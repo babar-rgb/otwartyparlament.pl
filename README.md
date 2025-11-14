@@ -1,10 +1,10 @@
 # Otwarty Parlament
 
-Transparentna, niekomercyjna platforma dla demokratii i odpowiedzialności politycznej. Śledź każde głosowanie w Sejmie, sprawdzaj jak głosują Twoi posłowie i porównuj partie.
+Transparentna, niekomercyjna platforma dla demokracji i odpowiedzialności politycznej. Śledź każde głosowanie w Sejmie, sprawdzaj jak głosują Twoi posłowie i porównuj partie.
 
 ## Demo
 
-Wersja live: [otwartyparlament.pl](https://otwartyparlament.pl)
+Wersja live:https://open-parliament-sejm-nikn.bolt.host/               LATER[otwartyparlament.pl](https://otwartyparlament.pl)
 
 ## Funkcjonalności
 
