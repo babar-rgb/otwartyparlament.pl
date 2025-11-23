@@ -3,8 +3,8 @@ import { fetchMPs, MP } from '../api';
 import MpCard from '../components/MpCard';
 import { Search } from 'lucide-react';
 
-// Mock data for visualization
-const mockMPs: MP[] = [
+// Fallback mock data for when API fails
+const fallbackMPs: MP[] = [
   { id: 101, first_name: 'Anna', last_name: 'Kowalska', club: 'KO', district: 'Warszawa I', photo_url: '', attendanceRate: 98, active: true },
   { id: 102, first_name: 'Jan', last_name: 'Nowak', club: 'PiS', district: 'Kraków I', photo_url: '', attendanceRate: 95, active: true },
   { id: 103, first_name: 'Maria', last_name: 'Wiśniewska', club: 'Trzecia Droga', district: 'Gdańsk', photo_url: '', attendanceRate: 92, active: true },
@@ -24,11 +24,11 @@ const mockMPs: MP[] = [
 ];
 
 const parties = [
-  { id: 'KO', name: 'KO', color: '#FF6B00' },
-  { id: 'PiS', name: 'PiS', color: '#1E3A8A' },
-  { id: 'Trzecia Droga', name: 'Trzecia Droga', color: '#16A34A' },
-  { id: 'Lewica', name: 'Lewica', color: '#DC2626' },
-  { id: 'Konfederacja', name: 'Konfederacja', color: '#7F1D1D' },
+  { id: 'KO', name: 'KO', color: '#0096FF' },
+  { id: 'PiS', name: 'PiS', color: '#800000' },
+  { id: 'Polska2050-TD', name: 'Polska2050-TD', color: '#00A150' },
+  { id: 'Lewica', name: 'Lewica', color: '#FF0000' },
+  { id: 'Konfederacja', name: 'Konfederacja', color: '#000080' },
 ];
 
 export default function Poslowie() {
@@ -41,13 +41,16 @@ export default function Poslowie() {
     const loadMps = async () => {
       try {
         const data = await fetchMPs();
-        // Combine API data with mock data
-        const combinedData = data.length > 0 ? data : mockMPs;
+        console.log('Fetched MPs:', data);
+        // Filter to only active MPs
+        const activeMps = data.filter(mp => mp.active === true);
+        console.log('Active MPs:', activeMps.length);
+        const combinedData = activeMps.length > 0 ? activeMps : fallbackMPs;
         setMps(combinedData);
       } catch (error) {
-        console.error('Error fetching MPs:', error);
+        console.error('Error fetching MPs:', error); // Added for debugging
         // Use mock data on error
-        setMps(mockMPs);
+        setMps(fallbackMPs);
       } finally {
         setLoading(false);
       }
@@ -71,7 +74,7 @@ export default function Poslowie() {
     return result;
   }, [searchTerm, selectedParty, mps]);
 
-  if (loading) return <div className="text-center py-12">Ładowanie posłów...</div>;
+  if (loading) return <div className="text-center py-12">Ładowanie danych z Sejmu...</div>;
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-6">
@@ -131,7 +134,7 @@ export default function Poslowie() {
 
         {/* MP Grid */}
         {filtered.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
             {filtered.map((mp) => (
               <MpCard key={mp.id} mp={mp} />
             ))}

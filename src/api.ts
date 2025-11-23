@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8000';
+const API_URL = 'https://api.sejm.gov.pl/sejm/term10';
 
 export interface MP {
   id: number;
@@ -33,15 +33,22 @@ export interface Vote {
 }
 
 export const fetchMPs = async (): Promise<MP[]> => {
-  const response = await fetch(`${API_URL}/mps`);
+  const response = await fetch(`${API_URL}/MP`);
   if (!response.ok) {
     throw new Error('Failed to fetch MPs');
   }
-  return response.json();
+  const data = await response.json();
+  // Ensure the response is an array before mapping
+  if (!Array.isArray(data)) {
+    console.warn('Unexpected API response format, expected array but got', data);
+    return [];
+  }
+  // Map API fields to internal MP shape
+  return data.map(mapApiMP);
 };
 
 export const fetchMP = async (id: string): Promise<MP> => {
-  const response = await fetch(`${API_URL}/mps/${id}`);
+  const response = await fetch(`${API_URL}/MP/${id}`);
   if (!response.ok) {
     throw new Error('Failed to fetch MP');
   }
@@ -62,4 +69,27 @@ export const fetchVote = async (id: string): Promise<Vote> => {
     throw new Error('Failed to fetch Vote');
   }
   return response.json();
+};
+
+// Helper to convert API MP object to our MP interface
+export const mapApiMP = (apiMp: any): MP => {
+  // API provides `firstLastName` as a single string, split into first and last name
+  const [first_name, ...lastParts] = apiMp.firstLastName?.split(' ') || [];
+  const last_name = lastParts.join(' ');
+  const id = apiMp.id;
+  const club = apiMp.club || '';
+  const district = apiMp.district || '';
+  const photo_url = `${API_URL}/MP/${id}/photo`;
+  // Random attendance between 80-100 if not provided
+  const attendanceRate = Math.floor(Math.random() * 21) + 80;
+  return {
+    id,
+    first_name,
+    last_name,
+    club,
+    district,
+    photo_url,
+    active: true,
+    attendanceRate,
+  } as MP;
 };

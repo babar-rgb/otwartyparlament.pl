@@ -8,16 +8,14 @@ interface MpCardProps {
 export default function MpCard({ mp }: MpCardProps) {
   const getPartyColor = (party: string): string => {
     const colors: Record<string, string> = {
-      KO: '#FF6B00', // Orange
-      PiS: '#1E3A8A', // Blue
-      'Trzecia Droga': '#16A34A', // Green
-      Lewica: '#DC2626', // Red
-      Konfederacja: '#7F1D1D', // Dark red/maroon
-      TD: '#16A34A', // Alias for Trzecia Droga
-      LWA: '#DC2626', // Alias for Lewica
-      K: '#7F1D1D', // Alias for Konfederacja
+      KO: '#0096FF', // Blue
+      PiS: '#800000', // Red
+      'Polska2050-TD': '#00A150', // Green
+      'PSL-TD': '#00A150', // Green (same as Polska2050)
+      Lewica: '#FF0000', // Dark Red
+      Konfederacja: '#000080', // Navy
     };
-    return colors[party] || '#64748B'; // Default slate
+    return colors[party] || '#64748B'; // Default gray
   };
 
   const attendanceRate = mp.attendanceRate || Math.floor(Math.random() * 15) + 85; // 85-99%
@@ -25,12 +23,12 @@ export default function MpCard({ mp }: MpCardProps) {
   return (
     <Link to={`/poslowie/${mp.id}`}>
       <div className="bg-white border border-slate-200 rounded-lg overflow-hidden hover:border-slate-400 transition-colors cursor-pointer">
-        {/* Photo with grayscale filter and party color bar */}
+        {/* Photo with party color bar */}
         <div className="relative">
           <img
             src={mp.photo_url || 'https://via.placeholder.com/200x200/E2E8F0/64748B?text=MP'}
             alt={`${mp.first_name} ${mp.last_name}`}
-            className="w-full h-48 object-cover filter grayscale"
+            className="w-full aspect-[3/4] object-cover"
           />
           {/* Party color bar at bottom of photo */}
           <div
