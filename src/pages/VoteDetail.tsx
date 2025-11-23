@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
-import { votes, voteResults, mps } from '../data/mockData';
+import { useState, useEffect } from 'react';
+import { fetchVote, Vote } from '../api';
 import { ArrowLeft, Share2, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
@@ -7,7 +8,25 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Ba
 
 export default function VoteDetail() {
   const { id } = useParams();
-  const vote = votes.find((v) => v.id === id);
+  const [vote, setVote] = useState<Vote | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadVote = async () => {
+      if (!id) return;
+      try {
+        const data = await fetchVote(id);
+        setVote(data);
+      } catch (error) {
+        console.error('Error fetching vote:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadVote();
+  }, [id]);
+
+  if (loading) return <div className="text-center py-12">Ładowanie głosowania...</div>;
 
   if (!vote) {
     return (
@@ -21,18 +40,13 @@ export default function VoteDetail() {
   }
 
   const voteData = [
-    { name: 'Za', value: vote.for, color: '#10b981' },
-    { name: 'Przeciw', value: vote.against, color: '#ef4444' },
-    { name: 'Wstrzymał się', value: vote.abstained, color: '#eab308' },
-    { name: 'Nieobecni', value: vote.absent, color: '#6b7280' },
+    { name: 'Za', value: vote.for || 0, color: '#10b981' },
+    { name: 'Przeciw', value: vote.against || 0, color: '#ef4444' },
+    { name: 'Wstrzymał się', value: vote.abstained || 0, color: '#eab308' },
+    { name: 'Nieobecni', value: vote.absent || 0, color: '#6b7280' },
   ];
 
-  const resultsForVote = voteResults.filter((vr) => vr.voteId === id);
-  const mpVotesForThisVote = resultsForVote.map((vr) => {
-    const mp = mps.find((m) => m.id === vr.mpId);
-    return { mp, vote: vr.vote };
-  });
-
+  // Mock data for charts since backend doesn't provide detailed breakdown yet
   const partyBreakdown = [
     { party: 'PiS', za: 45, przeciw: 8, wstrzymal: 2, nieobecni: 5 },
     { party: 'KO', za: 38, przeciw: 42, wstrzymal: 3, nieobecni: 4 },
@@ -52,7 +66,7 @@ export default function VoteDetail() {
         <div className="flex items-start justify-between gap-4 mb-4">
           <div>
             <p className="text-sm text-slate-600 mb-2">
-              Głosowanie #{vote.number} • {format(new Date(vote.date), 'd MMMM yyyy', { locale: pl })}
+              Głosowanie #{vote.id} • {format(new Date(vote.date), 'd MMMM yyyy', { locale: pl })}
             </p>
             <h1 className="text-3xl font-bold text-slate-900">{vote.title}</h1>
           </div>
@@ -66,15 +80,15 @@ export default function VoteDetail() {
           </div>
         </div>
 
-        <p className="text-slate-700 mb-4">{vote.description}</p>
+        <p className="text-slate-700 mb-4">{vote.description || 'Brak opisu'}</p>
 
         <div className="flex flex-wrap gap-4">
           <span className={`px-4 py-2 rounded-full font-semibold text-white ${vote.result === 'przyjęto' ? 'bg-green-600' : 'bg-red-600'}`}>
-            {vote.result.charAt(0).toUpperCase() + vote.result.slice(1)}
+            {vote.result ? (vote.result.charAt(0).toUpperCase() + vote.result.slice(1)) : 'Nierozstrzygnięte'}
           </span>
-          <span className="px-4 py-2 rounded-full bg-slate-700 text-white font-semibold">{vote.category}</span>
-          <span className={`px-4 py-2 rounded-full font-semibold ${vote.importance >= 85 ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
-            Ważność: {vote.importance}%
+          <span className="px-4 py-2 rounded-full bg-slate-700 text-white font-semibold">{vote.topic || 'Ogólne'}</span>
+          <span className={`px-4 py-2 rounded-full font-semibold ${vote.importance >= 8 ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
+            Ważność: {vote.importance}/10
           </span>
         </div>
       </div>
@@ -119,23 +133,23 @@ export default function VoteDetail() {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-slate-600">Za:</span>
-                <span className="font-bold text-green-600">{vote.for}</span>
+                <span className="font-bold text-green-600">{vote.for || 0}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-600">Przeciw:</span>
-                <span className="font-bold text-red-600">{vote.against}</span>
+                <span className="font-bold text-red-600">{vote.against || 0}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-600">Wstrzymał się:</span>
-                <span className="font-bold text-yellow-600">{vote.abstained}</span>
+                <span className="font-bold text-yellow-600">{vote.abstained || 0}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-600">Nieobecni:</span>
-                <span className="font-bold text-slate-600">{vote.absent}</span>
+                <span className="font-bold text-slate-600">{vote.absent || 0}</span>
               </div>
               <div className="flex justify-between pt-3 border-t border-slate-200">
                 <span className="text-slate-600 font-medium">Razem:</span>
-                <span className="font-bold">{vote.for + vote.against + vote.abstained + vote.absent}</span>
+                <span className="font-bold">{(vote.for || 0) + (vote.against || 0) + (vote.abstained || 0) + (vote.absent || 0)}</span>
               </div>
             </div>
           </div>
@@ -145,7 +159,7 @@ export default function VoteDetail() {
             <div className="space-y-2 text-sm">
               <div>
                 <p className="text-slate-600">Typ:</p>
-                <p className="font-semibold text-slate-900">{vote.type}</p>
+                <p className="font-semibold text-slate-900">{vote.kind || 'Inne'}</p>
               </div>
               <div>
                 <p className="text-slate-600">Data:</p>
@@ -153,41 +167,10 @@ export default function VoteDetail() {
               </div>
               <div>
                 <p className="text-slate-600">Kategoria:</p>
-                <p className="font-semibold text-slate-900">{vote.category}</p>
+                <p className="font-semibold text-slate-900">{vote.topic || 'Ogólne'}</p>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-lg border border-slate-200 p-6">
-        <h3 className="text-lg font-bold text-slate-900 mb-4">Jak głosowali posłowie?</h3>
-        <div className="space-y-2 max-h-96 overflow-y-auto">
-          {mpVotesForThisVote.map((item, idx) => {
-            if (!item.mp) return null;
-            const voteColor = {
-              za: 'text-green-600 bg-green-50',
-              przeciw: 'text-red-600 bg-red-50',
-              'wstrzymał się': 'text-yellow-600 bg-yellow-50',
-              nieobecny: 'text-slate-600 bg-slate-50',
-            };
-            return (
-              <div key={idx} className="flex items-center justify-between p-3 border-b border-slate-200 last:border-b-0">
-                <div className="flex items-center gap-3">
-                  <img src={item.mp.photoUrl} alt={item.mp.imie} className="w-10 h-10 rounded-full object-cover" />
-                  <div>
-                    <p className="font-semibold text-slate-900 text-sm">
-                      {item.mp.imie} {item.mp.nazwisko}
-                    </p>
-                    <p className="text-xs text-slate-500">{item.mp.party}</p>
-                  </div>
-                </div>
-                <span className={`px-3 py-1 rounded text-xs font-semibold ${voteColor[item.vote as keyof typeof voteColor]}`}>
-                  {item.vote}
-                </span>
-              </div>
-            );
-          })}
         </div>
       </div>
 

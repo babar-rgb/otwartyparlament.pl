@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Vote } from '../types';
+import { Vote } from '../api';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import * as Icons from 'lucide-react';
@@ -9,9 +9,9 @@ interface VoteCardProps {
 }
 
 export default function VoteCard({ vote }: VoteCardProps) {
-  const IconComponent = Icons[vote.categoryIcon as keyof typeof Icons] as any;
+  const IconComponent = vote.categoryIcon ? (Icons[vote.categoryIcon as keyof typeof Icons] as any) : Icons.FileText;
   const resultColor = vote.result === 'przyjęto' ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50';
-  const importanceColor = vote.importance >= 85 ? 'bg-red-100 text-red-800' : vote.importance >= 70 ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800';
+  const importanceColor = vote.importance >= 8 ? 'bg-red-100 text-red-800' : vote.importance >= 5 ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800';
 
   return (
     <Link to={`/glosowania/${vote.id}`}>
@@ -26,7 +26,7 @@ export default function VoteCard({ vote }: VoteCardProps) {
                 {vote.title}
               </h3>
               <span className={`px-2 py-1 rounded text-xs font-medium flex-shrink-0 ${resultColor}`}>
-                {vote.result}
+                {vote.result || 'Nierozstrzygnięte'}
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-1">
@@ -36,33 +36,33 @@ export default function VoteCard({ vote }: VoteCardProps) {
         </div>
 
         <p className="text-xs text-slate-600 line-clamp-2 mb-3">
-          {vote.description}
+          {vote.description || 'Brak opisu'}
         </p>
 
         <div className="flex items-center gap-2 mb-3">
           <span className={`text-xs font-semibold px-2 py-1 rounded ${importanceColor}`}>
-            Ważność: {vote.importance}%
+            Ważność: {vote.importance}/10
           </span>
           <span className="text-xs px-2 py-1 rounded bg-slate-100 text-slate-700">
-            {vote.category}
+            {vote.topic || 'Ogólne'}
           </span>
         </div>
 
         <div className="grid grid-cols-4 gap-2 pt-3 border-t border-slate-200">
           <div className="text-center">
-            <p className="text-xs font-semibold text-green-600">{vote.for}</p>
+            <p className="text-xs font-semibold text-green-600">{vote.for || 0}</p>
             <p className="text-xs text-slate-500">Za</p>
           </div>
           <div className="text-center">
-            <p className="text-xs font-semibold text-red-600">{vote.against}</p>
+            <p className="text-xs font-semibold text-red-600">{vote.against || 0}</p>
             <p className="text-xs text-slate-500">Przeciw</p>
           </div>
           <div className="text-center">
-            <p className="text-xs font-semibold text-yellow-600">{vote.abstained}</p>
+            <p className="text-xs font-semibold text-yellow-600">{vote.abstained || 0}</p>
             <p className="text-xs text-slate-500">Wstrzym.</p>
           </div>
           <div className="text-center">
-            <p className="text-xs font-semibold text-slate-600">{vote.absent}</p>
+            <p className="text-xs font-semibold text-slate-600">{vote.absent || 0}</p>
             <p className="text-xs text-slate-500">Nieobecni</p>
           </div>
         </div>

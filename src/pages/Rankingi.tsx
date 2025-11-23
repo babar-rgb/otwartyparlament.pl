@@ -1,28 +1,46 @@
-import { useState } from 'react';
-import { mps } from '../data/mockData';
+import { useState, useEffect } from 'react';
+import { fetchMPs, MP } from '../api';
 import { Link } from 'react-router-dom';
-import { Trophy, TrendingUp, Users, Clock } from 'lucide-react';
+import { Trophy, TrendingUp, Users, Clock, FileText } from 'lucide-react';
 
 export default function Rankingi() {
   const [activeTab, setActiveTab] = useState<'activity' | 'votes' | 'attendance' | 'bills'>('activity');
+  const [mps, setMps] = useState<MP[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadMps = async () => {
+      try {
+        const data = await fetchMPs();
+        setMps(data);
+      } catch (error) {
+        console.error('Error fetching MPs:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadMps();
+  }, []);
+
+  if (loading) return <div className="text-center py-12">Ładowanie rankingów...</div>;
 
   const rankings = {
-    activity: mps
-      .sort((a, b) => b.aktywnosc - a.aktywnosc)
+    activity: [...mps]
+      .sort((a, b) => (b.aktywnosc || 0) - (a.aktywnosc || 0))
       .slice(0, 20)
-      .map((mp, idx) => ({ ...mp, rank: idx + 1, value: mp.aktywnosc, unit: '%' })),
-    votes: mps
-      .sort((a, b) => b.votesCount - a.votesCount)
+      .map((mp, idx) => ({ ...mp, rank: idx + 1, value: mp.aktywnosc || 0, unit: '%' })),
+    votes: [...mps]
+      .sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0))
       .slice(0, 20)
-      .map((mp, idx) => ({ ...mp, rank: idx + 1, value: mp.votesCount, unit: 'głosów' })),
-    attendance: mps
-      .sort((a, b) => b.attendanceRate - a.attendanceRate)
+      .map((mp, idx) => ({ ...mp, rank: idx + 1, value: mp.votesCount || 0, unit: 'głosów' })),
+    attendance: [...mps]
+      .sort((a, b) => (b.attendanceRate || 0) - (a.attendanceRate || 0))
       .slice(0, 20)
-      .map((mp, idx) => ({ ...mp, rank: idx + 1, value: mp.attendanceRate, unit: '%' })),
-    bills: mps
-      .sort((a, b) => b.billsCount - a.billsCount)
+      .map((mp, idx) => ({ ...mp, rank: idx + 1, value: mp.attendanceRate || 0, unit: '%' })),
+    bills: [...mps]
+      .sort((a, b) => (b.billsCount || 0) - (a.billsCount || 0))
       .slice(0, 20)
-      .map((mp, idx) => ({ ...mp, rank: idx + 1, value: mp.billsCount, unit: 'ustaw' })),
+      .map((mp, idx) => ({ ...mp, rank: idx + 1, value: mp.billsCount || 0, unit: 'ustaw' })),
   };
 
   const getRankColor = (rank: number) => {
@@ -80,11 +98,10 @@ export default function Rankingi() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-6 py-4 font-semibold transition border-b-2 ${
-                  isActive
-                    ? 'border-blue-600 text-blue-600 bg-blue-50'
-                    : 'border-transparent text-slate-600 hover:text-slate-900'
-                }`}
+                className={`flex items-center gap-2 px-6 py-4 font-semibold transition border-b-2 ${isActive
+                  ? 'border-blue-600 text-blue-600 bg-blue-50'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+                  }`}
               >
                 <TabIcon size={18} />
                 {tab.label}
@@ -103,18 +120,18 @@ export default function Rankingi() {
                   </div>
 
                   <div className="flex-1 flex items-center gap-3">
-                    <img src={entry.photoUrl} alt={entry.imie} className="w-12 h-12 rounded-full object-cover" />
+                    <img src={entry.photo_url || 'https://via.placeholder.com/150'} alt={`${entry.first_name} ${entry.last_name}`} className="w-12 h-12 rounded-full object-cover" />
                     <div>
                       <p className="font-semibold text-slate-900">
-                        {entry.imie} {entry.nazwisko}
+                        {entry.first_name} {entry.last_name}
                       </p>
                       <p className="text-xs text-slate-500">{entry.district}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className={`${getPartyColor(entry.party)} text-white text-xs font-bold px-2 py-1 rounded`}>
-                      {entry.party}
+                    <span className={`${getPartyColor(entry.club)} text-white text-xs font-bold px-2 py-1 rounded`}>
+                      {entry.club}
                     </span>
                   </div>
 
@@ -160,6 +177,4 @@ export default function Rankingi() {
   );
 }
 
-function FileText(props: any) {
-  return <FileText {...props} />;
-}
+

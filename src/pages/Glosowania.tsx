@@ -1,15 +1,31 @@
-import { useState, useMemo } from 'react';
-import { votes } from '../data/mockData';
+import { useState, useMemo, useEffect } from 'react';
+import { fetchVotes, Vote } from '../api';
 import VoteCard from '../components/VoteCard';
 import { Search, Filter, Calendar } from 'lucide-react';
 
 export default function Glosowania() {
+  const [votes, setVotes] = useState<Vote[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [minImportance, setMinImportance] = useState(0);
-  const [result, setResult] = useState<string>('');
+  const [resultFilter, setResultFilter] = useState<string>('');
 
-  const categories = Array.from(new Set(votes.map((v) => v.category)));
+  useEffect(() => {
+    const loadVotes = async () => {
+      try {
+        const data = await fetchVotes();
+        setVotes(data);
+      } catch (error) {
+        console.error('Error fetching votes:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadVotes();
+  }, []);
+
+  const categories = Array.from(new Set(votes.map((v) => v.topic).filter(Boolean) as string[]));
 
   const filtered = useMemo(() => {
     let result = votes;
@@ -18,24 +34,25 @@ export default function Glosowania() {
       result = result.filter(
         (v) =>
           v.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          v.description.toLowerCase().includes(searchTerm.toLowerCase())
+          (v.description && v.description.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
     if (selectedCategory) {
-      result = result.filter((v) => v.category === selectedCategory);
+      result = result.filter((v) => v.topic === selectedCategory);
     }
 
     if (minImportance > 0) {
       result = result.filter((v) => v.importance >= minImportance);
     }
 
-    if (result) {
-      result = result.filter((v) => v.result === result || result === '');
-    }
+    // Result filter logic would need real result data
+    // if (resultFilter) { ... }
 
     return result.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [searchTerm, selectedCategory, minImportance, result]);
+  }, [searchTerm, selectedCategory, minImportance, resultFilter, votes]);
+
+  if (loading) return <div className="text-center py-12">Ładowanie głosowań...</div>;
 
   return (
     <div className="space-y-8">
@@ -89,12 +106,12 @@ export default function Glosowania() {
               <input
                 type="range"
                 min="0"
-                max="100"
+                max="10"
                 value={minImportance}
                 onChange={(e) => setMinImportance(parseInt(e.target.value))}
                 className="w-full"
               />
-              <p className="text-xs text-slate-500 mt-1">{minImportance}%</p>
+              <p className="text-xs text-slate-500 mt-1">{minImportance}/10</p>
             </div>
 
             <div>
@@ -102,8 +119,8 @@ export default function Glosowania() {
                 Wynik
               </label>
               <select
-                value={result}
-                onChange={(e) => setResult(e.target.value)}
+                value={resultFilter}
+                onChange={(e) => setResultFilter(e.target.value)}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Wszystkie wyniki</option>

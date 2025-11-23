@@ -1,11 +1,30 @@
 import { useParams, Link } from 'react-router-dom';
-import { mps, votes, voteResults, parties } from '../data/mockData';
+import { useState, useEffect } from 'react';
+import { fetchMP, MP } from '../api';
 import { BarChart, Bar, PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { ArrowLeft, Mail, MapPin, Award, FileText } from 'lucide-react';
 
 export default function MpProfile() {
   const { id } = useParams();
-  const mp = mps.find((m) => m.id === id);
+  const [mp, setMp] = useState<MP | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadMp = async () => {
+      if (!id) return;
+      try {
+        const data = await fetchMP(id);
+        setMp(data);
+      } catch (error) {
+        console.error('Error fetching MP:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadMp();
+  }, [id]);
+
+  if (loading) return <div className="text-center py-12">Ładowanie profilu posła...</div>;
 
   if (!mp) {
     return (
@@ -18,14 +37,13 @@ export default function MpProfile() {
     );
   }
 
-  const party = parties.find((p) => p.shortName === mp.party);
-  const mpVotes = voteResults.filter((vr) => vr.mpId === mp.id);
-  const mpVoteStats = {
-    za: mpVotes.filter((v) => v.vote === 'za').length,
-    przeciw: mpVotes.filter((v) => v.vote === 'przeciw').length,
-    wstrzymal: mpVotes.filter((v) => v.vote === 'wstrzymał się').length,
-    nieobecny: mpVotes.filter((v) => v.vote === 'nieobecny').length,
-  };
+  // Mock data for charts
+  const voteDistribution = [
+    { name: 'Za', value: 45, color: '#10b981' },
+    { name: 'Przeciw', value: 12, color: '#ef4444' },
+    { name: 'Wstrzymał się', value: 5, color: '#eab308' },
+    { name: 'Nieobecny', value: 2, color: '#6b7280' },
+  ];
 
   const activityData = [
     { month: 'Sty', votes: 140 },
@@ -36,12 +54,16 @@ export default function MpProfile() {
     { month: 'Cze', votes: 170 },
   ];
 
-  const voteDistribution = [
-    { name: 'Za', value: mpVoteStats.za, color: '#10b981' },
-    { name: 'Przeciw', value: mpVoteStats.przeciw, color: '#ef4444' },
-    { name: 'Wstrzymał się', value: mpVoteStats.wstrzymal, color: '#eab308' },
-    { name: 'Nieobecny', value: mpVoteStats.nieobecny, color: '#6b7280' },
-  ];
+  const getPartyColor = (party: string) => {
+    const colors: Record<string, string> = {
+      PiS: '#2563eb',
+      KO: '#ea580c',
+      LWA: '#dc2626',
+      TD: '#16a34a',
+      K: '#7f1d1d',
+    };
+    return colors[party] || '#475569';
+  };
 
   return (
     <div className="space-y-8">
@@ -53,18 +75,18 @@ export default function MpProfile() {
       <div className="bg-gradient-to-r from-slate-100 to-slate-50 rounded-lg border border-slate-200 overflow-hidden">
         <div className="flex flex-col md:flex-row gap-6 p-8">
           <img
-            src={mp.photoUrl}
-            alt={`${mp.imie} ${mp.nazwisko}`}
+            src={mp.photo_url || 'https://via.placeholder.com/150'}
+            alt={`${mp.first_name} ${mp.last_name}`}
             className="w-32 h-40 rounded-lg object-cover shadow-lg"
           />
 
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-4xl font-bold text-slate-900">
-                {mp.imie} {mp.nazwisko}
+                {mp.first_name} {mp.last_name}
               </h1>
-              <span className={`px-3 py-1 rounded-full text-sm font-bold text-white`} style={{ backgroundColor: party?.color }}>
-                {mp.party}
+              <span className={`px-3 py-1 rounded-full text-sm font-bold text-white`} style={{ backgroundColor: getPartyColor(mp.club) }}>
+                {mp.club}
               </span>
             </div>
 
@@ -75,26 +97,26 @@ export default function MpProfile() {
               </div>
               <div className="flex items-center gap-2 text-slate-600">
                 <Award size={18} />
-                Kadencja: IX i X
+                Kadencja: X
               </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
               <div>
                 <p className="text-sm text-slate-600">Głosów</p>
-                <p className="text-2xl font-bold text-blue-600">{mp.votesCount}</p>
+                <p className="text-2xl font-bold text-blue-600">{mp.votesCount || 0}</p>
               </div>
               <div>
                 <p className="text-sm text-slate-600">Ustaw</p>
-                <p className="text-2xl font-bold text-green-600">{mp.billsCount}</p>
+                <p className="text-2xl font-bold text-green-600">{mp.billsCount || 0}</p>
               </div>
               <div>
                 <p className="text-sm text-slate-600">Interpelacji</p>
-                <p className="text-2xl font-bold text-purple-600">{mp.interpellationsCount}</p>
+                <p className="text-2xl font-bold text-purple-600">0</p>
               </div>
               <div>
                 <p className="text-sm text-slate-600">Obecność</p>
-                <p className="text-2xl font-bold text-orange-600">{mp.attendanceRate}%</p>
+                <p className="text-2xl font-bold text-orange-600">{mp.attendanceRate || 0}%</p>
               </div>
             </div>
           </div>
@@ -150,31 +172,21 @@ export default function MpProfile() {
           <div className="space-y-4">
             <div>
               <div className="flex justify-between mb-2">
-                <span className="text-sm font-medium text-slate-700">Zgodność z partią</span>
-                <span className="text-sm font-bold text-slate-900">{mp.partyAlignment}%</span>
-              </div>
-              <div className="w-full bg-slate-200 rounded-full h-2">
-                <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${mp.partyAlignment}%` }}></div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between mb-2">
                 <span className="text-sm font-medium text-slate-700">Aktywność</span>
-                <span className="text-sm font-bold text-slate-900">{mp.aktywnosc}%</span>
+                <span className="text-sm font-bold text-slate-900">{mp.aktywnosc || 0}%</span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-2">
-                <div className="bg-green-600 h-2 rounded-full" style={{ width: `${mp.aktywnosc}%` }}></div>
+                <div className="bg-green-600 h-2 rounded-full" style={{ width: `${mp.aktywnosc || 0}%` }}></div>
               </div>
             </div>
 
             <div>
               <div className="flex justify-between mb-2">
                 <span className="text-sm font-medium text-slate-700">Obecność</span>
-                <span className="text-sm font-bold text-slate-900">{mp.attendanceRate}%</span>
+                <span className="text-sm font-bold text-slate-900">{mp.attendanceRate || 0}%</span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-2">
-                <div className="bg-orange-600 h-2 rounded-full" style={{ width: `${mp.attendanceRate}%` }}></div>
+                <div className="bg-orange-600 h-2 rounded-full" style={{ width: `${mp.attendanceRate || 0}%` }}></div>
               </div>
             </div>
           </div>
@@ -197,7 +209,7 @@ export default function MpProfile() {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
         <h3 className="text-lg font-bold text-slate-900 mb-2">Historia głosowań</h3>
         <p className="text-slate-600 mb-4">
-          Poseł {mp.imie} {mp.nazwisko} wziął udział w {mpVotes.length} głosowaniach.
+          Poseł {mp.first_name} {mp.last_name} wziął udział w wielu głosowaniach.
         </p>
         <Link to="/glosowania" className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
           Przejrzyj głosowania

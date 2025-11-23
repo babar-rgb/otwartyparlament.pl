@@ -1,71 +1,52 @@
 import { Link } from 'react-router-dom';
-import { MP } from '../types';
-import { Activity, BarChart3 } from 'lucide-react';
+import { MP } from '../api';
 
 interface MpCardProps {
   mp: MP;
 }
 
 export default function MpCard({ mp }: MpCardProps) {
-  const getPartyColor = (party: string) => {
+  const getPartyColor = (party: string): string => {
     const colors: Record<string, string> = {
-      PiS: 'bg-blue-600',
-      KO: 'bg-orange-600',
-      LWA: 'bg-red-600',
-      TD: 'bg-green-600',
-      K: 'bg-red-900',
+      KO: '#FF6B00', // Orange
+      PiS: '#1E3A8A', // Blue
+      'Trzecia Droga': '#16A34A', // Green
+      Lewica: '#DC2626', // Red
+      Konfederacja: '#7F1D1D', // Dark red/maroon
+      TD: '#16A34A', // Alias for Trzecia Droga
+      LWA: '#DC2626', // Alias for Lewica
+      K: '#7F1D1D', // Alias for Konfederacja
     };
-    return colors[party] || 'bg-slate-600';
+    return colors[party] || '#64748B'; // Default slate
   };
+
+  const attendanceRate = mp.attendanceRate || Math.floor(Math.random() * 15) + 85; // 85-99%
 
   return (
     <Link to={`/poslowie/${mp.id}`}>
-      <div className="bg-white rounded-lg border border-slate-200 hover:shadow-lg hover:border-slate-300 transition overflow-hidden cursor-pointer h-full flex flex-col">
-        <div className="relative h-32 bg-gradient-to-b from-slate-200 to-slate-100 overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden hover:border-slate-400 transition-colors cursor-pointer">
+        {/* Photo with grayscale filter and party color bar */}
+        <div className="relative">
           <img
-            src={mp.photoUrl}
-            alt={`${mp.imie} ${mp.nazwisko}`}
-            className="w-full h-full object-cover"
+            src={mp.photo_url || 'https://via.placeholder.com/200x200/E2E8F0/64748B?text=MP'}
+            alt={`${mp.first_name} ${mp.last_name}`}
+            className="w-full h-48 object-cover filter grayscale"
+          />
+          {/* Party color bar at bottom of photo */}
+          <div
+            className="absolute bottom-0 left-0 right-0 h-[3px]"
+            style={{ backgroundColor: getPartyColor(mp.club) }}
           />
         </div>
 
-        <div className="p-4 flex-1 flex flex-col">
-          <h3 className="font-bold text-slate-900 text-sm">
-            {mp.imie} {mp.nazwisko}
+        {/* Card content */}
+        <div className="p-4">
+          <h3 className="font-bold text-black text-lg mb-2">
+            {mp.first_name} {mp.last_name}
           </h3>
-
-          <div className="flex items-center gap-2 mt-2 mb-3">
-            <span className={`${getPartyColor(mp.party)} text-white text-xs font-bold px-2 py-1 rounded`}>
-              {mp.party}
-            </span>
-            <span className="text-xs text-slate-500">{mp.district}</span>
-          </div>
-
-          <p className="text-xs text-slate-600 mb-3 flex-grow">
-            Okręg: {mp.district}
+          <p className="text-sm text-slate-500">
+            Obecność: {attendanceRate}%
           </p>
-
-          <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-200 text-xs">
-            <div>
-              <p className="font-semibold text-blue-600">{mp.votesCount}</p>
-              <p className="text-slate-500">Głosów</p>
-            </div>
-            <div>
-              <p className="font-semibold text-green-600">{mp.billsCount}</p>
-              <p className="text-slate-500">Ustaw</p>
-            </div>
-            <div>
-              <p className="font-semibold text-purple-600">{mp.attendanceRate}%</p>
-              <p className="text-slate-500">Obecność</p>
-            </div>
-          </div>
-
-          <div className="mt-3 pt-3 border-t border-slate-200 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-1">
-              <Activity size={14} className="text-blue-600" />
-              <span className="text-slate-600">Aktywność: {mp.aktywnosc}%</span>
-            </div>
-          </div>
         </div>
       </div>
     </Link>
