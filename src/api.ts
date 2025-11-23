@@ -89,7 +89,7 @@ export const mapApiMP = (apiMp: any): MP => {
     club,
     district,
     photo_url,
-    active: true,
+    active: apiMp.active ?? true, // Use API's active field, default to true if not provided
     attendanceRate,
   } as MP;
 };

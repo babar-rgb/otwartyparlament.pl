@@ -22,29 +22,43 @@ export default function MpCard({ mp }: MpCardProps) {
 
   return (
     <Link to={`/poslowie/${mp.id}`}>
-      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden hover:border-slate-400 transition-colors cursor-pointer">
-        {/* Photo with party color bar */}
-        <div className="relative">
+      <div className="group bg-white rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer">
+        {/* Photo with party badge */}
+        <div className="relative overflow-hidden">
           <img
             src={mp.photo_url || 'https://via.placeholder.com/200x200/E2E8F0/64748B?text=MP'}
             alt={`${mp.first_name} ${mp.last_name}`}
-            className="w-full aspect-[3/4] object-cover"
+            className="w-full aspect-[3/4] object-cover transition-transform duration-500 group-hover:scale-105"
           />
-          {/* Party color bar at bottom of photo */}
+          {/* Party Badge - Top Right */}
           <div
-            className="absolute bottom-0 left-0 right-0 h-[3px]"
+            className="absolute top-2 right-2 px-2 py-1 rounded-full text-white text-xs font-bold"
             style={{ backgroundColor: getPartyColor(mp.club) }}
-          />
+          >
+            {mp.club}
+          </div>
         </div>
 
         {/* Card content */}
         <div className="p-4">
-          <h3 className="font-bold text-black text-lg mb-2">
+          <h3 className="font-bold text-gray-900 text-base mb-3">
             {mp.first_name} {mp.last_name}
           </h3>
-          <p className="text-sm text-slate-500">
-            Obecność: {attendanceRate}%
-          </p>
+
+          {/* Attendance with Progress Bar */}
+          <div className="space-y-1">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">Obecność</span>
+              <span className="font-semibold text-gray-900">{attendanceRate}%</span>
+            </div>
+            {/* Progress Bar */}
+            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-green-500 rounded-full transition-all duration-300"
+                style={{ width: `${attendanceRate}%` }}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </Link>
