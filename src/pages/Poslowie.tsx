@@ -23,12 +23,17 @@ const fallbackMPs: MP[] = [
   { id: 116, first_name: 'Joanna', last_name: 'Pawlak', club: 'KO', district: 'Opole', photo_url: '', attendanceRate: 98, active: true },
 ];
 
+// Major clubs to exclude from "INNE" filter
+const MAJOR_CLUBS = ['KO', 'PiS', 'Polska2050', 'PSL-TD', 'Lewica', 'Konfederacja'];
+
 const parties = [
   { id: 'KO', name: 'KO', color: '#0096FF' },
   { id: 'PiS', name: 'PiS', color: '#800000' },
-  { id: 'Polska2050-TD', name: 'Polska2050-TD', color: '#00A150' },
+  { id: 'Polska2050', name: 'Polska2050', color: '#00A150' },
+  { id: 'PSL-TD', name: 'PSL-TD', color: '#90EE90' },
   { id: 'Lewica', name: 'Lewica', color: '#FF0000' },
   { id: 'Konfederacja', name: 'Konfederacja', color: '#000080' },
+  { id: 'INNE', name: 'INNE', color: '#1F2937' },
 ];
 
 export default function Poslowie() {
@@ -68,7 +73,13 @@ export default function Poslowie() {
     }
 
     if (selectedParty) {
-      result = result.filter((mp) => mp.club === selectedParty);
+      if (selectedParty === 'INNE') {
+        // Show MPs from minor clubs (exclude major clubs)
+        result = result.filter((mp) => !MAJOR_CLUBS.includes(mp.club));
+      } else {
+        // Show MPs from the selected major club
+        result = result.filter((mp) => mp.club === selectedParty);
+      }
     }
 
     return result;

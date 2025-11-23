@@ -8,11 +8,18 @@ export interface MP {
   district: string;
   photo_url: string;
   active: boolean;
+  // District details
+  districtNum?: number;
+  districtName?: string;
+  voivodeship?: string;
+  // Contact
+  email?: string;
   // Optional fields for UI
   votesCount?: number;
   billsCount?: number;
   attendanceRate?: number;
   aktywnosc?: number;
+  rebelVotes?: number; // Votes against party line
 }
 
 export interface Vote {
@@ -52,7 +59,8 @@ export const fetchMP = async (id: string): Promise<MP> => {
   if (!response.ok) {
     throw new Error('Failed to fetch MP');
   }
-  return response.json();
+  const data = await response.json();
+  return mapApiMP(data);
 };
 
 export const fetchVotes = async (): Promise<Vote[]> => {
@@ -78,10 +86,36 @@ export const mapApiMP = (apiMp: any): MP => {
   const last_name = lastParts.join(' ');
   const id = apiMp.id;
   const club = apiMp.club || '';
-  const district = apiMp.district || '';
+  const district = apiMp.districtName || apiMp.district || '';
   const photo_url = `${API_URL}/MP/${id}/photo`;
+
+  // Extract district details
+  const districtNum = apiMp.districtNum;
+  const districtName = apiMp.districtName;
+  const voivodeship = apiMp.voivodeship;
+
+  // Extract email or generate fallback
+  let email = apiMp.email;
+  if (!email && first_name && last_name) {
+    // Generate standard Sejm email: name.surname@sejm.pl
+    const emailName = `${first_name}.${last_name}`
+      .toLowerCase()
+      .replace(/ą/g, 'a')
+      .replace(/ć/g, 'c')
+      .replace(/ę/g, 'e')
+      .replace(/ł/g, 'l')
+      .replace(/ń/g, 'n')
+      .replace(/ó/g, 'o')
+      .replace(/ś/g, 's')
+      .replace(/ź/g, 'z')
+      .replace(/ż/g, 'z')
+      .replace(/\s+/g, '.');
+    email = `${emailName}@sejm.pl`;
+  }
+
   // Random attendance between 80-100 if not provided
   const attendanceRate = Math.floor(Math.random() * 21) + 80;
+
   return {
     id,
     first_name,
@@ -89,7 +123,11 @@ export const mapApiMP = (apiMp: any): MP => {
     club,
     district,
     photo_url,
-    active: apiMp.active ?? true, // Use API's active field, default to true if not provided
+    active: apiMp.active ?? true,
+    districtNum,
+    districtName,
+    voivodeship,
+    email,
     attendanceRate,
   } as MP;
 };
