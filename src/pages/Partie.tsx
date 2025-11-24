@@ -36,7 +36,7 @@ export default function Partie() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {parties.map((party) => (
           <Link key={party.id} to={`/partie/${party.id}`}>
-            <div className="bg-white rounded-lg border border-slate-200 hover:shadow-lg hover:border-slate-300 transition overflow-hidden cursor-pointer h-full flex flex-col">
+            <div className="bg-white rounded-lg border border-slate-200 hover: hover:border-slate-300 transition overflow-hidden cursor-pointer h-full flex flex-col">
               <div className="h-24 bg-gradient-to-br from-slate-200 to-slate-100 flex items-center justify-center border-b border-slate-200">
                 <div
                   className="w-16 h-16 rounded-lg flex items-center justify-center text-white font-bold text-2xl"

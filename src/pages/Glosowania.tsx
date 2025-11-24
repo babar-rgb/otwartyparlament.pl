@@ -268,7 +268,7 @@ export default function Glosowania() {
             <div className="p-6 border-t border-slate-100 bg-slate-50 rounded-b-2xl">
               <button
                 onClick={() => setIsAdvancedModalOpen(false)}
-                className="w-full py-3.5 bg-black text-white rounded-xl font-bold text-lg hover:bg-slate-800 transition-colors shadow-lg"
+                className="w-full py-3.5 bg-black text-white rounded-xl font-bold text-lg hover:bg-slate-800 transition-colors "
               >
                 Zastosuj Filtry
               </button>

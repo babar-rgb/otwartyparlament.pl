@@ -178,19 +178,19 @@ export default function OProjekcie() {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <a href="#" className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-md transition text-center">
+          <a href="#" className="bg-white border border-slate-200 rounded-lg p-4 hover: transition text-center">
             <Github className="w-8 h-8 text-blue-600 mx-auto mb-2" />
             <p className="font-semibold text-slate-900 mb-1">Kod</p>
             <p className="text-sm text-slate-600">Wpisz się w kod na GitHub</p>
           </a>
 
-          <a href="mailto:info@otwartyparlament.pl" className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-md transition text-center">
+          <a href="mailto:info@otwartyparlament.pl" className="bg-white border border-slate-200 rounded-lg p-4 hover: transition text-center">
             <Heart className="w-8 h-8 text-red-600 mx-auto mb-2" />
             <p className="font-semibold text-slate-900 mb-1">Feedback</p>
             <p className="text-sm text-slate-600">Podziel się opinią</p>
           </a>
 
-          <a href="#" className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-md transition text-center">
+          <a href="#" className="bg-white border border-slate-200 rounded-lg p-4 hover: transition text-center">
             <Users className="w-8 h-8 text-green-600 mx-auto mb-2" />
             <p className="font-semibold text-slate-900 mb-1">Udostępnij</p>
             <p className="text-sm text-slate-600">Rozpowszechnij ideę</p>

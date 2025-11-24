@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { MP } from '../api';
 
 interface MpCardProps {
@@ -22,7 +23,12 @@ export default function MpCard({ mp }: MpCardProps) {
 
   return (
     <Link to={`/poslowie/${mp.id}`}>
-      <div className="group bg-white rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer">
+      <motion.div
+        className="group bg-white rounded-lg overflow-hidden border border-gray-200 hover:border-brand transition-all duration-300 cursor-pointer"
+        whileHover={{ y: -5, boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      >
         {/* Photo with party badge */}
         <div className="relative overflow-hidden">
           <img
@@ -32,7 +38,7 @@ export default function MpCard({ mp }: MpCardProps) {
           />
           {/* Party Badge - Top Right */}
           <div
-            className="absolute top-2 right-2 px-2 py-1 rounded-full text-white text-xs font-bold"
+            className="absolute top-2 right-2 px-2 py-1 rounded text-white text-xs font-bold"
             style={{ backgroundColor: getPartyColor(mp.club) }}
           >
             {mp.club}
@@ -52,15 +58,17 @@ export default function MpCard({ mp }: MpCardProps) {
               <span className="font-semibold text-ink">{attendanceRate}%</span>
             </div>
             {/* Progress Bar */}
-            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-brand rounded-full transition-all duration-300"
-                style={{ width: `${attendanceRate}%` }}
+            <div className="h-2 bg-gray-100 rounded-sm overflow-hidden">
+              <motion.div
+                className="h-full bg-brand rounded-sm"
+                initial={{ width: 0 }}
+                animate={{ width: `${attendanceRate}%` }}
+                transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
               />
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </Link>
   );
 }

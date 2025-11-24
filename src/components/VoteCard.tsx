@@ -15,7 +15,7 @@ export default function VoteCard({ vote }: VoteCardProps) {
 
   return (
     <Link to={`/glosowania/${vote.id}`}>
-      <div className="bg-white rounded-lg border border-slate-200 hover:shadow-lg hover:border-slate-300 transition p-4 cursor-pointer h-full">
+      <div className="bg-white rounded-lg border border-gray-200 hover:border-brand transition p-4 cursor-pointer h-full">
         <div className="flex items-start gap-3 mb-3">
           <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
             {IconComponent && <IconComponent size={20} className="text-blue-600" />}

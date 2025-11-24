@@ -67,6 +67,52 @@ def map_vote_value(api_value):
     if val_str == 'ABSENT': return 'ABSENT'
     return 'PRESENT'
 
+def calculate_importance(title, yes_count, no_count):
+    """
+    Calculate importance score (0-100) for a vote based on:
+    1. Keyword analysis (impact factor)
+    2. Controversy analysis (fight factor)
+    """
+    score = 0
+    title_lower = title.lower()
+    
+    # HIGH IMPACT keywords (+50 points each)
+    HIGH_IMPACT = ['podatek', 'vat', 'budżet', 'aborcja', 'konstytucja', 
+                   'trybunał', 'sąd najwyższy', 'obronność', 'pieniądz', 
+                   'składk', 'zus', 'in vitro', 'ustawa budżetowa']
+    
+    # LOW IMPACT keywords (-20 points each)
+    LOW_IMPACT = ['upamiętnienie', 'patron', 'dzień', 'zmiana nazwy', 
+                  'regulamin', 'sprawozdanie']
+    
+    # Keyword scoring
+    for keyword in HIGH_IMPACT:
+        if keyword in title_lower:
+            score += 50
+            break  # Only count once
+    
+    for keyword in LOW_IMPACT:
+        if keyword in title_lower:
+            score -= 20
+            break
+    
+    # Controversy scoring (based on vote split)
+    total_votes = yes_count + no_count
+    if total_votes > 0:
+        diff = abs(yes_count - no_count)
+        
+        if diff < 10:  # Extremely close (within 10 votes)
+            score += 40
+        elif diff < 30:  # Very close (within 30 votes)
+            score += 20
+        elif diff > 400:  # Unanimous (boring)
+            score -= 10
+    
+    # Normalize to 0-100
+    score = max(0, min(100, score))
+    
+    return score
+
 # --- ETL FUNCTIONS ---
 
 def fetch_all_sittings():
@@ -135,6 +181,14 @@ def process_sitting(sitting_num):
                 verdict = "PRZYJĘTO" if vote['yes'] > vote['no'] else "ODRZUCONO"
                 vote_id = sitting_num * 10000 + vote['votingNumber']
                 
+                # Calculate importance score
+                importance_score = calculate_importance(
+                    title_clean, 
+                    vote.get('yes', 0), 
+                    vote.get('no', 0)
+                )
+                is_key_vote = importance_score > 60
+                
                 vote_record = {
                     "id": vote_id,
                     "sitting": sitting_num,
@@ -144,6 +198,8 @@ def process_sitting(sitting_num):
                     "title_clean": title_clean,
                     "category": category,
                     "verdict": verdict,
+                    "importance_score": importance_score,
+                    "is_key_vote": is_key_vote,
                     "details_json": {
                         "kind": vote.get('kind', ''), 
                         "topic": vote.get('topic', ''),

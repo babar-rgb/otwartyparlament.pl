@@ -95,7 +95,7 @@ export default function MpProfile() {
           <img
             src={photoUrl}
             alt={`${mp.first_name} ${mp.last_name}`}
-            className="w-48 h-48 md:w-64 md:h-64 rounded-xl object-cover shadow-md"
+            className="w-48 h-48 md:w-64 md:h-64 rounded-xl object-cover "
             onError={(e) => {
               e.currentTarget.src = 'https://via.placeholder.com/256x256/E2E8F0/64748B?text=MP';
             }}
