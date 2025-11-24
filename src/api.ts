@@ -131,3 +131,11 @@ export const mapApiMP = (apiMp: any): MP => {
     attendanceRate,
   } as MP;
 };
+
+export const fetchSittingVotes = async (sittingId: number) => {
+  const response = await fetch(`${API_URL}/votings/${sittingId}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch votes');
+  }
+  return response.json();
+};

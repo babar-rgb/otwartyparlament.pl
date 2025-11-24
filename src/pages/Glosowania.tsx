@@ -1,81 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Calendar, ChevronLeft, ChevronRight, FileText, CheckCircle, XCircle, MinusCircle, SlidersHorizontal, LayoutGrid, X, Heart, TrendingUp, Wheat, GraduationCap, Shield, Scale, Building, Zap, Cpu, Users, Globe, Palette } from 'lucide-react';
-
-// Mock data for votes
-const MOCK_VOTES = [
-  {
-    id: 1,
-    date: '2023-11-28',
-    title: 'Ustawa o zmianie ustawy o podatku dochodowym od osób fizycznych',
-    type: 'Ustawa',
-    topic: 'Gospodarka',
-    result: 'Przyjęto',
-    votesYes: 240,
-    votesNo: 190,
-    votesAbstain: 15,
-  },
-  {
-    id: 2,
-    date: '2023-11-28',
-    title: 'Wniosek o wotum nieufności wobec Ministra Zdrowia',
-    type: 'Wniosek',
-    topic: 'Zdrowie',
-    result: 'Odrzucono',
-    votesYes: 180,
-    votesNo: 235,
-    votesAbstain: 5,
-  },
-  {
-    id: 3,
-    date: '2023-11-27',
-    title: 'Uchwała w sprawie upamiętnienia 160. rocznicy Powstania Styczniowego',
-    type: 'Uchwała',
-    topic: 'Kultura',
-    result: 'Przyjęto',
-    votesYes: 440,
-    votesNo: 0,
-    votesAbstain: 0,
-  },
-  {
-    id: 4,
-    date: '2023-11-25',
-    title: 'Rządowy projekt ustawy o finansowaniu in vitro',
-    type: 'Ustawa',
-    topic: 'Zdrowie',
-    result: 'Przyjęto',
-    votesYes: 260,
-    votesNo: 170,
-    votesAbstain: 10,
-  },
-  {
-    id: 5,
-    date: '2023-11-22',
-    title: 'Pierwsze czytanie obywatelskiego projektu ustawy o podwyżkach dla nauczycieli',
-    type: 'Ustawa',
-    topic: 'Edukacja',
-    result: 'Wstrzymano',
-    votesYes: 20,
-    votesNo: 20,
-    votesAbstain: 400,
-  },
-];
+import { fetchSittingVotes } from '../api';
 
 const THEMES = [
-  { name: 'Zdrowie', icon: Heart, count: 42 },
-  { name: 'Gospodarka', icon: TrendingUp, count: 68 },
-  { name: 'Rolnictwo', icon: Wheat, count: 23 },
-  { name: 'Edukacja', icon: GraduationCap, count: 31 },
-  { name: 'Obronność', icon: Shield, count: 19 },
-  { name: 'Sprawiedliwość', icon: Scale, count: 54 },
-  { name: 'Infrastruktura', icon: Building, count: 27 },
-  { name: 'Energetyka', icon: Zap, count: 35 },
-  { name: 'Technologia', icon: Cpu, count: 16 },
-  { name: 'Polityka Społeczna', icon: Users, count: 49 },
-  { name: 'Sprawy Zagraniczne', icon: Globe, count: 38 },
-  { name: 'Kultura', icon: Palette, count: 14 },
+  { name: 'Zdrowie', icon: Heart, count: 42, keywords: ['zdrowie', 'szpital', 'lekarz', 'pacjent', 'leków', 'medyc', 'in vitro'] },
+  { name: 'Gospodarka', icon: TrendingUp, count: 68, keywords: ['podatek', 'vat', 'budżet', 'finans', 'bank', 'pieniądz', 'akcyz', 'dochod'] },
+  { name: 'Rolnictwo', icon: Wheat, count: 23, keywords: ['roln', 'wieś', 'pasz', 'zboż', 'hodowla', 'zwierząt', 'koł gospodyń'] },
+  { name: 'Edukacja', icon: GraduationCap, count: 31, keywords: ['szkoł', 'edukacj', 'naucz', 'oświat', 'uczelni', 'student'] },
+  { name: 'Obronność', icon: Shield, count: 19, keywords: ['wojsk', 'obron', 'armi', 'żołnierz', 'granica'] },
+  { name: 'Sprawiedliwość', icon: Scale, count: 54, keywords: ['sąd', 'praw', 'karn', 'kodeks', 'ustaw', 'trybunał', 'więzien'] },
+  { name: 'Infrastruktura', icon: Building, count: 27, keywords: ['drog', 'kolej', 'mieszkan', 'budow', 'transport'] },
+  { name: 'Energetyka', icon: Zap, count: 35, keywords: ['energi', 'prąd', 'węgiel', 'gaz', 'elektrown', 'oze'] },
+  { name: 'Technologia', icon: Cpu, count: 16, keywords: ['cyfryzacj', 'internet', 'komputer', 'technolog'] },
+  { name: 'Polityka Społeczna', icon: Users, count: 49, keywords: ['rodzin', 'dziec', 'senior', 'emeryt', 'socjal', 'pomoc'] },
+  { name: 'Sprawy Zagraniczne', icon: Globe, count: 38, keywords: ['zagranic', 'uni', 'europej', 'ukrain', 'nato'] },
+  { name: 'Kultura', icon: Palette, count: 14, keywords: ['kultur', 'sztuk', 'muzeum', 'artyst', 'dziedzictw'] },
 ];
 
+const assignCategory = (title: string) => {
+  const lowerTitle = title.toLowerCase();
+  for (const theme of THEMES) {
+    if (theme.keywords.some(keyword => lowerTitle.includes(keyword))) {
+      return theme.name;
+    }
+  }
+  return 'Inne';
+};
+
 export default function Glosowania() {
+  const [votes, setVotes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isThemesModalOpen, setIsThemesModalOpen] = useState(false);
   const [isAdvancedModalOpen, setIsAdvancedModalOpen] = useState(false);
@@ -85,6 +40,23 @@ export default function Glosowania() {
   const [selectedResult, setSelectedResult] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const loadVotes = async () => {
+      try {
+        // Fetching votes from sitting #1 for prototype
+        const data = await fetchSittingVotes(1);
+        setVotes(data);
+      } catch (error) {
+        console.error('Error loading votes:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadVotes();
+  }, []);
 
   const getResultColor = (result: string) => {
     switch (result) {
@@ -108,6 +80,25 @@ export default function Glosowania() {
     setSelectedTopic(theme);
     setIsThemesModalOpen(false);
   };
+
+  const handleVoteClick = (vote: any) => {
+    navigate('/glosowania/details', { state: { vote } });
+  };
+
+  // Filter votes
+  const filteredVotes = votes.filter(vote => {
+    const category = assignCategory(vote.title);
+    const result = vote.yes > vote.no ? 'Przyjęto' : 'Odrzucono'; // Simple logic for prototype
+
+    // Search
+    if (searchTerm && !vote.title.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    // Topic
+    if (selectedTopic && category !== selectedTopic) return false;
+    // Result
+    if (selectedResult && result !== selectedResult) return false;
+
+    return true;
+  });
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -296,52 +287,67 @@ export default function Glosowania() {
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
           <h2 className="font-bold text-slate-700 uppercase tracking-wide text-sm">
-            Wyniki (4287 Głosowań)
+            Wyniki ({filteredVotes.length} Głosowań)
           </h2>
           <div className="text-xs text-slate-500 font-medium">
-            Strona 1 z 215
+            Strona 1 z 1
           </div>
         </div>
 
-        <div className="divide-y divide-slate-100">
-          {MOCK_VOTES.map((vote) => (
-            <div key={vote.id} className="p-4 hover:bg-slate-50 transition-colors group cursor-pointer">
-              <div className="flex flex-col md:flex-row md:items-center gap-4">
-                {/* Date & Type */}
-                <div className="flex md:flex-col items-center md:items-start gap-2 md:gap-1 min-w-[100px]">
-                  <div className="text-sm font-bold text-slate-500 flex items-center gap-1">
-                    <Calendar size={14} />
-                    {vote.date}
-                  </div>
-                  <span className="text-xs font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full border border-slate-200">
-                    {vote.type}
-                  </span>
-                </div>
+        {loading ? (
+          <div className="p-12 text-center text-slate-500">
+            Ładowanie danych...
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {filteredVotes.map((vote) => {
+              const category = assignCategory(vote.title);
+              const result = vote.yes > vote.no ? 'Przyjęto' : 'Odrzucono';
 
-                {/* Title & Topic */}
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors mb-1">
-                    {vote.title}
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide flex items-center gap-1">
-                      <FileText size={12} />
-                      {vote.topic}
-                    </span>
+              return (
+                <div
+                  key={vote.votingNumber}
+                  onClick={() => handleVoteClick({ ...vote, result })}
+                  className="p-4 hover:bg-slate-50 transition-colors group cursor-pointer"
+                >
+                  <div className="flex flex-col md:flex-row md:items-center gap-4">
+                    {/* Date & Type */}
+                    <div className="flex md:flex-col items-center md:items-start gap-2 md:gap-1 min-w-[100px]">
+                      <div className="text-sm font-bold text-slate-500 flex items-center gap-1">
+                        <Calendar size={14} />
+                        {vote.date}
+                      </div>
+                      <span className="text-xs font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full border border-slate-200">
+                        Głosowanie {vote.votingNumber}
+                      </span>
+                    </div>
+
+                    {/* Title & Topic */}
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors mb-1">
+                        {vote.title}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-slate-500 uppercase tracking-wide flex items-center gap-1">
+                          <FileText size={12} />
+                          {category}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Verdict Badge */}
+                    <div className="flex items-center justify-between md:justify-end min-w-[140px] mt-2 md:mt-0">
+                      <span className={`px-3 py-1.5 rounded-full text-sm font-bold uppercase tracking-wide border flex items-center ${getResultColor(result)}`}>
+                        {getResultIcon(result)}
+                        {result}
+                      </span>
+                    </div>
                   </div>
                 </div>
-
-                {/* Verdict Badge */}
-                <div className="flex items-center justify-between md:justify-end min-w-[140px] mt-2 md:mt-0">
-                  <span className={`px-3 py-1.5 rounded-full text-sm font-bold uppercase tracking-wide border flex items-center ${getResultColor(vote.result)}`}>
-                    {getResultIcon(vote.result)}
-                    {vote.result}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Pagination */}
         <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex justify-center items-center gap-4">
@@ -349,7 +355,7 @@ export default function Glosowania() {
             <ChevronLeft size={20} />
           </button>
           <span className="text-sm font-bold text-slate-700">
-            1 / 215
+            1 / 1
           </span>
           <button className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-slate-200 text-slate-500 hover:text-slate-900 transition-all">
             <ChevronRight size={20} />

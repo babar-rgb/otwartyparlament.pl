@@ -12,6 +12,7 @@ import PartyProfile from './pages/PartyProfile';
 import Rankingi from './pages/Rankingi';
 import TestWyborczy from './pages/TestWyborczy';
 import OProjekcie from './pages/OProjekcie';
+import VoteDetails from './pages/VoteDetails'; // Added import
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
             <Route path="/poslowie/:id" element={<MpProfile />} />
             <Route path="/glosowania" element={<Glosowania />} />
             <Route path="/glosowania/:id" element={<VoteDetail />} />
+            <Route path="/glosowania/details" element={<VoteDetails />} /> {/* Added route */}
             <Route path="/partie" element={<Partie />} />
             <Route path="/partie/:id" element={<PartyProfile />} />
             <Route path="/rankingi" element={<Rankingi />} />
