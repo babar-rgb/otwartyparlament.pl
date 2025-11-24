@@ -57,7 +57,7 @@ export default function Glosowania() {
 
   const getResultColor = (result: string) => {
     switch (result) {
-      case 'Przyjęto': return 'bg-green-100 text-green-800 border-green-200';
+      case 'Przyjęto': return 'bg-vote-yesBg text-vote-yes border-vote-yes/20';
       case 'Odrzucono': return 'bg-red-100 text-red-800 border-red-200';
       case 'Wstrzymano': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       default: return 'bg-slate-100 text-slate-800 border-slate-200';
@@ -231,7 +231,7 @@ export default function Glosowania() {
                       key={type}
                       onClick={() => setSelectedType(selectedType === type ? '' : type)}
                       className={`flex-1 py-2 text-xs font-bold uppercase tracking-wide rounded-md transition-all ${selectedType === type
-                        ? 'bg-white text-black shadow-sm'
+                        ? 'bg-white text-ink shadow-sm'
                         : 'text-slate-500 hover:text-slate-700'
                         }`}
                     >
@@ -246,7 +246,7 @@ export default function Glosowania() {
                 <label className="block text-sm font-bold text-slate-900 mb-3">Wynik Głosowania</label>
                 <div className="flex flex-col gap-2">
                   {[
-                    { label: 'Przyjęto', activeClass: 'bg-green-600 text-white border-green-600' },
+                    { label: 'Przyjęto', activeClass: 'bg-vote-yes text-white border-vote-yes' },
                     { label: 'Odrzucono', activeClass: 'bg-red-600 text-white border-red-600' },
                     { label: 'Wstrzymano', activeClass: 'bg-yellow-500 text-white border-yellow-500' }
                   ].map((item) => (

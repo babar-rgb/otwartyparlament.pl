@@ -1,6 +1,7 @@
 import os
 import requests
 import re
+import time
 from supabase import create_client, Client
 from datetime import datetime
 
@@ -21,11 +22,8 @@ SEJM_API_URL = "https://api.sejm.gov.pl/sejm/term10"
 def clean_title(raw_title):
     if not raw_title: return ""
     clean = raw_title
-    # Remove Prefix
     clean = re.sub(r'^(Pkt\.|Punkt)\s*\d+\.?\s*', '', clean, flags=re.IGNORECASE)
-    # Remove Suffix
     clean = re.sub(r'\s*\(druki?\s*nr.*?\)$', '', clean, flags=re.IGNORECASE)
-    # Remove Procedural Noise
     if re.match(r'^1\.\s*posiedzenie', clean, flags=re.IGNORECASE):
         return "Sprawy Regulaminowe / Posiedzenie Sejmu"
     return clean.strip()
@@ -52,164 +50,178 @@ def categorize_vote(title):
             return category
     return 'INNE'
 
+def map_vote_value(api_value):
+    mapping = {
+        1: 'YES',
+        2: 'NO',
+        3: 'ABSTAIN',
+        4: 'ABSENT'
+    }
+    if isinstance(api_value, int):
+        return mapping.get(api_value, 'PRESENT')
+    
+    val_str = str(api_value).upper()
+    if val_str == 'YES': return 'YES'
+    if val_str == 'NO': return 'NO'
+    if val_str == 'ABSTAIN': return 'ABSTAIN'
+    if val_str == 'ABSENT': return 'ABSENT'
+    return 'PRESENT'
+
 # --- ETL FUNCTIONS ---
+
+def fetch_all_sittings():
+    print("Fetching all sittings from /proceedings...")
+    try:
+        response = requests.get(f"{SEJM_API_URL}/proceedings")
+        if response.status_code != 200:
+            print(f"Error fetching proceedings: {response.status_code}")
+            return []
+        data = response.json()
+        sittings = sorted([item['number'] for item in data])
+        print(f"Found {len(sittings)} sittings: {sittings}")
+        return sittings
+    except Exception as e:
+        print(f"Exception fetching proceedings: {e}")
+        return []
 
 def sync_mps():
     print("Fetching MPs...")
-    response = requests.get(f"{SEJM_API_URL}/MP")
-    mps_data = response.json()
-    
-    print(f"Found {len(mps_data)} MPs. Syncing to DB...")
-    
-    mps_to_upsert = []
-    for mp in mps_data:
-        # Basic mapping
-        mp_record = {
-            "id": mp['id'],
-            "name": f"{mp['firstName']} {mp['lastName']}",
-            "party": mp.get('club', 'Niezrzeszony'),
-            "district": f"Okręg {mp.get('districtNum', 0)}",
-            "photo_url": f"https://api.sejm.gov.pl/sejm/term10/MP/{mp['id']}/photo",
-            "active": mp.get('active', True),
-            # Stats will be updated later or calculated
-            "stats_attendance": 0, 
-            "stats_rebellion": 0
-        }
-        mps_to_upsert.append(mp_record)
+    try:
+        response = requests.get(f"{SEJM_API_URL}/MP")
+        mps_data = response.json()
+        print(f"Found {len(mps_data)} MPs. Syncing to DB...")
         
-    # Batch upsert
-    data, count = supabase.table('mps').upsert(mps_to_upsert).execute()
-    print(f"Upserted {len(mps_to_upsert)} MPs.")
-
-def sync_votes(sitting_num):
-    print(f"Fetching votes for sitting {sitting_num}...")
-    response = requests.get(f"{SEJM_API_URL}/votings/{sitting_num}")
-    if response.status_code != 200:
-        print(f"Failed to fetch sitting {sitting_num}: {response.status_code}")
-        return
-
-    votes_data = response.json()
-    print(f"Found {len(votes_data)} votes.")
-    
-    for vote in votes_data:
-        title_raw = vote['title']
-        title_clean = clean_title(title_raw)
-        category = categorize_vote(title_clean)
-        
-        # Determine verdict (simple logic)
-        verdict = "ODRZUCONO"
-        if vote['yes'] > vote['no']:
-            verdict = "PRZYJĘTO"
+        mps_to_upsert = []
+        for mp in mps_data:
+            mp_record = {
+                "id": mp['id'],
+                "name": f"{mp['firstName']} {mp['lastName']}",
+                "party": mp.get('club', 'Niezrzeszony'),
+                "district": f"Okręg {mp.get('districtNum', 0)}",
+                "photo_url": f"https://api.sejm.gov.pl/sejm/term10/MP/{mp['id']}/photo",
+                "active": mp.get('active', True),
+                "stats_attendance": 0, 
+                "stats_rebellion": 0
+            }
+            mps_to_upsert.append(mp_record)
             
-        # Prepare Vote Record
-        # We need to handle the ID. Since we defined 'id' as serial in SQL, we let it auto-increment?
-        # But we need the ID for vote_results.
-        # Strategy: Use sitting * 10000 + votingNumber as deterministic ID for simplicity in this script
-        # Assuming max 10000 votes per sitting (safe assumption)
-        vote_id = sitting_num * 10000 + vote['votingNumber']
-        
-        vote_record = {
-            "id": vote_id,
-            "sitting": sitting_num,
-            "voting_number": vote['votingNumber'],
-            "date": vote['date'],
-            "title_raw": title_raw,
-            "title_clean": title_clean,
-            "category": category,
-            "verdict": verdict,
-            "details_json": {"kind": vote.get('kind', ''), "topic": vote.get('topic', '')}
-        }
-        
-        supabase.table('votes').upsert(vote_record).execute()
-        
-        # Fetch Individual Results for this vote
-        # Optimization: Only fetch if we really need to. For now, let's do it for the first 5 votes to test.
-        # Or iterate all if the user wants full sync.
-        # The API endpoint for details: /votings/{sitting}/{votingNumber}
-        
-        details_resp = requests.get(f"{SEJM_API_URL}/votings/{sitting_num}/{vote['votingNumber']}")
-        if details_resp.status_code == 200:
-            details = details_resp.json()
-            process_vote_results(vote_id, details.get('votes', []), vote_record)
+        supabase.table('mps').upsert(mps_to_upsert).execute()
+        print(f"Upserted {len(mps_to_upsert)} MPs.")
+    except Exception as e:
+        print(f"Error syncing MPs: {e}")
 
-def process_vote_results(vote_id, mp_votes, vote_record):
-    # 1. Calculate Party Majorities
-    party_votes = {} # { 'PiS': {'yes': 0, 'no': 0, 'abstain': 0} }
+def process_sitting(sitting_num):
+    print(f"\n--- Processing Sitting {sitting_num} ---")
     
-    # We need to look up MP club. 
-    # Ideally we have a local cache of MP -> Club.
-    # For now, let's assume the mp_votes list contains club info? 
-    # Sejm API /votings/{s}/{v} returns list of objects: { MP: 1, vote: "YES", club: "PiS" } ?
-    # Let's check API docs or assume standard format.
-    # Actually, the 'votes' array in details usually has: { mpId: 123, club: "PiS", vote: "YES" }
-    
-    results_to_insert = []
-    
-    # First pass: Count party votes
-    for v in mp_votes:
-        club = v.get('club', 'Niezrzeszony')
-        vote_val = v.get('vote') # "YES", "NO", "ABSTAIN", "ABSENT"
-        
-        if club not in party_votes:
-            party_votes[club] = {'YES': 0, 'NO': 0, 'ABSTAIN': 0, 'ABSENT': 0}
-        
-        if vote_val in party_votes[club]:
-            party_votes[club][vote_val] += 1
-            
-    # Determine Party Line
-    party_line = {}
-    for club, counts in party_votes.items():
-        # Simple majority
-        majority = max(counts, key=counts.get)
-        if counts[majority] > 0:
-            party_line[club] = majority
-        else:
-            party_line[club] = None
-            
-    # Second pass: Detect Rebels
-    for v in mp_votes:
-        mp_id = v.get('MP')
-        if not mp_id: continue
-        
-        club = v.get('club', 'Niezrzeszony')
-        vote_val = v.get('vote')
-        
-        # Handle special vote types (e.g. VOTE_VALID in elections)
-        if vote_val == 'VOTE_VALID':
-            # For now, treat as present but skip rebel logic unless we parse listVotes
-            vote_val = 'PRESENT'
-        
-        is_rebel = False
-        if club in party_line and party_line[club] and vote_val in ['YES', 'NO', 'ABSTAIN'] and vote_val != party_line[club]:
-            is_rebel = True
-            
-        result_record = {
-            "vote_id": vote_id,
-            "mp_id": mp_id,
-            "vote": vote_val,
-            "rebel": is_rebel
-        }
-        results_to_insert.append(result_record)
-        
-    # Batch insert results?
-    # Supabase might limit batch size. Let's do chunks of 1000.
-    chunk_size = 1000
-    for i in range(0, len(results_to_insert), chunk_size):
-        chunk = results_to_insert[i:i+chunk_size]
-        supabase.table('vote_results').upsert(chunk, on_conflict='vote_id, mp_id').execute() # Need constraint for this to work
-        
-    print(f"  Processed {len(results_to_insert)} votes for vote #{vote_record['voting_number']}")
+    try:
+        response = requests.get(f"{SEJM_API_URL}/votings/{sitting_num}")
+        if response.status_code != 200:
+            print(f"Failed to fetch votes for sitting {sitting_num}: {response.status_code}")
+            return
 
+        votes_data = response.json()
+        print(f"Found {len(votes_data)} votes in sitting {sitting_num}.")
+        
+        results_buffer = []
+        BUFFER_SIZE = 2000
+        
+        for i, vote in enumerate(votes_data):
+            try:
+                time.sleep(0.05) 
+                
+                title_raw = vote['title']
+                title_clean = clean_title(title_raw)
+                category = categorize_vote(title_clean)
+                verdict = "PRZYJĘTO" if vote['yes'] > vote['no'] else "ODRZUCONO"
+                vote_id = sitting_num * 10000 + vote['votingNumber']
+                
+                vote_record = {
+                    "id": vote_id,
+                    "sitting": sitting_num,
+                    "voting_number": vote['votingNumber'],
+                    "date": vote['date'],
+                    "title_raw": title_raw,
+                    "title_clean": title_clean,
+                    "category": category,
+                    "verdict": verdict,
+                    "details_json": {
+                        "kind": vote.get('kind', ''), 
+                        "topic": vote.get('topic', ''),
+                        "yes": vote.get('yes', 0),
+                        "no": vote.get('no', 0),
+                        "abstain": vote.get('abstain', 0)
+                    }
+                }
+                
+                supabase.table('votes').upsert(vote_record).execute()
+                
+                # Fetch Individual Results with Retry Logic
+                mp_votes = []
+                retries = 3
+                while retries > 0:
+                    details_resp = requests.get(f"{SEJM_API_URL}/votings/{sitting_num}/{vote['votingNumber']}")
+                    if details_resp.status_code == 200:
+                        details = details_resp.json()
+                        mp_votes = details.get('votes', [])
+                        if len(mp_votes) > 0:
+                            break # Success
+                        else:
+                            print(f"  WARNING: Vote {vote['votingNumber']} returned 0 votes. Retrying ({retries} left)...")
+                    else:
+                        print(f"  API Error {details_resp.status_code} for vote {vote['votingNumber']}. Retrying ({retries} left)...")
+                    
+                    retries -= 1
+                    time.sleep(1)
+                
+                # Validation
+                if len(mp_votes) < 450:
+                    print(f"  WARNING: Sitting {sitting_num}, Vote {vote['votingNumber']}: Only {len(mp_votes)} individual decisions fetched (Potential Data Loss).")
+                
+                if len(mp_votes) == 0:
+                     print(f"  ERROR: Sitting {sitting_num}, Vote {vote['votingNumber']}: FAILED to fetch individual decisions after retries. Skipping results.")
+                     continue
+
+                # Process Results
+                for v in mp_votes:
+                    mp_id = v.get('MP')
+                    if not mp_id: continue
+                    
+                    raw_vote = v.get('vote')
+                    mapped_vote = map_vote_value(raw_vote)
+                    
+                    result_record = {
+                        "vote_id": vote_id,
+                        "mp_id": mp_id,
+                        "vote": mapped_vote,
+                        "rebel": False # Simplified for mass ingest speed, can recalculate later
+                    }
+                    results_buffer.append(result_record)
+                    
+                    if len(results_buffer) >= BUFFER_SIZE:
+                        print(f"  Sitting {sitting_num}, Vote {vote['votingNumber']}: Buffer full ({len(results_buffer)}). Bulk inserting...")
+                        supabase.table('vote_results').upsert(results_buffer, on_conflict='vote_id, mp_id').execute()
+                        results_buffer = []
+
+                print(f"  Sitting {sitting_num}, Vote {vote['votingNumber']}: Fetched {len(mp_votes)} individual decisions. Saved to DB.")
+
+            except Exception as e:
+                print(f"  ERROR processing vote {vote.get('votingNumber', '?')}: {e}")
+                continue
+
+        if results_buffer:
+            print(f"  Flushing remaining {len(results_buffer)} records...")
+            supabase.table('vote_results').upsert(results_buffer, on_conflict='vote_id, mp_id').execute()
+            
+        print(f"Sitting {sitting_num} complete.")
+
+    except Exception as e:
+        print(f"CRITICAL ERROR processing sitting {sitting_num}: {e}")
 
 # --- MAIN ---
 if __name__ == "__main__":
-    print("Starting ETL...")
-    
-    # 1. Sync MPs
+    print("Starting Operation DEEP ARCHIVE (Granular Ingest)...")
     sync_mps()
-    
-    # 2. Sync Votes (Iterate sittings)
-    # For prototype, let's just do Sitting 1
-    sync_votes(1)
-    
-    print("ETL Complete.")
+    sittings = fetch_all_sittings()
+    for sitting in sittings:
+        process_sitting(sitting)
+    print("\nMISSION COMPLETE. All data ingested.")

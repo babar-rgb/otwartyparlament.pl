@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { useEffect, useState } from 'react';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -17,7 +16,7 @@ import VoteDetails from './pages/VoteDetails'; // Added import
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex flex-col">
+      <div className="min-h-screen bg-paper flex flex-col">
         <Navigation />
         <main className="flex-grow container mx-auto px-4 py-8">
           <Routes>

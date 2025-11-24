@@ -41,20 +41,20 @@ export default function MpCard({ mp }: MpCardProps) {
 
         {/* Card content */}
         <div className="p-4">
-          <h3 className="font-bold text-gray-900 text-base mb-3">
+          <h3 className="font-bold text-ink text-base mb-3">
             {mp.first_name} {mp.last_name}
           </h3>
 
           {/* Attendance with Progress Bar */}
           <div className="space-y-1">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-600">Obecność</span>
-              <span className="font-semibold text-gray-900">{attendanceRate}%</span>
+              <span className="text-ink-light">Obecność</span>
+              <span className="font-semibold text-ink">{attendanceRate}%</span>
             </div>
             {/* Progress Bar */}
             <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
               <div
-                className="h-full bg-green-500 rounded-full transition-all duration-300"
+                className="h-full bg-brand rounded-full transition-all duration-300"
                 style={{ width: `${attendanceRate}%` }}
               />
             </div>

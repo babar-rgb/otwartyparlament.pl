@@ -45,13 +45,13 @@ export default function Navigation() {
     <>
       <nav
         className={`fixed top-0 w-full z-50 py-6 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'
-          } ${lastScrollY > 50 ? 'bg-white/90 backdrop-blur-sm shadow-sm py-4' : 'bg-transparent'
+          } ${lastScrollY > 50 ? 'bg-paper/95 backdrop-blur-sm shadow-sm py-4' : 'bg-transparent'
           }`}
       >
         <div className="container mx-auto px-6 md:px-12">
           <div className="flex justify-between items-center">
             {/* Left: Logo */}
-            <Link to="/" className="font-extrabold text-2xl text-black tracking-tight">
+            <Link to="/" className="font-extrabold text-2xl text-ink tracking-tight">
               otwartyparlament.pl
             </Link>
 
@@ -61,7 +61,7 @@ export default function Navigation() {
                 <Link
                   key={link.href}
                   to={link.href}
-                  className={`text-sm font-medium uppercase tracking-wide text-black hover:opacity-70 transition-opacity ${location.pathname === link.href ? 'opacity-100' : 'opacity-80'
+                  className={`text-sm font-medium uppercase tracking-wide text-ink hover:opacity-70 transition-opacity ${location.pathname === link.href ? 'opacity-100' : 'opacity-80'
                     }`}
                 >
                   {link.label}
@@ -72,7 +72,7 @@ export default function Navigation() {
             {/* Right: Hamburger Menu Button */}
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 text-black hover:opacity-70 transition-opacity"
+              className="p-2 text-ink hover:opacity-70 transition-opacity"
               aria-label="Menu"
             >
               {isSidebarOpen ? <X size={28} strokeWidth={2} /> : <Menu size={28} strokeWidth={2} />}

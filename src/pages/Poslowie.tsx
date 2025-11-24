@@ -109,7 +109,7 @@ export default function Poslowie() {
       <div className="container mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-12">
-          <h1 className="text-5xl md:text-6xl font-extrabold text-black mb-4 tracking-tight">
+          <h1 className="text-5xl md:text-6xl font-extrabold text-ink mb-4 tracking-tight">
             Nasi Reprezentanci
           </h1>
           <p className="text-xl text-slate-600">

@@ -10,7 +10,7 @@ interface VoteCardProps {
 
 export default function VoteCard({ vote }: VoteCardProps) {
   const IconComponent = vote.categoryIcon ? (Icons[vote.categoryIcon as keyof typeof Icons] as any) : Icons.FileText;
-  const resultColor = vote.result === 'przyjęto' ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50';
+  const resultColor = vote.result === 'przyjęto' ? 'text-vote-yes bg-vote-yesBg' : 'text-vote-no bg-vote-noBg';
   const importanceColor = vote.importance >= 8 ? 'bg-red-100 text-red-800' : vote.importance >= 5 ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800';
 
   return (

@@ -43,7 +43,7 @@ const ClubRow = ({ club }: { club: any }) => {
 
                 {/* Middle: Progress Bar */}
                 <div className="flex-1 w-full h-3 bg-slate-100 rounded-full overflow-hidden flex">
-                    {yesPercent > 0 && <div style={{ width: `${yesPercent}%` }} className="bg-green-500 h-full" />}
+                    {yesPercent > 0 && <div style={{ width: `${yesPercent}%` }} className="bg-vote-yes h-full" />}
                     {noPercent > 0 && <div style={{ width: `${noPercent}%` }} className="bg-red-500 h-full" />}
                     {abstainPercent > 0 && <div style={{ width: `${abstainPercent}%` }} className="bg-yellow-400 h-full" />}
                 </div>
@@ -78,7 +78,7 @@ const ClubRow = ({ club }: { club: any }) => {
                                         <div className="text-sm font-bold text-slate-900 truncate">{mp.name}</div>
                                         {isRebel && <div className="text-[10px] font-bold text-orange-600 uppercase">Głos odrębny</div>}
                                     </div>
-                                    <span className={`text-xs font-bold px-2 py-1 rounded border ${mp.vote === 'Za' ? 'bg-green-100 text-green-700 border-green-200' :
+                                    <span className={`text-xs font-bold px-2 py-1 rounded border ${mp.vote === 'Za' ? 'bg-vote-yesBg text-vote-yes border-vote-yes/20' :
                                         mp.vote === 'Przeciw' ? 'bg-red-100 text-red-700 border-red-200' :
                                             'bg-yellow-100 text-yellow-700 border-yellow-200'
                                         }`}>
@@ -121,7 +121,7 @@ export default function VoteDetails() {
         );
     }
 
-    const resultColor = vote.verdict === 'PRZYJĘTO' ? 'text-green-600 bg-green-50 border-green-200' : 'text-red-600 bg-red-50 border-red-200';
+    const resultColor = vote.verdict === 'PRZYJĘTO' ? 'text-vote-yes bg-vote-yesBg border-vote-yes/20' : 'text-vote-no bg-vote-noBg border-vote-no/20';
     const resultIcon = vote.verdict === 'PRZYJĘTO' ? <CheckCircle size={32} /> : <XCircle size={32} />;
     const resultText = vote.verdict;
 
@@ -268,7 +268,7 @@ export default function VoteDetails() {
                                 href={sejmUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-black text-black hover:bg-black hover:text-white transition-all text-sm font-bold"
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-black text-ink hover:bg-black hover:text-white transition-all text-sm font-bold"
                             >
                                 <ExternalLink size={16} />
                                 Zobacz na sejm.gov.pl
@@ -306,7 +306,7 @@ export default function VoteDetails() {
                         </div>
 
                         <div className="grid md:grid-cols-2 gap-8">
-                            <div className="bg-green-50/50 rounded-xl p-6 border border-green-100">
+                            <div className="bg-vote-yesBg/50 rounded-xl p-6 border border-vote-yes/10">
                                 <h3 className="flex items-center gap-2 font-bold text-green-800 mb-4 text-lg">
                                     <ThumbsUp size={20} />
                                     Potencjalne Korzyści
