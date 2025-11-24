@@ -1,9 +1,9 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { MP } from '../api';
 import { supabase } from '../lib/supabase';
 import MpCard from '../components/MpCard';
 import FeaturedMPs from '../components/FeaturedMPs';
-import { Search } from 'lucide-react';
+import { Search, ChevronDown } from 'lucide-react';
 
 // Fallback mock data for when API fails
 const fallbackMPs: MP[] = [
@@ -28,6 +28,22 @@ const fallbackMPs: MP[] = [
 // Major clubs to exclude from "INNE" filter
 const MAJOR_CLUBS = ['KO', 'PiS', 'Polska2050', 'PSL-TD', 'Lewica', 'Konfederacja'];
 
+// Minor parties for INNE submenu
+const MINOR_PARTIES = [
+  { id: 'RAZEM', name: 'Razem' },
+  { id: 'REPUBLIKANIE', name: 'Republikanie' },
+  { id: 'KONFEDERACJA KP', name: 'Konfederacja KP' },
+  { id: 'NIEZALEŻNI', name: 'Niezależni' },
+];
+
+// Mapping from UI names to actual API club names
+const MIN_PARTY_MAP: Record<string, string> = {
+  'RAZEM': 'Razem',
+  'REPUBLIKANIE': 'Republikanie',
+  'KONFEDERACJA KP': 'Konfederacja_KP',
+  'NIEZALEŻNI': 'niez.',
+};
+
 const parties = [
   { id: 'KO', name: 'KO', color: '#0096FF' },
   { id: 'PiS', name: 'PiS', color: '#800000' },
@@ -43,6 +59,8 @@ export default function Poslowie() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedParty, setSelectedParty] = useState<string>('');
+  const [isInnePopoverOpen, setIsInnePopoverOpen] = useState(false);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadMps = async () => {
@@ -81,6 +99,23 @@ export default function Poslowie() {
     loadMps();
   }, []);
 
+  // Close popover when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+        setIsInnePopoverOpen(false);
+      }
+    };
+
+    if (isInnePopoverOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isInnePopoverOpen]);
+
   const filtered = useMemo(() => {
     let result = mps;
 
@@ -94,8 +129,12 @@ export default function Poslowie() {
       if (selectedParty === 'INNE') {
         // Show MPs from minor clubs (exclude major clubs)
         result = result.filter((mp) => !MAJOR_CLUBS.includes(mp.club));
+      } else if (MIN_PARTY_MAP[selectedParty]) {
+        // Map UI name to full DB club name for minor parties
+        const fullClubName = MIN_PARTY_MAP[selectedParty];
+        result = result.filter((mp) => mp.club === fullClubName);
       } else {
-        // Show MPs from the selected major club
+        // Show MPs from the selected major club (direct match)
         result = result.filter((mp) => mp.club === selectedParty);
       }
     }
@@ -154,27 +193,85 @@ export default function Poslowie() {
             <button
               onClick={() => setSelectedParty('')}
               className={`px-6 py-3 rounded-xl font-bold transition border-2 ${selectedParty === ''
-                  ? 'bg-ink text-white border-ink'
-                  : 'bg-white text-ink border-gray-200 hover:border-brand'
+                ? 'bg-ink text-white border-ink'
+                : 'bg-white text-ink border-gray-200 hover:border-brand'
                 }`}
             >
-              Wszyscy ({mps.length})
+              Wszyscy {selectedParty === '' && <span className="text-sm ml-1">({mps.length})</span>}
             </button>
-            {parties.map((party) => (
-              <button
-                key={party.id}
-                onClick={() => setSelectedParty(party.id)}
-                className={`px-6 py-3 rounded-xl font-bold transition border-2 ${selectedParty === party.id
+            {parties.map((party) => {
+              // Special handling for INNE button with popover
+              if (party.id === 'INNE') {
+                return (
+                  <div key={party.id} className="relative" ref={popoverRef}>
+                    <button
+                      onClick={() => {
+                        if (selectedParty === 'INNE') {
+                          setSelectedParty('');
+                          setIsInnePopoverOpen(false);
+                        } else {
+                          setSelectedParty('INNE');
+                          setIsInnePopoverOpen(!isInnePopoverOpen);
+                        }
+                      }}
+                      className={`px-6 py-3 rounded-xl font-bold transition border-2 flex items-center gap-2 ${selectedParty === 'INNE'
+                        ? 'text-white border-transparent'
+                        : 'bg-white text-ink border-gray-200 hover:border-brand'
+                        }`}
+                      style={{
+                        backgroundColor: selectedParty === 'INNE' ? party.color : undefined,
+                      }}
+                    >
+                      {party.name}
+                      {selectedParty === 'INNE' && <span className="text-sm">({filtered.length})</span>}
+                      <ChevronDown
+                        size={16}
+                        className={`transition-transform ${isInnePopoverOpen ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+
+                    {/* Popover Submenu */}
+                    {isInnePopoverOpen && (
+                      <div className="absolute top-full mt-2 left-0 bg-white border border-gray-200 rounded-lg shadow-sm py-2 z-50 min-w-[200px] animate-in fade-in duration-75">
+                        {MINOR_PARTIES.map((minorParty) => (
+                          <button
+                            key={minorParty.id}
+                            onClick={() => {
+                              setSelectedParty(minorParty.id);
+                              setIsInnePopoverOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm font-medium text-ink hover:bg-brand/10 transition"
+                          >
+                            {minorParty.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              // Regular party buttons
+              return (
+                <button
+                  key={party.id}
+                  onClick={() => {
+                    setSelectedParty(party.id);
+                    setIsInnePopoverOpen(false);
+                  }}
+                  className={`px-6 py-3 rounded-xl font-bold transition border-2 ${selectedParty === party.id
                     ? 'text-white border-transparent'
                     : 'bg-white text-ink border-gray-200 hover:border-brand'
-                  }`}
-                style={{
-                  backgroundColor: selectedParty === party.id ? party.color : undefined,
-                }}
-              >
-                {party.name}
-              </button>
-            ))}
+                    }`}
+                  style={{
+                    backgroundColor: selectedParty === party.id ? party.color : undefined,
+                  }}
+                >
+                  {party.name}
+                  {selectedParty === party.id && <span className="text-sm ml-1">({filtered.length})</span>}
+                </button>
+              );
+            })}
           </div>
         </div>
 
