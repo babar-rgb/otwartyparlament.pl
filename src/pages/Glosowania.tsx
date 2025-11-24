@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Calendar, ChevronLeft, ChevronRight, FileText, CheckCircle, XCircle, MinusCircle, SlidersHorizontal, LayoutGrid, X, Heart, TrendingUp, Wheat, GraduationCap, Shield, Scale, Building, Zap, Cpu, Users, Globe, Palette } from 'lucide-react';
-import { fetchSittingVotes } from '../api';
+import { supabase } from '../lib/supabase';
 
 const THEMES = [
   { name: 'Zdrowie', icon: Heart, count: 42, keywords: ['zdrowie', 'szpital', 'lekarz', 'pacjent', 'leków', 'medyc', 'in vitro'] },
@@ -18,15 +18,7 @@ const THEMES = [
   { name: 'Kultura', icon: Palette, count: 14, keywords: ['kultur', 'sztuk', 'muzeum', 'artyst', 'dziedzictw'] },
 ];
 
-const assignCategory = (title: string) => {
-  const lowerTitle = title.toLowerCase();
-  for (const theme of THEMES) {
-    if (theme.keywords.some(keyword => lowerTitle.includes(keyword))) {
-      return theme.name;
-    }
-  }
-  return 'Inne';
-};
+
 
 export default function Glosowania() {
   const [votes, setVotes] = useState<any[]>([]);
@@ -46,9 +38,14 @@ export default function Glosowania() {
   useEffect(() => {
     const loadVotes = async () => {
       try {
-        // Fetching votes from sitting #1 for prototype
-        const data = await fetchSittingVotes(1);
-        setVotes(data);
+        const { data, error } = await supabase
+          .from('votes')
+          .select('*')
+          .order('date', { ascending: false })
+          .limit(100);
+
+        if (error) throw error;
+        setVotes(data || []);
       } catch (error) {
         console.error('Error loading votes:', error);
       } finally {
@@ -87,15 +84,12 @@ export default function Glosowania() {
 
   // Filter votes
   const filteredVotes = votes.filter(vote => {
-    const category = assignCategory(vote.title);
-    const result = vote.yes > vote.no ? 'Przyjęto' : 'Odrzucono'; // Simple logic for prototype
-
     // Search
-    if (searchTerm && !vote.title.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    if (searchTerm && !vote.title_clean.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     // Topic
-    if (selectedTopic && category !== selectedTopic) return false;
+    if (selectedTopic && vote.category !== selectedTopic) return false;
     // Result
-    if (selectedResult && result !== selectedResult) return false;
+    if (selectedResult && vote.verdict !== selectedResult) return false;
 
     return true;
   });
@@ -301,13 +295,10 @@ export default function Glosowania() {
         ) : (
           <div className="divide-y divide-slate-100">
             {filteredVotes.map((vote) => {
-              const category = assignCategory(vote.title);
-              const result = vote.yes > vote.no ? 'Przyjęto' : 'Odrzucono';
-
               return (
                 <div
-                  key={vote.votingNumber}
-                  onClick={() => handleVoteClick({ ...vote, result })}
+                  key={vote.id}
+                  onClick={() => handleVoteClick(vote)}
                   className="p-4 hover:bg-slate-50 transition-colors group cursor-pointer"
                 >
                   <div className="flex flex-col md:flex-row md:items-center gap-4">
@@ -318,28 +309,28 @@ export default function Glosowania() {
                         {vote.date}
                       </div>
                       <span className="text-xs font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full border border-slate-200">
-                        Głosowanie {vote.votingNumber}
+                        Głosowanie {vote.voting_number}
                       </span>
                     </div>
 
                     {/* Title & Topic */}
                     <div className="flex-1">
                       <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors mb-1">
-                        {vote.title}
+                        {vote.title_clean}
                       </h3>
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-medium text-slate-500 uppercase tracking-wide flex items-center gap-1">
                           <FileText size={12} />
-                          {category}
+                          {vote.category}
                         </span>
                       </div>
                     </div>
 
                     {/* Verdict Badge */}
                     <div className="flex items-center justify-between md:justify-end min-w-[140px] mt-2 md:mt-0">
-                      <span className={`px-3 py-1.5 rounded-full text-sm font-bold uppercase tracking-wide border flex items-center ${getResultColor(result)}`}>
-                        {getResultIcon(result)}
-                        {result}
+                      <span className={`px-3 py-1.5 rounded-full text-sm font-bold uppercase tracking-wide border flex items-center ${getResultColor(vote.verdict)}`}>
+                        {getResultIcon(vote.verdict)}
+                        {vote.verdict}
                       </span>
                     </div>
                   </div>

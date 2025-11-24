@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { fetchMP, MP } from '../api';
+import { MP } from '../api';
+import { supabase } from '../lib/supabase';
 import { ArrowLeft, Mail, MapPin } from 'lucide-react';
 
 export default function MpProfile() {
@@ -12,8 +13,30 @@ export default function MpProfile() {
     const loadMp = async () => {
       if (!id) return;
       try {
-        const data = await fetchMP(id);
-        setMp(data);
+        const { data, error } = await supabase
+          .from('mps')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (error) throw error;
+
+        // Map DB columns to MP interface
+        const mappedMp: MP = {
+          id: data.id,
+          first_name: data.name.split(' ')[0],
+          last_name: data.name.split(' ').slice(1).join(' '),
+          club: data.party,
+          district: data.district,
+          photo_url: data.photo_url,
+          attendanceRate: Math.round(data.stats_attendance || 0),
+          active: data.active,
+          rebelVotes: data.stats_rebellion || 0,
+          email: '', // Not in DB yet, could add later
+          voivodeship: '' // Not in DB yet
+        };
+
+        setMp(mappedMp);
       } catch (error) {
         console.error('Error fetching MP:', error);
       } finally {
@@ -36,8 +59,6 @@ export default function MpProfile() {
     );
   }
 
-
-
   const getPartyColor = (party: string) => {
     const colors: Record<string, string> = {
       'PiS': '#800000',
@@ -51,13 +72,13 @@ export default function MpProfile() {
     return colors[party] || '#64748B';
   };
 
-  // Generate stats if not available from API (to avoid showing 0%)
-  const attendance = mp.attendanceRate || Math.floor(Math.random() * 16) + 85; // 85-100%
-  const rebelVotes = mp.rebelVotes || Math.floor(Math.random() * 16); // 0-15
-  const speeches = Math.floor(Math.random() * 30) + 5; // 5-34
+  // Use real stats from DB
+  const attendance = mp.attendanceRate || 0;
+  const rebelVotes = mp.rebelVotes || 0;
+  const speeches = Math.floor(Math.random() * 30) + 5; // Speeches not yet in DB, keeping mock for now
 
-  // Construct photo URL using ID from URL params
-  const photoUrl = `https://api.sejm.gov.pl/sejm/term10/MP/${id}/photo`;
+  // Use photo URL from DB
+  const photoUrl = mp.photo_url;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 py-8">

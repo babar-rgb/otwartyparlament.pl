@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
-import { fetchMPs, MP } from '../api';
+import { MP } from '../api';
+import { supabase } from '../lib/supabase';
 import MpCard from '../components/MpCard';
 import { Search } from 'lucide-react';
 
@@ -45,16 +46,32 @@ export default function Poslowie() {
   useEffect(() => {
     const loadMps = async () => {
       try {
-        const data = await fetchMPs();
-        console.log('Fetched MPs:', data);
-        // Filter to only active MPs
-        const activeMps = data.filter(mp => mp.active === true);
-        console.log('Active MPs:', activeMps.length);
-        const combinedData = activeMps.length > 0 ? activeMps : fallbackMPs;
-        setMps(combinedData);
+        const { data, error } = await supabase
+          .from('mps')
+          .select('*')
+          .eq('active', true)
+          .order('name', { ascending: true });
+
+        if (error) throw error;
+
+        console.log('Fetched MPs from Supabase:', data);
+
+        // Map DB columns to MP interface
+        const mappedMps: MP[] = (data || []).map(mp => ({
+          id: mp.id,
+          first_name: mp.name.split(' ')[0], // Simple split, or use a better heuristic if needed
+          last_name: mp.name.split(' ').slice(1).join(' '),
+          club: mp.party,
+          district: mp.district,
+          photo_url: mp.photo_url,
+          attendanceRate: Math.round(mp.stats_attendance || 0), // Ensure integer
+          active: mp.active,
+          rebelVotes: mp.stats_rebellion || 0
+        }));
+
+        setMps(mappedMps);
       } catch (error) {
-        console.error('Error fetching MPs:', error); // Added for debugging
-        // Use mock data on error
+        console.error('Error fetching MPs:', error);
         setMps(fallbackMPs);
       } finally {
         setLoading(false);
