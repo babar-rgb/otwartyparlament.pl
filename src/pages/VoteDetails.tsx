@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, Calendar, FileText, CheckCircle, XCircle, MinusCircle, Sparkles, ThumbsUp, AlertTriangle, ExternalLink, ChevronDown, ChevronUp, Tag } from 'lucide-react';
 
 
@@ -99,10 +99,39 @@ const ClubRow = ({ club }: { club: any }) => {
 
 
 
+import { MOCK_VOTES } from '../data/mockVotes';
+
 export default function VoteDetails() {
     const location = useLocation();
     const navigate = useNavigate();
-    const vote = location.state?.vote;
+    const { id } = useParams<{ id: string }>();
+
+    // Try to get vote from state, or find in MOCK_VOTES
+    let vote = location.state?.vote;
+
+    if (!vote && id) {
+        const mockVote = MOCK_VOTES.find(v => v.id === parseInt(id));
+        if (mockVote) {
+            vote = {
+                id: mockVote.id,
+                date: mockVote.date,
+                title_raw: mockVote.title,
+                title_clean: mockVote.title,
+                verdict: mockVote.verdict,
+                voting_number: mockVote.voting_number,
+                sitting: mockVote.sitting,
+                yes: mockVote.votesYes,
+                no: mockVote.votesNo,
+                abstain: mockVote.votesAbstain,
+                kind: mockVote.kind,
+                topic: mockVote.categoryLabel,
+                description: mockVote.description,
+                pros: mockVote.pros,
+                cons: mockVote.cons
+            };
+        }
+    }
+
     const [isTechDetailsOpen, setIsTechDetailsOpen] = useState(false);
 
     if (!vote) {
@@ -135,18 +164,14 @@ export default function VoteDetails() {
     const drukiMatch = vote.title_raw.match(/\((?:druki|druk)\s*nr.*?\)/i);
     const druki = drukiMatch ? drukiMatch[0].replace(/[()]/g, '') : null;
 
-    // Mock AI Analysis Data
+    // Mock AI Analysis Data (use vote data if available, otherwise fallback)
     const aiAnalysis = {
-        summary: "Ustawa ta ma na celu wprowadzenie istotnych zmian w systemie podatkowym, mających na celu uproszczenie rozliczeń dla małych i średnich przedsiębiorstw. Główne założenia obejmują podniesienie kwoty wolnej od podatku oraz zmianę stawek ryczałtowych.",
-        pros: [
-            "Zwiększenie płynności finansowej dla MŚP dzięki niższym obciążeniom.",
-            "Uproszczenie biurokracji poprzez cyfryzację procesów rozliczeniowych.",
-            "Zachęta do inwestycji w nowe technologie dzięki ulgom podatkowym."
+        summary: vote.description || "Brak dostępnego podsumowania dla tego głosowania.",
+        pros: vote.pros || [
+            "Brak danych o zaletach.",
         ],
-        cons: [
-            "Możliwy spadek wpływów do budżetu państwa w krótkim terminie.",
-            "Ryzyko komplikacji w okresie przejściowym dla księgowych.",
-            "Niejasne przepisy dotyczące niektórych branż usługowych."
+        cons: vote.cons || [
+            "Brak danych o wadach.",
         ]
     };
 
@@ -299,7 +324,7 @@ export default function VoteDetails() {
 
                     <div className="p-6 md:p-8">
                         <div className="mb-8">
-                            <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">Streszczenie</h3>
+                            <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">O co chodzi?</h3>
                             <p className="text-slate-700 text-lg leading-relaxed">
                                 {aiAnalysis.summary}
                             </p>
