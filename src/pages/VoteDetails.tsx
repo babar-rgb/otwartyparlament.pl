@@ -64,7 +64,7 @@ const ClubRow = ({ club }: { club: any }) => {
                 <div className="bg-slate-50 border-t border-slate-200 p-4 animate-fade-in">
                     <h4 className="text-xs font-bold text-slate-500 uppercase mb-3">Szczegółowe Głosy (Próbka)</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                        {mps.map((mp) => {
+                        {mps.map((mp: any) => {
                             const isRebel = mp.vote !== majorityVote;
                             return (
                                 <div
@@ -182,6 +182,53 @@ export default function VoteDetails() {
     useEffect(() => {
         const loadResults = async () => {
             if (!vote?.id) return;
+
+            // If it's a mock vote (ID >= 100), skip Supabase and use mock data
+            if (vote.id >= 100) {
+                setLoadingResults(false);
+
+                // Generate mock club votes based on the total yes/no/abstain
+                // This is a simple distribution for demo purposes
+                const mockClubs = [
+                    { name: 'PiS', size: 190, tendency: 'mixed' },
+                    { name: 'KO', size: 157, tendency: 'for' },
+                    { name: 'PL2050', size: 33, tendency: 'for' },
+                    { name: 'Lewica', size: 26, tendency: 'for' },
+                    { name: 'Konfederacja', size: 18, tendency: 'against' },
+                    { name: 'Kukiz15', size: 3, tendency: 'mixed' }
+                ];
+
+                const generatedClubVotes = mockClubs.map(club => {
+                    let yes = 0, no = 0, abstain = 0;
+
+                    // Simple logic to distribute votes based on verdict and club tendency
+                    // This is just to make the UI look populated
+                    if (vote.verdict === 'PRZYJĘTO') {
+                        if (club.tendency === 'for') { yes = Math.floor(club.size * 0.9); no = Math.floor(club.size * 0.05); }
+                        else if (club.tendency === 'against') { yes = Math.floor(club.size * 0.2); no = Math.floor(club.size * 0.7); }
+                        else { yes = Math.floor(club.size * 0.5); no = Math.floor(club.size * 0.4); }
+                    } else {
+                        if (club.tendency === 'for') { yes = Math.floor(club.size * 0.4); no = Math.floor(club.size * 0.5); }
+                        else if (club.tendency === 'against') { yes = Math.floor(club.size * 0.05); no = Math.floor(club.size * 0.9); }
+                        else { yes = Math.floor(club.size * 0.2); no = Math.floor(club.size * 0.7); }
+                    }
+
+                    abstain = club.size - yes - no;
+                    if (abstain < 0) abstain = 0; // Safety check
+
+                    return {
+                        name: club.name,
+                        yes,
+                        no,
+                        abstain,
+                        mps: [] // No individual MPs for mock votes
+                    };
+                });
+
+                setClubVotes(generatedClubVotes);
+                return;
+            }
+
             try {
                 const { data, error } = await supabase
                     .from('vote_results')
@@ -225,10 +272,11 @@ export default function VoteDetails() {
         loadResults();
     }, [vote]);
 
-    const totalVotes = voteResults.length;
-    const yesVotes = voteResults.filter(r => r.vote === 'YES').length;
-    const noVotes = voteResults.filter(r => r.vote === 'NO').length;
-    const abstainVotes = voteResults.filter(r => r.vote === 'ABSTAIN').length;
+    // Use vote object data if voteResults (real data) is empty
+    const totalVotes = voteResults.length > 0 ? voteResults.length : (vote.yes + vote.no + vote.abstain);
+    const yesVotes = voteResults.length > 0 ? voteResults.filter(r => r.vote === 'YES').length : vote.yes;
+    const noVotes = voteResults.length > 0 ? voteResults.filter(r => r.vote === 'NO').length : vote.no;
+    const abstainVotes = voteResults.length > 0 ? voteResults.filter(r => r.vote === 'ABSTAIN').length : vote.abstain;
 
     const yesPercent = totalVotes > 0 ? Math.round((yesVotes / totalVotes) * 100) : 0;
     const noPercent = totalVotes > 0 ? Math.round((noVotes / totalVotes) * 100) : 0;
@@ -337,7 +385,7 @@ export default function VoteDetails() {
                                     Potencjalne Korzyści
                                 </h3>
                                 <ul className="space-y-3">
-                                    {aiAnalysis.pros.map((pro, i) => (
+                                    {aiAnalysis.pros.map((pro: string, i: number) => (
                                         <li key={i} className="flex gap-3 text-slate-700">
                                             <CheckCircle className="text-green-500 shrink-0 mt-0.5" size={18} />
                                             <span>{pro}</span>
@@ -352,7 +400,7 @@ export default function VoteDetails() {
                                     Ryzyka i Wady
                                 </h3>
                                 <ul className="space-y-3">
-                                    {aiAnalysis.cons.map((con, i) => (
+                                    {aiAnalysis.cons.map((con: string, i: number) => (
                                         <li key={i} className="flex gap-3 text-slate-700">
                                             <MinusCircle className="text-red-500 shrink-0 mt-0.5" size={18} />
                                             <span>{con}</span>
