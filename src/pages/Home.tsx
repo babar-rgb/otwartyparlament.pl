@@ -179,88 +179,112 @@ export default function Home() {
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {/* Health */}
-            <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer">
-              <Heart className="w-12 h-12 text-slate-600 mb-4" />
-              <h3 className="font-bold text-ink mb-2">Zdrowie</h3>
-              <p className="text-sm text-slate-500">42 głosowania</p>
-            </div>
+            <Link to="/tematy/zdrowie">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
+                <Heart className="w-12 h-12 text-slate-600 mb-4" />
+                <h3 className="font-bold text-ink mb-2">Zdrowie</h3>
+                <p className="text-sm text-slate-500">42 głosowania</p>
+              </div>
+            </Link>
 
             {/* Economy */}
-            <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer">
-              <TrendingUp className="w-12 h-12 text-slate-600 mb-4" />
-              <h3 className="font-bold text-ink mb-2">Gospodarka</h3>
-              <p className="text-sm text-slate-500">68 głosowań</p>
-            </div>
+            <Link to="/tematy/gospodarka">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
+                <TrendingUp className="w-12 h-12 text-slate-600 mb-4" />
+                <h3 className="font-bold text-ink mb-2">Gospodarka</h3>
+                <p className="text-sm text-slate-500">68 głosowań</p>
+              </div>
+            </Link>
 
             {/* Agriculture */}
-            <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer">
-              <Wheat className="w-12 h-12 text-slate-600 mb-4" />
-              <h3 className="font-bold text-ink mb-2">Rolnictwo</h3>
-              <p className="text-sm text-slate-500">23 głosowania</p>
-            </div>
+            <Link to="/tematy/rolnictwo">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
+                <Wheat className="w-12 h-12 text-slate-600 mb-4" />
+                <h3 className="font-bold text-ink mb-2">Rolnictwo</h3>
+                <p className="text-sm text-slate-500">23 głosowania</p>
+              </div>
+            </Link>
 
             {/* Education */}
-            <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer">
-              <GraduationCap className="w-12 h-12 text-slate-600 mb-4" />
-              <h3 className="font-bold text-ink mb-2">Edukacja</h3>
-              <p className="text-sm text-slate-500">31 głosowań</p>
-            </div>
+            <Link to="/tematy/edukacja">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
+                <GraduationCap className="w-12 h-12 text-slate-600 mb-4" />
+                <h3 className="font-bold text-ink mb-2">Edukacja</h3>
+                <p className="text-sm text-slate-500">31 głosowań</p>
+              </div>
+            </Link>
 
             {/* Defense */}
-            <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer">
-              <Shield className="w-12 h-12 text-slate-600 mb-4" />
-              <h3 className="font-bold text-ink mb-2">Obronność</h3>
-              <p className="text-sm text-slate-500">19 głosowań</p>
-            </div>
+            <Link to="/tematy/obronnosc">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
+                <Shield className="w-12 h-12 text-slate-600 mb-4" />
+                <h3 className="font-bold text-ink mb-2">Obronność</h3>
+                <p className="text-sm text-slate-500">19 głosowań</p>
+              </div>
+            </Link>
 
             {/* Justice */}
-            <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer">
-              <Scale className="w-12 h-12 text-slate-600 mb-4" />
-              <h3 className="font-bold text-ink mb-2">Sprawiedliwość</h3>
-              <p className="text-sm text-slate-500">54 głosowania</p>
-            </div>
+            <Link to="/tematy/sprawiedliwosc">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
+                <Scale className="w-12 h-12 text-slate-600 mb-4" />
+                <h3 className="font-bold text-ink mb-2">Sprawiedliwość</h3>
+                <p className="text-sm text-slate-500">54 głosowania</p>
+              </div>
+            </Link>
 
             {/* Infrastructure */}
-            <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer">
-              <Building className="w-12 h-12 text-slate-600 mb-4" />
-              <h3 className="font-bold text-ink mb-2">Infrastruktura</h3>
-              <p className="text-sm text-slate-500">27 głosowań</p>
-            </div>
+            <Link to="/tematy/infrastruktura">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
+                <Building className="w-12 h-12 text-slate-600 mb-4" />
+                <h3 className="font-bold text-ink mb-2">Infrastruktura</h3>
+                <p className="text-sm text-slate-500">27 głosowań</p>
+              </div>
+            </Link>
 
             {/* Energy */}
-            <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer">
-              <Zap className="w-12 h-12 text-slate-600 mb-4" />
-              <h3 className="font-bold text-ink mb-2">Energetyka</h3>
-              <p className="text-sm text-slate-500">35 głosowań</p>
-            </div>
+            <Link to="/tematy/energetyka">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
+                <Zap className="w-12 h-12 text-slate-600 mb-4" />
+                <h3 className="font-bold text-ink mb-2">Energetyka</h3>
+                <p className="text-sm text-slate-500">35 głosowań</p>
+              </div>
+            </Link>
 
             {/* Technology */}
-            <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer">
-              <Cpu className="w-12 h-12 text-slate-600 mb-4" />
-              <h3 className="font-bold text-ink mb-2">Technologia</h3>
-              <p className="text-sm text-slate-500">16 głosowań</p>
-            </div>
+            <Link to="/tematy/technologia">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
+                <Cpu className="w-12 h-12 text-slate-600 mb-4" />
+                <h3 className="font-bold text-ink mb-2">Technologia</h3>
+                <p className="text-sm text-slate-500">16 głosowań</p>
+              </div>
+            </Link>
 
             {/* Social Policy */}
-            <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer">
-              <Users className="w-12 h-12 text-slate-600 mb-4" />
-              <h3 className="font-bold text-ink mb-2">Polityka Społeczna</h3>
-              <p className="text-sm text-slate-500">49 głosowań</p>
-            </div>
+            <Link to="/tematy/polityka-spoleczna">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
+                <Users className="w-12 h-12 text-slate-600 mb-4" />
+                <h3 className="font-bold text-ink mb-2">Polityka Społeczna</h3>
+                <p className="text-sm text-slate-500">49 głosowań</p>
+              </div>
+            </Link>
 
             {/* Foreign Affairs */}
-            <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer">
-              <Globe className="w-12 h-12 text-slate-600 mb-4" />
-              <h3 className="font-bold text-ink mb-2">Sprawy Zagraniczne</h3>
-              <p className="text-sm text-slate-500">38 głosowań</p>
-            </div>
+            <Link to="/tematy/sprawy-zagraniczne">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
+                <Globe className="w-12 h-12 text-slate-600 mb-4" />
+                <h3 className="font-bold text-ink mb-2">Sprawy Zagraniczne</h3>
+                <p className="text-sm text-slate-500">38 głosowań</p>
+              </div>
+            </Link>
 
             {/* Culture */}
-            <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer">
-              <Palette className="w-12 h-12 text-slate-600 mb-4" />
-              <h3 className="font-bold text-ink mb-2">Kultura</h3>
-              <p className="text-sm text-slate-500">14 głosowań</p>
-            </div>
+            <Link to="/tematy/kultura">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
+                <Palette className="w-12 h-12 text-slate-600 mb-4" />
+                <h3 className="font-bold text-ink mb-2">Kultura</h3>
+                <p className="text-sm text-slate-500">14 głosowań</p>
+              </div>
+            </Link>
           </div>
         </div>
       </section>

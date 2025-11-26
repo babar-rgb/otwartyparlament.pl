@@ -4,6 +4,7 @@ import re
 import time
 from supabase import create_client, Client
 from datetime import datetime
+from keyword_map import CATEGORY_KEYWORDS
 
 # --- CONFIGURATION ---
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
@@ -18,8 +19,6 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 SEJM_API_URL = "https://api.sejm.gov.pl/sejm/term10"
 
 # --- UTILS ---
-
-from keyword_map import CATEGORY_KEYWORDS
 
 def clean_title(raw_title):
     if not raw_title: return ""
@@ -289,44 +288,11 @@ def process_sitting(sitting_num):
     except Exception as e:
         print(f"CRITICAL ERROR processing sitting {sitting_num}: {e}")
 
-def update_existing_categories():
-    print("Updating categories for existing votes in DB...")
-    try:
-        # Fetch all votes (pagination might be needed for large datasets, but start simple)
-        response = supabase.table('votes').select('*').execute()
-        votes = response.data
-        print(f"Found {len(votes)} votes in DB.")
-        
-        updated_count = 0
-        for vote in votes:
-            title_raw = vote.get('title_raw') or vote.get('title')
-            if not title_raw:
-                continue
-                
-            title_clean = clean_title(title_raw)
-            new_category = classify_vote(title_clean)
-            
-            # Update if category is different or missing
-            if vote.get('category') != new_category:
-                print(f"Updating Vote {vote['id']}: {new_category}")
-                supabase.table('votes').update({'category': new_category}).eq('id', vote['id']).execute()
-                updated_count += 1
-                
-        print(f"Done. Updated {updated_count} votes.")
-        
-    except Exception as e:
-        print(f"Error updating categories: {e}")
-
 # --- MAIN ---
 if __name__ == "__main__":
-    import sys
-    
-    if len(sys.argv) > 1 and sys.argv[1] == "--update-categories":
-        update_existing_categories()
-    else:
-        print("Starting Operation DEEP ARCHIVE (Granular Ingest)...")
-        sync_mps()
-        sittings = fetch_all_sittings()
-        for sitting in sittings:
-            process_sitting(sitting)
-        print("\nMISSION COMPLETE. All data ingested.")
+    print("Starting Operation DEEP ARCHIVE (Granular Ingest)...")
+    sync_mps()
+    sittings = fetch_all_sittings()
+    for sitting in sittings:
+        process_sitting(sitting)
+    print("\nMISSION COMPLETE. All data ingested.")

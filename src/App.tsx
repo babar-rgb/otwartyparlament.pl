@@ -12,6 +12,7 @@ import Rankingi from './pages/Rankingi';
 import TestWyborczy from './pages/TestWyborczy';
 import OProjekcie from './pages/OProjekcie';
 import VoteDetails from './pages/VoteDetails'; // Added import
+import CategoryDetails from './pages/CategoryDetails';
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/rankingi" element={<Rankingi />} />
             <Route path="/test" element={<TestWyborczy />} />
             <Route path="/o-projekcie" element={<OProjekcie />} />
+            <Route path="/tematy/:slug" element={<CategoryDetails />} />
           </Routes>
         </main>
         <Footer />

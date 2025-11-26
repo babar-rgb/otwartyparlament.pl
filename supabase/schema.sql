@@ -27,6 +27,8 @@ create table if not exists votes (
   title_clean text,
   category text,
   verdict text,
+  importance_score integer default 0,
+  is_key_vote boolean default false,
   details_json jsonb default '{}'::jsonb,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   unique(sitting, voting_number)
