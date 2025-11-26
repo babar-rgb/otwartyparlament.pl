@@ -5,7 +5,7 @@ import Home from './pages/Home';
 import Poslowie from './pages/Poslowie';
 import MpProfile from './pages/MpProfile';
 import Glosowania from './pages/Glosowania';
-import VoteDetail from './pages/VoteDetail';
+// import VoteDetail from './pages/VoteDetail';
 import Partie from './pages/Partie';
 import PartyProfile from './pages/PartyProfile';
 import Rankingi from './pages/Rankingi';
@@ -25,8 +25,8 @@ export default function App() {
             <Route path="/poslowie" element={<Poslowie />} />
             <Route path="/poslowie/:id" element={<MpProfile />} />
             <Route path="/glosowania" element={<Glosowania />} />
-            <Route path="/glosowania/:id" element={<VoteDetail />} />
-            <Route path="/glosowania/details" element={<VoteDetails />} /> {/* Added route */}
+            <Route path="/glosowania/:id" element={<VoteDetails />} />
+            {/* <Route path="/glosowania/details" element={<VoteDetails />} /> */}
             <Route path="/partie" element={<Partie />} />
             <Route path="/partie/:id" element={<PartyProfile />} />
             <Route path="/rankingi" element={<Rankingi />} />
