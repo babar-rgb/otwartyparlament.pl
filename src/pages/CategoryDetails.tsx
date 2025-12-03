@@ -67,7 +67,7 @@ export default function CategoryDetails() {
             // Note: We are using 'ilike' for case-insensitive partial match if exact match fails, 
             // or just exact match if we are confident. Let's try exact match first.
             const { data, error } = await supabase
-                .table('votes')
+                .from('votes')
                 .select('*')
                 .ilike('category', `%${category}%`)
                 .order('date', { ascending: false })

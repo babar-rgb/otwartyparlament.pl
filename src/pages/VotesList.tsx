@@ -22,6 +22,7 @@ interface Vote {
 const VotesList: React.FC = () => {
     const [votes, setVotes] = useState<Vote[]>([]);
     const [loading, setLoading] = useState(true);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [page, setPage] = useState(0);
     const PAGE_SIZE = 20;
 
@@ -31,17 +32,19 @@ const VotesList: React.FC = () => {
 
     const fetchVotes = async () => {
         setLoading(true);
+        setErrorMsg(null);
         try {
             const { data, error } = await supabase
-                .table('votes')
+                .from('votes')
                 .select('*')
                 .order('date', { ascending: false })
                 .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
             if (error) throw error;
             setVotes(data || []);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error fetching votes:', error);
+            setErrorMsg(error.message || 'Unknown error');
         } finally {
             setLoading(false);
         }
@@ -71,7 +74,12 @@ const VotesList: React.FC = () => {
 
                 {/* List */}
                 <div className="space-y-4">
-                    {loading && votes.length === 0 ? (
+                    {errorMsg ? (
+                        <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 flex items-center gap-2">
+                            <AlertCircle className="w-5 h-5" />
+                            <span>Błąd pobierania danych: {errorMsg}</span>
+                        </div>
+                    ) : loading && votes.length === 0 ? (
                         <div className="text-center py-12 text-neutral-500">Ładowanie głosowań...</div>
                     ) : votes.length === 0 ? (
                         <div className="text-center py-12 text-neutral-500">Brak głosowań w bazie.</div>

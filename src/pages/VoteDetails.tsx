@@ -53,7 +53,7 @@ const VoteDetails: React.FC = () => {
         try {
             // 1. Fetch Vote Metadata
             const { data: voteData, error: voteError } = await supabase
-                .table('votes')
+                .from('votes')
                 .select('*')
                 .eq('sitting', sitting)
                 .eq('voting_number', votingNumber)
@@ -64,7 +64,7 @@ const VoteDetails: React.FC = () => {
 
             // 2. Fetch Individual Results with MP info
             const { data: resultsData, error: resultsError } = await supabase
-                .table('vote_results')
+                .from('vote_results')
                 .select('vote, mps(name, party, photo_url)')
                 .eq('vote_id', voteData.id);
 
@@ -133,8 +133,8 @@ const VoteDetails: React.FC = () => {
                         </h1>
 
                         <div className={`inline-flex items-center gap-3 px-5 py-2 rounded-xl text-lg font-bold ${vote.verdict === 'PRZYJĘTO'
-                                ? 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
-                                : 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
+                            ? 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
+                            : 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
                             }`}>
                             {vote.verdict === 'PRZYJĘTO' ? <CheckCircle2 className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
                             {vote.verdict}
@@ -192,8 +192,8 @@ const VoteDetails: React.FC = () => {
                         {results.map((r, idx) => (
                             <div key={idx} className="flex items-center gap-3 p-3 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-100 dark:border-neutral-700">
                                 <div className={`w-2 h-10 rounded-full ${r.vote === 'YES' ? 'bg-green-500' :
-                                        r.vote === 'NO' ? 'bg-red-500' :
-                                            r.vote === 'ABSTAIN' ? 'bg-neutral-400' : 'bg-neutral-200 dark:bg-neutral-700'
+                                    r.vote === 'NO' ? 'bg-red-500' :
+                                        r.vote === 'ABSTAIN' ? 'bg-neutral-400' : 'bg-neutral-200 dark:bg-neutral-700'
                                     }`} />
                                 <div>
                                     <div className="font-medium text-sm">{r.mps?.name}</div>
