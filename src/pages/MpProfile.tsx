@@ -2,7 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { MP } from '../api';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, Mail, MapPin, CheckCircle2, XCircle, MinusCircle, HelpCircle, Star } from 'lucide-react';
+import { ArrowLeft, Mail, MapPin, CheckCircle2, XCircle, MinusCircle, HelpCircle, Star, ArrowRight } from 'lucide-react';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 
 interface VoteHistoryItem {
@@ -25,6 +25,7 @@ export default function MpProfile() {
   const [voteHistory, setVoteHistory] = useState<VoteHistoryItem[]>([]);
   const [keyDecisions, setKeyDecisions] = useState<VoteHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [interpellations, setInterpellations] = useState<{ id: number; title: string; sent_date: string }[]>([]);
 
   useEffect(() => {
     const loadMpData = async () => {
@@ -79,6 +80,19 @@ export default function MpProfile() {
 
         if (!keyError && keyData) {
           setKeyDecisions(keyData as unknown as VoteHistoryItem[]);
+        }
+
+        // 4. Fetch Interpellations (New)
+        const { data: interpellationData, error: interpellationError } = await supabase
+          .from('interpellation_authors')
+          .select('interpellations(id, title, sent_date)')
+          .eq('mp_id', id)
+          .order('interpellation_id', { ascending: false })
+          .limit(5);
+
+        if (!interpellationError && interpellationData) {
+          const mappedInterpellations = interpellationData.map((item: any) => item.interpellations);
+          setInterpellations(mappedInterpellations);
         }
 
       } catch (error) {
@@ -256,9 +270,9 @@ export default function MpProfile() {
                 <div className="flex items-center justify-between border-t border-slate-100 pt-3">
                   <span className="text-sm text-slate-500">Głos posła:</span>
                   <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full font-bold text-sm uppercase tracking-wide ${item.vote === 'YES' ? 'bg-green-100 text-green-700' :
-                      item.vote === 'NO' ? 'bg-red-100 text-red-700' :
-                        item.vote === 'ABSTAIN' ? 'bg-neutral-100 text-neutral-700' :
-                          'bg-slate-100 text-slate-500'
+                    item.vote === 'NO' ? 'bg-red-100 text-red-700' :
+                      item.vote === 'ABSTAIN' ? 'bg-neutral-100 text-neutral-700' :
+                        'bg-slate-100 text-slate-500'
                     }`}>
                     {item.vote === 'YES' && <CheckCircle2 size={14} />}
                     {item.vote === 'NO' && <XCircle size={14} />}
@@ -270,6 +284,39 @@ export default function MpProfile() {
                   </div>
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* SECTION F: Interpellations (NEW) */}
+      {interpellations.length > 0 && (
+        <div className="bg-white rounded-xl border-2 border-slate-200 p-8 shadow-sm">
+          <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+            <Mail size={24} className="text-blue-600" />
+            Ostatnie Interpelacje
+          </h2>
+          <div className="space-y-4">
+            {interpellations.map((interpellation) => (
+              <a
+                key={interpellation.id}
+                href={`https://sejm.gov.pl/Sejm10.nsf/interpelacja.xsp?typ=INT&nr=${interpellation.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block p-4 border border-slate-100 rounded-lg hover:bg-slate-50 transition-colors group"
+              >
+                <div className="flex justify-between items-start gap-4">
+                  <div>
+                    <h3 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors mb-1">
+                      {interpellation.title}
+                    </h3>
+                    <span className="text-xs text-slate-500">
+                      Nr {interpellation.id} • Złożono: {interpellation.sent_date}
+                    </span>
+                  </div>
+                  <ArrowRight size={16} className="text-slate-300 group-hover:text-blue-600 transition-colors mt-1" />
+                </div>
+              </a>
             ))}
           </div>
         </div>

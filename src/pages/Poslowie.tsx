@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-// Force HMR update 5
+// Force HMR update 10
 import { useSearchParams } from 'react-router-dom';
 import { MP } from '../api';
 import { supabase } from '../lib/supabase';
@@ -175,10 +175,10 @@ export default function Poslowie() {
     <div className="container mx-auto px-4 pt-24 pb-12 max-w-7xl">
       {/* Header */}
       <div className="mb-12">
-        <h1 className="text-5xl md:text-6xl font-extrabold text-ink mb-4 tracking-tight">
+        <h1 className="text-5xl md:text-6xl font-extrabold text-ink dark:text-white mb-4 tracking-tight">
           Nasi Reprezentanci
         </h1>
-        <p className="text-xl text-ink-light">
+        <p className="text-xl text-ink-light dark:text-slate-400">
           {mps.length} posłów. Znajdź i weryfikuj.
         </p>
       </div>
@@ -192,7 +192,7 @@ export default function Poslowie() {
             placeholder="Wyszukaj nazwisko posła..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-14 pr-6 py-4 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition bg-white"
+            className="w-full pl-14 pr-6 py-4 text-lg border-2 border-gray-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition bg-white dark:bg-slate-900 text-ink dark:text-white placeholder-slate-400"
           />
         </div>
       </div>
@@ -203,8 +203,8 @@ export default function Poslowie() {
           <button
             onClick={() => setSelectedParty('')}
             className={`px-6 py-3 rounded-xl font-bold transition border-2 ${selectedParty === ''
-              ? 'bg-ink text-white border-ink'
-              : 'bg-white text-ink border-gray-200 hover:border-brand'
+              ? 'bg-ink text-white border-ink dark:bg-white dark:text-ink dark:border-white'
+              : 'bg-white text-ink border-gray-200 hover:border-brand dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:border-brand'
               }`}
           >
             Wszyscy {selectedParty === '' && <span className="text-sm ml-1">({mps.length})</span>}
@@ -226,7 +226,7 @@ export default function Poslowie() {
                     }}
                     className={`px-6 py-3 rounded-xl font-bold transition border-2 flex items-center gap-2 ${selectedParty === 'INNE'
                       ? 'text-white border-transparent'
-                      : 'bg-white text-ink border-gray-200 hover:border-brand'
+                      : 'bg-white text-ink border-gray-200 hover:border-brand dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:border-brand'
                       }`}
                     style={{
                       backgroundColor: selectedParty === 'INNE' ? party.color : undefined,
@@ -242,7 +242,7 @@ export default function Poslowie() {
 
                   {/* Popover Submenu */}
                   {isInnePopoverOpen && (
-                    <div className="absolute top-full mt-2 left-0 bg-white border border-gray-200 rounded-lg shadow-sm py-2 z-50 min-w-[200px] animate-in fade-in duration-75">
+                    <div className="absolute top-full mt-2 left-0 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg shadow-sm py-2 z-50 min-w-[200px] animate-in fade-in duration-75">
                       {MINOR_PARTIES.map((minorParty) => (
                         <button
                           key={minorParty.id}
@@ -250,7 +250,7 @@ export default function Poslowie() {
                             setSelectedParty(minorParty.id);
                             setIsInnePopoverOpen(false);
                           }}
-                          className="w-full text-left px-4 py-2 text-sm font-medium text-ink hover:bg-brand/10 transition"
+                          className="w-full text-left px-4 py-2 text-sm font-medium text-ink dark:text-slate-200 hover:bg-brand/10 transition"
                         >
                           {minorParty.name}
                         </button>
@@ -271,7 +271,7 @@ export default function Poslowie() {
                 }}
                 className={`px-6 py-3 rounded-xl font-bold transition border-2 ${selectedParty === party.id
                   ? 'text-white border-transparent'
-                  : 'bg-white text-ink border-gray-200 hover:border-brand'
+                  : 'bg-white text-ink border-gray-200 hover:border-brand dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:border-brand'
                   }`}
                 style={{
                   backgroundColor: selectedParty === party.id ? party.color : undefined,
@@ -302,7 +302,7 @@ export default function Poslowie() {
       </div>
 
       {filtered.length === 0 && (
-        <div className="text-center py-12 text-ink-light">
+        <div className="text-center py-12 text-ink-light dark:text-slate-400">
           Nie znaleziono posłów spełniających kryteria.
         </div>
       )}

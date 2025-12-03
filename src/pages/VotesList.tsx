@@ -53,6 +53,7 @@ const VotesList: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [page, setPage] = useState(0);
+    const [sliderPage, setSliderPage] = useState(0); // Visual state for slider
     const [totalCount, setTotalCount] = useState(0);
     const PAGE_SIZE = 20;
 
@@ -66,13 +67,15 @@ const VotesList: React.FC = () => {
 
     // Debounced Search
     const debouncedSearch = useDebounce((query: string) => {
-        setPage(0); // Reset page on search
+        setPage(0);
+        setSliderPage(0);
         fetchVotes(query, categoryFilter, verdictFilter, dateRange, 0);
     }, 500);
 
     useEffect(() => {
         // Initial fetch
         fetchVotes(searchQuery, categoryFilter, verdictFilter, dateRange, page);
+        setSliderPage(page); // Sync slider with page
     }, [page, categoryFilter, verdictFilter, dateRange]);
 
     // Handle Search Input Change
@@ -138,13 +141,24 @@ const VotesList: React.FC = () => {
         setVerdictFilter('WSZYSTKIE');
         setDateRange({ start: '', end: '' });
         setPage(0);
+        setSliderPage(0);
         fetchVotes('', 'WSZYSTKIE', 'WSZYSTKIE', { start: '', end: '' }, 0);
     };
 
     const hasActiveFilters = searchQuery || categoryFilter !== 'WSZYSTKIE' || verdictFilter !== 'WSZYSTKIE' || dateRange.start || dateRange.end;
 
+    // Handle Slider Change (Visual Only)
+    const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSliderPage(parseInt(e.target.value));
+    };
+
+    // Handle Slider Release (Commit Change)
+    const handleSliderCommit = () => {
+        setPage(sliderPage);
+    };
+
     return (
-        <div className="min-h-screen bg-[#F9F9F7] text-neutral-900 pt-32 pb-12 px-6 md:px-12 font-serif">
+        <div className="min-h-screen bg-paper text-neutral-900 pt-32 pb-12 px-6 md:px-12 font-serif">
             <div className="max-w-5xl mx-auto space-y-8">
 
                 {/* Header */}
@@ -190,7 +204,7 @@ const VotesList: React.FC = () => {
                             <div className="relative">
                                 <select
                                     value={categoryFilter}
-                                    onChange={(e) => { setCategoryFilter(e.target.value); setPage(0); }}
+                                    onChange={(e) => { setCategoryFilter(e.target.value); setPage(0); setSliderPage(0); }}
                                     className="w-full appearance-none bg-white border border-neutral-300 rounded-none px-4 py-3 pr-10 focus:border-neutral-900 focus:ring-0 font-sans text-sm"
                                 >
                                     {CATEGORIES.map(cat => (
@@ -208,7 +222,7 @@ const VotesList: React.FC = () => {
                                 {['WSZYSTKIE', 'PRZYJĘTO', 'ODRZUCONO'].map((v) => (
                                     <button
                                         key={v}
-                                        onClick={() => { setVerdictFilter(v); setPage(0); }}
+                                        onClick={() => { setVerdictFilter(v); setPage(0); setSliderPage(0); }}
                                         className={`flex-1 py-3 text-xs font-bold font-sans transition-colors ${verdictFilter === v
                                             ? v === 'PRZYJĘTO' ? 'bg-green-600 text-white'
                                                 : v === 'ODRZUCONO' ? 'bg-red-600 text-white'
@@ -229,14 +243,14 @@ const VotesList: React.FC = () => {
                                 <input
                                     type="date"
                                     value={dateRange.start}
-                                    onChange={(e) => { setDateRange(prev => ({ ...prev, start: e.target.value })); setPage(0); }}
+                                    onChange={(e) => { setDateRange(prev => ({ ...prev, start: e.target.value })); setPage(0); setSliderPage(0); }}
                                     className="w-full bg-white border border-neutral-300 rounded-none px-3 py-3 focus:border-neutral-900 focus:ring-0 font-sans text-sm"
                                     placeholder="Od"
                                 />
                                 <input
                                     type="date"
                                     value={dateRange.end}
-                                    onChange={(e) => { setDateRange(prev => ({ ...prev, end: e.target.value })); setPage(0); }}
+                                    onChange={(e) => { setDateRange(prev => ({ ...prev, end: e.target.value })); setPage(0); setSliderPage(0); }}
                                     className="w-full bg-white border border-neutral-300 rounded-none px-3 py-3 focus:border-neutral-900 focus:ring-0 font-sans text-sm"
                                     placeholder="Do"
                                 />
@@ -350,21 +364,48 @@ const VotesList: React.FC = () => {
 
                 {/* Pagination */}
                 {votes.length > 0 && (
-                    <div className="flex justify-center gap-4 pt-8 pb-12">
-                        <button
-                            onClick={() => setPage(p => Math.max(0, p - 1))}
-                            disabled={page === 0}
-                            className="px-8 py-3 bg-white border border-neutral-200 text-sm font-bold uppercase tracking-wide disabled:opacity-50 hover:bg-neutral-50 transition-colors font-sans"
-                        >
-                            Poprzednia
-                        </button>
-                        <button
-                            onClick={() => setPage(p => p + 1)}
-                            disabled={votes.length < PAGE_SIZE}
-                            className="px-8 py-3 bg-neutral-900 text-white border border-neutral-900 text-sm font-bold uppercase tracking-wide hover:bg-neutral-800 transition-colors font-sans disabled:opacity-50"
-                        >
-                            Następna
-                        </button>
+                    <div className="flex flex-col items-center gap-6 pt-8 pb-12">
+
+                        {/* Slider Control */}
+                        <div className="w-full max-w-md flex items-center gap-4">
+                            <span className="text-xs font-bold text-neutral-400 font-sans">1</span>
+                            <input
+                                type="range"
+                                min={0}
+                                max={Math.ceil(totalCount / PAGE_SIZE) - 1}
+                                value={sliderPage}
+                                onChange={handleSliderChange}
+                                onMouseUp={handleSliderCommit}
+                                onTouchEnd={handleSliderCommit}
+                                className="flex-1 h-2 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-neutral-900 dark:accent-white"
+                            />
+                            <span className="text-xs font-bold text-neutral-400 font-sans">
+                                {Math.ceil(totalCount / PAGE_SIZE)}
+                            </span>
+                        </div>
+
+                        {/* Page Info & Buttons */}
+                        <div className="flex items-center gap-6">
+                            <button
+                                onClick={() => setPage(p => Math.max(0, p - 1))}
+                                disabled={page === 0}
+                                className="px-6 py-2 bg-white dark:bg-slate-800 border border-neutral-200 dark:border-slate-700 text-xs font-bold uppercase tracking-wide disabled:opacity-50 hover:bg-neutral-50 dark:hover:bg-slate-700 transition-colors font-sans rounded-lg text-neutral-900 dark:text-white"
+                            >
+                                Poprzednia
+                            </button>
+
+                            <span className="text-sm font-bold font-sans text-neutral-900 dark:text-white">
+                                Strona {sliderPage + 1} z {Math.ceil(totalCount / PAGE_SIZE)}
+                            </span>
+
+                            <button
+                                onClick={() => setPage(p => Math.min(Math.ceil(totalCount / PAGE_SIZE) - 1, p + 1))}
+                                disabled={page >= Math.ceil(totalCount / PAGE_SIZE) - 1}
+                                className="px-6 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 border border-neutral-900 dark:border-white text-xs font-bold uppercase tracking-wide hover:bg-neutral-800 dark:hover:bg-slate-200 transition-colors font-sans disabled:opacity-50 rounded-lg"
+                            >
+                                Następna
+                            </button>
+                        </div>
                     </div>
                 )}
 

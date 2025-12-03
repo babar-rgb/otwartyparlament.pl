@@ -25,17 +25,17 @@ function MiniMPCard({ mp, metric, metricValue, accentColor, index }: MiniMPCardP
         >
             <Link to={`/poslowie/${mp.id}`}>
                 <motion.div
-                    className="flex-shrink-0 w-48 bg-white rounded-2xl border border-slate-200 overflow-hidden cursor-pointer flex flex-col items-center p-4 relative"
+                    className="flex-shrink-0 w-48 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden cursor-pointer flex flex-col items-center p-4 relative"
                     whileHover={{ y: -3, boxShadow: "0 8px 20px rgba(0,0,0,0.08)" }}
                     whileTap={{ scale: 0.98 }}
                     transition={{ type: "spring", stiffness: 300 }}
                 >
                     {/* Decorative background gradient */}
-                    <div className="absolute top-0 left-0 w-full h-16 bg-gradient-to-b from-slate-50 to-transparent opacity-50" />
+                    <div className="absolute top-0 left-0 w-full h-16 bg-gradient-to-b from-slate-50 dark:from-slate-800 to-transparent opacity-50" />
 
                     {/* Photo */}
                     <div className="relative mb-3 z-10">
-                        <div className="w-32 h-32 rounded-full p-1 bg-white border border-slate-100 shadow-sm">
+                        <div className="w-32 h-32 rounded-full p-1 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm">
                             <img
                                 src={mp.photo_url || 'https://via.placeholder.com/200x200/E2E8F0/64748B?text=MP'}
                                 alt={`${mp.first_name} ${mp.last_name}`}
@@ -43,17 +43,17 @@ function MiniMPCard({ mp, metric, metricValue, accentColor, index }: MiniMPCardP
                             />
                         </div>
                         {/* Rank badge */}
-                        <div className={`absolute -top-1 -left-1 w-7 h-7 ${accentColor} rounded-full flex items-center justify-center text-white font-bold text-xs shadow-md border-2 border-white`}>
+                        <div className={`absolute -top-1 -left-1 w-7 h-7 ${accentColor} rounded-full flex items-center justify-center text-white font-bold text-xs shadow-md border-2 border-white dark:border-slate-900`}>
                             {index + 1}
                         </div>
                     </div>
 
                     {/* Content */}
                     <div className="text-center w-full z-10">
-                        <h4 className="font-bold text-slate-900 text-sm mb-2 line-clamp-2 h-10 flex items-center justify-center">
+                        <h4 className="font-bold text-slate-900 dark:text-slate-100 text-sm mb-2 line-clamp-2 h-10 flex items-center justify-center">
                             {mp.first_name} {mp.last_name}
                         </h4>
-                        <div className="flex flex-col items-center gap-0.5 bg-slate-50 rounded-lg py-2 px-3 border border-slate-100">
+                        <div className="flex flex-col items-center gap-0.5 bg-slate-50 dark:bg-slate-800/50 rounded-lg py-2 px-3 border border-slate-100 dark:border-slate-700">
                             <span className={`text-xl font-bold ${accentColor.replace('bg-', 'text-')}`}>
                                 {metricValue}%
                             </span>
@@ -94,16 +94,16 @@ export default function FeaturedMPs({ topAttendance, topRebels, lowAttendance }:
     return (
         <div className="mb-12">
             <div className="mb-6">
-                <h2 className="text-3xl font-bold text-ink mb-2">Wyróżnieni Posłowie</h2>
-                <p className="text-ink-light">Automatycznie wygenerowane rankingi na podstawie danych z Sejmu</p>
+                <h2 className="text-3xl font-bold text-ink dark:text-white mb-2">Wyróżnieni Posłowie</h2>
+                <p className="text-ink-light dark:text-slate-400">Automatycznie wygenerowane rankingi na podstawie danych z Sejmu</p>
             </div>
 
             <div className="space-y-8">
                 {sections.map((section, sectionIndex) => (
                     <div key={sectionIndex}>
                         <div className="mb-4">
-                            <h3 className="text-xl font-bold text-ink">{section.title}</h3>
-                            <p className="text-sm text-ink-light">{section.subtitle}</p>
+                            <h3 className="text-xl font-bold text-ink dark:text-white">{section.title}</h3>
+                            <p className="text-sm text-ink-light dark:text-slate-400">{section.subtitle}</p>
                         </div>
 
                         {/* Horizontal scrollable container */}
@@ -130,9 +130,9 @@ export default function FeaturedMPs({ topAttendance, topRebels, lowAttendance }:
             </div>
 
             {/* Divider */}
-            <div className="mt-12 pt-8 border-t border-gray-200">
-                <h3 className="text-2xl font-bold text-ink mb-2">Wszyscy Posłowie</h3>
-                <p className="text-ink-light">Pełna lista 460 posłów X kadencji Sejmu</p>
+            <div className="mt-12 pt-8 border-t border-gray-200 dark:border-slate-800">
+                <h3 className="text-2xl font-bold text-ink dark:text-white mb-2">Wszyscy Posłowie</h3>
+                <p className="text-ink-light dark:text-slate-400">Pełna lista 460 posłów X kadencji Sejmu</p>
             </div>
         </div>
     );
