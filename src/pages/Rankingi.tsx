@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { fetchMPs, MP } from '../api';
 import { Link } from 'react-router-dom';
-import { Trophy, TrendingUp, Users, Clock, FileText } from 'lucide-react';
+import { Trophy, TrendingUp, Users, Clock, FileText, Swords } from 'lucide-react';
+import Comparator from './Comparator';
 
 export default function Rankingi() {
-  const [activeTab, setActiveTab] = useState<'activity' | 'votes' | 'attendance' | 'bills'>('activity');
+  const [activeTab, setActiveTab] = useState<'activity' | 'votes' | 'attendance' | 'bills' | 'comparator'>('activity');
   const [mps, setMps] = useState<MP[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -68,13 +69,14 @@ export default function Rankingi() {
     return colors[party] || 'bg-slate-600';
   };
 
-  const currentRanking = rankings[activeTab];
+  const currentRanking = activeTab === 'comparator' ? [] : rankings[activeTab];
 
   const tabs = [
     { id: 'activity', label: 'Aktywność', icon: TrendingUp },
     { id: 'votes', label: 'Głosowania', icon: Users },
     { id: 'attendance', label: 'Obecność', icon: Clock },
     { id: 'bills', label: 'Projekty ustaw', icon: FileText },
+    { id: 'comparator', label: 'Porównywarka', icon: Swords },
   ];
 
   return (
@@ -111,47 +113,51 @@ export default function Rankingi() {
         </div>
 
         <div className="p-6">
-          <div className="space-y-3">
-            {currentRanking.map((entry: any, _: number) => (
-              <Link key={entry.id} to={`/poslowie/${entry.id}`}>
-                <div className="flex items-center gap-4 p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition cursor-pointer">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg ${getRankColor(entry.rank)}`}>
-                    {getRankIcon(entry.rank)}
-                  </div>
+          {activeTab === 'comparator' ? (
+            <Comparator embedded={true} />
+          ) : (
+            <div className="space-y-3">
+              {currentRanking.map((entry: any, _: number) => (
+                <Link key={entry.id} to={`/poslowie/${entry.id}`}>
+                  <div className="flex items-center gap-4 p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition cursor-pointer">
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg ${getRankColor(entry.rank)}`}>
+                      {getRankIcon(entry.rank)}
+                    </div>
 
-                  <div className="flex-1 flex items-center gap-3">
-                    <img src={entry.photo_url || 'https://via.placeholder.com/150'} alt={`${entry.first_name} ${entry.last_name}`} className="w-12 h-12 rounded-full object-cover" />
-                    <div>
-                      <p className="font-semibold text-slate-900">
-                        {entry.first_name} {entry.last_name}
-                      </p>
-                      <p className="text-xs text-slate-500">{entry.district}</p>
+                    <div className="flex-1 flex items-center gap-3">
+                      <img src={entry.photo_url || 'https://via.placeholder.com/150'} alt={`${entry.first_name} ${entry.last_name}`} className="w-12 h-12 rounded-full object-cover" />
+                      <div>
+                        <p className="font-semibold text-slate-900">
+                          {entry.first_name} {entry.last_name}
+                        </p>
+                        <p className="text-xs text-slate-500">{entry.district}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className={`${getPartyColor(entry.club)} text-white text-xs font-bold px-2 py-1 rounded`}>
+                        {entry.club}
+                      </span>
+                    </div>
+
+                    <div className="text-right min-w-20">
+                      <p className="text-2xl font-bold text-blue-600">{entry.value}</p>
+                      <p className="text-xs text-slate-500">{entry.unit}</p>
+                    </div>
+
+                    <div className="w-32 bg-slate-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full"
+                        style={{
+                          width: `${Math.min(100, (entry.value / Math.max(...currentRanking.map((e: any) => e.value))) * 100)}%`,
+                        }}
+                      ></div>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className={`${getPartyColor(entry.club)} text-white text-xs font-bold px-2 py-1 rounded`}>
-                      {entry.club}
-                    </span>
-                  </div>
-
-                  <div className="text-right min-w-20">
-                    <p className="text-2xl font-bold text-blue-600">{entry.value}</p>
-                    <p className="text-xs text-slate-500">{entry.unit}</p>
-                  </div>
-
-                  <div className="w-32 bg-slate-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full"
-                      style={{
-                        width: `${Math.min(100, (entry.value / Math.max(...currentRanking.map((e: any) => e.value))) * 100)}%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

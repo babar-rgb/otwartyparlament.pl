@@ -17,6 +17,8 @@ import DataSources from './pages/DataSources';
 import OpenSource from './pages/OpenSource';
 import Newsletter from './pages/Newsletter';
 import Contact from './pages/Contact';
+import Comparator from './pages/Comparator';
+import BillDetails from './pages/BillDetails';
 
 export default function App() {
   return (
@@ -36,11 +38,13 @@ export default function App() {
             <Route path="/rankingi" element={<Rankingi />} />
             <Route path="/test" element={<TestWyborczy />} />
             <Route path="/o-projekcie" element={<OProjekcie />} />
+            <Route path="/ustawy/:id" element={<BillDetails />} /> {/* Added route for BillDetails */}
             <Route path="/tematy/:slug" element={<CategoryDetails />} />
             <Route path="/metodologia" element={<DataSources />} />
             <Route path="/open-source" element={<OpenSource />} />
             <Route path="/newsletter" element={<Newsletter />} />
             <Route path="/kontakt" element={<Contact />} />
+            <Route path="/porownywarka" element={<Comparator />} />
           </Routes>
         </main>
         <Footer />

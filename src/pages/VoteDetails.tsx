@@ -100,6 +100,7 @@ const ClubRow = ({ club }: { club: any }) => {
 
 
 import { MOCK_VOTES } from '../data/mockVotes';
+import SejmHall from '../components/SejmHall';
 
 export default function VoteDetails() {
     const location = useLocation();
@@ -414,68 +415,91 @@ export default function VoteDetails() {
             </div>
 
             {/* Visual Data Section */}
-            <div className="grid md:grid-cols-2 gap-8 mb-12">
-                {/* Donut Chart */}
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col items-center justify-center">
-                    <h3 className="text-lg font-bold text-slate-900 mb-6 w-full text-left">Wynik Głosowania</h3>
-
+            <div className="mb-12">
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-8">
+                    <h3 className="text-lg font-bold text-slate-900 mb-4 text-center">Sala Sejmowa</h3>
                     {loadingResults ? (
-                        <div className="py-12 text-slate-500">Ładowanie wykresu...</div>
+                        <div className="py-12 text-center text-slate-500">Ładowanie wizualizacji...</div>
                     ) : (
-                        <>
-                            <div className="relative w-64 h-64">
-                                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                                    {/* Background Circle */}
-                                    <circle cx="50" cy="50" r={radius} fill="none" stroke="#f1f5f9" strokeWidth="12" />
-                                </svg>
-                                {/* Using CSS Conic Gradient for simplicity and perfect segments */}
-                                <div
-                                    className="absolute inset-0 rounded-full"
-                                    style={{
-                                        background: `conic-gradient(
+                        <SejmHall votes={voteResults.map((r: any) => ({
+                            mpId: r.mp_id,
+                            vote: r.vote === 'YES' ? 'za' : r.vote === 'NO' ? 'przeciw' : r.vote === 'ABSTAIN' ? 'wstrzymal' : 'nieobecny',
+                            mp: {
+                                id: r.mp_id,
+                                first_name: r.mps?.name?.split(' ')[0] || '',
+                                last_name: r.mps?.name?.split(' ').slice(1).join(' ') || '',
+                                club: r.mps?.party || 'Niezrzeszeni',
+                                photo_url: r.mps?.photo_url,
+                                district: 'Polska', // Dummy value
+                                active: true // Dummy value
+                            }
+                        }))} />
+                    )}
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-8">
+                    {/* Donut Chart */}
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col items-center justify-center">
+                        <h3 className="text-lg font-bold text-slate-900 mb-6 w-full text-left">Wynik Głosowania</h3>
+
+                        {loadingResults ? (
+                            <div className="py-12 text-slate-500">Ładowanie wykresu...</div>
+                        ) : (
+                            <>
+                                <div className="relative w-64 h-64">
+                                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                        {/* Background Circle */}
+                                        <circle cx="50" cy="50" r={radius} fill="none" stroke="#f1f5f9" strokeWidth="12" />
+                                    </svg>
+                                    {/* Using CSS Conic Gradient for simplicity and perfect segments */}
+                                    <div
+                                        className="absolute inset-0 rounded-full"
+                                        style={{
+                                            background: `conic-gradient(
                         #22c55e 0% ${yesPercent}%, 
                         #ef4444 ${yesPercent}% ${yesPercent + noPercent}%, 
                         #eab308 ${yesPercent + noPercent}% 100%
                         )`
-                                    }}
-                                ></div>
-                                {/* Inner White Circle for Donut Effect */}
-                                <div className="absolute inset-4 bg-white rounded-full flex flex-col items-center justify-center">
-                                    <span className="text-4xl font-black text-slate-900">{totalVotes}</span>
-                                    <span className="text-sm font-bold text-slate-500 uppercase">Głosów</span>
+                                        }}
+                                    ></div>
+                                    {/* Inner White Circle for Donut Effect */}
+                                    <div className="absolute inset-4 bg-white rounded-full flex flex-col items-center justify-center">
+                                        <span className="text-4xl font-black text-slate-900">{totalVotes}</span>
+                                        <span className="text-sm font-bold text-slate-500 uppercase">Głosów</span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div className="flex justify-center gap-6 mt-8 w-full">
-                                <div className="text-center">
-                                    <div className="text-2xl font-black text-green-600">{yesVotes}</div>
-                                    <div className="text-xs font-bold text-slate-500 uppercase">Za</div>
+                                <div className="flex justify-center gap-6 mt-8 w-full">
+                                    <div className="text-center">
+                                        <div className="text-2xl font-black text-green-600">{yesVotes}</div>
+                                        <div className="text-xs font-bold text-slate-500 uppercase">Za</div>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="text-2xl font-black text-red-600">{noVotes}</div>
+                                        <div className="text-xs font-bold text-slate-500 uppercase">Przeciw</div>
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="text-2xl font-black text-yellow-500">{abstainVotes}</div>
+                                        <div className="text-xs font-bold text-slate-500 uppercase">Wstrzym.</div>
+                                    </div>
                                 </div>
-                                <div className="text-center">
-                                    <div className="text-2xl font-black text-red-600">{noVotes}</div>
-                                    <div className="text-xs font-bold text-slate-500 uppercase">Przeciw</div>
-                                </div>
-                                <div className="text-center">
-                                    <div className="text-2xl font-black text-yellow-500">{abstainVotes}</div>
-                                    <div className="text-xs font-bold text-slate-500 uppercase">Wstrzym.</div>
-                                </div>
-                            </div>
-                        </>
-                    )}
-                </div>
+                            </>
+                        )}
+                    </div>
 
-                {/* Club Breakdown List */}
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                    <h3 className="text-lg font-bold text-slate-900 mb-6">Głosowanie Klubów</h3>
-                    {loadingResults ? (
-                        <div className="text-center py-8 text-slate-500">Ładowanie wyników...</div>
-                    ) : (
-                        <div className="space-y-2">
-                            {clubVotes.map((club) => (
-                                <ClubRow key={club.name} club={club} />
-                            ))}
-                        </div>
-                    )}
+                    {/* Club Breakdown List */}
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                        <h3 className="text-lg font-bold text-slate-900 mb-6">Głosowanie Klubów</h3>
+                        {loadingResults ? (
+                            <div className="text-center py-8 text-slate-500">Ładowanie wyników...</div>
+                        ) : (
+                            <div className="space-y-2">
+                                {clubVotes.map((club) => (
+                                    <ClubRow key={club.name} club={club} />
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
