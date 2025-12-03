@@ -60,16 +60,21 @@ export default function Navigation() {
 
             {/* Center: Main Links (Desktop) */}
             <div className="hidden md:flex items-center gap-12">
-              {links.map((link) => (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  className={`text-sm font-medium uppercase tracking-wide text-ink hover:opacity-70 transition-opacity ${location.pathname === link.href ? 'opacity-100' : 'opacity-80'
-                    }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
+              <Link to="/poslowie" className="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+                Posłowie
+              </Link>
+              <Link to="/glosowania" className="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+                Głosowania
+              </Link>
+              <Link to="/rankingi" className="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+                Rankingi
+              </Link>
+              <Link to="/projekty" className="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+                Projekty
+              </Link>
+              <Link to="/o-projekcie" className="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+                O Projekcie
+              </Link>
             </div>
 
             {/* Right: Actions */}

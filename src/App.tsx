@@ -1,10 +1,10 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import Poslowie from './pages/Poslowie';
 import MpProfile from './pages/MpProfile';
-import Glosowania from './pages/Glosowania';
+// import Glosowania from './pages/Glosowania';
 // import VoteDetail from './pages/VoteDetail';
 import Partie from './pages/Partie';
 import PartyProfile from './pages/PartyProfile';
@@ -20,6 +20,7 @@ import Contact from './pages/Contact';
 import Comparator from './pages/Comparator';
 import BillDetails from './pages/BillDetails';
 import BillsList from './pages/BillsList';
+import VotesList from './pages/VotesList';
 
 export default function App() {
   return (
@@ -31,8 +32,8 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/poslowie" element={<Poslowie />} />
             <Route path="/poslowie/:id" element={<MpProfile />} />
-            <Route path="/glosowania" element={<Glosowania />} />
-            <Route path="/glosowania/:id" element={<VoteDetails />} />
+            {/* <Route path="/glosowania" element={<Glosowania />} /> */} {/* Original /glosowania route */}
+            {/* <Route path="/glosowania/:id" element={<VoteDetails />} /> */} {/* Original /glosowania/:id route */}
             {/* <Route path="/glosowania/details" element={<VoteDetails />} /> */}
             <Route path="/partie" element={<Partie />} />
             <Route path="/partie/:id" element={<PartyProfile />} />
@@ -41,6 +42,10 @@ export default function App() {
             <Route path="/o-projekcie" element={<OProjekcie />} />
             <Route path="/ustawy/:id" element={<BillDetails />} /> {/* Added route for BillDetails */}
             <Route path="/projekty" element={<BillsList />} /> {/* Added route for BillsList */}
+            <Route path="/projekty/:id" element={<BillDetails />} />
+            <Route path="/glosowania" element={<VotesList />} />
+            <Route path="/glosowania/:sitting/:votingNumber" element={<VoteDetails />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
             <Route path="/tematy/:slug" element={<CategoryDetails />} />
             <Route path="/metodologia" element={<DataSources />} />
             <Route path="/open-source" element={<OpenSource />} />

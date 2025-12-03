@@ -73,6 +73,8 @@ const VotesList: React.FC = () => {
                 <div className="space-y-4">
                     {loading && votes.length === 0 ? (
                         <div className="text-center py-12 text-neutral-500">Ładowanie głosowań...</div>
+                    ) : votes.length === 0 ? (
+                        <div className="text-center py-12 text-neutral-500">Brak głosowań w bazie.</div>
                     ) : (
                         votes.map((vote) => (
                             <Link
@@ -107,8 +109,8 @@ const VotesList: React.FC = () => {
 
                                         <div className="flex items-center gap-2">
                                             <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${vote.category === 'PERSONALNE/PROCEDURALNE' ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800' :
-                                                    vote.category === 'EKONOMIA' ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800' :
-                                                        'bg-neutral-100 text-neutral-600 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700'
+                                                vote.category === 'EKONOMIA' ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800' :
+                                                    'bg-neutral-100 text-neutral-600 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700'
                                                 }`}>
                                                 {vote.category || 'INNE'}
                                             </span>
