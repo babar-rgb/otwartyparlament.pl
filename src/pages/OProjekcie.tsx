@@ -1,211 +1,194 @@
-import { Heart, Github, Book, Lock, Zap, Users } from 'lucide-react';
+import { Heart, Github, Book, Lock, Zap, Users, Target, Calendar, CheckCircle2 } from 'lucide-react';
 
 export default function OProjekcie() {
   return (
-    <div className="space-y-12">
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-xl p-8 md:p-12">
-        <Heart className="w-12 h-12 mb-4" />
-        <h1 className="text-4xl md:text-5xl font-bold mb-4">O Projekcie</h1>
-        <p className="text-lg md:text-xl text-blue-100">
-          Otwarty Parlament to inicjatywa dedykowana przejrzystości i odpowiedzialności w polskim systemie parlamentarnym.
+    <div className="container mx-auto px-4 pt-24 pb-12 max-w-5xl animate-fade-in">
+      {/* Hero Section */}
+      <div className="text-center mb-20">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full font-bold text-sm mb-6 border border-blue-100">
+          <Target size={16} />
+          <span>Nasza Misja</span>
+        </div>
+        <h1 className="text-5xl md:text-7xl font-black text-slate-900 mb-6 tracking-tight leading-tight">
+          Demokracja potrzebuje <br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">światła</span>
+        </h1>
+        <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+          Wierzymy, że przejrzystość jest fundamentem zaufania. Budujemy narzędzia, które pozwalają każdemu obywatelowi zrozumieć, co dzieje się przy ulicy Wiejskiej.
         </p>
       </div>
 
-      <section>
-        <h2 className="text-3xl font-bold text-slate-900 mb-6">Misja</h2>
-        <div className="prose prose-slate max-w-none">
-          <p className="text-lg text-slate-700 mb-6">
-            Wierzymy, że <strong>przejrzystość jest fundamentem demokracji</strong>. Każdy obywatel ma prawo wiedzieć, jak głosują ich reprezentanci,
-            jakie projekty wspierają i ile czasu poświęcają pracy w Sejmie.
-          </p>
-          <p className="text-lg text-slate-700 mb-6">
-            Otwarty Parlament to narzędzie, które czyni te informacje łatwo dostępnymi, przeszukiwalnymi i zrozumiałymi dla każdego. Bez względu
-            na znajomość polityki, każdy powinien móc sprawdzić, jak zagłosował jego poseł.
+      {/* Core Values Grid */}
+      <div className="grid md:grid-cols-3 gap-8 mb-24">
+        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-lg hover:shadow-xl transition-shadow group">
+          <div className="w-14 h-14 bg-blue-50 rounded-xl flex items-center justify-center mb-6 text-blue-600 group-hover:scale-110 transition-transform">
+            <Zap size={28} />
+          </div>
+          <h3 className="text-2xl font-bold text-slate-900 mb-3">Dostępność</h3>
+          <p className="text-slate-600 leading-relaxed">
+            Zamieniamy skomplikowany język prawniczy na proste podsumowania. Dane sejmowe powinny być zrozumiałe dla każdego, nie tylko dla prawników.
           </p>
         </div>
-      </section>
 
-      <section>
-        <h2 className="text-3xl font-bold text-slate-900 mb-6">Zakładka-idea: Transparentność dla wszystkich</h2>
-        <div className="bg-gradient-to-br from-slate-100 to-slate-50 rounded-lg border border-slate-200 p-8">
-          <p className="text-slate-700 mb-4">
-            Od początku istnienia pomysłu na tę stronę przyświecała nam <strong>jedna idea: transparentność</strong>.
-          </p>
-          <p className="text-slate-700 mb-4">
-            Dlatego:
-          </p>
-          <ul className="space-y-3 text-slate-700">
-            <li className="flex items-start gap-3">
-              <span className="text-blue-600 font-bold flex-shrink-0">✓</span>
-              <span><strong>Nie zarabiamy na niej</strong> - Otwarty Parlament jest non-profit i zawsze będzie bezpłatny</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="text-blue-600 font-bold flex-shrink-0">✓</span>
-              <span><strong>Udostępniamy kod</strong> - Projekt jest open source, każdy może go sprawdzić, audytować i wspierać</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="text-blue-600 font-bold flex-shrink-0">✓</span>
-              <span><strong>Pokazujemy źródła</strong> - Każda dana pochodzi z publicznych źródeł i jest jasno oznaczona</span>
-            </li>
-          </ul>
-          <p className="text-slate-700 mt-6 italic">
-            Wierzymy, że jeśli będziemy budować nasz wspólny świat na bazie transparentności, stanie się on lepszym miejscem.
+        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-lg hover:shadow-xl transition-shadow group">
+          <div className="w-14 h-14 bg-indigo-50 rounded-xl flex items-center justify-center mb-6 text-indigo-600 group-hover:scale-110 transition-transform">
+            <Lock size={28} />
+          </div>
+          <h3 className="text-2xl font-bold text-slate-900 mb-3">Bezpieczeństwo</h3>
+          <p className="text-slate-600 leading-relaxed">
+            Szanujemy Twoją prywatność. Nie śledzimy Cię, nie sprzedajemy danych. Nasz kod jest otwarty, więc możesz to zweryfikować.
           </p>
         </div>
-      </section>
 
-      <section>
-        <h2 className="text-3xl font-bold text-slate-900 mb-6">Jak to działa?</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg border border-slate-200 p-6">
-            <Zap className="w-12 h-12 text-blue-600 mb-4" />
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Automatyczne zbieranie danych</h3>
-            <p className="text-slate-700 text-sm">
-              Codziennie pobieramy dane z oficjalnych źródeł Sejmu i mediów, aby mieć zawsze aktualne informacje o głosowaniach.
-            </p>
+        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-lg hover:shadow-xl transition-shadow group">
+          <div className="w-14 h-14 bg-purple-50 rounded-xl flex items-center justify-center mb-6 text-purple-600 group-hover:scale-110 transition-transform">
+            <Heart size={28} />
           </div>
-
-          <div className="bg-white rounded-lg border border-slate-200 p-6">
-            <Users className="w-12 h-12 text-blue-600 mb-4" />
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Inteligentna klasyfikacja</h3>
-            <p className="text-slate-700 text-sm">
-              Używamy sztucznej inteligencji do automatycznego przypisywania głosowań do kategorii i oceny ich ważności dla społeczeństwa.
-            </p>
-          </div>
-
-          <div className="bg-white rounded-lg border border-slate-200 p-6">
-            <Lock className="w-12 h-12 text-blue-600 mb-4" />
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Bezpieczeństwo danych</h3>
-            <p className="text-slate-700 text-sm">
-              Wszystkie dane są publiczne i otwarte. Szanujemy prywatność i bezpieczeństwo użytkowników.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-3xl font-bold text-slate-900 mb-6">Technologia</h2>
-        <div className="bg-white rounded-lg border border-slate-200 p-8">
-          <p className="text-slate-700 mb-4">
-            Otwarty Parlament zbudowany jest na nowoczesnych, open-source technologiach:
+          <h3 className="text-2xl font-bold text-slate-900 mb-3">Niezależność</h3>
+          <p className="text-slate-600 leading-relaxed">
+            Jesteśmy inicjatywą non-profit, niezależną od partii politycznych i grup interesu. Naszym jedynym interesariuszem jest społeczeństwo.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-700">
-            <div>
-              <p className="font-semibold text-slate-900">Frontend</p>
-              <p>React + TypeScript + TailwindCSS</p>
-            </div>
-            <div>
-              <p className="font-semibold text-slate-900">Backend</p>
-              <p>Supabase + Edge Functions</p>
-            </div>
-            <div>
-              <p className="font-semibold text-slate-900">AI/ML</p>
-              <p>Automatyczna klasyfikacja tematyki i ważności</p>
-            </div>
-            <div>
-              <p className="font-semibold text-slate-900">Hosting</p>
-              <p>Supabase + Vercel/Similar</p>
-            </div>
-          </div>
-          <a href="#" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold mt-6">
-            <Github size={18} />
-            Przejrzyj kod na GitHub
-          </a>
         </div>
-      </section>
+      </div>
 
-      <section>
-        <h2 className="text-3xl font-bold text-slate-900 mb-6">Źródła danych</h2>
-        <div className="bg-white rounded-lg border border-slate-200 p-8">
-          <p className="text-slate-700 mb-6">
-            Wszystkie dane pochodzą z publicznych, oficjalnych źródeł:
-          </p>
-          <ul className="space-y-3">
-            <li className="flex items-start gap-3">
-              <Book size={20} className="text-blue-600 flex-shrink-0 mt-1" />
-              <div>
-                <p className="font-semibold text-slate-900">Sejm RP</p>
-                <p className="text-sm text-slate-600">api.sejm.gov.pl - oficjalne API Sejmu</p>
+      {/* How It Works - Visual Section */}
+      <div className="mb-24">
+        <div className="bg-slate-900 rounded-3xl p-8 md:p-12 text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2"></div>
+          <div className="relative z-10">
+            <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">Jak to działa?</h2>
+            <div className="grid md:grid-cols-3 gap-12">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/20">
+                  <Book size={32} className="text-blue-300" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">1. Pobieramy dane</h3>
+                <p className="text-slate-400 text-sm">
+                  Automatycznie synchronizujemy się z API Sejmu RP, pobierając informacje o głosowaniach i posłach.
+                </p>
               </div>
-            </li>
-            <li className="flex items-start gap-3">
-              <Book size={20} className="text-blue-600 flex-shrink-0 mt-1" />
-              <div>
-                <p className="font-semibold text-slate-900">Dane rządowe</p>
-                <p className="text-sm text-slate-600">dane.gov.pl - otwarte dane publiczne</p>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/20">
+                  <Users size={32} className="text-purple-300" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">2. Analizujemy</h3>
+                <p className="text-slate-400 text-sm">
+                  Nasze algorytmy i AI przetwarzają surowe dane, wykrywając anomalie, bunty partyjne i kluczowe tematy.
+                </p>
               </div>
-            </li>
-            <li className="flex items-start gap-3">
-              <Book size={20} className="text-blue-600 flex-shrink-0 mt-1" />
-              <div>
-                <p className="font-semibold text-slate-900">Media i prasa</p>
-                <p className="text-sm text-slate-600">Zbiór RSS i API mediów informacyjnych</p>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/20">
+                  <Zap size={32} className="text-yellow-300" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">3. Prezentujemy</h3>
+                <p className="text-slate-400 text-sm">
+                  Dostarczasz Ci czytelne raporty, rankingi i profile, dzięki którym wiesz, kto i jak Cię reprezentuje.
+                </p>
               </div>
-            </li>
-          </ul>
+            </div>
+          </div>
         </div>
-      </section>
+      </div>
 
-      <section>
-        <h2 className="text-3xl font-bold text-slate-900 mb-6">Plan na przyszłość</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <h3 className="font-bold text-slate-900 mb-3">Krótkoterminowo (Q4 2024)</h3>
-            <ul className="text-sm text-slate-700 space-y-2">
-              <li>✓ Rozszerzone analizy i wykresy</li>
-              <li>✓ Newsletter tygodniowy</li>
-              <li>✓ Rankingi posłów</li>
-              <li>✓ Pełna historia głosowań</li>
+      {/* Roadmap */}
+      <div className="mb-24">
+        <h2 className="text-3xl font-bold text-slate-900 mb-10 text-center">Plan rozwoju</h2>
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="bg-blue-50 rounded-2xl p-8 border border-blue-100">
+            <div className="flex items-center gap-3 mb-6">
+              <Calendar className="text-blue-600" />
+              <h3 className="text-xl font-bold text-slate-900">Q4 2025 (Teraz)</h3>
+            </div>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3">
+                <CheckCircle2 size={20} className="text-blue-600 mt-0.5 flex-shrink-0" />
+                <span className="text-slate-700">Wdrożenie pełnej bazy posłów i klubów</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <CheckCircle2 size={20} className="text-blue-600 mt-0.5 flex-shrink-0" />
+                <span className="text-slate-700">Analiza AI dla kluczowych ustaw</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <CheckCircle2 size={20} className="text-blue-600 mt-0.5 flex-shrink-0" />
+                <span className="text-slate-700">Newsletter i system powiadomień</span>
+              </li>
             </ul>
           </div>
 
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-            <h3 className="font-bold text-slate-900 mb-3">Długoterminowo (2025+)</h3>
-            <ul className="text-sm text-slate-700 space-y-2">
-              <li>• Porównanie głosów posłów</li>
-              <li>• API dla programistów</li>
-              <li>• Mobilna aplikacja</li>
-              <li>• Integracja z sieciami społecznościowymi</li>
+          <div className="bg-white rounded-2xl p-8 border border-slate-200 opacity-75 hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-3 mb-6">
+              <Calendar className="text-slate-400" />
+              <h3 className="text-xl font-bold text-slate-900">2026 (Przyszłość)</h3>
+            </div>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full border-2 border-slate-300 mt-0.5 flex-shrink-0"></div>
+                <span className="text-slate-600">Aplikacja mobilna (iOS/Android)</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full border-2 border-slate-300 mt-0.5 flex-shrink-0"></div>
+                <span className="text-slate-600">Porównywarka poglądów (Tinder dla polityki)</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full border-2 border-slate-300 mt-0.5 flex-shrink-0"></div>
+                <span className="text-slate-600">Publiczne API dla deweloperów</span>
+              </li>
             </ul>
           </div>
         </div>
-      </section>
+      </div>
 
-      <section className="bg-gradient-to-r from-blue-50 to-slate-50 rounded-lg border border-slate-200 p-8">
-        <h2 className="text-2xl font-bold text-slate-900 mb-4">Chcesz wesprzeć projekt?</h2>
-        <p className="text-slate-700 mb-6">
-          Otwarty Parlament to inicjatywa społeczna. Możesz nam pomóc na wiele sposobów:
+      {/* Legal Compliance Section */}
+      <div className="mb-24 bg-slate-50 rounded-2xl p-8 border border-slate-200">
+        <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <CheckCircle2 size={24} className="text-green-600" />
+          Legalność i Transparentność
+        </h3>
+        <div className="grid md:grid-cols-2 gap-8 text-sm text-slate-600">
+          <div>
+            <p className="mb-2">
+              <strong>Źródło danych:</strong> Dane pochodzą z Systemu Informacyjnego Sejmu (api.sejm.gov.pl) i są wykorzystywane zgodnie z ustawą o otwartych danych (Dz.U. 2023 poz. 1524).
+            </p>
+            <p>
+              <strong>Aktualizacja:</strong> Dane są pobierane codziennie. Ostatnia aktualizacja: {new Date().toLocaleDateString('pl-PL')}.
+            </p>
+          </div>
+          <div>
+            <p className="mb-2">
+              <strong>Przetwarzanie AI:</strong> Opisy i analizy głosowań są generowane automatycznie przez sztuczną inteligencję i nie stanowią oficjalnego stanowiska Kancelarii Sejmu.
+            </p>
+            <p className="italic text-xs mt-2">
+              Kancelaria Sejmu nie ponosi odpowiedzialności za przetworzone dane.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-3xl p-12 text-center border border-slate-200">
+        <h2 className="text-3xl font-bold text-slate-900 mb-6">Dołącz do ruchu</h2>
+        <p className="text-xl text-slate-600 mb-8 max-w-2xl mx-auto">
+          To projekt społeczny. Twój głos, Twój kod i Twoje wsparcie mają znaczenie.
         </p>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <a href="#" className="bg-white border border-slate-200 rounded-lg p-4 hover: transition text-center">
-            <Github className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-            <p className="font-semibold text-slate-900 mb-1">Kod</p>
-            <p className="text-sm text-slate-600">Wpisz się w kod na GitHub</p>
+        <div className="flex flex-col sm:flex-row justify-center gap-4">
+          <a
+            href="https://github.com/yourusername/otwartyparlament"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all hover:scale-105 shadow-lg"
+          >
+            <Github size={20} />
+            Współtwórz kod
           </a>
-
-          <a href="mailto:info@otwartyparlament.pl" className="bg-white border border-slate-200 rounded-lg p-4 hover: transition text-center">
-            <Heart className="w-8 h-8 text-red-600 mx-auto mb-2" />
-            <p className="font-semibold text-slate-900 mb-1">Feedback</p>
-            <p className="text-sm text-slate-600">Podziel się opinią</p>
-          </a>
-
-          <a href="#" className="bg-white border border-slate-200 rounded-lg p-4 hover: transition text-center">
-            <Users className="w-8 h-8 text-green-600 mx-auto mb-2" />
-            <p className="font-semibold text-slate-900 mb-1">Udostępnij</p>
-            <p className="text-sm text-slate-600">Rozpowszechnij ideę</p>
+          <a
+            href="mailto:kontakt@otwartyparlament.pl"
+            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-slate-900 border-2 border-slate-200 rounded-xl font-bold hover:border-blue-500 hover:text-blue-600 transition-all"
+          >
+            <Heart size={20} />
+            Zostań patronem
           </a>
         </div>
-      </section>
-
-      <section className="text-center py-8">
-        <p className="text-slate-600 mb-2">
-          Zbudowane z pasją dla demokracji
-        </p>
-        <p className="text-xs text-slate-500">
-          © 2024 Otwarty Parlament • Wszystkie dane są publiczne i otwarte
-        </p>
-      </section>
+      </div>
     </div>
   );
 }

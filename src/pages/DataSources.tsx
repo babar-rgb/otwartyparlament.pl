@@ -116,13 +116,42 @@ export default function DataSources() {
             </div>
 
             {/* Disclaimer */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center">
-                <h4 className="font-bold text-slate-900 mb-2">Nota Prawna</h4>
-                <p className="text-sm text-slate-600 max-w-3xl mx-auto">
-                    Serwis OtwartyParlament.pl jest inicjatywą społeczną non-profit i nie jest oficjalną stroną Sejmu Rzeczypospolitej Polskiej.
-                    Wszystkie prezentowane dane pochodzą z publicznie dostępnego API Sejmu (api.sejm.gov.pl).
-                    Analizy AI mogą zawierać błędy i powinny być traktowane pomocniczo.
-                </p>
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-8">
+                <h4 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <ShieldCheck size={20} className="text-blue-600" />
+                    Nota Prawna i Zgodność z Ustawą
+                </h4>
+                <div className="space-y-4 text-sm text-slate-600">
+                    <p>
+                        Serwis OtwartyParlament.pl działa w oparciu o ustawę o otwartych danych i ponownym wykorzystywaniu informacji sektora publicznego (Dz.U. 2023 poz. 1524).
+                    </p>
+
+                    <div className="grid md:grid-cols-2 gap-6 mt-4">
+                        <div className="bg-white p-4 rounded-lg border border-slate-200">
+                            <h5 className="font-bold text-slate-900 mb-2">1. Źródło i Czas Danych</h5>
+                            <p>
+                                Prezentowane dane pochodzą z Systemu Informacyjnego Sejmu (api.sejm.gov.pl).
+                                Baza danych jest aktualizowana codziennie w godzinach porannych.
+                                <br />
+                                <span className="text-xs text-slate-400 mt-2 block">
+                                    Dane aktualne na dzień: {new Date().toLocaleDateString('pl-PL')}
+                                </span>
+                            </p>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-lg border border-slate-200">
+                            <h5 className="font-bold text-slate-900 mb-2">2. Przetwarzanie i AI</h5>
+                            <p>
+                                Tematyka głosowań oraz ocena ich ważności są wynikiem automatycznej analizy (AI) dokonanej przez algorytmy serwisu i nie stanowią oficjalnej informacji pochodzącej z Kancelarii Sejmu.
+                            </p>
+                        </div>
+                    </div>
+
+                    <p className="text-xs text-slate-500 mt-4 italic">
+                        Kancelaria Sejmu nie ponosi odpowiedzialności za treść analiz ani za sposób dalszego wykorzystania danych przetworzonych przez serwis.
+                        Serwis jest inicjatywą społeczną non-profit.
+                    </p>
+                </div>
             </div>
         </div>
     );

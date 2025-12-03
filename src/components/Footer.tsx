@@ -28,18 +28,18 @@ export default function Footer() {
               <li><a href="/rankingi" className="text-slate-400 hover:text-white transition">Rankingi</a></li>
               <li><a href="/test" className="text-slate-400 hover:text-white transition">Test wyborczy</a></li>
               <li><a href="/o-projekcie" className="text-slate-400 hover:text-white transition">O projekcie</a></li>
-              <li><a href="/" className="text-slate-400 hover:text-white transition">Źródła danych</a></li>
+              <li><a href="/metodologia" className="text-slate-400 hover:text-white transition">Źródła danych</a></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-bold mb-4">Kontakt</h4>
             <div className="space-y-3">
-              <a href="mailto:info@otwartyparlament.pl" className="flex items-center gap-2 text-slate-400 hover:text-white transition text-sm">
+              <a href="/kontakt" className="flex items-center gap-2 text-slate-400 hover:text-white transition text-sm">
                 <Mail size={16} />
-                info@otwartyparlament.pl
+                Formularz kontaktowy
               </a>
-              <a href="#" className="flex items-center gap-2 text-slate-400 hover:text-white transition text-sm">
+              <a href="https://github.com/babar-rgb" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-slate-400 hover:text-white transition text-sm">
                 <Github size={16} />
                 GitHub
               </a>

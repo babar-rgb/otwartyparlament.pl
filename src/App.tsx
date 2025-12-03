@@ -15,6 +15,8 @@ import VoteDetails from './pages/VoteDetails';
 import CategoryDetails from './pages/CategoryDetails';
 import DataSources from './pages/DataSources';
 import OpenSource from './pages/OpenSource';
+import Newsletter from './pages/Newsletter';
+import Contact from './pages/Contact';
 
 export default function App() {
   return (
@@ -37,6 +39,8 @@ export default function App() {
             <Route path="/tematy/:slug" element={<CategoryDetails />} />
             <Route path="/metodologia" element={<DataSources />} />
             <Route path="/open-source" element={<OpenSource />} />
+            <Route path="/newsletter" element={<Newsletter />} />
+            <Route path="/kontakt" element={<Contact />} />
           </Routes>
         </main>
         <Footer />
