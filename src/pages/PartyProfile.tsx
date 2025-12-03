@@ -31,7 +31,7 @@ export default function PartyProfile() {
   const topMps = partyMps.sort((a, b) => b.aktywnosc - a.aktywnosc).slice(0, 5);
 
   return (
-    <div className="space-y-8">
+    <div className="container mx-auto px-4 pt-24 pb-12 space-y-8">
       <Link to="/partie" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold mb-4">
         <ArrowLeft size={20} />
         Wróć do listy

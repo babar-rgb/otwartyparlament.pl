@@ -81,7 +81,7 @@ export default function MpProfile() {
   const photoUrl = mp.photo_url;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 py-8">
+    <div className="max-w-5xl mx-auto space-y-6 pt-24 pb-12 px-4">
       {/* Back Button */}
       <Link to="/poslowie" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold">
         <ArrowLeft size={20} />

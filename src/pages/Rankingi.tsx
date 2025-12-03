@@ -78,7 +78,7 @@ export default function Rankingi() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="container mx-auto px-4 pt-24 pb-12 space-y-8">
       <div>
         <h1 className="text-4xl font-bold text-slate-900 mb-2 flex items-center gap-3">
           <Trophy size={40} className="text-yellow-500" />

@@ -19,7 +19,7 @@ export default function App() {
     <BrowserRouter>
       <div className="min-h-screen bg-paper flex flex-col">
         <Navigation />
-        <main className="flex-grow container mx-auto px-4 py-8">
+        <main className="flex-grow pt-0">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/poslowie" element={<Poslowie />} />

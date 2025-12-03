@@ -171,142 +171,140 @@ export default function Poslowie() {
   if (loading) return <div className="text-center py-12">Ładowanie danych z Sejmu...</div>;
 
   return (
-    <div className="min-h-screen bg-paper py-12 px-6">
-      <div className="container mx-auto max-w-7xl">
-        {/* Header */}
-        <div className="mb-12">
-          <h1 className="text-5xl md:text-6xl font-extrabold text-ink mb-4 tracking-tight">
-            Nasi Reprezentanci
-          </h1>
-          <p className="text-xl text-ink-light">
-            {mps.length} posłów. Znajdź i weryfikuj.
-          </p>
-        </div>
-
-        {/* Search Bar */}
-        <div className="mb-8">
-          <div className="relative max-w-2xl mx-auto">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={24} />
-            <input
-              type="text"
-              placeholder="Wyszukaj nazwisko posła..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-14 pr-6 py-4 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition bg-white"
-            />
-          </div>
-        </div>
-
-        {/* Party Filter Buttons */}
-        <div className="mb-12">
-          <div className="flex flex-wrap justify-center gap-3">
-            <button
-              onClick={() => setSelectedParty('')}
-              className={`px-6 py-3 rounded-xl font-bold transition border-2 ${selectedParty === ''
-                ? 'bg-ink text-white border-ink'
-                : 'bg-white text-ink border-gray-200 hover:border-brand'
-                }`}
-            >
-              Wszyscy {selectedParty === '' && <span className="text-sm ml-1">({mps.length})</span>}
-            </button>
-            {parties.map((party) => {
-              // Special handling for INNE button with popover
-              if (party.id === 'INNE') {
-                return (
-                  <div key={party.id} className="relative" ref={popoverRef}>
-                    <button
-                      onClick={() => {
-                        if (selectedParty === 'INNE') {
-                          setSelectedParty('');
-                          setIsInnePopoverOpen(false);
-                        } else {
-                          setSelectedParty('INNE');
-                          setIsInnePopoverOpen(!isInnePopoverOpen);
-                        }
-                      }}
-                      className={`px-6 py-3 rounded-xl font-bold transition border-2 flex items-center gap-2 ${selectedParty === 'INNE'
-                        ? 'text-white border-transparent'
-                        : 'bg-white text-ink border-gray-200 hover:border-brand'
-                        }`}
-                      style={{
-                        backgroundColor: selectedParty === 'INNE' ? party.color : undefined,
-                      }}
-                    >
-                      {party.name}
-                      {selectedParty === 'INNE' && <span className="text-sm">({filtered.length})</span>}
-                      <ChevronDown
-                        size={16}
-                        className={`transition-transform ${isInnePopoverOpen ? 'rotate-180' : ''}`}
-                      />
-                    </button>
-
-                    {/* Popover Submenu */}
-                    {isInnePopoverOpen && (
-                      <div className="absolute top-full mt-2 left-0 bg-white border border-gray-200 rounded-lg shadow-sm py-2 z-50 min-w-[200px] animate-in fade-in duration-75">
-                        {MINOR_PARTIES.map((minorParty) => (
-                          <button
-                            key={minorParty.id}
-                            onClick={() => {
-                              setSelectedParty(minorParty.id);
-                              setIsInnePopoverOpen(false);
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm font-medium text-ink hover:bg-brand/10 transition"
-                          >
-                            {minorParty.name}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-
-              // Regular party buttons
-              return (
-                <button
-                  key={party.id}
-                  onClick={() => {
-                    setSelectedParty(party.id);
-                    setIsInnePopoverOpen(false);
-                  }}
-                  className={`px-6 py-3 rounded-xl font-bold transition border-2 ${selectedParty === party.id
-                    ? 'text-white border-transparent'
-                    : 'bg-white text-ink border-gray-200 hover:border-brand'
-                    }`}
-                  style={{
-                    backgroundColor: selectedParty === party.id ? party.color : undefined,
-                  }}
-                >
-                  {party.name}
-                  {selectedParty === party.id && <span className="text-sm ml-1">({filtered.length})</span>}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Featured MPs Dashboard - Only show when no filters active */}
-        {!searchTerm && !selectedParty && (
-          <FeaturedMPs
-            topAttendance={featuredMPs.topAttendance}
-            topRebels={featuredMPs.topRebels}
-            lowAttendance={featuredMPs.lowAttendance}
-          />
-        )}
-
-        {/* Main Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {filtered.map((mp) => (
-            <MpCard key={mp.id} mp={mp} />
-          ))}
-        </div>
-
-        {filtered.length === 0 && (
-          <div className="text-center py-12 text-ink-light">
-            Nie znaleziono posłów spełniających kryteria.
-          </div>
-        )}
+    <div className="container mx-auto px-4 pt-24 pb-12 max-w-7xl">
+      {/* Header */}
+      <div className="mb-12">
+        <h1 className="text-5xl md:text-6xl font-extrabold text-ink mb-4 tracking-tight">
+          Nasi Reprezentanci
+        </h1>
+        <p className="text-xl text-ink-light">
+          {mps.length} posłów. Znajdź i weryfikuj.
+        </p>
       </div>
+
+      {/* Search Bar */}
+      <div className="mb-8">
+        <div className="relative max-w-2xl mx-auto">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={24} />
+          <input
+            type="text"
+            placeholder="Wyszukaj nazwisko posła..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-14 pr-6 py-4 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition bg-white"
+          />
+        </div>
+      </div>
+
+      {/* Party Filter Buttons */}
+      <div className="mb-12">
+        <div className="flex flex-wrap justify-center gap-3">
+          <button
+            onClick={() => setSelectedParty('')}
+            className={`px-6 py-3 rounded-xl font-bold transition border-2 ${selectedParty === ''
+              ? 'bg-ink text-white border-ink'
+              : 'bg-white text-ink border-gray-200 hover:border-brand'
+              }`}
+          >
+            Wszyscy {selectedParty === '' && <span className="text-sm ml-1">({mps.length})</span>}
+          </button>
+          {parties.map((party) => {
+            // Special handling for INNE button with popover
+            if (party.id === 'INNE') {
+              return (
+                <div key={party.id} className="relative" ref={popoverRef}>
+                  <button
+                    onClick={() => {
+                      if (selectedParty === 'INNE') {
+                        setSelectedParty('');
+                        setIsInnePopoverOpen(false);
+                      } else {
+                        setSelectedParty('INNE');
+                        setIsInnePopoverOpen(!isInnePopoverOpen);
+                      }
+                    }}
+                    className={`px-6 py-3 rounded-xl font-bold transition border-2 flex items-center gap-2 ${selectedParty === 'INNE'
+                      ? 'text-white border-transparent'
+                      : 'bg-white text-ink border-gray-200 hover:border-brand'
+                      }`}
+                    style={{
+                      backgroundColor: selectedParty === 'INNE' ? party.color : undefined,
+                    }}
+                  >
+                    {party.name}
+                    {selectedParty === 'INNE' && <span className="text-sm">({filtered.length})</span>}
+                    <ChevronDown
+                      size={16}
+                      className={`transition-transform ${isInnePopoverOpen ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+
+                  {/* Popover Submenu */}
+                  {isInnePopoverOpen && (
+                    <div className="absolute top-full mt-2 left-0 bg-white border border-gray-200 rounded-lg shadow-sm py-2 z-50 min-w-[200px] animate-in fade-in duration-75">
+                      {MINOR_PARTIES.map((minorParty) => (
+                        <button
+                          key={minorParty.id}
+                          onClick={() => {
+                            setSelectedParty(minorParty.id);
+                            setIsInnePopoverOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm font-medium text-ink hover:bg-brand/10 transition"
+                        >
+                          {minorParty.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            // Regular party buttons
+            return (
+              <button
+                key={party.id}
+                onClick={() => {
+                  setSelectedParty(party.id);
+                  setIsInnePopoverOpen(false);
+                }}
+                className={`px-6 py-3 rounded-xl font-bold transition border-2 ${selectedParty === party.id
+                  ? 'text-white border-transparent'
+                  : 'bg-white text-ink border-gray-200 hover:border-brand'
+                  }`}
+                style={{
+                  backgroundColor: selectedParty === party.id ? party.color : undefined,
+                }}
+              >
+                {party.name}
+                {selectedParty === party.id && <span className="text-sm ml-1">({filtered.length})</span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Featured MPs Dashboard - Only show when no filters active */}
+      {!searchTerm && !selectedParty && (
+        <FeaturedMPs
+          topAttendance={featuredMPs.topAttendance}
+          topRebels={featuredMPs.topRebels}
+          lowAttendance={featuredMPs.lowAttendance}
+        />
+      )}
+
+      {/* Main Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        {filtered.map((mp) => (
+          <MpCard key={mp.id} mp={mp} />
+        ))}
+      </div>
+
+      {filtered.length === 0 && (
+        <div className="text-center py-12 text-ink-light">
+          Nie znaleziono posłów spełniających kryteria.
+        </div>
+      )}
     </div>
   );
 }

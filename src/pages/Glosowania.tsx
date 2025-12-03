@@ -95,7 +95,7 @@ export default function Glosowania() {
   });
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div className="container mx-auto px-4 pt-24 pb-12 max-w-7xl">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl md:text-5xl font-black text-slate-900 mb-2">

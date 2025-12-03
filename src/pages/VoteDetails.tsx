@@ -285,7 +285,7 @@ export default function VoteDetails() {
     const radius = 40;
 
     return (
-        <div className="container mx-auto px-4 py-8 max-w-4xl animate-fade-in">
+        <div className="container mx-auto px-4 pt-24 pb-12 max-w-4xl animate-fade-in">
             {/* Breadcrumb */}
             <button
                 onClick={() => navigate('/glosowania')}

@@ -113,89 +113,91 @@ export default function TestWyborczy() {
   const progress = ((currentQuestion + 1) / testVotes.length) * 100;
 
   return (
-    <div className="space-y-8 max-w-2xl mx-auto">
-      <div>
-        <h1 className="text-4xl font-bold text-slate-900 mb-2">Test wyborczy</h1>
-        <p className="text-slate-600">
-          Odpowiedz na pytania o rzeczywistych głosowaniach sejmowych i dowiedz się, z którą partią Twoje poglądy są najbardziej zbieżne.
-        </p>
-      </div>
+    <div className="container mx-auto px-4 pt-24 pb-12">
+      <div className="space-y-8 max-w-2xl mx-auto">
+        <div>
+          <h1 className="text-4xl font-bold text-slate-900 mb-2">Test wyborczy</h1>
+          <p className="text-slate-600">
+            Odpowiedz na pytania o rzeczywistych głosowaniach sejmowych i dowiedz się, z którą partią Twoje poglądy są najbardziej zbieżne.
+          </p>
+        </div>
 
-      <div className="bg-white rounded-lg border border-slate-200 p-6">
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-2">
-            <p className="text-sm font-medium text-slate-700">
-              Pytanie {currentQuestion + 1} z {testVotes.length}
-            </p>
-            <p className="text-sm text-slate-500">{Math.round(progress)}%</p>
+        <div className="bg-white rounded-lg border border-slate-200 p-6">
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <p className="text-sm font-medium text-slate-700">
+                Pytanie {currentQuestion + 1} z {testVotes.length}
+              </p>
+              <p className="text-sm text-slate-500">{Math.round(progress)}%</p>
+            </div>
+            <div className="w-full bg-slate-200 rounded-full h-2">
+              <div className="bg-blue-600 h-2 rounded-full transition-all" style={{ width: `${progress}%` }}></div>
+            </div>
           </div>
-          <div className="w-full bg-slate-200 rounded-full h-2">
-            <div className="bg-blue-600 h-2 rounded-full transition-all" style={{ width: `${progress}%` }}></div>
+
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-slate-900 mb-4">{vote.title}</h2>
+            <p className="text-slate-700 mb-4">{vote.description}</p>
+
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-slate-600">
+                <span className="font-semibold">Kategoria:</span> {vote.category}
+              </p>
+              <p className="text-sm text-slate-600 mt-2">
+                <span className="font-semibold">Wynik rzeczywisty:</span> {vote.for} za, {vote.against} przeciw
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3 mb-6">
+            <button
+              onClick={() => handleAnswer('za')}
+              className="w-full p-4 text-left border-2 border-slate-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition font-semibold text-slate-900"
+            >
+              ✓ Za (Popieram)
+            </button>
+            <button
+              onClick={() => handleAnswer('przeciw')}
+              className="w-full p-4 text-left border-2 border-slate-200 rounded-lg hover:border-red-500 hover:bg-red-50 transition font-semibold text-slate-900"
+            >
+              ✕ Przeciw (Nie popieram)
+            </button>
+            <button
+              onClick={() => handleAnswer('wstrzymam')}
+              className="w-full p-4 text-left border-2 border-slate-200 rounded-lg hover:border-yellow-500 hover:bg-yellow-50 transition font-semibold text-slate-900"
+            >
+              ⊝ Wstrzymuję się (Nie mam zdania)
+            </button>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={handlePrevious}
+              disabled={currentQuestion === 0}
+              className="flex-1 px-4 py-2 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-100 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <ChevronLeft size={18} />
+              Poprzednie
+            </button>
+            <button
+              onClick={() => handleAnswer(answers[currentQuestion] || 'wstrzymam')}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2"
+            >
+              Następne
+              <ChevronRight size={18} />
+            </button>
           </div>
         </div>
 
-        <div className="mb-8">
-          <h2 className="text-xl font-bold text-slate-900 mb-4">{vote.title}</h2>
-          <p className="text-slate-700 mb-4">{vote.description}</p>
-
-          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6">
-            <p className="text-sm text-slate-600">
-              <span className="font-semibold">Kategoria:</span> {vote.category}
-            </p>
-            <p className="text-sm text-slate-600 mt-2">
-              <span className="font-semibold">Wynik rzeczywisty:</span> {vote.for} za, {vote.against} przeciw
-            </p>
-          </div>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <h3 className="font-bold text-slate-900 mb-2">Jak to działa?</h3>
+          <ul className="text-sm text-slate-700 space-y-2">
+            <li>• Każde pytanie to rzeczywiste głosowanie z Sejmu</li>
+            <li>• Twoje odpowiedzi są porównywane z głosami poszczególnych partii</li>
+            <li>• Test pokazuje, z którą partią masz największą zgodność</li>
+            <li>• Wyniki nie są przechowywane - test przebiega całkowicie prywatnie</li>
+          </ul>
         </div>
-
-        <div className="space-y-3 mb-6">
-          <button
-            onClick={() => handleAnswer('za')}
-            className="w-full p-4 text-left border-2 border-slate-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition font-semibold text-slate-900"
-          >
-            ✓ Za (Popieram)
-          </button>
-          <button
-            onClick={() => handleAnswer('przeciw')}
-            className="w-full p-4 text-left border-2 border-slate-200 rounded-lg hover:border-red-500 hover:bg-red-50 transition font-semibold text-slate-900"
-          >
-            ✕ Przeciw (Nie popieram)
-          </button>
-          <button
-            onClick={() => handleAnswer('wstrzymam')}
-            className="w-full p-4 text-left border-2 border-slate-200 rounded-lg hover:border-yellow-500 hover:bg-yellow-50 transition font-semibold text-slate-900"
-          >
-            ⊝ Wstrzymuję się (Nie mam zdania)
-          </button>
-        </div>
-
-        <div className="flex gap-3">
-          <button
-            onClick={handlePrevious}
-            disabled={currentQuestion === 0}
-            className="flex-1 px-4 py-2 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-100 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            <ChevronLeft size={18} />
-            Poprzednie
-          </button>
-          <button
-            onClick={() => handleAnswer(answers[currentQuestion] || 'wstrzymam')}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2"
-          >
-            Następne
-            <ChevronRight size={18} />
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h3 className="font-bold text-slate-900 mb-2">Jak to działa?</h3>
-        <ul className="text-sm text-slate-700 space-y-2">
-          <li>• Każde pytanie to rzeczywiste głosowanie z Sejmu</li>
-          <li>• Twoje odpowiedzi są porównywane z głosami poszczególnych partii</li>
-          <li>• Test pokazuje, z którą partią masz największą zgodność</li>
-          <li>• Wyniki nie są przechowywane - test przebiega całkowicie prywatnie</li>
-        </ul>
       </div>
     </div>
   );
