@@ -19,6 +19,7 @@ import Newsletter from './pages/Newsletter';
 import Contact from './pages/Contact';
 import Comparator from './pages/Comparator';
 import BillDetails from './pages/BillDetails';
+import BillsList from './pages/BillsList';
 
 export default function App() {
   return (
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="/test" element={<TestWyborczy />} />
             <Route path="/o-projekcie" element={<OProjekcie />} />
             <Route path="/ustawy/:id" element={<BillDetails />} /> {/* Added route for BillDetails */}
+            <Route path="/projekty" element={<BillsList />} /> {/* Added route for BillsList */}
             <Route path="/tematy/:slug" element={<CategoryDetails />} />
             <Route path="/metodologia" element={<DataSources />} />
             <Route path="/open-source" element={<OpenSource />} />

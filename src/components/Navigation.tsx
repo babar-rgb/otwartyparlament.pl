@@ -37,10 +37,11 @@ export default function Navigation() {
 
   const links = [
     { label: 'Strona główna', href: '/' },
-    { label: 'Posłowie', href: '/poslowie' },
-    { label: 'Głosowania', href: '/glosowania' },
-    { label: 'Ranking', href: '/rankingi' },
-    { label: 'Test wyborczy', href: '/test' },
+    { href: '/poslowie', label: 'Posłowie' },
+    { href: '/glosowania', label: 'Głosowania' },
+    { href: '/rankingi', label: 'Rankingi' },
+    { href: '/projekty', label: 'Projekty' },
+    { href: '/o-projekcie', label: 'O projekcie' },
   ];
 
   return (

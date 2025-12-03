@@ -87,14 +87,14 @@ export default function BillDetails() {
         return (
             <div className="container mx-auto px-4 pt-24 pb-12 text-center">
                 <h1 className="text-2xl font-bold text-slate-900">Nie znaleziono procesu legislacyjnego.</h1>
-                <Link to="/rankingi" className="text-blue-600 hover:underline mt-4 inline-block">Powrót</Link>
+                <Link to="/projekty" className="text-blue-600 hover:underline mt-4 inline-block">Powrót</Link>
             </div>
         );
     }
 
     return (
         <div className="container mx-auto px-4 pt-24 pb-12 max-w-5xl animate-fade-in">
-            <Link to="/rankingi" className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors mb-8 group">
+            <Link to="/projekty" className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors mb-8 group">
                 <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                 Powrót do listy
             </Link>
