@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { ArrowLeft, Calendar, CheckCircle2, XCircle, PieChart, Users } from 'lucide-react';
+import { cleanSejmTitle } from '../utils/titleFormatter';
+import VoteTechnicalDetails from '../components/VoteTechnicalDetails';
 
 interface VoteDetail {
     id: number;
@@ -9,6 +11,7 @@ interface VoteDetail {
     voting_number: number;
     date: string;
     title_clean: string;
+    title_raw?: string;
     verdict: string;
     print_number: string | null;
     details_json: {
@@ -101,7 +104,7 @@ const VoteDetails: React.FC = () => {
     if (!vote) return <div className="p-12 text-center">Nie znaleziono głosowania.</div>;
 
     return (
-        <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 p-6 md:p-12 font-sans">
+        <div className="min-h-screen bg-neutral-50 text-neutral-900 p-6 md:p-12 font-sans">
             <div className="max-w-5xl mx-auto space-y-8">
 
                 {/* Back Link */}
@@ -111,30 +114,29 @@ const VoteDetails: React.FC = () => {
                 </Link>
 
                 {/* Header */}
-                <div className="bg-white dark:bg-neutral-800 rounded-3xl p-8 shadow-sm border border-neutral-200 dark:border-neutral-700">
+                <div className="bg-white rounded-3xl p-8 shadow-sm border border-neutral-200">
                     <div className="space-y-6">
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
-                            <span className="flex items-center gap-1.5 bg-neutral-100 dark:bg-neutral-700 px-3 py-1 rounded-full">
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-500">
+                            <span className="flex items-center gap-1.5 bg-neutral-100 px-3 py-1 rounded-full">
                                 <Calendar className="w-4 h-4" />
                                 {new Date(vote.date).toLocaleDateString('pl-PL')}
                             </span>
-                            <span className="bg-neutral-100 dark:bg-neutral-700 px-3 py-1 rounded-full">
+                            <span className="bg-neutral-100 px-3 py-1 rounded-full">
                                 Posiedzenie {vote.sitting}, Głosowanie {vote.voting_number}
                             </span>
-                            {vote.print_number && (
-                                <Link to={`/projekty`} className="bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 px-3 py-1 rounded-full hover:underline">
-                                    Druk nr {vote.print_number}
-                                </Link>
-                            )}
                         </div>
 
-                        <h1 className="text-3xl md:text-4xl font-bold leading-tight">
-                            {vote.title_clean}
-                        </h1>
+                        <div>
+                            <h1 className="text-3xl md:text-4xl font-bold leading-tight mb-2">
+                                {cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
+                            </h1>
+
+                            <VoteTechnicalDetails rawTitle={vote.title_raw || vote.title_clean} />
+                        </div>
 
                         <div className={`inline-flex items-center gap-3 px-5 py-2 rounded-xl text-lg font-bold ${vote.verdict === 'PRZYJĘTO'
-                            ? 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800'
-                            : 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800'
+                            ? 'bg-green-50 text-green-700 border border-green-200'
+                            : 'bg-red-50 text-red-700 border border-red-200'
                             }`}>
                             {vote.verdict === 'PRZYJĘTO' ? <CheckCircle2 className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
                             {vote.verdict}
@@ -149,25 +151,25 @@ const VoteDetails: React.FC = () => {
                         <h2 className="text-2xl font-bold">Głosowanie w Klubach</h2>
                     </div>
 
-                    <div className="bg-white dark:bg-neutral-800 rounded-2xl overflow-hidden shadow-sm border border-neutral-200 dark:border-neutral-700">
+                    <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-neutral-200">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
-                                    <tr className="bg-neutral-50 dark:bg-neutral-700/50 text-sm uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                                    <tr className="bg-neutral-50 text-sm uppercase tracking-wider text-neutral-500">
                                         <th className="p-4 font-semibold">Klub / Koło</th>
-                                        <th className="p-4 font-semibold text-green-600 dark:text-green-400">Za</th>
-                                        <th className="p-4 font-semibold text-red-600 dark:text-red-400">Przeciw</th>
-                                        <th className="p-4 font-semibold text-neutral-600 dark:text-neutral-300">Wstrzymał się</th>
+                                        <th className="p-4 font-semibold text-green-600">Za</th>
+                                        <th className="p-4 font-semibold text-red-600">Przeciw</th>
+                                        <th className="p-4 font-semibold text-neutral-600">Wstrzymał się</th>
                                         <th className="p-4 font-semibold text-neutral-400">Nieobecny</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-neutral-100 dark:divide-neutral-700">
+                                <tbody className="divide-y divide-neutral-100">
                                     {Object.entries(partyStats).map(([party, stats]) => (
-                                        <tr key={party} className="hover:bg-neutral-50 dark:hover:bg-neutral-700/30 transition-colors">
+                                        <tr key={party} className="hover:bg-neutral-50 transition-colors">
                                             <td className="p-4 font-medium">{party}</td>
-                                            <td className="p-4 font-bold text-green-600 dark:text-green-500">{stats.yes}</td>
-                                            <td className="p-4 font-bold text-red-600 dark:text-red-500">{stats.no}</td>
-                                            <td className="p-4 font-bold text-neutral-600 dark:text-neutral-300">{stats.abstain}</td>
+                                            <td className="p-4 font-bold text-green-600">{stats.yes}</td>
+                                            <td className="p-4 font-bold text-red-600">{stats.no}</td>
+                                            <td className="p-4 font-bold text-neutral-600">{stats.abstain}</td>
                                             <td className="p-4 text-neutral-400">{stats.absent}</td>
                                         </tr>
                                     ))}
@@ -190,10 +192,10 @@ const VoteDetails: React.FC = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {results.map((r, idx) => (
-                            <div key={idx} className="flex items-center gap-3 p-3 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-100 dark:border-neutral-700">
+                            <div key={idx} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-neutral-100">
                                 <div className={`w-2 h-10 rounded-full ${r.vote === 'YES' ? 'bg-green-500' :
                                     r.vote === 'NO' ? 'bg-red-500' :
-                                        r.vote === 'ABSTAIN' ? 'bg-neutral-400' : 'bg-neutral-200 dark:bg-neutral-700'
+                                        r.vote === 'ABSTAIN' ? 'bg-neutral-400' : 'bg-neutral-200'
                                     }`} />
                                 <div>
                                     <div className="font-medium text-sm">{r.mps?.name}</div>

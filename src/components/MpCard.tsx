@@ -24,21 +24,26 @@ export default function MpCard({ mp }: MpCardProps) {
   return (
     <Link to={`/poslowie/${mp.id}`}>
       <motion.div
-        className="group bg-white rounded-lg overflow-hidden border border-gray-200 hover:border-brand transition-all duration-300 cursor-pointer"
-        whileHover={{ y: -5, boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }}
+        className="group bg-white rounded-2xl border border-slate-200 hover:border-blue-400 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-lg hover:-translate-y-1 p-6 flex flex-col items-center text-center relative overflow-hidden"
+        whileHover={{ y: -5 }}
         whileTap={{ scale: 0.98 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
+        {/* Decorative background gradient */}
+        <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-slate-50 to-transparent opacity-50" />
+
         {/* Photo with party badge */}
-        <div className="relative overflow-hidden">
-          <img
-            src={mp.photo_url || 'https://via.placeholder.com/200x200/E2E8F0/64748B?text=MP'}
-            alt={`${mp.first_name} ${mp.last_name}`}
-            className="w-full aspect-[3/4] object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-          {/* Party Badge - Top Right */}
+        <div className="relative mb-4 z-10">
+          <div className="w-40 h-40 rounded-full p-1 bg-white border border-slate-100 shadow-sm group-hover:shadow-md transition-shadow">
+            <img
+              src={mp.photo_url || 'https://via.placeholder.com/200x200/E2E8F0/64748B?text=MP'}
+              alt={`${mp.first_name} ${mp.last_name}`}
+              className="w-full h-full rounded-full object-cover"
+            />
+          </div>
+          {/* Party Badge - Bottom Center of Photo */}
           <div
-            className="absolute top-2 right-2 px-2 py-1 rounded text-white text-xs font-bold"
+            className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 px-3 py-0.5 rounded-full text-white text-[10px] font-bold shadow-sm border-2 border-white whitespace-nowrap"
             style={{ backgroundColor: getPartyColor(mp.club) }}
           >
             {mp.club}
@@ -46,21 +51,24 @@ export default function MpCard({ mp }: MpCardProps) {
         </div>
 
         {/* Card content */}
-        <div className="p-4">
-          <h3 className="font-bold text-ink text-base mb-3">
+        <div className="w-full z-10">
+          <h3 className="font-bold text-slate-900 text-lg mb-1 group-hover:text-blue-600 transition-colors">
             {mp.first_name} {mp.last_name}
           </h3>
+          <p className="text-xs text-slate-500 mb-4 font-medium uppercase tracking-wide">
+            {mp.district ? `Okręg ${mp.district}` : 'Poseł na Sejm RP'}
+          </p>
 
           {/* Attendance with Progress Bar */}
-          <div className="space-y-1">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-ink-light">Obecność</span>
-              <span className="font-semibold text-ink">{attendanceRate}%</span>
+          <div className="w-full bg-slate-50 rounded-xl p-3 border border-slate-100">
+            <div className="flex justify-between items-center text-xs mb-1.5">
+              <span className="text-slate-500 font-medium">Frekwencja</span>
+              <span className="font-bold text-slate-700">{attendanceRate}%</span>
             </div>
             {/* Progress Bar */}
-            <div className="h-2 bg-gray-100 rounded-sm overflow-hidden">
+            <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-brand rounded-sm"
+                className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${attendanceRate}%` }}
                 transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}

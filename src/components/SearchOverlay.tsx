@@ -35,16 +35,9 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
         e?.preventDefault();
         if (!query.trim()) return;
 
-        // For now, we can redirect to a search results page or just the MPs page with a query param
-        // Since we don't have a dedicated global search page yet, let's redirect to /poslowie with the search term
-        // Ideally, we would have a global search page.
-        // But based on the current app structure, searching for MPs is the primary use case.
-        // Let's navigate to /poslowie and maybe we can pass state or query param.
-        // The Poslowie page uses local state for search, so we might need to update it to read from URL.
-        // For this step, I'll just close the overlay and maybe log it, or navigate to /poslowie?
-        // Let's navigate to /poslowie?search=query
+        // Unified Search
+        navigate(`/szukaj?q=${encodeURIComponent(query)}`);
 
-        navigate(`/poslowie?q=${encodeURIComponent(query)}`);
         onClose();
         setQuery('');
     };

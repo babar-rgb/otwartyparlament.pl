@@ -21,6 +21,7 @@ import Comparator from './pages/Comparator';
 import BillDetails from './pages/BillDetails';
 import BillsList from './pages/BillsList';
 import VotesList from './pages/VotesList';
+import SearchPage from './pages/SearchPage';
 
 export default function App() {
   return (
@@ -52,6 +53,7 @@ export default function App() {
             <Route path="/newsletter" element={<Newsletter />} />
             <Route path="/kontakt" element={<Contact />} />
             <Route path="/porownywarka" element={<Comparator />} />
+            <Route path="/szukaj" element={<SearchPage />} />
           </Routes>
         </main>
         <Footer />

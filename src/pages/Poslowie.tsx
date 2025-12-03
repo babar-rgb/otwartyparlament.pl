@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+// Force HMR update 5
 import { useSearchParams } from 'react-router-dom';
 import { MP } from '../api';
 import { supabase } from '../lib/supabase';

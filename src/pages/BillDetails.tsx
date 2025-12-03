@@ -1,7 +1,8 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, FileText, Calendar, User, Tag } from 'lucide-react';
+import { ArrowLeft, FileText, Calendar, User, Tag, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
 import BillTimeline, { TimelineStage } from '../components/BillTimeline';
 import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 interface ProcessStage {
     date: string;
@@ -21,9 +22,24 @@ interface BillData {
     status: 'processing' | 'passed' | 'rejected';
 }
 
+interface RelatedVote {
+    id: number;
+    sitting: number;
+    voting_number: number;
+    date: string;
+    title_clean: string;
+    verdict: string;
+    details_json: {
+        yes: number;
+        no: number;
+        abstain: number;
+    };
+}
+
 export default function BillDetails() {
     const { id } = useParams();
     const [bill, setBill] = useState<BillData | null>(null);
+    const [relatedVotes, setRelatedVotes] = useState<RelatedVote[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -55,16 +71,32 @@ export default function BillDetails() {
                     if (lastStage?.stageName.includes('odrzuc')) status = 'rejected';
                 }
 
+                const printNumber = data.documentId;
+
                 setBill({
                     id: data.id,
                     title: data.title || `Proces legislacyjny nr ${data.id}`,
                     description: data.description || 'Brak opisu.',
-                    printNumber: data.documentId || 'Brak',
+                    printNumber: printNumber || 'Brak',
                     date: data.startDate,
                     proposer: 'Sejm RP', // API doesn't always provide proposer directly in process, might need separate fetch
                     currentStage,
                     status
                 });
+
+                // Fetch related votes if print number exists
+                if (printNumber) {
+                    const { data: votesData, error: votesError } = await supabase
+                        .from('votes')
+                        .select('*')
+                        .eq('print_number', printNumber)
+                        .order('date', { ascending: false });
+
+                    if (!votesError && votesData) {
+                        setRelatedVotes(votesData);
+                    }
+                }
+
             } catch (error) {
                 console.error('Error fetching bill:', error);
             } finally {
@@ -78,7 +110,7 @@ export default function BillDetails() {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen pt-24">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
         );
     }
@@ -153,7 +185,44 @@ export default function BillDetails() {
                     </div>
                     <div>
                         <h3 className="font-bold text-slate-900 mb-4">Powiązane głosowania</h3>
-                        <p className="text-slate-500 text-sm">Szczegóły głosowań dostępne w zakładce Głosowania.</p>
+                        {relatedVotes.length > 0 ? (
+                            <div className="space-y-3">
+                                {relatedVotes.map((vote) => (
+                                    <Link
+                                        key={vote.id}
+                                        to={`/glosowania/${vote.sitting}/${vote.voting_number}`}
+                                        className="block p-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-sm transition-all group"
+                                    >
+                                        <div className="flex justify-between items-start mb-2">
+                                            <span className="text-xs font-medium text-slate-500">
+                                                {new Date(vote.date).toLocaleDateString('pl-PL')}
+                                            </span>
+                                            <span className={`flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${vote.verdict === 'PRZYJĘTO'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-red-100 text-red-700'
+                                                }`}>
+                                                {vote.verdict === 'PRZYJĘTO' ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                                                {vote.verdict}
+                                            </span>
+                                        </div>
+                                        <h4 className="text-sm font-bold text-slate-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                                            {vote.title_clean}
+                                        </h4>
+                                        <div className="flex items-center justify-between text-xs text-slate-500">
+                                            <div className="flex gap-2">
+                                                <span className="text-green-600 font-medium">Za: {vote.details_json?.yes || 0}</span>
+                                                <span className="text-red-600 font-medium">Przeciw: {vote.details_json?.no || 0}</span>
+                                            </div>
+                                            <div className="flex items-center text-blue-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                                                Szczegóły <ArrowRight size={12} className="ml-1" />
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-slate-500 text-sm italic">Brak powiązanych głosowań w bazie.</p>
+                        )}
                     </div>
                 </div>
             </div>

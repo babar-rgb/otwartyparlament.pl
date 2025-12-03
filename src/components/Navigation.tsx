@@ -60,19 +60,19 @@ export default function Navigation() {
 
             {/* Center: Main Links (Desktop) */}
             <div className="hidden md:flex items-center gap-12">
-              <Link to="/poslowie" className="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+              <Link to="/poslowie" className="text-sm font-bold text-neutral-900 hover:text-blue-600 transition-colors">
                 Posłowie
               </Link>
-              <Link to="/glosowania" className="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+              <Link to="/glosowania" className="text-sm font-bold text-neutral-900 hover:text-blue-600 transition-colors">
                 Głosowania
               </Link>
-              <Link to="/rankingi" className="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+              <Link to="/rankingi" className="text-sm font-bold text-neutral-900 hover:text-blue-600 transition-colors">
                 Rankingi
               </Link>
-              <Link to="/projekty" className="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+              <Link to="/projekty" className="text-sm font-bold text-neutral-900 hover:text-blue-600 transition-colors">
                 Projekty
               </Link>
-              <Link to="/o-projekcie" className="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+              <Link to="/o-projekcie" className="text-sm font-bold text-neutral-900 hover:text-blue-600 transition-colors">
                 O Projekcie
               </Link>
             </div>

@@ -2,48 +2,92 @@ import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { MP } from '../api';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, Mail, MapPin } from 'lucide-react';
+import { ArrowLeft, Mail, MapPin, CheckCircle2, XCircle, MinusCircle, HelpCircle, Star } from 'lucide-react';
+import { cleanSejmTitle } from '../utils/titleFormatter';
+
+interface VoteHistoryItem {
+  vote: string;
+  votes: {
+    id: number;
+    sitting: number;
+    voting_number: number;
+    title_clean: string;
+    title_raw?: string;
+    date: string;
+    verdict: string;
+    category?: string;
+  };
+}
 
 export default function MpProfile() {
   const { id } = useParams();
   const [mp, setMp] = useState<MP | null>(null);
+  const [voteHistory, setVoteHistory] = useState<VoteHistoryItem[]>([]);
+  const [keyDecisions, setKeyDecisions] = useState<VoteHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadMp = async () => {
+    const loadMpData = async () => {
       if (!id) return;
       try {
-        const { data, error } = await supabase
+        // 1. Fetch MP Details
+        const { data: mpData, error: mpError } = await supabase
           .from('mps')
           .select('*')
           .eq('id', id)
           .single();
 
-        if (error) throw error;
+        if (mpError) throw mpError;
 
         // Map DB columns to MP interface
         const mappedMp: MP = {
-          id: data.id,
-          first_name: data.name.split(' ')[0],
-          last_name: data.name.split(' ').slice(1).join(' '),
-          club: data.party,
-          district: data.district,
-          photo_url: data.photo_url,
-          attendanceRate: Math.round(data.stats_attendance || 0),
-          active: data.active,
-          rebelVotes: data.stats_rebellion || 0,
-          email: '', // Not in DB yet, could add later
-          voivodeship: '' // Not in DB yet
+          id: mpData.id,
+          first_name: mpData.name.split(' ')[0],
+          last_name: mpData.name.split(' ').slice(1).join(' '),
+          club: mpData.party,
+          district: mpData.district,
+          photo_url: mpData.photo_url,
+          attendanceRate: Math.round(mpData.stats_attendance || 0),
+          active: mpData.active,
+          rebelVotes: mpData.stats_rebellion || 0,
+          email: '',
+          voivodeship: ''
         };
 
         setMp(mappedMp);
+
+        // 2. Fetch Voting History (Last 10)
+        const { data: historyData, error: historyError } = await supabase
+          .from('vote_results')
+          .select('vote, votes!inner(id, sitting, voting_number, title_clean, title_raw, date, verdict)')
+          .eq('mp_id', id)
+          .order('vote_id', { ascending: false })
+          .limit(10);
+
+        if (!historyError && historyData) {
+          setVoteHistory(historyData as unknown as VoteHistoryItem[]);
+        }
+
+        // 3. Fetch Key Decisions (Key Votes)
+        const { data: keyData, error: keyError } = await supabase
+          .from('vote_results')
+          .select('vote, votes!inner(id, sitting, voting_number, title_clean, title_raw, date, verdict, category, is_key_vote)')
+          .eq('mp_id', id)
+          .eq('votes.is_key_vote', true)
+          .order('vote_id', { ascending: false })
+          .limit(5);
+
+        if (!keyError && keyData) {
+          setKeyDecisions(keyData as unknown as VoteHistoryItem[]);
+        }
+
       } catch (error) {
-        console.error('Error fetching MP:', error);
+        console.error('Error fetching MP data:', error);
       } finally {
         setLoading(false);
       }
     };
-    loadMp();
+    loadMpData();
   }, [id]);
 
   if (loading) return <div className="text-center py-12">Ładowanie profilu posła...</div>;
@@ -81,7 +125,7 @@ export default function MpProfile() {
   const photoUrl = mp.photo_url;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pt-24 pb-12 px-4">
+    <div className="max-w-5xl mx-auto space-y-6 pt-24 pb-12 px-4 animate-fade-in">
       {/* Back Button */}
       <Link to="/poslowie" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold">
         <ArrowLeft size={20} />
@@ -181,37 +225,98 @@ export default function MpProfile() {
         </div>
       </div>
 
-      {/* SECTION C: Voting History Timeline */}
-      <div className="bg-white rounded-xl border-2 border-slate-200 p-8 shadow-sm">
-        <h2 className="text-2xl font-bold text-slate-900 mb-6">
-          Jak głosował(a) w kluczowych sprawach?
-        </h2>
-
-        <div className="space-y-4">
-          {/* Vote 1 */}
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 py-4 border-b border-slate-200">
-            <span className="text-slate-700 font-medium">Ustawa o finansowaniu In Vitro</span>
-            <span className="px-4 py-2 bg-green-100 text-green-800 rounded-full font-bold text-sm uppercase tracking-wide w-fit">
-              Za
-            </span>
+      {/* SECTION C: Key Decisions (NEW) */}
+      {keyDecisions.length > 0 && (
+        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl border-2 border-indigo-100 p-8 shadow-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+              <Star size={24} />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900">
+              Kluczowe Decyzje
+            </h2>
           </div>
 
-          {/* Vote 2 */}
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 py-4 border-b border-slate-200">
-            <span className="text-slate-700 font-medium">Wotum zaufania dla rządu</span>
-            <span className="px-4 py-2 bg-red-100 text-red-800 rounded-full font-bold text-sm uppercase tracking-wide w-fit">
-              Przeciw
-            </span>
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {keyDecisions.map((item, index) => (
+              <div key={index} className="bg-white p-5 rounded-xl border border-indigo-100 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex justify-between items-start gap-4 mb-3">
+                  <span className="text-xs font-bold text-indigo-500 uppercase tracking-wider bg-indigo-50 px-2 py-1 rounded">
+                    {item.votes.category || 'WAŻNE'}
+                  </span>
+                  <span className="text-xs text-slate-400 whitespace-nowrap">
+                    {new Date(item.votes.date).toLocaleDateString('pl-PL')}
+                  </span>
+                </div>
 
-          {/* Vote 3 */}
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 py-4">
-            <span className="text-slate-700 font-medium">Zamrożenie cen energii</span>
-            <span className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full font-bold text-sm uppercase tracking-wide w-fit">
-              Wstrzymał się
-            </span>
+                <h3 className="font-bold text-slate-900 mb-4 line-clamp-2 min-h-[3rem]">
+                  {cleanSejmTitle(item.votes.title_clean || item.votes.title_raw || '')}
+                </h3>
+
+                <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+                  <span className="text-sm text-slate-500">Głos posła:</span>
+                  <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full font-bold text-sm uppercase tracking-wide ${item.vote === 'YES' ? 'bg-green-100 text-green-700' :
+                      item.vote === 'NO' ? 'bg-red-100 text-red-700' :
+                        item.vote === 'ABSTAIN' ? 'bg-neutral-100 text-neutral-700' :
+                          'bg-slate-100 text-slate-500'
+                    }`}>
+                    {item.vote === 'YES' && <CheckCircle2 size={14} />}
+                    {item.vote === 'NO' && <XCircle size={14} />}
+                    {item.vote === 'ABSTAIN' && <MinusCircle size={14} />}
+
+                    {item.vote === 'YES' ? 'ZA' :
+                      item.vote === 'NO' ? 'PRZECIW' :
+                        item.vote === 'ABSTAIN' ? 'WSTRZ.' : 'NIEOB.'}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+      )}
+
+      {/* SECTION D: Voting History Timeline */}
+      <div className="bg-white rounded-xl border-2 border-slate-200 p-8 shadow-sm">
+        <h2 className="text-2xl font-bold text-slate-900 mb-6">
+          Ostatnie głosowania
+        </h2>
+
+        {voteHistory.length > 0 ? (
+          <div className="space-y-4">
+            {voteHistory.map((item, index) => (
+              <div key={index} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 py-4 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors rounded-lg px-2">
+                <div className="flex-1">
+                  <div className="text-xs text-slate-500 mb-1">
+                    {new Date(item.votes.date).toLocaleDateString('pl-PL')} • Posiedzenie {item.votes.sitting}
+                  </div>
+                  <Link to={`/glosowania/${item.votes.sitting}/${item.votes.voting_number}`} className="text-slate-900 font-medium hover:text-blue-600 transition-colors line-clamp-2">
+                    {cleanSejmTitle(item.votes.title_clean || item.votes.title_raw || '')}
+                  </Link>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  {/* MP Vote */}
+                  <div className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm uppercase tracking-wide w-fit border ${item.vote === 'YES' ? 'bg-green-100 text-green-800 border-green-200' :
+                    item.vote === 'NO' ? 'bg-red-100 text-red-800 border-red-200' :
+                      item.vote === 'ABSTAIN' ? 'bg-neutral-100 text-neutral-800 border-neutral-200' :
+                        'bg-slate-100 text-slate-500 border-slate-200'
+                    }`}>
+                    {item.vote === 'YES' && <CheckCircle2 size={16} />}
+                    {item.vote === 'NO' && <XCircle size={16} />}
+                    {item.vote === 'ABSTAIN' && <MinusCircle size={16} />}
+                    {item.vote === 'ABSENT' && <HelpCircle size={16} />}
+
+                    {item.vote === 'YES' ? 'ZA' :
+                      item.vote === 'NO' ? 'PRZECIW' :
+                        item.vote === 'ABSTAIN' ? 'WSTRZ.' : 'NIEOB.'}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-slate-500">Brak danych o głosowaniach.</p>
+        )}
 
         <div className="mt-6 pt-6 border-t border-slate-200">
           <Link
@@ -223,7 +328,7 @@ export default function MpProfile() {
         </div>
       </div>
 
-      {/* SECTION D: Contact */}
+      {/* SECTION E: Contact */}
       <div className="bg-slate-50 rounded-xl border-2 border-slate-200 p-6 shadow-sm">
         <h3 className="text-lg font-bold text-slate-900 mb-4">Kontakt</h3>
         {mp.email ? (

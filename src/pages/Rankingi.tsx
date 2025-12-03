@@ -1,19 +1,47 @@
 import { useState, useEffect } from 'react';
-import { fetchMPs, MP } from '../api';
 import { Link } from 'react-router-dom';
-import { Trophy, TrendingUp, Users, Clock, FileText, Swords } from 'lucide-react';
+import { Trophy, TrendingUp, Swords, TrendingDown, AlertTriangle } from 'lucide-react';
 import Comparator from './Comparator';
+import { supabase } from '../lib/supabase';
+
+interface RankingMP {
+  id: number;
+  first_name: string;
+  last_name: string;
+  club: string;
+  district: string;
+  photo_url: string;
+  stats_attendance: number;
+  stats_rebellion: number;
+}
 
 export default function Rankingi() {
-  const [activeTab, setActiveTab] = useState<'activity' | 'votes' | 'attendance' | 'bills' | 'comparator'>('activity');
-  const [mps, setMps] = useState<MP[]>([]);
+  const [activeTab, setActiveTab] = useState<'attendance_high' | 'attendance_low' | 'rebellion' | 'comparator'>('attendance_high');
+  const [mps, setMps] = useState<RankingMP[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadMps = async () => {
       try {
-        const data = await fetchMPs();
-        setMps(data);
+        const { data, error } = await supabase
+          .from('mps')
+          .select('id, name, party, district, photo_url, stats_attendance, stats_rebellion')
+          .eq('active', true);
+
+        if (error) throw error;
+
+        const mappedMps = data.map((mp: any) => ({
+          id: mp.id,
+          first_name: mp.name.split(' ')[0],
+          last_name: mp.name.split(' ').slice(1).join(' '),
+          club: mp.party,
+          district: mp.district,
+          photo_url: mp.photo_url,
+          stats_attendance: mp.stats_attendance || 0,
+          stats_rebellion: mp.stats_rebellion || 0,
+        }));
+
+        setMps(mappedMps);
       } catch (error) {
         console.error('Error fetching MPs:', error);
       } finally {
@@ -26,22 +54,20 @@ export default function Rankingi() {
   if (loading) return <div className="text-center py-12">Ładowanie rankingów...</div>;
 
   const rankings = {
-    activity: [...mps]
-      .sort((a, b) => (b.aktywnosc || 0) - (a.aktywnosc || 0))
+    attendance_high: [...mps]
+      .sort((a, b) => b.stats_attendance - a.stats_attendance)
       .slice(0, 20)
-      .map((mp, idx) => ({ ...mp, rank: idx + 1, value: mp.aktywnosc || 0, unit: '%' })),
-    votes: [...mps]
-      .sort((a, b) => (b.votesCount || 0) - (a.votesCount || 0))
+      .map((mp, idx) => ({ ...mp, rank: idx + 1, value: mp.stats_attendance, unit: '%' })),
+
+    attendance_low: [...mps]
+      .sort((a, b) => a.stats_attendance - b.stats_attendance)
       .slice(0, 20)
-      .map((mp, idx) => ({ ...mp, rank: idx + 1, value: mp.votesCount || 0, unit: 'głosów' })),
-    attendance: [...mps]
-      .sort((a, b) => (b.attendanceRate || 0) - (a.attendanceRate || 0))
+      .map((mp, idx) => ({ ...mp, rank: idx + 1, value: mp.stats_attendance, unit: '%' })),
+
+    rebellion: [...mps]
+      .sort((a, b) => b.stats_rebellion - a.stats_rebellion)
       .slice(0, 20)
-      .map((mp, idx) => ({ ...mp, rank: idx + 1, value: mp.attendanceRate || 0, unit: '%' })),
-    bills: [...mps]
-      .sort((a, b) => (b.billsCount || 0) - (a.billsCount || 0))
-      .slice(0, 20)
-      .map((mp, idx) => ({ ...mp, rank: idx + 1, value: mp.billsCount || 0, unit: 'ustaw' })),
+      .map((mp, idx) => ({ ...mp, rank: idx + 1, value: mp.stats_rebellion, unit: 'głosów przeciw klubowi' })),
   };
 
   const getRankColor = (rank: number) => {
@@ -60,11 +86,13 @@ export default function Rankingi() {
 
   const getPartyColor = (party: string) => {
     const colors: Record<string, string> = {
-      PiS: 'bg-blue-600',
-      KO: 'bg-orange-600',
-      LWA: 'bg-red-600',
-      TD: 'bg-green-600',
-      K: 'bg-red-900',
+      'PiS': 'bg-[#800000]',
+      'KO': 'bg-[#0096FF]',
+      'Polska2050': 'bg-[#00A150]',
+      'PSL-TD': 'bg-[#90EE90]',
+      'Lewica': 'bg-[#FF0000]',
+      'Konfederacja': 'bg-[#000080]',
+      'INNE': 'bg-slate-600',
     };
     return colors[party] || 'bg-slate-600';
   };
@@ -72,22 +100,21 @@ export default function Rankingi() {
   const currentRanking = activeTab === 'comparator' ? [] : rankings[activeTab];
 
   const tabs = [
-    { id: 'activity', label: 'Aktywność', icon: TrendingUp },
-    { id: 'votes', label: 'Głosowania', icon: Users },
-    { id: 'attendance', label: 'Obecność', icon: Clock },
-    { id: 'bills', label: 'Projekty ustaw', icon: FileText },
+    { id: 'attendance_high', label: 'Najwyższa Frekwencja', icon: TrendingUp },
+    { id: 'attendance_low', label: 'Najniższa Frekwencja', icon: TrendingDown },
+    { id: 'rebellion', label: 'Buntownicy', icon: AlertTriangle },
     { id: 'comparator', label: 'Porównywarka', icon: Swords },
   ];
 
   return (
-    <div className="container mx-auto px-4 pt-24 pb-12 space-y-8">
+    <div className="container mx-auto px-4 pt-24 pb-12 space-y-8 animate-fade-in">
       <div>
         <h1 className="text-4xl font-bold text-slate-900 mb-2 flex items-center gap-3">
           <Trophy size={40} className="text-yellow-500" />
           Rankingi
         </h1>
         <p className="text-slate-600">
-          Sprawdź najbardziej aktywnych posłów w różnych kategoriach.
+          Sprawdź najbardziej aktywnych i niezależnych posłów. Dane oparte na rzeczywistych głosowaniach.
         </p>
       </div>
 
@@ -100,7 +127,7 @@ export default function Rankingi() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-6 py-4 font-semibold transition border-b-2 ${isActive
+                className={`flex items-center gap-2 px-6 py-4 font-semibold transition border-b-2 whitespace-nowrap ${isActive
                   ? 'border-blue-600 text-blue-600 bg-blue-50'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
                   }`}
@@ -119,15 +146,22 @@ export default function Rankingi() {
             <div className="space-y-3">
               {currentRanking.map((entry: any, _: number) => (
                 <Link key={entry.id} to={`/poslowie/${entry.id}`}>
-                  <div className="flex items-center gap-4 p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition cursor-pointer">
+                  <div className="flex items-center gap-4 p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition cursor-pointer group">
                     <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg ${getRankColor(entry.rank)}`}>
                       {getRankIcon(entry.rank)}
                     </div>
 
                     <div className="flex-1 flex items-center gap-3">
-                      <img src={entry.photo_url || 'https://via.placeholder.com/150'} alt={`${entry.first_name} ${entry.last_name}`} className="w-12 h-12 rounded-full object-cover" />
+                      <img
+                        src={entry.photo_url || 'https://via.placeholder.com/150'}
+                        alt={`${entry.first_name} ${entry.last_name}`}
+                        className="w-12 h-12 rounded-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://via.placeholder.com/150';
+                        }}
+                      />
                       <div>
-                        <p className="font-semibold text-slate-900">
+                        <p className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
                           {entry.first_name} {entry.last_name}
                         </p>
                         <p className="text-xs text-slate-500">{entry.district}</p>
@@ -140,14 +174,21 @@ export default function Rankingi() {
                       </span>
                     </div>
 
-                    <div className="text-right min-w-20">
-                      <p className="text-2xl font-bold text-blue-600">{entry.value}</p>
+                    <div className="text-right min-w-24">
+                      <p className={`text-2xl font-bold ${activeTab === 'attendance_low' ? 'text-red-600' :
+                        activeTab === 'rebellion' ? 'text-orange-600' : 'text-blue-600'
+                        }`}>
+                        {entry.value}
+                        {activeTab === 'attendance_high' || activeTab === 'attendance_low' ? '%' : ''}
+                      </p>
                       <p className="text-xs text-slate-500">{entry.unit}</p>
                     </div>
 
-                    <div className="w-32 bg-slate-200 rounded-full h-2">
+                    <div className="w-32 bg-slate-200 rounded-full h-2 hidden md:block">
                       <div
-                        className="bg-blue-600 h-2 rounded-full"
+                        className={`h-2 rounded-full ${activeTab === 'attendance_low' ? 'bg-red-600' :
+                          activeTab === 'rebellion' ? 'bg-orange-600' : 'bg-blue-600'
+                          }`}
                         style={{
                           width: `${Math.min(100, (entry.value / Math.max(...currentRanking.map((e: any) => e.value))) * 100)}%`,
                         }}
@@ -168,14 +209,15 @@ export default function Rankingi() {
             O rankingach
           </h3>
           <p className="text-sm text-slate-700">
-            Rankingi pokazują najbardziej aktywnych posłów w różnych kategoriach. Wskaźniki aktualizują się codziennie.
+            Rankingi generowane są automatycznie na podstawie analizy wszystkich głosowań w tej kadencji.
+            "Buntownicy" to posłowie, którzy najczęściej głosują inaczej niż większość ich klubu.
           </p>
         </div>
 
         <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6">
           <h3 className="font-bold text-slate-900 mb-2">Metodologia</h3>
           <p className="text-sm text-slate-700">
-            Dane pochodzą z oficjalnych rejestrów Sejmu i są aktualizowane codziennie o 6 rano.
+            Dane pochodzą z oficjalnych rejestrów Sejmu. Frekwencja liczona jest jako procent udziału w głosowaniach.
           </p>
         </div>
       </div>

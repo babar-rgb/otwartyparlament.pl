@@ -32,8 +32,8 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
                         club: mp.club || 'Niezrzeszeni',
                         active: mp.active,
                         photo_url: mp.photo_url || `https://ui-avatars.com/api/?name=${mp.first_name || 'Posel'}+${mp.last_name || ''}&background=random`,
-                        attendanceRate: mp.stats_attendance ? Math.round(mp.stats_attendance * 100) : Math.floor(Math.random() * 20) + 80,
-                        rebelVotes: mp.stats_rebellion ? Math.round(mp.stats_rebellion * 100) : Math.floor(Math.random() * 15),
+                        attendanceRate: mp.stats_attendance ? Math.round(mp.stats_attendance) : Math.floor(Math.random() * 20) + 80,
+                        rebelVotes: mp.stats_rebellion || 0,
                         lastVote: 'Za'
                     }));
 
@@ -288,7 +288,7 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
                                     <span>Buntownik (Głosy przeciw partii)</span>
                                 </div>
                                 <div className="flex items-center gap-4">
-                                    <span className="font-black text-slate-900 w-12 text-right">{mpA.rebelVotes || 0}%</span>
+                                    <span className="font-black text-slate-900 w-12 text-right">{mpA.rebelVotes || 0}</span>
                                     <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden relative">
                                         {/* Center line */}
                                         <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-300"></div>
@@ -302,7 +302,7 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
                                             className="absolute top-0 h-full bg-pink-500 rounded-r-full"
                                         ></div>
                                     </div>
-                                    <span className="font-black text-slate-900 w-12">{mpB.rebelVotes || 0}%</span>
+                                    <span className="font-black text-slate-900 w-12">{mpB.rebelVotes || 0}</span>
                                 </div>
                             </div>
                         </div>
