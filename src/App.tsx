@@ -11,8 +11,10 @@ import PartyProfile from './pages/PartyProfile';
 import Rankingi from './pages/Rankingi';
 import TestWyborczy from './pages/TestWyborczy';
 import OProjekcie from './pages/OProjekcie';
-import VoteDetails from './pages/VoteDetails'; // Added import
+import VoteDetails from './pages/VoteDetails';
 import CategoryDetails from './pages/CategoryDetails';
+import DataSources from './pages/DataSources';
+import OpenSource from './pages/OpenSource';
 
 export default function App() {
   return (
@@ -33,6 +35,8 @@ export default function App() {
             <Route path="/test" element={<TestWyborczy />} />
             <Route path="/o-projekcie" element={<OProjekcie />} />
             <Route path="/tematy/:slug" element={<CategoryDetails />} />
+            <Route path="/metodologia" element={<DataSources />} />
+            <Route path="/open-source" element={<OpenSource />} />
           </Routes>
         </main>
         <Footer />

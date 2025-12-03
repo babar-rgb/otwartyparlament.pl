@@ -86,10 +86,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                     </div>
                                 </Link>
 
-                                <a
-                                    href="https://github.com/yourusername/otwartyparlament"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                <Link
+                                    to="/open-source"
                                     onClick={onClose}
                                     className="flex items-center gap-3 p-4 rounded-lg hover:bg-slate-50 transition-colors group"
                                 >
@@ -98,7 +96,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                         <div className="font-bold text-slate-900">Kod Źródłowy (Open Source)</div>
                                         <div className="text-sm text-slate-600">Zobacz na GitHub</div>
                                     </div>
-                                </a>
+                                </Link>
                             </nav>
                         </div>
 
