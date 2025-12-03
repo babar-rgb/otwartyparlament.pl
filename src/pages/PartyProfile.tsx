@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { parties, mps } from '../data/mockData';
-import { ArrowLeft, Users, BarChart3, TrendingUp } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { ArrowLeft, Users, TrendingUp } from 'lucide-react';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 
 export default function PartyProfile() {
   const { id } = useParams();

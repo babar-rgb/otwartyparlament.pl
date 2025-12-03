@@ -112,7 +112,7 @@ export default function FeaturedMPs({ topAttendance, topRebels, lowAttendance }:
                                         metricValue={
                                             section.metric === "obecność"
                                                 ? mp.attendanceRate || 85
-                                                : mp.stats_rebellion || Math.floor(Math.random() * 20)
+                                                : mp.rebelVotes || Math.floor(Math.random() * 20)
                                         }
                                         accentColor={section.accentColor}
                                         index={index}

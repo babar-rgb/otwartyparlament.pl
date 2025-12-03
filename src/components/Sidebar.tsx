@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { X, Github, Mail, BookOpen, Database, Heart } from 'lucide-react';
+import { X, Github, Mail, BookOpen, Database, Heart, Search } from 'lucide-react';
 
 interface SidebarProps {
     isOpen: boolean;
@@ -39,6 +39,25 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     <div className="flex-1 overflow-y-auto p-6">
                         {/* Section A: Transparentność i Misja */}
                         <div className="mb-8">
+                            {/* Mobile Search Input */}
+                            <div className="mb-6 relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                                <input
+                                    type="text"
+                                    placeholder="Szukaj..."
+                                    className="w-full pl-10 pr-4 py-3 bg-slate-100 rounded-lg text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            const target = e.target as HTMLInputElement;
+                                            if (target.value.trim()) {
+                                                window.location.href = `/poslowie?q=${encodeURIComponent(target.value)}`;
+                                                onClose();
+                                            }
+                                        }
+                                    }}
+                                />
+                            </div>
+
                             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-4">
                                 Transparentność i Misja
                             </h3>

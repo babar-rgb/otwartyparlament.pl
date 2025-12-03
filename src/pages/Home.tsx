@@ -1,29 +1,7 @@
-import { useState, useEffect } from 'react';
-import { fetchMPs, fetchVotes, Vote, MP } from '../api';
 import { Link } from 'react-router-dom';
-import { ChevronDown, ArrowRight, Heart, TrendingUp, Wheat, GraduationCap, Shield, Scale, Building, Zap, Cpu, Users, Globe, Palette } from 'lucide-react';
-import VoteCard from '../components/VoteCard';
-import MpCard from '../components/MpCard';
+import { ChevronDown, Heart, TrendingUp, Wheat, GraduationCap, Shield, Scale, Building, Zap, Cpu, Users, Globe, Palette } from 'lucide-react';
 
 export default function Home() {
-  const [votes, setVotes] = useState<Vote[]>([]);
-  const [mps, setMps] = useState<MP[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [votesData, mpsData] = await Promise.all([fetchVotes(), fetchMPs()]);
-        setVotes(votesData);
-        setMps(mpsData);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
-  }, []);
 
   return (
     <div className="min-h-screen bg-paper">

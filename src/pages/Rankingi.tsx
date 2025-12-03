@@ -112,7 +112,7 @@ export default function Rankingi() {
 
         <div className="p-6">
           <div className="space-y-3">
-            {currentRanking.map((entry: any, idx: number) => (
+            {currentRanking.map((entry: any, _: number) => (
               <Link key={entry.id} to={`/poslowie/${entry.id}`}>
                 <div className="flex items-center gap-4 p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition cursor-pointer">
                   <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg ${getRankColor(entry.rank)}`}>

@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { MP } from '../api';
 import { supabase } from '../lib/supabase';
 import MpCard from '../components/MpCard';
@@ -55,12 +56,21 @@ const parties = [
 ];
 
 export default function Poslowie() {
+  const [searchParams] = useSearchParams();
   const [mps, setMps] = useState<MP[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [selectedParty, setSelectedParty] = useState<string>('');
   const [isInnePopoverOpen, setIsInnePopoverOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
+
+  // Sync search term with URL query param
+  useEffect(() => {
+    const query = searchParams.get('q');
+    if (query !== null) {
+      setSearchTerm(query);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const loadMps = async () => {

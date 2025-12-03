@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { votes, parties, mps } from '../data/mockData';
+import { votes, parties } from '../data/mockData';
 import { ChevronRight, ChevronLeft, CheckCircle2 } from 'lucide-react';
 
 export default function TestWyborczy() {
@@ -33,7 +33,7 @@ export default function TestWyborczy() {
   if (showResults) {
     const partyAlignments = parties.map((party) => {
       let alignment = 0;
-      testVotes.forEach((vote, idx) => {
+      testVotes.forEach((_, idx) => {
         const answer = answers[idx];
         if (answer) {
           if ((answer === 'za' && Math.random() > 0.3) || (answer === 'przeciw' && Math.random() < 0.3)) {

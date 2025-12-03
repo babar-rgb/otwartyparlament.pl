@@ -1,10 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Search } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
+import SearchOverlay from './SearchOverlay';
 
 export default function Navigation() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const location = useLocation();
@@ -69,20 +71,35 @@ export default function Navigation() {
               ))}
             </div>
 
-            {/* Right: Hamburger Menu Button */}
-            <button
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 text-ink hover:opacity-70 transition-opacity"
-              aria-label="Menu"
-            >
-              {isSidebarOpen ? <X size={28} strokeWidth={2} /> : <Menu size={28} strokeWidth={2} />}
-            </button>
+            {/* Right: Actions */}
+            <div className="flex items-center gap-4">
+              {/* Search Button */}
+              <button
+                onClick={() => setIsSearchOpen(true)}
+                className="p-2 text-ink hover:opacity-70 transition-opacity"
+                aria-label="Szukaj"
+              >
+                <Search size={24} strokeWidth={2} />
+              </button>
+
+              {/* Hamburger Menu Button */}
+              <button
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="p-2 text-ink hover:opacity-70 transition-opacity"
+                aria-label="Menu"
+              >
+                {isSidebarOpen ? <X size={28} strokeWidth={2} /> : <Menu size={28} strokeWidth={2} />}
+              </button>
+            </div>
           </div>
         </div>
       </nav>
 
       {/* Sidebar Drawer */}
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+
+      {/* Search Overlay */}
+      <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>
   );
 }
