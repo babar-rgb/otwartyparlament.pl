@@ -2,7 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { MP } from '../api';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, Mail, MapPin, CheckCircle2, XCircle, MinusCircle, HelpCircle, Star, ArrowRight, FileText, Sparkles } from 'lucide-react';
+import { MapPin, Phone, Mail, ExternalLink, Calendar, TrendingUp, AlertCircle, FileText, Sparkles, MessageSquare, Scale, Star, CheckCircle2, XCircle, MinusCircle, HelpCircle, ArrowLeft, ArrowRight } from 'lucide-react';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 
 interface VoteHistoryItem {
@@ -38,6 +38,8 @@ const MpProfile = () => {
   const [voteHistory, setVoteHistory] = useState<VoteHistoryItem[]>([]);
   const [keyDecisions, setKeyDecisions] = useState<VoteHistoryItem[]>([]);
   const [digitizedDeclarations, setDigitizedDeclarations] = useState<AssetDeclaration[]>([]);
+  const [recentSpeeches, setRecentSpeeches] = useState<any[]>([]);
+  const [consistencyReports, setConsistencyReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [interpellations, setInterpellations] = useState<{ id: number; title: string; sent_date: string }[]>([]);
 
@@ -78,9 +80,26 @@ const MpProfile = () => {
           .select('*')
           .eq('mp_id', mpData.id);
 
-        if (declData) {
-          setDigitizedDeclarations(declData);
-        }
+        if (declData) setDigitizedDeclarations(declData);
+
+        // Fetch recent speeches
+        const { data: speechData } = await supabase
+          .from('speeches')
+          .select('*')
+          .eq('mp_id', id)
+          .order('date', { ascending: false })
+          .limit(3);
+
+        if (speechData) setRecentSpeeches(speechData);
+
+        // Fetch consistency reports
+        const { data: consistencyData } = await supabase
+          .from('consistency_reports')
+          .select('*')
+          .eq('mp_id', id)
+          .order('created_at', { ascending: false });
+
+        if (consistencyData) setConsistencyReports(consistencyData);
 
         // 2. Fetch Voting History (Last 10)
         const { data: historyData, error: historyError } = await supabase
@@ -178,7 +197,7 @@ const MpProfile = () => {
           <img
             src={photoUrl}
             alt={`${mp.first_name} ${mp.last_name}`}
-            className="w-48 h-48 md:w-64 md:h-64 rounded-xl object-cover "
+            className="w-48 h-48 md:w-64 md:h-64 rounded-xl object-cover"
             onError={(e) => {
               e.currentTarget.src = 'https://via.placeholder.com/256x256/E2E8F0/64748B?text=MP';
             }}
@@ -261,6 +280,91 @@ const MpProfile = () => {
           <p className="text-sm text-slate-500 mt-2">
             Aktywność w debacie publicznej
           </p>
+        </div>
+      </div>
+
+      {/* Consistency Analysis Section */}
+      <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200 animate-slide-up" style={{ animationDelay: '0.5s' }}>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-3 bg-purple-100 rounded-xl text-purple-600">
+            <Scale size={24} />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900">Analiza Spójności (AI)</h2>
+        </div>
+
+        <div className="space-y-4">
+          {consistencyReports.length > 0 ? (
+            consistencyReports.map((report) => (
+              <div key={report.id} className="p-5 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="font-bold text-lg text-slate-900">{report.topic}</h3>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${report.verdict === 'Spójny' ? 'bg-green-100 text-green-700' :
+                      report.verdict === 'Niespójny' ? 'bg-red-100 text-red-700' :
+                        'bg-yellow-100 text-yellow-700'
+                    }`}>
+                    {report.verdict}
+                  </span>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4 mb-3">
+                  <div className="bg-white p-3 rounded-lg border border-slate-100">
+                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">Co mówił:</p>
+                    <p className="text-sm text-slate-700 italic">"{report.speech_quote}"</p>
+                  </div>
+                  <div className="bg-white p-3 rounded-lg border border-slate-100">
+                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">Jak głosował:</p>
+                    <p className="text-sm text-slate-700">{report.vote_result}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2 text-sm text-slate-600 bg-purple-50 p-3 rounded-lg">
+                  <Sparkles size={16} className="text-purple-500 mt-0.5 shrink-0" />
+                  <p>{report.analysis}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8 text-slate-500">
+              <p>Brak raportów spójności dla tego posła.</p>
+              <p className="text-xs mt-2">Analiza jest generowana okresowo dla kluczowych tematów.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Recent Speeches Section */}
+      <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200 animate-slide-up" style={{ animationDelay: '0.4s' }}>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-3 bg-blue-100 rounded-xl text-blue-600">
+            <MessageSquare size={24} />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900">Ostatnie Wypowiedzi</h2>
+        </div>
+
+        <div className="space-y-4">
+          {recentSpeeches.length > 0 ? (
+            recentSpeeches.map((speech) => (
+              <div key={speech.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-200 transition-colors">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                    Posiedzenie {speech.sitting} • {speech.date}
+                  </span>
+                </div>
+                <p className="text-slate-700 text-sm line-clamp-3 italic">
+                  "{speech.content}"
+                </p>
+                <Link to={`/wypowiedzi?q=${encodeURIComponent(speech.content.slice(0, 50))}`} className="text-xs font-bold text-blue-600 mt-2 inline-block hover:underline">
+                  Zobacz pełną wypowiedź &rarr;
+                </Link>
+              </div>
+            ))
+          ) : (
+            <p className="text-slate-500 italic">Brak zarejestrowanych wypowiedzi w bazie.</p>
+          )}
+
+          <Link to="/wypowiedzi" className="block text-center text-sm font-bold text-slate-500 hover:text-blue-600 mt-4 transition-colors">
+            Przeszukaj wszystkie stenogramy &rarr;
+          </Link>
         </div>
       </div>
 
@@ -372,9 +476,9 @@ const MpProfile = () => {
                   <div className="flex items-center justify-between border-t border-slate-100 pt-3">
                     <span className="text-sm text-slate-500">Głos posła:</span>
                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full font-bold text-sm uppercase tracking-wide ${item.vote === 'YES' ? 'bg-green-100 text-green-700' :
-                      item.vote === 'NO' ? 'bg-red-100 text-red-700' :
-                        item.vote === 'ABSTAIN' ? 'bg-neutral-100 text-neutral-700' :
-                          'bg-slate-100 text-slate-500'
+                        item.vote === 'NO' ? 'bg-red-100 text-red-700' :
+                          item.vote === 'ABSTAIN' ? 'bg-neutral-100 text-neutral-700' :
+                            'bg-slate-100 text-slate-500'
                       }`}>
                       {item.vote === 'YES' && <CheckCircle2 size={14} />}
                       {item.vote === 'NO' && <XCircle size={14} />}
@@ -513,7 +617,7 @@ const MpProfile = () => {
           </a>
         </p>
       </div>
-    </div >
+    </div>
   );
 }
 
