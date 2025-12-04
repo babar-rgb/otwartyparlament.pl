@@ -13,20 +13,61 @@ interface Process {
 export default function BillsList() {
     const [processes, setProcesses] = useState<Process[]>([]);
     const [loading, setLoading] = useState(true);
-    const [offset, setOffset] = useState(0);
+    const [page, setPage] = useState(0);
+    const [totalCount, setTotalCount] = useState<number | null>(null);
     const limit = 20;
 
+    // First, fetch total count
+    useEffect(() => {
+        const fetchTotalCount = async () => {
+            try {
+                // Fetch 1 item to get headers
+                const response = await fetch(`https://api.sejm.gov.pl/sejm/term10/processes?limit=1`);
+                const countHeader = response.headers.get('X-Total-Count');
+                if (countHeader) {
+                    setTotalCount(parseInt(countHeader, 10));
+                }
+            } catch (error) {
+                console.error('Error fetching total count:', error);
+            }
+        };
+        fetchTotalCount();
+    }, []);
+
+    // Then fetch data based on page and totalCount
     useEffect(() => {
         const fetchProcesses = async () => {
+            if (totalCount === null) return;
+
             setLoading(true);
             try {
-                // Fetch processes sorted by ID descending (proxy for date) to get latest
-                const response = await fetch(`https://api.sejm.gov.pl/sejm/term10/processes?limit=${limit}&offset=${offset}`);
+                // Calculate API offset to get latest items
+                // If total is 100, limit 20.
+                // Page 0: want 80-100. apiOffset = 100 - 20 * (0 + 1) = 80.
+                // Page 1: want 60-80. apiOffset = 100 - 20 * (1 + 1) = 60.
+
+                let apiOffset = totalCount - limit * (page + 1);
+                let fetchLimit = limit;
+
+                // Handle last page (start of list)
+                if (apiOffset < 0) {
+                    fetchLimit = limit + apiOffset; // e.g. 20 + (-15) = 5
+                    apiOffset = 0;
+                }
+
+                if (fetchLimit <= 0) {
+                    setProcesses([]);
+                    setLoading(false);
+                    return;
+                }
+
+                const response = await fetch(`https://api.sejm.gov.pl/sejm/term10/processes?limit=${fetchLimit}&offset=${apiOffset}`);
                 if (!response.ok) throw new Error('Failed to fetch processes');
+
                 const data = await response.json();
 
-                // The API returns an array directly
-                setProcesses(data);
+                // Reverse to show newest first
+                setProcesses(data.reverse());
             } catch (error) {
                 console.error('Error fetching processes:', error);
             } finally {
@@ -35,15 +76,15 @@ export default function BillsList() {
         };
 
         fetchProcesses();
-    }, [offset]);
+    }, [page, totalCount]);
 
     const handleNext = () => {
-        setOffset(prev => prev + limit);
+        setPage(prev => prev + 1);
         window.scrollTo(0, 0);
     };
 
     const handlePrev = () => {
-        setOffset(prev => Math.max(0, prev - limit));
+        setPage(prev => Math.max(0, prev - 1));
         window.scrollTo(0, 0);
     };
 
@@ -104,18 +145,18 @@ export default function BillsList() {
             <div className="flex justify-between items-center mt-12 pt-8 border-t border-slate-200">
                 <button
                     onClick={handlePrev}
-                    disabled={offset === 0 || loading}
+                    disabled={page === 0 || loading}
                     className="flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                     <ChevronLeft size={20} />
                     Poprzednie
                 </button>
                 <span className="text-slate-400 font-mono text-sm">
-                    Strona {Math.floor(offset / limit) + 1}
+                    Strona {page + 1}
                 </span>
                 <button
                     onClick={handleNext}
-                    disabled={processes.length < limit || loading}
+                    disabled={loading || (totalCount !== null && (page + 1) * limit >= totalCount)}
                     className="flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                     Następne

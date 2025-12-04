@@ -9,12 +9,16 @@ interface MpCardProps {
 export default function MpCard({ mp }: MpCardProps) {
   const getPartyColor = (party: string): string => {
     const colors: Record<string, string> = {
-      KO: '#0096FF', // Blue
-      PiS: '#800000', // Red
-      'Polska2050-TD': '#00A150', // Green
+      KO: '#E31E2D', // Red
+      PiS: '#003876', // Blue
+      'Polska2050-TD': '#FDB913', // Yellow
       'PSL-TD': '#00A150', // Green (same as Polska2050)
-      Lewica: '#FF0000', // Dark Red
-      Konfederacja: '#000080', // Navy
+      Lewica: 'linear-gradient(135deg, #6a1b9a 0%, #d32f2f 100%)', // Gradient
+      Konfederacja: '#091F42', // Navy
+      Razem: '#99004F', // Razem Purple
+      Republikanie: '#002D62', // Republikanie Dark Navy
+      Konfederacja_KP: '#D4AF37', // Konfederacja KP Gold
+      Niezależni: 'linear-gradient(135deg, #9CA3AF 0%, #4B5563 100%)', // Grey Gradient
     };
     return colors[party] || '#64748B'; // Default gray
   };
@@ -44,7 +48,7 @@ export default function MpCard({ mp }: MpCardProps) {
           {/* Party Badge - Bottom Center of Photo */}
           <div
             className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 px-3 py-0.5 rounded-full text-white text-[10px] font-bold shadow-sm border-2 border-white dark:border-slate-900 whitespace-nowrap"
-            style={{ backgroundColor: getPartyColor(mp.club) }}
+            style={{ background: getPartyColor(mp.club) }}
           >
             {mp.club}
           </div>

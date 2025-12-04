@@ -62,7 +62,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder="Szukaj posła, głosowania, tematu..."
-                        className="w-full bg-transparent text-3xl md:text-4xl font-bold text-ink placeholder:text-ink/20 border-b-2 border-ink/10 py-6 pl-20 pr-20 focus:outline-none focus:border-brand transition-colors"
+                        className="w-full bg-transparent text-3xl md:text-4xl font-bold text-black dark:text-white placeholder:text-slate-400 border-b-2 border-slate-200 dark:border-slate-700 py-6 pl-20 pr-20 focus:outline-none focus:border-blue-500 transition-colors"
                     />
                     <button
                         type="button"

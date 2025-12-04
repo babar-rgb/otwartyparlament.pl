@@ -4,9 +4,9 @@ import { ChevronDown, Heart, TrendingUp, Wheat, GraduationCap, Shield, Scale, Bu
 export default function Home() {
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="h-screen flex flex-col justify-center items-center relative overflow-hidden bg-paper">
+      <section className="h-screen flex flex-col justify-center items-center relative overflow-hidden">
 
         {/* Layer 1: The Graphic (Golden Circle) */}
         <div className="absolute inset-0 flex items-center justify-center z-0">
@@ -40,7 +40,7 @@ export default function Home() {
       </section>
 
       {/* Top 3 Priority Votes Section */}
-      <section className="bg-white py-24 px-6 relative z-20 -mt-12 rounded-t-[3rem] shadow-2xl">
+      <section className="bg-white dark:bg-paper py-24 px-6 relative z-20 -mt-12 rounded-t-[3rem] shadow-2xl">
         <div className="container mx-auto max-w-5xl">
           <div className="flex items-end gap-4 mb-16">
             <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight">
@@ -144,7 +144,7 @@ export default function Home() {
       </section>
 
       {/* Thematic Areas Section */}
-      <section className="bg-slate-50 py-20 px-6">
+      <section className="bg-slate-50 dark:bg-transparent py-20 px-6">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-extrabold text-ink mb-4 tracking-tight">

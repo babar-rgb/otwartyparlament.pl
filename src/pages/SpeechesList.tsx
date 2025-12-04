@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
-import { Search, Calendar, User } from 'lucide-react';
+import { Search, Calendar, User, Filter, X } from 'lucide-react';
 
 interface Speech {
     id: number;
@@ -19,6 +19,12 @@ interface Speech {
     };
 }
 
+interface MP {
+    id: number;
+    name: string;
+    party: string;
+}
+
 export default function SpeechesList() {
     const [query, setQuery] = useState('');
     const [speeches, setSpeeches] = useState<Speech[]>([]);
@@ -27,11 +33,27 @@ export default function SpeechesList() {
     const [hasSearched, setHasSearched] = useState(false);
     const [totalCount, setTotalCount] = useState<number>(0);
 
-    // Load recent speeches on mount
+    // Filters
+    const [showFilters, setShowFilters] = useState(false);
+    const [mps, setMps] = useState<MP[]>([]);
+    const [selectedMp, setSelectedMp] = useState<string>('');
+    const [selectedParty, setSelectedParty] = useState<string>('');
+    const [dateFrom, setDateFrom] = useState('');
+    const [dateTo, setDateTo] = useState('');
+
+    const parties = ['KO', 'PiS', 'Polska2050', 'PSL-TD', 'Lewica', 'Konfederacja', 'Razem', 'Kukiz15'];
+
+    // Load initial data
     useEffect(() => {
         fetchRecentSpeeches();
         fetchTotalCount();
+        fetchMps();
     }, []);
+
+    const fetchMps = async () => {
+        const { data } = await supabase.from('mps').select('id, name, party').order('name');
+        if (data) setMps(data);
+    };
 
     const fetchTotalCount = async () => {
         const { count } = await supabase
@@ -59,22 +81,52 @@ export default function SpeechesList() {
         }
     };
 
-    const handleSearch = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!query.trim()) return;
+    const handleSearch = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
 
         setLoading(true);
         setHasSearched(true);
         try {
-            // Use Supabase full text search if configured, or simple ilike for now
-            // Ideally we should have a tsvector column, but for MVP ilike is okay for small datasets
-            const { data, error } = await supabase
+            let queryBuilder = supabase
                 .from('speeches')
                 .select(`
           *,
           mp:mps(id, name, party, photo_url)
-        `)
-                .ilike('content', `%${query}%`)
+        `);
+
+            // Text Search
+            if (query.trim()) {
+                queryBuilder = queryBuilder.ilike('content', `%${query}%`);
+            }
+
+            // Filters
+            if (selectedMp) {
+                queryBuilder = queryBuilder.eq('mp_id', selectedMp);
+            }
+            if (selectedParty) {
+                // We need to filter by joined table, but Supabase JS client doesn't support filtering on joined tables easily in one go for 1:N without !inner
+                // Workaround: Filter by speaker_party if it exists on speeches, or use !inner on join
+                // Assuming we don't have party on speeches, we use the !inner join trick
+                queryBuilder = supabase
+                    .from('speeches')
+                    .select(`
+                        *,
+                        mp:mps!inner(id, name, party, photo_url)
+                    `)
+                    .eq('mp.party', selectedParty);
+
+                if (query.trim()) queryBuilder = queryBuilder.ilike('content', `%${query}%`);
+                if (selectedMp) queryBuilder = queryBuilder.eq('mp_id', selectedMp);
+            }
+
+            if (dateFrom) {
+                queryBuilder = queryBuilder.gte('date', dateFrom);
+            }
+            if (dateTo) {
+                queryBuilder = queryBuilder.lte('date', dateTo);
+            }
+
+            const { data, error } = await queryBuilder
                 .order('date', { ascending: false })
                 .limit(50);
 
@@ -85,6 +137,16 @@ export default function SpeechesList() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const clearFilters = () => {
+        setQuery('');
+        setSelectedMp('');
+        setSelectedParty('');
+        setDateFrom('');
+        setDateTo('');
+        setHasSearched(false);
+        setSpeeches([]);
     };
 
     const highlightText = (text: string, highlight: string) => {
@@ -140,23 +202,92 @@ export default function SpeechesList() {
                     Przeszukaj <strong>{totalCount.toLocaleString()}</strong> stenogramów z posiedzeń Sejmu. Sprawdź, co dokładnie mówili posłowie.
                 </p>
 
-                <form onSubmit={handleSearch} className="max-w-2xl mx-auto relative">
-                    <input
-                        type="text"
-                        placeholder="Wpisz frazę (np. 'inflacja', 'CPK', 'aborcja')..."
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-lg shadow-sm text-slate-900 placeholder:text-slate-400"
-                    />
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={24} />
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="absolute right-2 top-2 bottom-2 px-6 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                    >
-                        {loading ? 'Szukam...' : 'Szukaj'}
-                    </button>
-                </form>
+                <div className="max-w-3xl mx-auto bg-white p-2 rounded-2xl shadow-lg border border-slate-100">
+                    <form onSubmit={handleSearch} className="relative">
+                        <input
+                            type="text"
+                            placeholder="Wpisz frazę (np. 'inflacja', 'CPK', 'aborcja')..."
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            className="w-full pl-12 pr-32 py-4 rounded-xl border-none focus:ring-0 text-lg text-slate-900 placeholder:text-slate-400"
+                        />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={24} />
+
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setShowFilters(!showFilters)}
+                                className={`p-2 rounded-lg transition-colors ${showFilters ? 'bg-blue-50 text-blue-600' : 'hover:bg-slate-100 text-slate-500'}`}
+                                title="Filtry"
+                            >
+                                <Filter size={20} />
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                            >
+                                {loading ? '...' : 'Szukaj'}
+                            </button>
+                        </div>
+                    </form>
+
+                    {/* Filters Panel */}
+                    {showFilters && (
+                        <div className="border-t border-slate-100 p-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-left animate-in slide-in-from-top-2">
+                            {/* MP Filter */}
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Poseł</label>
+                                <select
+                                    value={selectedMp}
+                                    onChange={(e) => setSelectedMp(e.target.value)}
+                                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500"
+                                >
+                                    <option value="">Wszyscy</option>
+                                    {mps.map(mp => (
+                                        <option key={mp.id} value={mp.id}>{mp.name} ({mp.party})</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Party Filter */}
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Klub / Koło</label>
+                                <select
+                                    value={selectedParty}
+                                    onChange={(e) => setSelectedParty(e.target.value)}
+                                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500"
+                                >
+                                    <option value="">Wszystkie</option>
+                                    {parties.map(party => (
+                                        <option key={party} value={party}>{party}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Date Filter */}
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Data</label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="date"
+                                        value={dateFrom}
+                                        onChange={(e) => setDateFrom(e.target.value)}
+                                        className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm"
+                                        placeholder="Od"
+                                    />
+                                    <input
+                                        type="date"
+                                        value={dateTo}
+                                        onChange={(e) => setDateTo(e.target.value)}
+                                        className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm"
+                                        placeholder="Do"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Results or Recent */}
@@ -164,10 +295,15 @@ export default function SpeechesList() {
                 <div className="flex items-center justify-between border-b border-slate-200 pb-4">
                     <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
                         {hasSearched
-                            ? (speeches.length > 0 ? `Wyniki wyszukiwania (${speeches.length})` : `Brak wyników dla "${query}"`)
+                            ? (speeches.length > 0 ? `Wyniki wyszukiwania (${speeches.length})` : `Brak wyników`)
                             : 'Ostatnie wypowiedzi'
                         }
                     </h2>
+                    {hasSearched && (
+                        <button onClick={clearFilters} className="text-sm font-bold text-red-500 hover:text-red-600 flex items-center gap-1">
+                            <X size={14} /> Wyczyść filtry
+                        </button>
+                    )}
                     {!hasSearched && (
                         <span className="text-sm text-slate-500 flex items-center gap-1">
                             <Calendar size={14} /> Ostatnie posiedzenia
@@ -180,17 +316,7 @@ export default function SpeechesList() {
                     {hasSearched && speeches.length === 0 && (
                         <div className="text-center py-12 bg-slate-50 rounded-xl border border-slate-200">
                             <p className="text-xl font-bold text-slate-700 mb-2">Nie znaleziono wypowiedzi.</p>
-                            <p className="text-slate-500">Spróbuj wpisać inne słowo kluczowe lub sprawdź pisownię.</p>
-                            <button
-                                onClick={() => {
-                                    setHasSearched(false);
-                                    setQuery('');
-                                    setSpeeches([]);
-                                }}
-                                className="mt-4 text-blue-600 hover:text-blue-700 font-bold hover:underline"
-                            >
-                                Wróć do ostatnich wypowiedzi
-                            </button>
+                            <p className="text-slate-500">Spróbuj zmienić kryteria wyszukiwania.</p>
                         </div>
                     )}
 

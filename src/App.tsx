@@ -30,7 +30,7 @@ import SearchPage from './pages/SearchPage';
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-paper dark:bg-slate-950 flex flex-col transition-colors duration-300">
+      <div className="min-h-screen bg-paper dark:bg-[#1e1b4b] flex flex-col transition-colors duration-300">
         <Navigation />
         <main className="flex-grow pt-0">
           <Routes>

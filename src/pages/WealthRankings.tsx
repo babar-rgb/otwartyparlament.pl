@@ -46,13 +46,23 @@ export default function WealthRankings() {
                         const decl = mp.asset_declarations?.[0];
                         if (!decl || !decl.parsed_content) return null;
 
+                        const parseAmount = (val: any): number => {
+                            if (typeof val === 'number') return val;
+                            if (typeof val === 'string') {
+                                // Remove currency symbols and spaces, replace comma with dot
+                                const clean = val.replace(/[^\d.,-]/g, '').replace(',', '.');
+                                return parseFloat(clean) || 0;
+                            }
+                            return 0;
+                        };
+
                         return {
                             mp_id: mp.id,
                             name: mp.name,
                             party: mp.party,
                             photo_url: mp.photo_url,
-                            savings: decl.parsed_content.savings || 0,
-                            income: decl.parsed_content.income || 0,
+                            savings: parseAmount(decl.parsed_content.savings),
+                            income: parseAmount(decl.parsed_content.income),
                             properties_count: decl.parsed_content.real_estate?.length || 0,
                             summary: decl.summary
                         };
@@ -94,10 +104,10 @@ export default function WealthRankings() {
 
             {/* Header */}
             <div className="text-center space-y-4">
-                <h1 className="text-4xl md:text-5xl font-black text-slate-900">
+                <h1 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white">
                     Rankingi Majątkowe
                 </h1>
-                <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+                <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
                     Analiza oświadczeń majątkowych posłów wykonana przez sztuczną inteligencję.
                     <br />
                     <span className="text-sm text-slate-400 mt-2 block">
@@ -108,48 +118,48 @@ export default function WealthRankings() {
 
             {/* Top Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-6 rounded-2xl border border-emerald-100 shadow-sm">
+                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 p-6 rounded-2xl border border-emerald-100 dark:border-emerald-800 shadow-sm">
                     <div className="flex items-center gap-4 mb-4">
-                        <div className="p-3 bg-emerald-100 rounded-xl text-emerald-600">
+                        <div className="p-3 bg-emerald-100 dark:bg-emerald-900/50 rounded-xl text-emerald-600 dark:text-emerald-400">
                             <DollarSign size={32} />
                         </div>
                         <div>
-                            <p className="text-sm font-bold text-emerald-800 uppercase tracking-wide">Największe Oszczędności</p>
-                            <p className="text-2xl font-black text-slate-900">{topSavings[0]?.name}</p>
+                            <p className="text-sm font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wide">Największe Oszczędności</p>
+                            <p className="text-2xl font-black text-slate-900 dark:text-white">{topSavings[0]?.name}</p>
                         </div>
                     </div>
-                    <p className="text-4xl font-black text-emerald-600">
+                    <p className="text-4xl font-black text-emerald-600 dark:text-emerald-400">
                         {topSavings[0]?.savings.toLocaleString()} PLN
                     </p>
                 </div>
 
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100 shadow-sm">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 rounded-2xl border border-blue-100 dark:border-blue-800 shadow-sm">
                     <div className="flex items-center gap-4 mb-4">
-                        <div className="p-3 bg-blue-100 rounded-xl text-blue-600">
+                        <div className="p-3 bg-blue-100 dark:bg-blue-900/50 rounded-xl text-blue-600 dark:text-blue-400">
                             <TrendingUp size={32} />
                         </div>
                         <div>
-                            <p className="text-sm font-bold text-blue-800 uppercase tracking-wide">Największy Dochód (Rok)</p>
-                            <p className="text-2xl font-black text-slate-900">{topIncome[0]?.name}</p>
+                            <p className="text-sm font-bold text-blue-800 dark:text-blue-400 uppercase tracking-wide">Największy Dochód (Rok)</p>
+                            <p className="text-2xl font-black text-slate-900 dark:text-white">{topIncome[0]?.name}</p>
                         </div>
                     </div>
-                    <p className="text-4xl font-black text-blue-600">
+                    <p className="text-4xl font-black text-blue-600 dark:text-blue-400">
                         {topIncome[0]?.income.toLocaleString()} PLN
                     </p>
                 </div>
 
-                <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-2xl border border-amber-100 shadow-sm">
+                <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 p-6 rounded-2xl border border-amber-100 dark:border-amber-800 shadow-sm">
                     <div className="flex items-center gap-4 mb-4">
-                        <div className="p-3 bg-amber-100 rounded-xl text-amber-600">
+                        <div className="p-3 bg-amber-100 dark:bg-amber-900/50 rounded-xl text-amber-600 dark:text-amber-400">
                             <Home size={32} />
                         </div>
                         <div>
-                            <p className="text-sm font-bold text-amber-800 uppercase tracking-wide">Król Nieruchomości</p>
-                            <p className="text-2xl font-black text-slate-900">{topProperties[0]?.name}</p>
+                            <p className="text-sm font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wide">Król Nieruchomości</p>
+                            <p className="text-2xl font-black text-slate-900 dark:text-white">{topProperties[0]?.name}</p>
                         </div>
                     </div>
-                    <p className="text-4xl font-black text-amber-600">
-                        {topProperties[0]?.properties_count} <span className="text-lg text-amber-800 font-medium">nieruchomości</span>
+                    <p className="text-4xl font-black text-amber-600 dark:text-amber-400">
+                        {topProperties[0]?.properties_count} <span className="text-lg text-amber-800 dark:text-amber-500 font-medium">nieruchomości</span>
                     </p>
                 </div>
             </div>
@@ -158,61 +168,61 @@ export default function WealthRankings() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
 
                 {/* Savings Ranking */}
-                <div className="bg-white rounded-2xl border-2 border-slate-100 shadow-sm overflow-hidden">
-                    <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                        <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center">
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                             <DollarSign className="text-emerald-500" />
                             Top 10: Oszczędności
                         </h2>
                     </div>
-                    <div className="divide-y divide-slate-100">
+                    <div className="divide-y divide-slate-100 dark:divide-slate-800">
                         {topSavings.map((mp, idx) => (
-                            <Link to={`/poslowie/${mp.mp_id}`} key={mp.mp_id} className="flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors group">
-                                <div className="font-black text-slate-300 w-6 text-center text-lg group-hover:text-emerald-500 transition-colors">
+                            <Link to={`/poslowie/${mp.mp_id}`} key={mp.mp_id} className="flex items-center gap-4 p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
+                                <div className="font-black text-slate-300 dark:text-slate-600 w-6 text-center text-lg group-hover:text-emerald-500 transition-colors">
                                     {idx + 1}
                                 </div>
-                                <img src={mp.photo_url} alt={mp.name} className="w-12 h-12 rounded-full object-cover border border-slate-200" />
+                                <img src={mp.photo_url} alt={mp.name} className="w-12 h-12 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
                                 <div className="flex-1">
-                                    <p className="font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">{mp.name}</p>
+                                    <p className="font-bold text-slate-900 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">{mp.name}</p>
                                     <span className="text-xs font-bold px-2 py-0.5 rounded text-white" style={{ backgroundColor: getPartyColor(mp.party) }}>
                                         {mp.party}
                                     </span>
                                 </div>
                                 <div className="text-right">
-                                    <p className="font-black text-slate-900">{mp.savings.toLocaleString()} PLN</p>
+                                    <p className="font-black text-slate-900 dark:text-white">{mp.savings.toLocaleString()} PLN</p>
                                 </div>
-                                <ArrowRight size={16} className="text-slate-300 group-hover:text-emerald-500 transition-colors" />
+                                <ArrowRight size={16} className="text-slate-300 dark:text-slate-600 group-hover:text-emerald-500 transition-colors" />
                             </Link>
                         ))}
                     </div>
                 </div>
 
                 {/* Real Estate Ranking */}
-                <div className="bg-white rounded-2xl border-2 border-slate-100 shadow-sm overflow-hidden">
-                    <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                        <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center">
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                             <Home className="text-amber-500" />
                             Top 10: Nieruchomości
                         </h2>
                     </div>
-                    <div className="divide-y divide-slate-100">
+                    <div className="divide-y divide-slate-100 dark:divide-slate-800">
                         {topProperties.map((mp, idx) => (
-                            <Link to={`/poslowie/${mp.mp_id}`} key={mp.mp_id} className="flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors group">
-                                <div className="font-black text-slate-300 w-6 text-center text-lg group-hover:text-amber-500 transition-colors">
+                            <Link to={`/poslowie/${mp.mp_id}`} key={mp.mp_id} className="flex items-center gap-4 p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
+                                <div className="font-black text-slate-300 dark:text-slate-600 w-6 text-center text-lg group-hover:text-amber-500 transition-colors">
                                     {idx + 1}
                                 </div>
-                                <img src={mp.photo_url} alt={mp.name} className="w-12 h-12 rounded-full object-cover border border-slate-200" />
+                                <img src={mp.photo_url} alt={mp.name} className="w-12 h-12 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
                                 <div className="flex-1">
-                                    <p className="font-bold text-slate-900 group-hover:text-amber-700 transition-colors">{mp.name}</p>
+                                    <p className="font-bold text-slate-900 dark:text-white group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">{mp.name}</p>
                                     <span className="text-xs font-bold px-2 py-0.5 rounded text-white" style={{ backgroundColor: getPartyColor(mp.party) }}>
                                         {mp.party}
                                     </span>
                                 </div>
                                 <div className="text-right">
-                                    <p className="font-black text-slate-900">{mp.properties_count}</p>
-                                    <p className="text-xs text-slate-500">pozycji</p>
+                                    <p className="font-black text-slate-900 dark:text-white">{mp.properties_count}</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">pozycji</p>
                                 </div>
-                                <ArrowRight size={16} className="text-slate-300 group-hover:text-amber-500 transition-colors" />
+                                <ArrowRight size={16} className="text-slate-300 dark:text-slate-600 group-hover:text-amber-500 transition-colors" />
                             </Link>
                         ))}
                     </div>

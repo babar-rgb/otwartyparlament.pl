@@ -121,6 +121,7 @@ const VotesList: React.FC = () => {
 
             // Pagination
             const { data, error, count } = await query
+                .order('is_key_vote', { ascending: false })
                 .order('date', { ascending: false })
                 .range(pageParam * PAGE_SIZE, (pageParam + 1) * PAGE_SIZE - 1);
 
@@ -183,7 +184,7 @@ const VotesList: React.FC = () => {
                                 placeholder="Szukaj po tytule (np. podatki, aborcja)..."
                                 value={searchQuery}
                                 onChange={handleSearchChange}
-                                className="w-full pl-16 pr-6 py-6 text-lg bg-transparent border-none focus:ring-0 placeholder:text-neutral-400 font-sans"
+                                className="w-full pl-16 pr-6 py-6 text-lg bg-transparent border-none focus:ring-0 placeholder:text-neutral-400 font-sans text-neutral-900"
                             />
                         </div>
                         <button

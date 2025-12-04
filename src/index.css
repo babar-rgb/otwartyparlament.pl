@@ -9,8 +9,8 @@
 
   /* DARK MODE OVERRIDE */
   .dark body {
-    /* Use a rich dark gray, NOT pure black */
-    @apply bg-[#0F1115] text-[#E0E0E0];
+    /* SWAPPED: Global background is now the purple from the section (#1e1b4b) */
+    @apply bg-[#1e1b4b] text-[#E0E0E0];
   }
 
   h1,
@@ -37,7 +37,8 @@
   }
 
   .dark #root {
-    @apply bg-[#0F1115];
+    /* SWAPPED: Global background is now purple */
+    @apply bg-[#1e1b4b];
   }
 
   /* --- GLOBAL DARK MODE OVERRIDES --- */
@@ -48,10 +49,11 @@
   .dark .bg-neutral-50,
   .dark .bg-gray-50,
   .dark .bg-paper {
-    background-color: #1F2937 !important;
+    /* SWAPPED: Cards/Sections now use the old global dark background (#0F1115) */
+    background-color: #0F1115 !important;
+    /* gray-950/black */
+    border-color: #1F2937 !important;
     /* gray-800 */
-    border-color: #374151 !important;
-    /* gray-700 */
     color: #E5E7EB !important;
   }
 
@@ -171,13 +173,15 @@
   }
 
   .dark .from-indigo-50 {
-    --tw-gradient-from: #1e1b4b !important;
+    /* SWAPPED: Section background is now the old global dark (#0F1115) */
+    --tw-gradient-from: #0F1115 !important;
     --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
   }
 
   /* indigo-950 */
   .dark .to-blue-50 {
-    --tw-gradient-to: #172554 !important;
+    /* SWAPPED: Section background end is also dark */
+    --tw-gradient-to: #0F1115 !important;
   }
 
   /* blue-950 */

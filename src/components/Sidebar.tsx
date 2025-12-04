@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { X, Github, Mail, BookOpen, Database, Heart, Search } from 'lucide-react';
 
 interface SidebarProps {
@@ -7,6 +7,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+    const navigate = useNavigate();
     return (
         <>
             {/* Backdrop Overlay */}
@@ -50,7 +51,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                         if (e.key === 'Enter') {
                                             const target = e.target as HTMLInputElement;
                                             if (target.value.trim()) {
-                                                window.location.href = `/poslowie?q=${encodeURIComponent(target.value)}`;
+                                                navigate(`/szukaj?q=${encodeURIComponent(target.value)}`);
                                                 onClose();
                                             }
                                         }
@@ -65,8 +66,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                 <Link to="/poslowie" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Posłowie</Link>
                                 <Link to="/glosowania" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Głosowania</Link>
                                 <Link to="/rankingi" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Rankingi</Link>
-                                <Link to="/majatek" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-emerald-700 bg-emerald-50/50">Majątki</Link>
-                                <Link to="/wypowiedzi" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-blue-700 bg-blue-50/50">Wypowiedzi</Link>
                                 <Link to="/projekty" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Projekty</Link>
                             </nav>
 

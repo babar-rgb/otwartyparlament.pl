@@ -32,10 +32,10 @@ const MAJOR_CLUBS = ['KO', 'PiS', 'Polska2050', 'PSL-TD', 'Lewica', 'Konfederacj
 
 // Minor parties for INNE submenu
 const MINOR_PARTIES = [
-  { id: 'RAZEM', name: 'Razem' },
-  { id: 'REPUBLIKANIE', name: 'Republikanie' },
-  { id: 'KONFEDERACJA KP', name: 'Konfederacja KP' },
-  { id: 'NIEZALEŻNI', name: 'Niezależni' },
+  { id: 'RAZEM', name: 'Razem', color: '#99004F' },
+  { id: 'REPUBLIKANIE', name: 'Republikanie', color: '#002D62' },
+  { id: 'KONFEDERACJA KP', name: 'Konfederacja KP', color: '#D4AF37' },
+  { id: 'NIEZALEŻNI', name: 'Niezależni', color: 'linear-gradient(135deg, #9CA3AF 0%, #4B5563 100%)' },
 ];
 
 // Mapping from UI names to actual API club names
@@ -47,12 +47,12 @@ const MIN_PARTY_MAP: Record<string, string> = {
 };
 
 const parties = [
-  { id: 'KO', name: 'KO', color: '#0096FF' },
-  { id: 'PiS', name: 'PiS', color: '#800000' },
-  { id: 'Polska2050', name: 'Polska2050', color: '#00A150' },
+  { id: 'KO', name: 'KO', color: '#E31E2D' },
+  { id: 'PiS', name: 'PiS', color: '#003876' },
+  { id: 'Polska2050', name: 'Polska2050', color: '#FDB913' },
   { id: 'PSL-TD', name: 'PSL-TD', color: '#90EE90' },
-  { id: 'Lewica', name: 'Lewica', color: '#FF0000' },
-  { id: 'Konfederacja', name: 'Konfederacja', color: '#000080' },
+  { id: 'Lewica', name: 'Lewica', color: 'linear-gradient(135deg, #6a1b9a 0%, #d32f2f 100%)' },
+  { id: 'Konfederacja', name: 'Konfederacja', color: '#091F42' },
   { id: 'INNE', name: 'INNE', color: '#1F2937' },
 ];
 
@@ -192,7 +192,7 @@ export default function Poslowie() {
             placeholder="Wyszukaj nazwisko posła..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-14 pr-6 py-4 text-lg border-2 border-gray-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition bg-white dark:bg-slate-900 text-ink dark:text-white placeholder-slate-400"
+            className="w-full pl-14 pr-6 py-4 text-lg border-2 border-gray-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400"
           />
         </div>
       </div>
@@ -229,7 +229,7 @@ export default function Poslowie() {
                       : 'bg-white text-ink border-gray-200 hover:border-brand dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:border-brand'
                       }`}
                     style={{
-                      backgroundColor: selectedParty === 'INNE' ? party.color : undefined,
+                      background: selectedParty === 'INNE' ? party.color : undefined,
                     }}
                   >
                     {party.name}
@@ -250,8 +250,11 @@ export default function Poslowie() {
                             setSelectedParty(minorParty.id);
                             setIsInnePopoverOpen(false);
                           }}
-                          className="w-full text-left px-4 py-2 text-sm font-medium text-ink dark:text-slate-200 hover:bg-brand/10 transition"
+                          className="w-full text-left px-4 py-2 text-sm font-medium text-ink dark:text-slate-200 hover:bg-brand/10 transition flex items-center gap-2"
                         >
+                          {minorParty.color && (
+                            <span className="w-3 h-3 rounded-full" style={{ background: minorParty.color }} />
+                          )}
                           {minorParty.name}
                         </button>
                       ))}
@@ -274,7 +277,7 @@ export default function Poslowie() {
                   : 'bg-white text-ink border-gray-200 hover:border-brand dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:border-brand'
                   }`}
                 style={{
-                  backgroundColor: selectedParty === party.id ? party.color : undefined,
+                  background: selectedParty === party.id ? party.color : undefined,
                 }}
               >
                 {party.name}

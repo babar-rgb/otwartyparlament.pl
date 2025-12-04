@@ -58,14 +58,38 @@ const SearchPage: React.FC = () => {
             }
 
             // 2. Search Votes
-            const { data: votesData } = await supabase
+            const searchWords = searchQuery.split(/\s+/).filter(w => w.length > 0);
+
+            let votesQuery = supabase
                 .from('votes')
-                .select('*')
-                .or(`title_clean.ilike.%${searchQuery}%,title_raw.ilike.%${searchQuery}%`)
+                .select('*');
+
+            // For each word, require it to be in title_clean OR title_raw
+            searchWords.forEach(word => {
+                votesQuery = votesQuery.or(`title_clean.ilike.%${word}%,title_raw.ilike.%${word}%`);
+            });
+
+            const { data: votesData } = await votesQuery
                 .order('date', { ascending: false })
                 .limit(6);
 
             if (votesData) setVotes(votesData);
+
+            // 3. Search Speeches (NEW)
+            let speechesQuery = supabase
+                .from('speeches')
+                .select('*');
+
+            // For each word, require it to be in content
+            searchWords.forEach(word => {
+                speechesQuery = speechesQuery.ilike('content', `%${word}%`);
+            });
+
+            const { data: speechesData } = await speechesQuery
+                .order('date', { ascending: false })
+                .limit(3);
+
+            if (speechesData) setSpeeches(speechesData);
 
         } catch (error) {
             console.error('Search error:', error);
@@ -173,7 +197,39 @@ const SearchPage: React.FC = () => {
                             </section>
                         )}
 
-                        {mps.length === 0 && votes.length === 0 && (
+                        {/* Speeches Section */}
+                        {speeches.length > 0 && (
+                            <section>
+                                <div className="flex items-center gap-3 mb-6 border-b border-neutral-200 pb-4">
+                                    <MessageSquare className="w-5 h-5 text-blue-600" />
+                                    <h2 className="text-2xl font-bold">Wypowiedzi</h2>
+                                </div>
+                                <div className="space-y-4">
+                                    {speeches.map((speech: any) => (
+                                        <div key={speech.id} className="p-6 bg-white rounded-xl border border-slate-200 hover:border-blue-300 transition-colors">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                                                    Posiedzenie {speech.sitting} • {speech.date}
+                                                </span>
+                                            </div>
+                                            <p className="text-slate-700 text-sm line-clamp-3 italic mb-3">
+                                                "{speech.content}"
+                                            </p>
+                                            <Link to={`/wypowiedzi/${speech.id}`} className="text-sm font-bold text-blue-600 hover:underline flex items-center gap-1">
+                                                Czytaj całość <ArrowRight size={14} />
+                                            </Link>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="mt-6 text-center">
+                                    <Link to={`/wypowiedzi?q=${query}`} className="inline-flex items-center gap-2 text-blue-600 font-bold hover:text-blue-800 transition-colors uppercase tracking-wide text-sm">
+                                        Przeszukaj wszystkie wypowiedzi <ArrowRight className="w-4 h-4" />
+                                    </Link>
+                                </div>
+                            </section>
+                        )}
+
+                        {mps.length === 0 && votes.length === 0 && speeches.length === 0 && (
                             <div className="text-center py-24 bg-white rounded-2xl border border-neutral-200">
                                 <Search className="w-16 h-16 text-neutral-200 mx-auto mb-6" />
                                 <h3 className="text-2xl font-bold text-ink mb-3">Brak wyników</h3>

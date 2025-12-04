@@ -22,20 +22,27 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
                 // Map to MP interface
                 const mappedMPs: MP[] = (data || [])
                     .filter((mp: any) => mp && mp.id) // Filter out invalid records
-                    .map((mp: any) => ({
-                        id: mp.id,
-                        first_name: mp.first_name || '',
-                        last_name: mp.last_name || '',
-                        email: mp.email || `${(mp.first_name || '').toLowerCase()}.${(mp.last_name || '').toLowerCase()}@sejm.pl`,
-                        district: mp.district_name || 'Warszawa',
-                        party: mp.club || 'Niezrzeszeni',
-                        club: mp.club || 'Niezrzeszeni',
-                        active: mp.active,
-                        photo_url: mp.photo_url || `https://ui-avatars.com/api/?name=${mp.first_name || 'Posel'}+${mp.last_name || ''}&background=random`,
-                        attendanceRate: mp.stats_attendance ? Math.round(mp.stats_attendance) : Math.floor(Math.random() * 20) + 80,
-                        rebelVotes: mp.stats_rebellion || 0,
-                        lastVote: 'Za'
-                    }));
+                    .map((mp: any) => {
+                        // Split name into first and last name if needed, or just use name
+                        const nameParts = (mp.name || '').split(' ');
+                        const lastName = nameParts.pop() || '';
+                        const firstName = nameParts.join(' ');
+
+                        return {
+                            id: mp.id,
+                            first_name: firstName,
+                            last_name: lastName,
+                            email: mp.email || `${firstName.toLowerCase()}.${lastName.toLowerCase()}@sejm.pl`,
+                            district: mp.district || 'Warszawa',
+                            party: mp.party || 'Niezrzeszeni',
+                            club: mp.party || 'Niezrzeszeni',
+                            active: mp.active,
+                            photo_url: mp.photo_url || `https://ui-avatars.com/api/?name=${mp.name || 'Posel'}&background=random`,
+                            attendanceRate: mp.stats_attendance ? Math.round(mp.stats_attendance) : Math.floor(Math.random() * 20) + 80,
+                            rebelVotes: mp.stats_rebellion || 0,
+                            lastVote: 'Za'
+                        };
+                    });
 
                 console.log('Fetched MPs:', mappedMPs.length);
                 setMps(mappedMPs);
@@ -79,6 +86,58 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
 
         // Opposition vs Coalition
         return Math.floor(Math.random() * 30) + 10; // 10-40%
+    }, [mpA, mpB]);
+
+    // Fetch Key Votes and Individual Decisions
+    const [keyVotes, setKeyVotes] = useState<any[]>([]);
+    const [loadingVotes, setLoadingVotes] = useState(false);
+
+    useEffect(() => {
+        if (!mpA || !mpB) return;
+
+        const fetchKeyVotes = async () => {
+            setLoadingVotes(true);
+            try {
+                // 1. Get Key Votes from DB
+                const { data: votesData } = await supabase
+                    .from('votes')
+                    .select('*')
+                    .eq('is_key_vote', true)
+                    .order('date', { ascending: false })
+                    .limit(5);
+
+                if (!votesData) return;
+
+                // 2. Fetch individual decisions for each vote from Sejm API
+                const votesWithDecisions = await Promise.all(votesData.map(async (vote) => {
+                    try {
+                        const response = await fetch(`https://api.sejm.gov.pl/sejm/term10/votings/${vote.sitting}/${vote.voting_number}`);
+                        const votingData = await response.json();
+
+                        // Find MP votes
+                        const voteA = votingData.votes.find((v: any) => v.mpId === mpA.id)?.vote || 'Nieobecny';
+                        const voteB = votingData.votes.find((v: any) => v.mpId === mpB.id)?.vote || 'Nieobecny';
+
+                        return {
+                            ...vote,
+                            voteA,
+                            voteB
+                        };
+                    } catch (e) {
+                        console.error(`Error fetching details for vote ${vote.sitting}/${vote.voting_number}`, e);
+                        return { ...vote, voteA: '?', voteB: '?' };
+                    }
+                }));
+
+                setKeyVotes(votesWithDecisions);
+            } catch (err) {
+                console.error('Error fetching key votes:', err);
+            } finally {
+                setLoadingVotes(false);
+            }
+        };
+
+        fetchKeyVotes();
     }, [mpA, mpB]);
 
     if (loading) {
@@ -249,8 +308,45 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
             {/* Stats Comparison */}
             {mpA && mpB && (
                 <div className="grid md:grid-cols-2 gap-8 animate-in slide-in-from-bottom-8 fade-in duration-700">
+
+                    {/* Key Votes (New Section) */}
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 order-1 md:order-2">
+                        <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                            <TrendingUp className="text-blue-500" />
+                            Kluczowe Głosowania
+                        </h3>
+
+                        {loadingVotes ? (
+                            <div className="flex items-center justify-center py-8">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {keyVotes.map((vote) => {
+                                    const agree = vote.voteA === vote.voteB;
+                                    return (
+                                        <div key={vote.id} className="flex items-center gap-4 p-3 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors">
+                                            <div className={`p-2 rounded-full ${agree ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                                                {agree ? <CheckCircle2 size={20} /> : <AlertTriangle size={20} />}
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="text-sm font-bold text-slate-900 line-clamp-2">
+                                                    {vote.title_clean || vote.title_raw}
+                                                </div>
+                                                <div className="text-xs text-slate-500 flex gap-4 mt-2">
+                                                    <span>{mpA.last_name}: <strong className={vote.voteA === 'Za' ? 'text-green-600' : vote.voteA === 'Przeciw' ? 'text-red-600' : 'text-slate-500'}>{vote.voteA}</strong></span>
+                                                    <span>{mpB.last_name}: <strong className={vote.voteB === 'Za' ? 'text-green-600' : vote.voteB === 'Przeciw' ? 'text-red-600' : 'text-slate-500'}>{vote.voteB}</strong></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+
                     {/* Stats Card */}
-                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 order-2 md:order-1">
                         <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
                             <Trophy className="text-yellow-500" />
                             Statystyki
@@ -305,36 +401,6 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
                                     <span className="font-black text-slate-900 w-12">{mpB.rebelVotes || 0}</span>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Common Votes (Mocked) */}
-                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
-                        <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                            <TrendingUp className="text-blue-500" />
-                            Ostatnie Głosowania
-                        </h3>
-
-                        <div className="space-y-4">
-                            {[1, 2, 3].map((i) => {
-                                const agree = Math.random() > (100 - similarity) / 100;
-                                return (
-                                    <div key={i} className="flex items-center gap-4 p-3 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors">
-                                        <div className={`p-2 rounded-full ${agree ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                                            {agree ? <CheckCircle2 size={20} /> : <AlertTriangle size={20} />}
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="text-sm font-bold text-slate-900 line-clamp-1">
-                                                Głosowanie nad ustawą budżetową #{2450 + i}
-                                            </div>
-                                            <div className="text-xs text-slate-500 flex gap-4 mt-1">
-                                                <span>{mpA.last_name}: <strong className={agree ? 'text-green-600' : 'text-slate-700'}>Za</strong></span>
-                                                <span>{mpB.last_name}: <strong className={agree ? 'text-green-600' : 'text-red-600'}>{agree ? 'Za' : 'Przeciw'}</strong></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
                         </div>
                     </div>
                 </div>
