@@ -33,8 +33,8 @@ if not SUPABASE_URL or not SUPABASE_KEY or not GEMINI_API_KEY:
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 genai.configure(api_key=GEMINI_API_KEY)
 
-# Use Gemini 2.0 Flash for multimodal capabilities
-MODEL_NAME = 'gemini-2.0-flash' 
+# Use Gemini 1.5 Flash for higher rate limits
+MODEL_NAME = 'gemini-1.5-flash' 
 
 def digitize_declarations():
     print("Starting Asset Declarations Digitization...")

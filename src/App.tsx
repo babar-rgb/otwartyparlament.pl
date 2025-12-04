@@ -10,6 +10,7 @@ import Partie from './pages/Partie';
 import PartyProfile from './pages/PartyProfile';
 import Rankingi from './pages/Rankingi';
 import TestWyborczy from './pages/TestWyborczy';
+import WealthRankings from './pages/WealthRankings';
 import OProjekcie from './pages/OProjekcie';
 import VoteDetails from './pages/VoteDetails';
 import CategoryDetails from './pages/CategoryDetails';
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="/partie" element={<Partie />} />
             <Route path="/partie/:id" element={<PartyProfile />} />
             <Route path="/rankingi" element={<Rankingi />} />
+            <Route path="/majatek" element={<WealthRankings />} />
             <Route path="/test" element={<TestWyborczy />} />
             <Route path="/o-projekcie" element={<OProjekcie />} />
             <Route path="/ustawy/:id" element={<BillDetails />} /> {/* Added route for BillDetails */}
