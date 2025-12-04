@@ -207,6 +207,7 @@ def process_sitting(sitting_num):
 if __name__ == "__main__":
     print("--- IMPORT VOTES (GŁOSOWANIA) ---")
     sittings = fetch_all_sittings()
+    print(f"Sittings to process: {sittings}")
     for sitting in sittings:
         process_sitting(sitting)
     print("--- DONE ---")

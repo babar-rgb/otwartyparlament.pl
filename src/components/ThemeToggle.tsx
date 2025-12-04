@@ -13,8 +13,8 @@ export default function ThemeToggle() {
         >
             <motion.div
                 initial={false}
-                animate={{ rotate: theme === 'dark' ? 180 : 0 }}
-                transition={{ duration: 0.3 }}
+                animate={{ rotate: theme === 'dark' ? 360 : 0 }}
+                transition={{ duration: 0.5, type: "spring" }}
             >
                 {theme === 'light' ? <Sun size={20} /> : <Moon size={20} />}
             </motion.div>

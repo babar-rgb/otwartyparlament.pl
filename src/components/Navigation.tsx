@@ -50,7 +50,7 @@ export default function Navigation() {
             </Link>
 
             {/* Center: Main Links (Desktop) */}
-            <div className="hidden md:flex items-center gap-12">
+            <div className="hidden xl:flex items-center gap-6">
               <Link to="/poslowie" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 Posłowie
               </Link>

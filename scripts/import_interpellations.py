@@ -29,7 +29,7 @@ def import_interpellations():
     print("Starting Interpellations Import...")
     
     offset = 0
-    limit = 50
+    limit = 10 # Reduced from 50 because we are fetching bodies now
     total_imported = 0
     
     while True:
@@ -69,6 +69,25 @@ def import_interpellations():
                             })
                         except ValueError:
                             print(f"Warning: Invalid MP ID {mp_id} in interpellation {item['num']}")
+
+                # Fetch full content (body) for each interpellation
+                # This is slower but necessary for search
+                for interp in interpellations_batch:
+                    try:
+                        num = interp['id']
+                        # print(f"  Fetching body for {num}...")
+                        body_url = f"{SEJM_API_URL}/interpellations/{num}/body"
+                        r_body = requests.get(body_url)
+                        if r_body.status_code == 200:
+                            interp['raw_data']['content'] = r_body.text
+                        else:
+                            # Try to get from details if body endpoint fails or is empty
+                            # Some might be attachments only
+                            pass
+                    except Exception as e:
+                        print(f"  Error fetching body for {interp['id']}: {e}")
+
+            # Upsert Interpellations
 
             # Upsert Interpellations
             if interpellations_batch:

@@ -27,10 +27,14 @@ def scrape_and_update():
     print("Starting Asset Declarations Import...")
     
     # 1. Fetch all MPs
-    response = supabase.table('mps').select('id, name').order('id').execute()
+    response = supabase.table('mps').select('id, name, declarations').order('id').execute()
     mps = response.data
     
-    print(f"Found {len(mps)} MPs to process.")
+    print(f"Found {len(mps)} MPs total.")
+    
+    # Filter out MPs that already have declarations
+    mps_to_process = [mp for mp in mps if not mp.get('declarations')]
+    print(f"Resuming: {len(mps_to_process)} MPs need declarations.")
     
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
@@ -41,7 +45,7 @@ def scrape_and_update():
         )
         page = context.new_page()
         
-        for i, mp in enumerate(mps):
+        for i, mp in enumerate(mps_to_process):
             mp_id = mp['id']
             padded_id = f"{mp_id:03d}"
             name = mp['name']

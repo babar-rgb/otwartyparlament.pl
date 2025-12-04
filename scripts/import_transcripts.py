@@ -52,8 +52,8 @@ def import_transcripts():
     # Sort by date descending
     valid_proceedings.sort(key=lambda x: x['dates'][0], reverse=True)
     
-    # Limit to last 5 sittings
-    recent_proceedings = valid_proceedings[:5]
+    # Limit to last 30 sittings to cover more history (e.g. CPK debates)
+    recent_proceedings = valid_proceedings[:30]
     
     print(f"Found {len(valid_proceedings)} valid proceedings. Processing last {len(recent_proceedings)}.")
 
