@@ -60,12 +60,6 @@ export default function Navigation() {
               <Link to="/rankingi" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 Rankingi
               </Link>
-              <Link to="/majatek" className="text-emerald-600 hover:text-emerald-700 font-bold transition-colors flex items-center gap-1">
-                <span className="bg-emerald-100 p-1 rounded">💰</span> Majątki
-              </Link>
-              <Link to="/wypowiedzi" className="text-slate-600 hover:text-slate-900 font-medium transition-colors flex items-center gap-1">
-                <span className="bg-blue-100 p-1 rounded">🎤</span> Wypowiedzi
-              </Link>
               <Link to="/projekty" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 Projekty
               </Link>

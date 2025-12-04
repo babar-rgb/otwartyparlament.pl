@@ -111,11 +111,36 @@ export default function Rankingi() {
       <div>
         <h1 className="text-4xl font-bold text-slate-900 mb-2 flex items-center gap-3">
           <Trophy size={40} className="text-yellow-500" />
-          Rankingi
+          Rankingi i Analizy
         </h1>
-        <p className="text-slate-600">
+        <p className="text-slate-600 mb-6">
           Sprawdź najbardziej aktywnych i niezależnych posłów. Dane oparte na rzeczywistych głosowaniach.
         </p>
+
+        {/* Quick Access Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <Link to="/majatek" className="bg-white p-6 rounded-xl border border-emerald-100 shadow-sm hover:shadow-md transition-all group flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-2xl">💰</div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">Ranking Majątków</h3>
+                <p className="text-sm text-slate-500">Zobacz kto jest najbogatszym posłem</p>
+              </div>
+            </div>
+            <TrendingUp className="text-emerald-300 group-hover:text-emerald-600 transition-colors" />
+          </Link>
+
+          <Link to="/wypowiedzi" className="bg-white p-6 rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-all group flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl">🎤</div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-700 transition-colors">Wyszukiwarka Wypowiedzi</h3>
+                <p className="text-sm text-slate-500">Przeszukaj stenogramy z posiedzeń</p>
+              </div>
+            </div>
+            <TrendingUp className="text-blue-300 group-hover:text-blue-600 transition-colors" />
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg border border-slate-200 shadow-sm">

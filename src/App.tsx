@@ -13,6 +13,7 @@ import TestWyborczy from './pages/TestWyborczy';
 import WealthRankings from './pages/WealthRankings';
 import SpeechesList from './pages/SpeechesList';
 import SpeechDetails from './pages/SpeechDetails';
+import InterpellationsList from './pages/InterpellationsList';
 import OProjekcie from './pages/OProjekcie';
 import VoteDetails from './pages/VoteDetails';
 import CategoryDetails from './pages/CategoryDetails';
@@ -45,6 +46,7 @@ export default function App() {
             <Route path="/majatek" element={<WealthRankings />} />
             <Route path="/wypowiedzi" element={<SpeechesList />} />
             <Route path="/wypowiedzi/:id" element={<SpeechDetails />} />
+            <Route path="/interpelacje" element={<InterpellationsList />} />
             <Route path="/test" element={<TestWyborczy />} />
             <Route path="/o-projekcie" element={<OProjekcie />} />
             <Route path="/ustawy/:id" element={<BillDetails />} /> {/* Added route for BillDetails */}
