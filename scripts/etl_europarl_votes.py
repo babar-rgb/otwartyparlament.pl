@@ -39,17 +39,24 @@ def get_polish_mep_ids():
 POLISH_MEP_IDS = set()
 
 def fetch_details(url):
-    """Helper to fetch JSON-LD with retries."""
-    for i in range(3):
+    """Fetches JSON-LD details from a given URL with retries."""
+    for attempt in range(5): # Increased to 5 attempts
         try:
-            r = requests.get(url, timeout=10)
+            r = requests.get(url, headers={'Accept': 'application/ld+json'}, timeout=30) # Increased timeout to 30s
             if r.status_code == 200:
-                return r.json()
+                try:
+                    return r.json()
+                except ValueError:
+                    print(f"JSON Decode Error for {url}")
+                    return None
             elif r.status_code == 404:
                 return None
+            else:
+                # print(f"Status {r.status_code} for {url}. Retrying...")
+                time.sleep(2 * (attempt + 1)) # Backoff: 2, 4, 6, 8...
         except Exception as e:
-            print(f"Request error {url}: {e}")
-            time.sleep(1)
+            print(f"Request error {url}: {e} (Attempt {attempt+1}/5)")
+            time.sleep(2 * (attempt + 1))
     return None
 
 def process_vote_result(vote_id, vote_uri):
@@ -213,12 +220,28 @@ def process_session(session):
         
         if is_voting_time:
                 sub_items = act.get('consists_of') or act.get('consistsOf') or []
-                print(f"[{sid}] Found Voting Time with {len(sub_items)} votes.")
                 
-                for vote_uri in sub_items:
-                    parts = vote_uri.split('/')
-                    vid = parts[-1]
-                    process_vote_result(vid, vote_uri)
+                # KEY VOTE HEURISTIC
+                # Filter by title keywords to ensure we only get important legislation
+                title_pl = label.lower()
+                keywords = ["rozporządzenie", "dyrektywa", "decyzja", "akt", "regulation", "directive", "act"]
+                is_legislative = any(k in title_pl for k in keywords)
+                
+                # Also ignore common technical strings if needed
+                ignore_terms = ["mianowania", "uchylenie immunitetu", "wniosek o", "appointment of", "request for waiver"]
+                is_ignored = any(t in title_pl for t in ignore_terms)
+                
+                if is_legislative and not is_ignored:
+                    print(f"[{sid}] Found KEY LEGISLATIVE VOTE: {label}")
+                    print(f" -> Found {len(sub_items)} sub-votes.")
+                    
+                    for vote_uri in sub_items:
+                        parts = vote_uri.split('/')
+                        vid = parts[-1]
+                        process_vote_result(vid, vote_uri)
+                else:
+                    # print(f"Skipping non-legislative/technical vote: {label}")
+                    pass
 
 def run_etl():
     print("Starting Europarl Votes ETL (Multi-threaded)...")

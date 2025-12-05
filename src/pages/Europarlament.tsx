@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Globe, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
+import { EuroLogoGold } from '../components/EuroLogoGold';
 
 interface EuroMP {
     id: number;
@@ -50,7 +51,7 @@ const Europarlament: React.FC = () => {
 
     const uniqueParties = Array.from(new Set(meps.map(m => m.national_party))).filter(p => p && p !== 'Brak danych').sort();
 
-    // Group Colors Helper (still used for badges, maybe adapt for parties?)
+    // Group Colors Helper
     const getGroupColor = (group: string) => {
         if (!group) return 'bg-gray-100 text-gray-800';
         if (group.includes('EPP')) return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
@@ -71,8 +72,10 @@ const Europarlament: React.FC = () => {
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div>
                             <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-                                <Globe className="w-10 h-10 text-blue-600 dark:text-blue-400" />
-                                Reprezentacja w Europie
+                                <EuroLogoGold className="w-12 h-12" />
+                                <span className="bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-[#D6B55E] dark:to-[#F3E5AB]">
+                                    Reprezentacja w Europie
+                                </span>
                             </h1>
                             <p className="text-lg text-neutral-600 dark:text-neutral-400">
                                 Polscy posłowie w Parlamencie Europejskim (Kadencja 2024-2029)
@@ -172,8 +175,6 @@ const Europarlament: React.FC = () => {
                                                     {mep.eu_group}
                                                 </span>
                                             </div>
-
-                                            {/* Simple visual separator or extra info if needed */}
                                         </div>
                                     </div>
                                 </Link>

@@ -72,14 +72,7 @@ export default function Navigation() {
             </div>
 
             {/* Right: Actions */}
-            <div className="flex items-center gap-4">
-              <Link to="/europarlament" className="hidden sm:block">
-                <img
-                  src="/euro_logo.png"
-                  alt="Europarlament"
-                  className="h-8 w-auto hover:scale-110 transition-transform dark:invert"
-                />
-              </Link>
+            <div className="flex items-center gap-2">
               <ThemeToggle />
 
               {/* Search Button */}

@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { ArrowLeft, Calendar, CheckCircle2, XCircle, PieChart, Users, Sparkles, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import VoteTechnicalDetails from '../components/VoteTechnicalDetails';
+import SejmHemicycle from '../components/SejmHemicycle';
 
 interface VoteDetail {
     id: number;
@@ -219,7 +220,29 @@ const VoteDetails: React.FC = () => {
                     </div>
                 )}
 
-                {/* Party Breakdown Table */}
+                {/* Sejm Hemicycle Visualization */}
+                <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                        <Users className="w-6 h-6 text-blue-600" />
+                        <h2 className="text-2xl font-bold">Sala Sejmowa</h2>
+                    </div>
+                    <div className="bg-white dark:bg-[#1a1f36] rounded-3xl p-4 md:p-8 shadow-sm border border-neutral-200 dark:border-slate-800">
+                        <SejmHemicycle
+                            data={results.map(r => ({
+                                name: r.mps?.name || 'Nieznany',
+                                party: r.mps?.party || 'Niezrzeszeni',
+                                photo_url: r.mps?.photo_url || '',
+                                vote: r.vote
+                            }))}
+                        />
+                        <div className="flex flex-wrap justify-center gap-6 mt-6 text-sm font-medium text-neutral-600 dark:text-neutral-400">
+                            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-green-600"></span> ZA</div>
+                            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-red-600"></span> PRZECIW</div>
+                            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-amber-500"></span> WSTRZYMAŁ SIĘ</div>
+                            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-neutral-300"></span> NIEOBECNY</div>
+                        </div>
+                    </div>
+                </div>
                 <div className="space-y-4">
                     <div className="flex items-center gap-3">
                         <PieChart className="w-6 h-6 text-blue-600" />
