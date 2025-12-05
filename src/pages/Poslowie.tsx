@@ -3,9 +3,11 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { MP } from '../api';
 import { supabase } from '../lib/supabase';
+import { useTerm } from '../context/TermContext';
+import TermSwitcher from '../components/TermSwitcher';
 import MpCard from '../components/MpCard';
 import FeaturedMPs from '../components/FeaturedMPs';
-import { Search, ChevronDown } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 // Fallback mock data for when API fails
 const fallbackMPs: MP[] = [
@@ -30,14 +32,6 @@ const fallbackMPs: MP[] = [
 // Major clubs to exclude from "INNE" filter
 const MAJOR_CLUBS = ['KO', 'PiS', 'Polska2050', 'PSL-TD', 'Lewica', 'Konfederacja'];
 
-// Minor parties for INNE submenu
-const MINOR_PARTIES = [
-  { id: 'RAZEM', name: 'Razem', color: '#99004F' },
-  { id: 'REPUBLIKANIE', name: 'Republikanie', color: '#002D62' },
-  { id: 'KONFEDERACJA KP', name: 'Konfederacja KP', color: '#D4AF37' },
-  { id: 'NIEZALEŻNI', name: 'Niezależni', color: 'linear-gradient(135deg, #9CA3AF 0%, #4B5563 100%)' },
-];
-
 // Mapping from UI names to actual API club names
 const MIN_PARTY_MAP: Record<string, string> = {
   'RAZEM': 'Razem',
@@ -46,19 +40,49 @@ const MIN_PARTY_MAP: Record<string, string> = {
   'NIEZALEŻNI': 'niez.',
 };
 
-const parties = [
-  { id: 'KO', name: 'KO', color: '#E31E2D' },
-  { id: 'PiS', name: 'PiS', color: '#003876' },
-  { id: 'Polska2050', name: 'Polska2050', color: '#FDB913' },
-  { id: 'PSL-TD', name: 'PSL-TD', color: '#90EE90' },
-  { id: 'Lewica', name: 'Lewica', color: 'linear-gradient(135deg, #6a1b9a 0%, #d32f2f 100%)' },
-  { id: 'Konfederacja', name: 'Konfederacja', color: '#091F42' },
-  { id: 'INNE', name: 'INNE', color: '#1F2937' },
+// Helper for Party Colors (Same as Europarlament)
+const getPartyColor = (party: string) => {
+  const p = party?.toLowerCase() || '';
+
+  if (p.includes('ko') || p.includes('koalicja obywatelska') || p.includes('po') || p.includes('nowoczesna') || p.includes('inicjatywa polska'))
+    return 'bg-gradient-to-r from-orange-500 to-red-500 text-white border-transparent shadow-md'; // KO
+
+  if (p.includes('pis') || p.includes('prawo i sprawiedliwość') || p.includes('suwerenna polska'))
+    return 'bg-gradient-to-r from-blue-700 to-blue-900 text-white border-transparent shadow-md'; // PiS
+
+  if (p.includes('polska 2050') || p.includes('trzecia droga (polska 2050)'))
+    return 'bg-yellow-400 text-black border-transparent shadow-md'; // PL2050: Yellow + Black text
+
+  if (p.includes('psl') || p.includes('trzecia droga (psl)'))
+    return 'bg-gradient-to-r from-green-600 to-emerald-700 text-white border-transparent shadow-md'; // PSL
+
+  if (p.includes('konfederacja'))
+    return 'bg-gradient-to-r from-[#091F42] to-[#0f284d] text-white border-transparent shadow-md'; // Konfederacja (Dark Navy)
+
+  if (p.includes('lewica') || p.includes('razem'))
+    return 'bg-gradient-to-r from-purple-600 to-red-600 text-white border-transparent shadow-md'; // Lewica
+
+  if (p.includes('kukiz'))
+    return 'bg-gray-700 text-white border-transparent';
+
+  return 'bg-white text-ink border-gray-200 hover:border-brand dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:border-brand';
+};
+
+const PARTIES = [
+  { id: 'KO', name: 'Koalicja Obywatelska' },
+  { id: 'PiS', name: 'Prawo i Sprawiedliwość' },
+  { id: 'Polska2050', name: 'Polska 2050' },
+  { id: 'PSL-TD', name: 'PSL' },
+  { id: 'Lewica', name: 'Lewica' },
+  { id: 'Konfederacja', name: 'Konfederacja' },
+  { id: 'INNE', name: 'INNE' },
 ];
 
 export default function Poslowie() {
   const [searchParams] = useSearchParams();
+  const { term } = useTerm();
   const [mps, setMps] = useState<MP[]>([]);
+  // ... (rest of state items same)
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [selectedParty, setSelectedParty] = useState<string>('');
@@ -75,26 +99,28 @@ export default function Poslowie() {
 
   useEffect(() => {
     const loadMps = async () => {
+      setLoading(true);
       try {
         const { data, error } = await supabase
           .from('mps')
           .select('*')
+          .eq('term', term) // Filter by selected Term
           .eq('active', true)
           .order('name', { ascending: true });
 
         if (error) throw error;
 
-        console.log('Fetched MPs from Supabase:', data);
+        console.log(`Fetched MPs for Term ${term}: `, data?.length);
 
         // Map DB columns to MP interface
         const mappedMps: MP[] = (data || []).map(mp => ({
           id: mp.id,
-          first_name: mp.name.split(' ')[0], // Simple split, or use a better heuristic if needed
+          first_name: mp.name.split(' ')[0],
           last_name: mp.name.split(' ').slice(1).join(' '),
           club: mp.party,
           district: mp.district,
           photo_url: mp.photo_url,
-          attendanceRate: Math.round(mp.stats_attendance || 0), // Ensure integer
+          attendanceRate: Math.round(mp.stats_attendance || 0),
           active: mp.active,
           rebelVotes: mp.stats_rebellion || 0
         }));
@@ -102,13 +128,14 @@ export default function Poslowie() {
         setMps(mappedMps);
       } catch (error) {
         console.error('Error fetching MPs:', error);
-        setMps(fallbackMPs);
+        if (term === 10) setMps(fallbackMPs);
+        else setMps([]);
       } finally {
         setLoading(false);
       }
     };
     loadMps();
-  }, []);
+  }, [term]);
 
   // Close popover when clicking outside
   useEffect(() => {
@@ -131,21 +158,19 @@ export default function Poslowie() {
     let result = mps;
 
     if (searchTerm) {
+      // ... (same search logic)
       result = result.filter((mp) =>
-        `${mp.first_name} ${mp.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
+        `${mp.first_name} ${mp.last_name} `.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     if (selectedParty) {
       if (selectedParty === 'INNE') {
-        // Show MPs from minor clubs (exclude major clubs)
         result = result.filter((mp) => !MAJOR_CLUBS.includes(mp.club));
       } else if (MIN_PARTY_MAP[selectedParty]) {
-        // Map UI name to full DB club name for minor parties
         const fullClubName = MIN_PARTY_MAP[selectedParty];
         result = result.filter((mp) => mp.club === fullClubName);
       } else {
-        // Show MPs from the selected major club (direct match)
         result = result.filter((mp) => mp.club === selectedParty);
       }
     }
@@ -153,6 +178,7 @@ export default function Poslowie() {
     return result;
   }, [searchTerm, selectedParty, mps]);
 
+  // ... (featuredMPs logic same)
   // Create featured MPs subsets
   const featuredMPs = useMemo(() => {
     const sorted = [...mps];
@@ -173,14 +199,18 @@ export default function Poslowie() {
 
   return (
     <div className="container mx-auto px-4 pt-24 pb-12 max-w-7xl">
+
       {/* Header */}
-      <div className="mb-12">
-        <h1 className="text-5xl md:text-6xl font-extrabold text-ink dark:text-white mb-4 tracking-tight">
-          Nasi Reprezentanci
-        </h1>
-        <p className="text-xl text-ink-light dark:text-slate-400">
-          {mps.length} posłów. Znajdź i weryfikuj.
-        </p>
+      <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <h1 className="text-5xl md:text-6xl font-extrabold text-ink dark:text-white mb-4 tracking-tight">
+            Nasi Reprezentanci
+          </h1>
+          <p className="text-xl text-ink-light dark:text-slate-400">
+            {mps.length} posłów. Znajdź i weryfikuj.
+          </p>
+        </div>
+        <TermSwitcher />
       </div>
 
       {/* Search Bar */}
@@ -202,89 +232,26 @@ export default function Poslowie() {
         <div className="flex flex-wrap justify-center gap-3">
           <button
             onClick={() => setSelectedParty('')}
-            className={`px-6 py-3 rounded-xl font-bold transition border-2 ${selectedParty === ''
-              ? 'bg-ink text-white border-ink dark:bg-white dark:text-ink dark:border-white'
-              : 'bg-white text-ink border-gray-200 hover:border-brand dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:border-brand'
-              }`}
+            className={`px-6 py-3 rounded-full font-bold transition-all border ${selectedParty === ''
+              ? 'bg-blue-600 text-white border-blue-600'
+              : 'bg-white dark:bg-[#24243e] text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-indigo-800 hover:border-blue-300'
+              } `}
           >
             Wszyscy {selectedParty === '' && <span className="text-sm ml-1">({mps.length})</span>}
           </button>
-          {parties.map((party) => {
-            // Special handling for INNE button with popover
-            if (party.id === 'INNE') {
-              return (
-                <div key={party.id} className="relative" ref={popoverRef}>
-                  <button
-                    onClick={() => {
-                      if (selectedParty === 'INNE') {
-                        setSelectedParty('');
-                        setIsInnePopoverOpen(false);
-                      } else {
-                        setSelectedParty('INNE');
-                        setIsInnePopoverOpen(!isInnePopoverOpen);
-                      }
-                    }}
-                    className={`px-6 py-3 rounded-xl font-bold transition border-2 flex items-center gap-2 ${selectedParty === 'INNE'
-                      ? 'text-white border-transparent'
-                      : 'bg-white text-ink border-gray-200 hover:border-brand dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:border-brand'
-                      }`}
-                    style={{
-                      background: selectedParty === 'INNE' ? party.color : undefined,
-                    }}
-                  >
-                    {party.name}
-                    {selectedParty === 'INNE' && <span className="text-sm">({filtered.length})</span>}
-                    <ChevronDown
-                      size={16}
-                      className={`transition-transform ${isInnePopoverOpen ? 'rotate-180' : ''}`}
-                    />
-                  </button>
 
-                  {/* Popover Submenu */}
-                  {isInnePopoverOpen && (
-                    <div className="absolute top-full mt-2 left-0 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg shadow-sm py-2 z-50 min-w-[200px] animate-in fade-in duration-75">
-                      {MINOR_PARTIES.map((minorParty) => (
-                        <button
-                          key={minorParty.id}
-                          onClick={() => {
-                            setSelectedParty(minorParty.id);
-                            setIsInnePopoverOpen(false);
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm font-medium text-ink dark:text-slate-200 hover:bg-brand/10 transition flex items-center gap-2"
-                        >
-                          {minorParty.color && (
-                            <span className="w-3 h-3 rounded-full" style={{ background: minorParty.color }} />
-                          )}
-                          {minorParty.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            }
-
-            // Regular party buttons
-            return (
-              <button
-                key={party.id}
-                onClick={() => {
-                  setSelectedParty(party.id);
-                  setIsInnePopoverOpen(false);
-                }}
-                className={`px-6 py-3 rounded-xl font-bold transition border-2 ${selectedParty === party.id
-                  ? 'text-white border-transparent'
-                  : 'bg-white text-ink border-gray-200 hover:border-brand dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:border-brand'
-                  }`}
-                style={{
-                  background: selectedParty === party.id ? party.color : undefined,
-                }}
-              >
-                {party.name}
-                {selectedParty === party.id && <span className="text-sm ml-1">({filtered.length})</span>}
-              </button>
-            );
-          })}
+          {PARTIES.map((party) => (
+            <button
+              key={party.id}
+              onClick={() => setSelectedParty(party.id)}
+              className={`px-6 py-3 rounded-full font-bold transition-all border ${selectedParty === party.id
+                ? getPartyColor(party.name)
+                : 'bg-white dark:bg-[#24243e] text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-indigo-800 hover:border-blue-300'
+                }`}
+            >
+              {party.name}
+            </button>
+          ))}
         </div>
       </div>
 

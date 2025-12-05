@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Search } from 'lucide-react';
 import { EuroLogoGold } from '../components/EuroLogoGold';
+import { useTerm } from '../context/TermContext';
 
 interface EuroMP {
     id: number;
@@ -16,6 +17,7 @@ interface EuroMP {
 }
 
 const Europarlament: React.FC = () => {
+    const { term } = useTerm();
     const [meps, setMeps] = useState<EuroMP[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -23,18 +25,20 @@ const Europarlament: React.FC = () => {
 
     useEffect(() => {
         fetchMeps();
-    }, []);
+    }, [term]);
 
     const fetchMeps = async () => {
         setLoading(true);
         const { data, error } = await supabase
             .from('euro_meps')
             .select('*')
+            .eq('term', term) // Filter by Term
             .eq('active', true)
             .order('full_name');
 
         if (error) {
             console.error('Error fetching MEPs:', error);
+            setMeps([]);
         } else {
             setMeps(data || []);
         }
@@ -78,11 +82,11 @@ const Europarlament: React.FC = () => {
                                 </span>
                             </h1>
                             <p className="text-lg text-neutral-600 dark:text-neutral-400">
-                                Polscy posłowie w Parlamencie Europejskim (Kadencja 2024-2029)
+                                Polscy posłowie w Parlamencie Europejskim (Kadencja {term === 10 ? '2024-2029' : '2019-2024'})
                             </p>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="flex flex-col sm:flex-row gap-3 items-center">
                             {/* Search */}
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
@@ -206,13 +210,13 @@ const getPartyColor = (party: string) => {
         return 'bg-gradient-to-r from-blue-700 to-blue-900'; // PiS: Dark Blue
 
     if (p.includes('polska 2050') || p.includes('trzecia droga (polska 2050)'))
-        return 'bg-yellow-400 border-2 border-blue-600 text-white'; // PL2050: Yellow + Blue Border
+        return 'bg-yellow-400 text-black border-transparent shadow-md'; // PL2050: Yellow + Black text
 
     if (p.includes('psl') || p.includes('ludowe') || p.includes('trzecia droga (psl)'))
         return 'bg-gradient-to-r from-green-600 to-emerald-700'; // PSL: Green
 
     if (p.includes('konfederacja') || p.includes('nowa nadzieja') || p.includes('ruch narodowy'))
-        return 'bg-gradient-to-r from-indigo-800 to-slate-900'; // Konfederacja: Very Dark
+        return 'bg-gradient-to-r from-[#091F42] to-[#0f284d] text-white'; // Konfederacja: Dark Navy
 
     if (p.includes('lewica') || p.includes('razem') || p.includes('nowa lewica'))
         return 'bg-gradient-to-r from-purple-600 to-red-600'; // Lewica: Purple/Red
@@ -225,14 +229,20 @@ const getPartyColor = (party: string) => {
 
 const EuroVotesList = () => {
     const [votes, setVotes] = useState<any[]>([]);
+    const { term } = useTerm();
 
     useEffect(() => {
         const fetchVotes = async () => {
-            const { data } = await supabase.from('euro_votes').select('*').order('date', { ascending: false }).limit(6);
+            const { data } = await supabase
+                .from('euro_votes')
+                .select('*')
+                .eq('term', term)
+                .order('date', { ascending: false })
+                .limit(6);
             if (data) setVotes(data);
         };
         fetchVotes();
-    }, []);
+    }, [term]);
 
     if (votes.length === 0) return null;
 

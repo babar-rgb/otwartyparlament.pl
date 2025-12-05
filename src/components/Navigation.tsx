@@ -11,6 +11,7 @@ export default function Navigation() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+
   useEffect(() => {
     const controlNavbar = () => {
       if (typeof window !== 'undefined') {
@@ -45,8 +46,8 @@ export default function Navigation() {
         <div className="container mx-auto px-6 md:px-12">
           <div className="flex justify-between items-center">
             {/* Left: Logo */}
-            <Link to="/" className="font-extrabold text-2xl text-ink dark:text-white tracking-tight">
-              otwartyparlament.pl
+            <Link to="/" className="font-extrabold text-2xl text-ink dark:text-white tracking-tight flex items-center gap-2">
+              <span>otwartyparlament.pl</span>
             </Link>
 
             {/* Center: Main Links (Desktop) */}
@@ -73,6 +74,7 @@ export default function Navigation() {
 
             {/* Right: Actions */}
             <div className="flex items-center gap-2">
+
               <ThemeToggle />
 
               {/* Search Button */}
