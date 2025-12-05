@@ -26,6 +26,8 @@ import BillDetails from './pages/BillDetails';
 import BillsList from './pages/BillsList';
 import VotesList from './pages/VotesList';
 import SearchPage from './pages/SearchPage';
+import Europarlament from './pages/Europarlament';
+import EuroMPProfile from './pages/EuroMPProfile';
 
 export default function App() {
   return (
@@ -36,6 +38,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/poslowie" element={<Poslowie />} />
+            <Route path="/europarlament" element={<Europarlament />} />
             <Route path="/poslowie/:id" element={<MpProfile />} />
             {/* <Route path="/glosowania" element={<Glosowania />} /> */} {/* Original /glosowania route */}
             {/* <Route path="/glosowania/:id" element={<VoteDetails />} /> */} {/* Original /glosowania/:id route */}
@@ -54,6 +57,7 @@ export default function App() {
             <Route path="/projekty/:id" element={<BillDetails />} />
             <Route path="/glosowania" element={<VotesList />} />
             <Route path="/glosowania/:sitting/:votingNumber" element={<VoteDetails />} />
+            <Route path="/europarlament/:id" element={<EuroMPProfile />} />
             <Route path="*" element={<Navigate to="/" replace />} />
             <Route path="/tematy/:slug" element={<CategoryDetails />} />
             <Route path="/metodologia" element={<DataSources />} />

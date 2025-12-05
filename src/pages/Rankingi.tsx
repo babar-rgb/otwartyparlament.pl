@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Trophy, TrendingUp, Swords, TrendingDown, AlertTriangle } from 'lucide-react';
+import { Trophy, TrendingUp, Swords, TrendingDown, AlertTriangle, Medal, HandCoins, Mic } from 'lucide-react';
 import Comparator from './Comparator';
 import { supabase } from '../lib/supabase';
 
@@ -121,7 +121,9 @@ export default function Rankingi() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <Link to="/majatek" className="bg-white p-6 rounded-xl border border-emerald-100 shadow-sm hover:shadow-md transition-all group flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-2xl">💰</div>
+              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
+                <HandCoins size={24} />
+              </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">Ranking Majątków</h3>
                 <p className="text-sm text-slate-500">Zobacz kto jest najbogatszym posłem</p>
@@ -132,7 +134,9 @@ export default function Rankingi() {
 
           <Link to="/wypowiedzi" className="bg-white p-6 rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-all group flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl">🎤</div>
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                <Mic size={24} />
+              </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-700 transition-colors">Wyszukiwarka Wypowiedzi</h3>
                 <p className="text-sm text-slate-500">Przeszukaj stenogramy z posiedzeń</p>
@@ -173,7 +177,10 @@ export default function Rankingi() {
                 <Link key={entry.id} to={`/poslowie/${entry.id}`}>
                   <div className="flex items-center gap-4 p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition cursor-pointer group">
                     <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg ${getRankColor(entry.rank)}`}>
-                      {getRankIcon(entry.rank)}
+                      {entry.rank === 1 ? <Medal size={24} className="text-yellow-600" /> :
+                        entry.rank === 2 ? <Medal size={24} className="text-gray-600" /> :
+                          entry.rank === 3 ? <Medal size={24} className="text-orange-600" /> :
+                            <span className="font-mono text-slate-600">#{entry.rank}</span>}
                     </div>
 
                     <div className="flex-1 flex items-center gap-3">

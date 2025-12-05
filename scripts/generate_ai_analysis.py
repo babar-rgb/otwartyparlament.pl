@@ -10,7 +10,7 @@ try:
         for line in f:
             if '=' in line:
                 key, value = line.strip().split('=', 1)
-                os.environ[key] = value
+                os.environ[key] = value.strip()
 except Exception:
     pass
 
@@ -36,26 +36,36 @@ except:
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def generate_analysis():
-    print("Starting AI Analysis Generation...")
+    print("Starting AI Analysis Generation (Gemini - Health Filter)...")
 
     # 1. Fetch votes that don't have analysis yet
-    # We do this by fetching all votes and checking against existing analyses, 
-    # or using a left join if possible. For simplicity, let's fetch recent votes.
     
     # Get IDs of already analyzed votes
     existing_ids_response = supabase.table('vote_analyses').select('vote_id').execute()
     existing_ids = {item['vote_id'] for item in existing_ids_response.data}
     
-    # Fetch recent votes (e.g., last 20)
+    # Fetch recent votes
     votes_response = supabase.table('votes')\
         .select('id, title_clean, title_raw, category')\
         .order('date', desc=True)\
-        .limit(20)\
+        .limit(6000)\
         .execute()
-        
-    votes_to_process = [v for v in votes_response.data if v['id'] not in existing_ids]
     
-    print(f"Found {len(votes_to_process)} new votes to analyze.")
+    # Filter for Health related votes
+    keywords = ['zdrow', 'szpital', 'medy', 'lekar', 'pielęgniar', 'pacjen', 'leków', 'refundac']
+    
+    votes_to_process = []
+    for v in votes_response.data:
+        if v['id'] in existing_ids:
+            continue
+            
+        text_content = (v.get('title_clean') or '') + " " + (v.get('title_raw') or '')
+        text_content = text_content.lower()
+        
+        if any(k in text_content for k in keywords):
+            votes_to_process.append(v)
+    
+    print(f"Found {len(votes_to_process)} new HEALTH related votes to analyze.")
     
     for vote in votes_to_process:
         try:
@@ -63,18 +73,17 @@ def generate_analysis():
             print(f"Analyzing: {title}...")
             
             prompt = f"""
-            Jesteś ekspertem od polskiego parlamentaryzmu. 
-            Przeanalizuj to głosowanie i przygotuj krótkie, obiektywne podsumowanie dla zwykłego obywatela.
+            Jesteś ekspertem od polskiego parlamentaryzmu i systemu ochrony zdrowia. 
+            Przeanalizuj to głosowanie i przygotuj krótkie, obiektywne podsumowanie dla zwykłego pacjenta/obywatela.
             
             Tytuł: {title}
             Kategoria: {vote.get('category')}
-            Opis (jeśli jest): {vote.get('description', '')}
             
             Wymagany format JSON:
             {{
-                "summary": "2-3 zdania prostym językiem o co chodzi w tej ustawie/głosowaniu. Unikaj żargonu.",
-                "pros": ["Argument ZA nr 1", "Argument ZA nr 2", "Argument ZA nr 3"],
-                "cons": ["Argument PRZECIW nr 1", "Argument PRZECIW nr 2", "Argument PRZECIW nr 3"]
+                "summary": "2-3 zdania prostym językiem o co chodzi w tej zmianie w ochronie zdrowia. Unikaj urzędniczego języka.",
+                "pros": ["Zaleta/Argument ZA nr 1", "Zaleta/Argument ZA nr 2"],
+                "cons": ["Wada/Ryzyko/Argument PRZECIW nr 1", "Wada/Ryzyko/Argument PRZECIW nr 2"]
             }}
             
             Odpowiedz TYLKO czystym JSONem.
@@ -102,7 +111,7 @@ def generate_analysis():
             supabase.table('vote_analyses').insert(data).execute()
             print("Saved analysis.")
             
-            time.sleep(2) # Rate limiting
+            time.sleep(1) # Rate limiting
             
         except Exception as e:
             print(f"Error analyzing vote {vote['id']}: {e}")

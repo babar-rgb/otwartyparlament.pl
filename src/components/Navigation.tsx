@@ -54,6 +54,9 @@ export default function Navigation() {
               <Link to="/poslowie" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 Posłowie
               </Link>
+              <Link to="/europarlament" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                Europarlament
+              </Link>
               <Link to="/glosowania" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 Głosowania
               </Link>
@@ -70,6 +73,13 @@ export default function Navigation() {
 
             {/* Right: Actions */}
             <div className="flex items-center gap-4">
+              <Link to="/europarlament" className="hidden sm:block">
+                <img
+                  src="/euro_logo.png"
+                  alt="Europarlament"
+                  className="h-8 w-auto hover:scale-110 transition-transform dark:invert"
+                />
+              </Link>
               <ThemeToggle />
 
               {/* Search Button */}
