@@ -63,20 +63,21 @@ const VotesList: React.FC = () => {
     const [categoryFilter, setCategoryFilter] = useState('WSZYSTKIE');
     const [verdictFilter, setVerdictFilter] = useState('WSZYSTKIE');
     const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: '', end: '' });
+    const [sortMode, setSortMode] = useState<'LATEST' | 'IMPORTANT'>('LATEST'); // New State
     const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
     // Debounced Search
     const debouncedSearch = useDebounce((query: string) => {
         setPage(0);
         setSliderPage(0);
-        fetchVotes(query, categoryFilter, verdictFilter, dateRange, 0);
+        fetchVotes(query, categoryFilter, verdictFilter, dateRange, sortMode, 0);
     }, 500);
 
     useEffect(() => {
         // Initial fetch
-        fetchVotes(searchQuery, categoryFilter, verdictFilter, dateRange, page);
+        fetchVotes(searchQuery, categoryFilter, verdictFilter, dateRange, sortMode, page);
         setSliderPage(page); // Sync slider with page
-    }, [page, categoryFilter, verdictFilter, dateRange]);
+    }, [page, categoryFilter, verdictFilter, dateRange, sortMode]);
 
     // Handle Search Input Change
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,6 +91,7 @@ const VotesList: React.FC = () => {
         category: string,
         verdict: string,
         dates: { start: string; end: string },
+        sort: 'LATEST' | 'IMPORTANT',
         pageParam: number
     ) => {
         setLoading(true);
@@ -119,10 +121,17 @@ const VotesList: React.FC = () => {
                 query = query.lte('date', `${dates.end}T23:59:59`);
             }
 
+            // Sorting
+            if (sort === 'IMPORTANT') {
+                // Primary: Importance, Secondary: Date
+                query = query.order('importance_score', { ascending: false }).order('date', { ascending: false });
+            } else {
+                // Primary: Date, Secondary: Importance
+                query = query.order('date', { ascending: false }).order('importance_score', { ascending: false });
+            }
+
             // Pagination
             const { data, error, count } = await query
-                .order('is_key_vote', { ascending: false })
-                .order('date', { ascending: false })
                 .range(pageParam * PAGE_SIZE, (pageParam + 1) * PAGE_SIZE - 1);
 
             if (error) throw error;
@@ -141,9 +150,10 @@ const VotesList: React.FC = () => {
         setCategoryFilter('WSZYSTKIE');
         setVerdictFilter('WSZYSTKIE');
         setDateRange({ start: '', end: '' });
+        setSortMode('LATEST');
         setPage(0);
         setSliderPage(0);
-        fetchVotes('', 'WSZYSTKIE', 'WSZYSTKIE', { start: '', end: '' }, 0);
+        fetchVotes('', 'WSZYSTKIE', 'WSZYSTKIE', { start: '', end: '' }, 'LATEST', 0);
     };
 
     const hasActiveFilters = searchQuery || categoryFilter !== 'WSZYSTKIE' || verdictFilter !== 'WSZYSTKIE' || dateRange.start || dateRange.end;
@@ -256,6 +266,25 @@ const VotesList: React.FC = () => {
                                     placeholder="Do"
                                 />
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Sort Toggles */}
+                    <div className="px-8 py-4 bg-white border-t border-neutral-100 flex items-center gap-4">
+                        <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider font-sans">Sortuj:</span>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setSortMode('LATEST')}
+                                className={`px-4 py-2 text-xs font-bold uppercase tracking-wide rounded-full transition-colors font-sans ${sortMode === 'LATEST' ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'}`}
+                            >
+                                Najnowsze
+                            </button>
+                            <button
+                                onClick={() => setSortMode('IMPORTANT')}
+                                className={`px-4 py-2 text-xs font-bold uppercase tracking-wide rounded-full transition-colors font-sans ${sortMode === 'IMPORTANT' ? 'bg-blue-600 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'}`}
+                            >
+                                Najważniejsze
+                            </button>
                         </div>
                     </div>
 

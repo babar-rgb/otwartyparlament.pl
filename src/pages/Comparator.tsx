@@ -40,7 +40,8 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
                             photo_url: mp.photo_url || `https://ui-avatars.com/api/?name=${mp.name || 'Posel'}&background=random`,
                             attendanceRate: mp.stats_attendance ? Math.round(mp.stats_attendance) : Math.floor(Math.random() * 20) + 80,
                             rebelVotes: mp.stats_rebellion || 0,
-                            lastVote: 'Za'
+                            lastVote: 'Za',
+                            stats: { speeches: 0, interpellations: 0 } // Init
                         };
                     });
 
@@ -98,18 +99,33 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
         const fetchKeyVotes = async () => {
             setLoadingVotes(true);
             try {
-                // 1. Get Key Votes from DB
+                // 1. Get Key Votes from DB (Fetch slightly more to handle deduplication)
                 const { data: votesData } = await supabase
                     .from('votes')
                     .select('*')
                     .eq('is_key_vote', true)
                     .order('date', { ascending: false })
-                    .limit(5);
+                    .limit(20);
 
                 if (!votesData) return;
 
+                // Deduplicate by Title (fuzzy match or exact)
+                const uniqueVotes = [];
+                const seenTitles = new Set();
+
+                for (const v of votesData) {
+                    const title = v.title_clean || v.title_raw;
+                    // Check if we've seen this title or a very similar one (e.g. "Sprawozdanie Komisji...")
+                    // Simple distinct for now:
+                    if (!seenTitles.has(title)) {
+                        seenTitles.add(title);
+                        uniqueVotes.push(v);
+                    }
+                    if (uniqueVotes.length >= 5) break;
+                }
+
                 // 2. Fetch individual decisions for each vote from Sejm API
-                const votesWithDecisions = await Promise.all(votesData.map(async (vote) => {
+                const votesWithDecisions = await Promise.all(uniqueVotes.map(async (vote) => {
                     try {
                         const response = await fetch(`https://api.sejm.gov.pl/sejm/term10/votings/${vote.sitting}/${vote.voting_number}`);
                         const votingData = await response.json();
@@ -139,6 +155,30 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
 
         fetchKeyVotes();
     }, [mpA, mpB]);
+
+    // Fetch Extra Stats (Speeches, Interpellations)
+    useEffect(() => {
+        const fetchExtraStats = async () => {
+            // Function to get count for an MP
+            const getStats = async (mpId: number) => {
+                const { count: sCount } = await supabase.from('speeches').select('id', { count: 'exact', head: true }).eq('mp_id', mpId);
+                const { count: iCount } = await supabase.from('interpellations').select('id', { count: 'exact', head: true }).eq('mp_id', mpId);
+                return { speeches: sCount || 0, interpellations: iCount || 0 };
+            };
+
+            if (mpA) {
+                getStats(mpA.id).then(stats => setMpA(prev => prev ? { ...prev, stats } : null));
+            }
+            if (mpB) {
+                getStats(mpB.id).then(stats => setMpB(prev => prev ? { ...prev, stats } : null));
+            }
+        };
+
+        // Only fetch if stats are 0 (fresh selection)
+        if ((mpA && !mpA.stats?.speeches) || (mpB && !mpB.stats?.speeches)) {
+            fetchExtraStats();
+        }
+    }, [mpA?.id, mpB?.id]);
 
     if (loading) {
         return (
@@ -355,26 +395,36 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
                         <div className="space-y-8">
                             {/* Attendance */}
                             <div>
-                                <div className="flex justify-between text-sm font-bold text-slate-500 mb-2">
+                                <div className="flex justify-between text-sm font-bold text-slate-500 mb-4">
                                     <span>Frekwencja</span>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <span className="font-black text-slate-900 w-12 text-right">{mpA.attendanceRate}%</span>
-                                    <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden flex">
-                                        <div style={{ width: '50%' }} className="bg-purple-500 h-full relative">
-                                            <div style={{ width: `${mpA.attendanceRate}%` }} className="absolute top-0 right-0 h-full bg-purple-600 opacity-50"></div>
-                                        </div>
-                                        <div style={{ width: '50%' }} className="bg-pink-500 h-full relative">
-                                            <div style={{ width: `${mpB.attendanceRate}%` }} className="absolute top-0 left-0 h-full bg-pink-600 opacity-50"></div>
-                                        </div>
+
+                                {/* MP A Bar */}
+                                <div className="mb-3">
+                                    <div className="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                                        <span>{mpA.last_name}</span>
+                                        <span>{mpA.attendanceRate}%</span>
                                     </div>
-                                    <span className="font-black text-slate-900 w-12">{mpB.attendanceRate}%</span>
+                                    <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                                        <div
+                                            style={{ width: `${mpA.attendanceRate}%` }}
+                                            className="h-full bg-purple-500 rounded-full"
+                                        ></div>
+                                    </div>
                                 </div>
-                                {/* Visual Bar Comparison */}
-                                <div className="flex h-2 mt-2 rounded-full overflow-hidden">
-                                    <div style={{ width: `${mpA.attendanceRate}%` }} className="bg-purple-500 h-full"></div>
-                                    <div className="flex-1 bg-slate-100"></div>
-                                    <div style={{ width: `${mpB.attendanceRate}%` }} className="bg-pink-500 h-full"></div>
+
+                                {/* MP B Bar */}
+                                <div>
+                                    <div className="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                                        <span>{mpB.last_name}</span>
+                                        <span>{mpB.attendanceRate}%</span>
+                                    </div>
+                                    <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                                        <div
+                                            style={{ width: `${mpB.attendanceRate}%` }}
+                                            className="h-full bg-pink-500 rounded-full"
+                                        ></div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -399,6 +449,50 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
                                         ></div>
                                     </div>
                                     <span className="font-black text-slate-900 w-12">{mpB.rebelVotes || 0}</span>
+                                </div>
+                            </div>
+
+                            {/* Speeches */}
+                            <div>
+                                <div className="flex justify-between text-sm font-bold text-slate-500 mb-2">
+                                    <span>Wypowiedzi</span>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <span className="font-black text-slate-900 w-12 text-right">{mpA.stats?.speeches || 0}</span>
+                                    <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden flex">
+                                        <div
+                                            style={{ flex: mpA.stats?.speeches || 0 }}
+                                            className="bg-purple-500 h-full"
+                                        ></div>
+                                        <div className="w-1 bg-white"></div>
+                                        <div
+                                            style={{ flex: mpB.stats?.speeches || 0 }}
+                                            className="bg-pink-500 h-full"
+                                        ></div>
+                                    </div>
+                                    <span className="font-black text-slate-900 w-12">{mpB.stats?.speeches || 0}</span>
+                                </div>
+                            </div>
+
+                            {/* Interpellations */}
+                            <div>
+                                <div className="flex justify-between text-sm font-bold text-slate-500 mb-2">
+                                    <span>Interpelacje</span>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <span className="font-black text-slate-900 w-12 text-right">{mpA.stats?.interpellations || 0}</span>
+                                    <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden flex">
+                                        <div
+                                            style={{ flex: mpA.stats?.interpellations || 0 }}
+                                            className="bg-purple-500 h-full"
+                                        ></div>
+                                        <div className="w-1 bg-white"></div>
+                                        <div
+                                            style={{ flex: mpB.stats?.interpellations || 0 }}
+                                            className="bg-pink-500 h-full"
+                                        ></div>
+                                    </div>
+                                    <span className="font-black text-slate-900 w-12">{mpB.stats?.interpellations || 0}</span>
                                 </div>
                             </div>
                         </div>

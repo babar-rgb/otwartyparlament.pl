@@ -11,10 +11,10 @@ export default function OProjekcie() {
         </div>
         <h1 className="text-5xl md:text-7xl font-black text-slate-900 mb-6 tracking-tight leading-tight">
           Demokracja potrzebuje <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">światła</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">transparentności</span>
         </h1>
         <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-          Wierzymy, że przejrzystość jest fundamentem zaufania. Budujemy narzędzia, które pozwalają każdemu obywatelowi zrozumieć, co dzieje się przy ulicy Wiejskiej.
+          Wierzymy, że przejrzystość jest fundamentem zaufania. Budujemy narzędzia, które pozwalają każdemu obywatelowi zrozumieć, co się dzieje w Sejmie.
         </p>
       </div>
 
@@ -127,7 +127,7 @@ export default function OProjekcie() {
               </li>
               <li className="flex items-start gap-3">
                 <div className="w-5 h-5 rounded-full border-2 border-slate-300 mt-0.5 flex-shrink-0"></div>
-                <span className="text-slate-600">Porównywarka poglądów (Tinder dla polityki)</span>
+                <span className="text-slate-600">Porównywarka poglądów</span>
               </li>
               <li className="flex items-start gap-3">
                 <div className="w-5 h-5 rounded-full border-2 border-slate-300 mt-0.5 flex-shrink-0"></div>
@@ -172,7 +172,7 @@ export default function OProjekcie() {
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           <a
-            href="https://github.com/yourusername/otwartyparlament"
+            href="https://github.com/babar-rgb"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all hover:scale-105 shadow-lg"

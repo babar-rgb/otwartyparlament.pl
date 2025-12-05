@@ -21,6 +21,11 @@ export interface MP {
   aktywnosc?: number;
   rebelVotes?: number; // Votes against party line
   declarations?: { label: string; url: string }[];
+  stats?: {
+    speeches?: number;
+    interpellations?: number;
+    voteParticipation?: number;
+  };
 }
 
 export interface Vote {

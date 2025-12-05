@@ -34,13 +34,27 @@ try:
     top_savings = []
     top_income = []
 
+    def safe_money(val):
+        if val is None: return 0.0
+        if isinstance(val, (int, float)): return float(val)
+        if isinstance(val, str):
+            # Clean string: remove spaces, replace comma with dot
+            clean = val.replace(' ', '').replace(',', '.')
+            # Remove currency symbols if any (basic check)
+            clean = clean.replace('PLN', '').replace('zł', '')
+            try:
+                return float(clean)
+            except:
+                return 0.0
+        return 0.0
+
     for d in declarations:
         content = d.get('parsed_content')
         if not content:
             continue
         
-        savings = content.get('savings', 0)
-        income = content.get('income', 0)
+        savings = safe_money(content.get('savings', 0))
+        income = safe_money(content.get('income', 0))
         properties = len(content.get('real_estate', []))
 
         if savings > 0: valid_savings += 1
