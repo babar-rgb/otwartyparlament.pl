@@ -112,7 +112,7 @@ const Europarlament: React.FC = () => {
                                 key={party}
                                 onClick={() => setGroupFilter(party)}
                                 className={`px-4 py-1.5 rounded-full transition-all border ${groupFilter === party
-                                    ? 'bg-blue-600 text-white border-blue-600'
+                                    ? `${getPartyColor(party)} text-white border-transparent shadow-md`
                                     : 'bg-white dark:bg-[#24243e] text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-indigo-800 hover:border-blue-300'}`}
                             >
                                 {party}
@@ -122,8 +122,15 @@ const Europarlament: React.FC = () => {
                 </div>
             </div>
 
+            {/* Key Votes Section */}
+            <EuroVotesList />
+
             {/* Grid */}
-            <div className="max-w-7xl mx-auto px-6 py-12">
+            <div className="max-w-7xl mx-auto px-6 pb-12">
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                    <div className="w-1 h-8 bg-blue-600 rounded-full"></div>
+                    Polscy Deputowani
+                </h2>
                 {loading ? (
                     <div className="text-center py-20 text-neutral-500">Ładowanie danych z Parlamentu Europejskiego...</div>
                 ) : (
@@ -158,7 +165,7 @@ const Europarlament: React.FC = () => {
                                             </h3>
                                             <div className="flex flex-wrap gap-2">
                                                 {/* National Party Badge */}
-                                                <span className="bg-white/90 dark:bg-white/10 backdrop-blur-sm px-2 py-0.5 rounded text-xs font-semibold text-neutral-900 dark:text-white border border-white/20">
+                                                <span className={`px-2 py-0.5 rounded text-xs font-semibold backdrop-blur-sm shadow-sm border border-white/20 text-white ${getPartyColor(mep.national_party)}`}>
                                                     {mep.national_party !== 'Brak danych' ? mep.national_party : 'Polska'}
                                                 </span>
                                             </div>
@@ -186,5 +193,83 @@ const Europarlament: React.FC = () => {
         </div>
     );
 };
+
+// Helper for Party Colors (Same as Sejm)
+const getPartyColor = (party: string) => {
+    // Normalize string
+    const p = party?.toLowerCase() || '';
+
+    if (p.includes('koalicja obywatelska') || p.includes('po') || p.includes('nowoczesna') || p.includes('inicjatywa polska'))
+        return 'bg-gradient-to-r from-orange-500 to-red-500'; // KO: Red/Orange
+
+    if (p.includes('prawo i sprawiedliwość') || p.includes('pis') || p.includes('suwerenna polska'))
+        return 'bg-gradient-to-r from-blue-700 to-blue-900'; // PiS: Dark Blue
+
+    if (p.includes('polska 2050') || p.includes('trzecia droga (polska 2050)'))
+        return 'bg-yellow-400 border-2 border-blue-600 text-white'; // PL2050: Yellow + Blue Border
+
+    if (p.includes('psl') || p.includes('ludowe') || p.includes('trzecia droga (psl)'))
+        return 'bg-gradient-to-r from-green-600 to-emerald-700'; // PSL: Green
+
+    if (p.includes('konfederacja') || p.includes('nowa nadzieja') || p.includes('ruch narodowy'))
+        return 'bg-gradient-to-r from-indigo-800 to-slate-900'; // Konfederacja: Very Dark
+
+    if (p.includes('lewica') || p.includes('razem') || p.includes('nowa lewica'))
+        return 'bg-gradient-to-r from-purple-600 to-red-600'; // Lewica: Purple/Red
+
+    if (p.includes('kukiz'))
+        return 'bg-gray-700';
+
+    return 'bg-gray-500';
+};
+
+const EuroVotesList = () => {
+    const [votes, setVotes] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchVotes = async () => {
+            const { data } = await supabase.from('euro_votes').select('*').order('date', { ascending: false }).limit(6);
+            if (data) setVotes(data);
+        };
+        fetchVotes();
+    }, []);
+
+    if (votes.length === 0) return null;
+
+    return (
+        <div className="max-w-7xl mx-auto px-6 py-8">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <div className="w-1 h-8 bg-amber-500 rounded-full"></div>
+                Ostatnie Kluczowe Głosowania
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {votes.map(v => (
+                    <Link
+                        to={`/europarlament/glosowanie/${v.id}`}
+                        key={v.id}
+                        className="bg-white dark:bg-[#24243e] p-6 rounded-2xl border border-neutral-200 dark:border-indigo-900/50 shadow-sm hover:border-amber-400 dark:hover:border-amber-500/50 transition-all hover:shadow-md block group"
+                    >
+                        <div className="flex justify-between items-start mb-3">
+                            <span className="text-xs font-bold bg-neutral-100 dark:bg-white/5 px-2 py-1 rounded text-neutral-500 uppercase tracking-wide">
+                                {new Date(v.date).toLocaleDateString('pl-PL')}
+                            </span>
+                            <span className="text-xs text-neutral-400 group-hover:text-amber-500 transition-colors">ID: {v.id?.split('-').pop()}</span>
+                        </div>
+                        <h3 className="font-bold text-lg mb-2 line-clamp-2 leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                            {v.title}
+                        </h3>
+                        {/* Placeholder for results if we had them summary */}
+                        <div className="mt-3 flex gap-2">
+                            <span className="text-xs font-bold text-green-600 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded border border-green-200 dark:border-green-800">
+                                Wniosek Legislacyjny
+                            </span>
+                        </div>
+                    </Link>
+                ))}
+            </div>
+        </div>
+    );
+};
+
 
 export default Europarlament;

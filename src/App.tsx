@@ -28,6 +28,7 @@ import VotesList from './pages/VotesList';
 import SearchPage from './pages/SearchPage';
 import Europarlament from './pages/Europarlament';
 import EuroMPProfile from './pages/EuroMPProfile';
+import EuroVoteDetails from './pages/EuroVoteDetails';
 
 export default function App() {
   return (
@@ -38,8 +39,10 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/poslowie" element={<Poslowie />} />
+            {/* Europarlament Routes */}
             <Route path="/europarlament" element={<Europarlament />} />
-            <Route path="/poslowie/:id" element={<MpProfile />} />
+            <Route path="/europarlament/:id" element={<EuroMPProfile />} />
+            <Route path="/europarlament/glosowanie/:id" element={<EuroVoteDetails />} />
             {/* <Route path="/glosowania" element={<Glosowania />} /> */} {/* Original /glosowania route */}
             {/* <Route path="/glosowania/:id" element={<VoteDetails />} /> */} {/* Original /glosowania/:id route */}
             {/* <Route path="/glosowania/details" element={<VoteDetails />} /> */}
