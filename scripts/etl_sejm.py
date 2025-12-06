@@ -29,7 +29,7 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Multi-Term Config
-TARGET_TERMS = [9, 10]
+TARGET_TERMS = [10]
 BASE_API_URL = "https://api.sejm.gov.pl/sejm"
 
 # --- UTILS ---
@@ -165,34 +165,59 @@ def sync_mps(term):
     print(f"Fetching MPs for Term {term}...")
     try:
         response = requests.get(f"{BASE_API_URL}/term{term}/MP")
-        mps_data = response.json()
-        print(f"Found {len(mps_data)} MPs in Term {term}. Syncing to DB...")
+        # List endpoint might not have numberOfSeat, let's verification fetch
+        mps_list = response.json()
+        print(f"Found {len(mps_list)} MPs in Term {term}. Syncing to DB...")
         
         mps_to_upsert = []
-        for mp in mps_data:
-            api_id = mp['id']
+        for i, mp_summary in enumerate(mps_list):
+            api_id = mp_summary['id']
+            
+            # Fetch details for numberOfSeat
+            try:
+                # Polite fetching
+                # time.sleep(0.05) 
+                details_resp = requests.get(f"{BASE_API_URL}/term{term}/MP/{api_id}")
+                if details_resp.status_code == 200:
+                    mp_details = details_resp.json()
+                    seat_num = mp_details.get('numberOfSeat')
+                else:
+                    print(f"  [Warn] Failed to fetch details for MP {api_id}")
+                    seat_num = None
+            except Exception as e:
+                print(f"  [Error] fetching MP details {api_id}: {e}")
+                seat_num = None
+
+            if i % 50 == 0:
+                print(f"  Processed {i}/{len(mps_list)} MPs...")
+
             # ID Logic: Term 10 stays original (Backwards Compat), Term 9 gets prefix
             if term == 10:
                 db_id = api_id
             else:
                 db_id = term * 10000 + api_id
 
+            # Use details if available, else fallback to summary
+            mp_source = mp_details if 'mp_details' in locals() and mp_details else mp_summary
+
             mp_record = {
                 "id": db_id,
-                "name": f"{mp['firstName']} {mp['lastName']}",
-                "party": mp.get('club', 'Niezrzeszony'),
-                "district": f"Okręg {mp.get('districtNum', 0)}",
-                "photo_url": f"https://api.sejm.gov.pl/sejm/term{term}/MP/{mp['id']}/photo",
-                "active": mp.get('active', True),
+                "name": f"{mp_source['firstName']} {mp_source['lastName']}",
+                "party": mp_source.get('club', 'Niezrzeszony'),
+                "district": f"Okręg {mp_source.get('districtNum', 0)}",
+                "photo_url": f"https://api.sejm.gov.pl/sejm/term{term}/MP/{api_id}/photo",
+                "active": mp_source.get('active', True),
                 "stats_attendance": 0, 
                 "stats_rebellion": 0,
                 "term": term,
-                "api_id": mp['id']
+                "api_id": api_id,
+                "seat_number": seat_num
             }
             mps_to_upsert.append(mp_record)
             
         try:
             # Upsert on 'id' (Primary Key)
+            # Make sure 'seat_number' is in the schema!
             supabase.table('mps').upsert(mps_to_upsert).execute()
             print(f"Upserted {len(mps_to_upsert)} MPs for Term {term}.")
         except Exception as e:

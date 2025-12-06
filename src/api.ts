@@ -20,6 +20,7 @@ export interface MP {
   attendanceRate?: number;
   aktywnosc?: number;
   rebelVotes?: number; // Votes against party line
+  seat_number?: number | null;
   term?: number;
   declarations?: { label: string; url: string }[];
   stats?: {

@@ -2,7 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { MP } from '../api';
 import { supabase } from '../lib/supabase';
-import { MapPin, Phone, Mail, ExternalLink, Calendar, TrendingUp, AlertCircle, FileText, Sparkles, MessageSquare, Scale, Star, CheckCircle2, XCircle, MinusCircle, HelpCircle, ArrowLeft, ArrowRight } from 'lucide-react';
+import { MapPin, Mail, FileText, Sparkles, Scale, Star, CheckCircle2, XCircle, MinusCircle, HelpCircle, ArrowLeft, ArrowRight, MessageSquare } from 'lucide-react';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 
 interface VoteHistoryItem {
@@ -573,7 +573,18 @@ const MpProfile = () => {
             ))}
           </div>
         ) : (
-          <p className="text-slate-500">Brak danych o głosowaniach.</p>
+          <div className="text-center py-8">
+            <p className="text-slate-500 mb-2">
+              {mp.term === 9
+                ? 'Archiwum IX Kadencji - Szczegółowe wyniki głosowań są w trakcie migracji.'
+                : 'Brak danych o ostatnich głosowaniach.'}
+            </p>
+            {mp.term === 9 && (
+              <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full font-medium">
+                Dane historyczne
+              </span>
+            )}
+          </div>
         )}
 
         <div className="mt-6 pt-6 border-t border-slate-200">

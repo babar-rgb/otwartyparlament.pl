@@ -39,6 +39,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/poslowie" element={<Poslowie />} />
+            <Route path="/poslowie/:id" element={<MpProfile />} />
             {/* Europarlament Routes */}
             <Route path="/europarlament" element={<Europarlament />} />
             <Route path="/europarlament/:id" element={<EuroMPProfile />} />

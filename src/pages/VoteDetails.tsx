@@ -83,7 +83,7 @@ const VoteDetails: React.FC = () => {
             const mpIds = resultsDataRaw.map((r: any) => r.mp_id);
             const { data: mpsData, error: mpsError } = await supabase
                 .from('mps')
-                .select('id, name, party, photo_url')
+                .select('id, name, party, photo_url, seat_number')
                 .in('id', mpIds);
 
             if (mpsError) throw mpsError;
