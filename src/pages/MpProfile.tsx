@@ -16,6 +16,7 @@ interface VoteHistoryItem {
     date: string;
     verdict: string;
     category?: string;
+    term: number;
   };
 }
 
@@ -105,7 +106,7 @@ const MpProfile = () => {
         // 2. Fetch Voting History (Last 10)
         const { data: historyData, error: historyError } = await supabase
           .from('vote_results')
-          .select('vote, votes!inner(id, sitting, voting_number, title_clean, title_raw, date, verdict)')
+          .select('vote, votes!inner(id, sitting, voting_number, title_clean, title_raw, date, verdict, term)')
           .eq('mp_id', id)
           .order('vote_id', { ascending: false })
           .limit(10);
@@ -546,7 +547,7 @@ const MpProfile = () => {
                   <div className="text-xs text-slate-500 mb-1">
                     {new Date(item.votes.date).toLocaleDateString('pl-PL')} • Posiedzenie {item.votes.sitting}
                   </div>
-                  <Link to={`/glosowania/${item.votes.sitting}/${item.votes.voting_number}`} className="text-slate-900 font-medium hover:text-blue-600 transition-colors line-clamp-2">
+                  <Link to={`/glosowania/${item.votes.term}/${item.votes.sitting}/${item.votes.voting_number}`} className="text-slate-900 font-medium hover:text-blue-600 transition-colors line-clamp-2">
                     {cleanSejmTitle(item.votes.title_clean || item.votes.title_raw || '')}
                   </Link>
                 </div>

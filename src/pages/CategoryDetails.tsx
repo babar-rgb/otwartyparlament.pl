@@ -17,6 +17,7 @@ interface Vote {
         no: number;
         abstain: number;
     };
+    term: number;
 }
 
 export default function CategoryDetails() {
@@ -203,7 +204,7 @@ export default function CategoryDetails() {
                         votes.map((vote, index) => (
                             <Link
                                 key={vote.id}
-                                to={`/glosowania/${vote.sitting}/${vote.voting_number}`}
+                                to={`/glosowania/${vote.term}/${vote.sitting}/${vote.voting_number}`}
                                 className="block group bg-white p-6 rounded-xl border border-gray-200 hover:border-brand/50 hover:shadow-md transition-all"
                             >
                                 <div className="flex items-start gap-4">

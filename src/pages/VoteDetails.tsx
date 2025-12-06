@@ -40,7 +40,7 @@ interface PartyStats {
 }
 
 const VoteDetails: React.FC = () => {
-    const { sitting, votingNumber } = useParams();
+    const { term, sitting, votingNumber } = useParams();
     const [vote, setVote] = useState<VoteDetail | null>(null);
     const [results, setResults] = useState<VoteResult[]>([]);
     const [partyStats, setPartyStats] = useState<Record<string, PartyStats>>({});
@@ -52,10 +52,11 @@ const VoteDetails: React.FC = () => {
         if (sitting && votingNumber) {
             fetchVoteDetails();
         }
-    }, [sitting, votingNumber]);
+    }, [sitting, votingNumber, term]);
 
     const fetchVoteDetails = async () => {
         setLoading(true);
+        const termId = term ? parseInt(term) : 10;
         try {
             // 1. Fetch Vote Metadata
             const { data: voteData, error: voteError } = await supabase
@@ -63,24 +64,41 @@ const VoteDetails: React.FC = () => {
                 .select('*')
                 .eq('sitting', sitting)
                 .eq('voting_number', votingNumber)
+                .eq('term', termId)
                 .single();
 
             if (voteError) throw voteError;
             setVote(voteData);
 
-            // 2. Fetch Individual Results with MP info
-            const { data: resultsData, error: resultsError } = await supabase
+            // 2. Fetch Individual Results (Get MP IDs first)
+            const { data: resultsDataRaw, error: resultsError } = await supabase
                 .from('vote_results')
-                .select('vote, mps(name, party, photo_url)')
-                .eq('vote_id', voteData.id);
+                .select('vote, mp_id')
+                .eq('vote_id', voteData.id)
+                .limit(460);
 
             if (resultsError) throw resultsError;
 
-            const typedResults = resultsData as unknown as VoteResult[];
+            // 3. Fetch MPs efficiently
+            const mpIds = resultsDataRaw.map((r: any) => r.mp_id);
+            const { data: mpsData, error: mpsError } = await supabase
+                .from('mps')
+                .select('id, name, party, photo_url')
+                .in('id', mpIds);
+
+            if (mpsError) throw mpsError;
+
+            // 4. Manual Join
+            const mpMap = new Map(mpsData?.map((mp: any) => [mp.id, mp]));
+            const typedResults: VoteResult[] = resultsDataRaw.map((r: any) => ({
+                vote: r.vote,
+                mps: mpMap.get(r.mp_id)
+            }));
+
             setResults(typedResults);
 
-            // 3. Calculate Party Stats
-            const stats: Record<string, PartyStats> = {};
+            // 5. Calculate Party Stats
+            const stats: Record<string, { yes: number; no: number; abstain: number; absent: number }> = {};
 
             typedResults.forEach(r => {
                 const party = r.mps?.party || 'Niezrzeszeni';

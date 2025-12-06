@@ -1,165 +1,132 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface MPData {
     name: string;
     party: string;
     photo_url: string;
     vote: string; // 'YES', 'NO', 'ABSTAIN', 'ABSENT'
-    id?: number; // Optional if we link to profile
+    id?: number;
 }
 
 interface SejmHemicycleProps {
     data: MPData[];
-    width?: number;
-    height?: number;
 }
 
-const ROWS = 12;
-const SEATS_TOTAL = 460;
-const RADIUS_INNER = 120;
-const RADIUS_OUTER = 400;
+// Architecture: Fixed Sejm Layout (Digital Twin)
+interface Seat {
+    id: number;
+    x: number;
+    y: number;
+}
 
-// Helper to generate seat coordinates
-const generateSeats = () => {
-    const seats = [];
-    const rowStep = (RADIUS_OUTER - RADIUS_INNER) / (ROWS - 1);
+const generateSejmLayout = (): Seat[] => {
+    const seats: Seat[] = [];
 
-    // Initial estimation of seats per row (proportional to radius)
-    let tempRows = [];
-    let totalCircumference = 0;
+    // Config
+    const SECTORS_COUNT = 5;
+    const ROWS_COUNT = 14;
 
-    for (let r = 0; r < ROWS; r++) {
-        const rad = RADIUS_INNER + r * rowStep;
-        totalCircumference += Math.PI * rad;
-        tempRows.push({ r, rad });
-    }
+    // Exact configuration to reach 92 seats per sector (460 total)
+    const ROW_CAPACITIES = [4, 4, 5, 5, 6, 6, 7, 7, 7, 8, 8, 8, 8, 9];
 
-    // Allocate seats
-    let allocated = 0;
-    const rowCounts = tempRows.map(row => {
-        const count = Math.round((Math.PI * row.rad / totalCircumference) * SEATS_TOTAL);
-        return count;
-    });
+    // Geometry
+    const RADIUS_INNER = 140;
+    const RADIUS_OUTER = 460;
+    const START_ANGLE = Math.PI * 0.1; // Right limit
+    const END_ANGLE = Math.PI * 0.9;   // Left limit
+    const TOTAL_SPAN = END_ANGLE - START_ANGLE;
 
-    // Adjustment to match exactly 460
-    const currentSum = rowCounts.reduce((a, b) => a + b, 0);
-    let diff = SEATS_TOTAL - currentSum;
+    const AISLE_WIDTH = 0.04;
+    const TOTAL_AISLE_SPACE = (SECTORS_COUNT - 1) * AISLE_WIDTH;
+    const USABLE_ANGLE = TOTAL_SPAN - TOTAL_AISLE_SPACE;
+    const SECTOR_ANGLE = USABLE_ANGLE / SECTORS_COUNT;
 
-    // Distribute diff to outer rows
-    let i = ROWS - 1;
-    while (diff !== 0) {
-        if (diff > 0) {
-            rowCounts[i]++;
-            diff--;
-        } else {
-            rowCounts[i]--;
-            diff++;
-        }
-        i = (i - 1 + ROWS) % ROWS;
-    }
+    let globalSeatId = 0;
 
-    // Generate Coords
-    for (let r = 0; r < ROWS; r++) {
-        const radius = RADIUS_INNER + r * rowStep;
-        const count = rowCounts[r];
-        const angleStep = Math.PI / (count - 1 || 1); // Spread over 180 deg (PI)
+    // Iterate Sectors (Left to Right for ID generation? Or mapping?)
+    // Sorted Data is Left-to-Right. So Seat IDs should correspond 0..459 Left-to-Right.
+    // So Sector 0 is Leftmost.
+    for (let s = 0; s < SECTORS_COUNT; s++) {
+        // Sector Start = END_ANGLE - (s * (SECTOR_ANGLE + AISLE_WIDTH))
+        const sectorStartAngle = END_ANGLE - (s * (SECTOR_ANGLE + AISLE_WIDTH));
 
-        for (let s = 0; s < count; s++) {
-            // Angle from PI (left) to 0 (right)
-            // But usually we want 0 at top? No, hemicycle is often standard math angle.
-            // Let's say Left is 180deg (PI), Right is 0deg.
-            const angle = Math.PI - (s * angleStep);
+        for (let r = 0; r < ROWS_COUNT; r++) {
+            const seatsInRow = ROW_CAPACITIES[r];
+            const radius = RADIUS_INNER + (r * (RADIUS_OUTER - RADIUS_INNER) / (ROWS_COUNT - 1));
 
-            const x = radius * Math.cos(angle);
-            const y = radius * Math.sin(angle); // y goes UP in math, but SVG y goes DOWN. 
-            // We want the arch to curve UPWARDS usually? Or DOWNWARDS?
-            // Standard parliament diagrams are usually an arc opening upwards or the speaker is at bottom.
-            // Let's assume Speaker is at (0,0) at the bottom center.
-            // So y should be negative (upwards) relative to center.
+            // Center within sector
+            const angleStep = SECTOR_ANGLE / seatsInRow;
 
-            // Store angle for sorting
-            seats.push({ x, y: -y, rotation: (angle * 180 / Math.PI) - 90, angleRaw: angle });
+            for (let i = 0; i < seatsInRow; i++) {
+                // Angle: Start from High (Left) down to Low (Right) within sector
+                // Center of the slot `i`
+                const angle = sectorStartAngle - (angleStep / 2) - (i * angleStep);
+
+                const x = radius * Math.cos(angle);
+                const y = -radius * Math.sin(angle); // SVG Flip
+
+                seats.push({
+                    id: globalSeatId++,
+                    x,
+                    y
+                });
+            }
         }
     }
-
-    // CRITICAL FIX: Sort seats by Angle (Left to Right) 
-    // to ensure parties fill "Wedges" (Slices) instead of "Rings".
-    // Determine sort based on angle. Larger angle (PI) is Left. Smaller (0) is Right.
-    // We want to fill Left to Right.
-    seats.sort((a, b) => b.angleRaw - a.angleRaw);
 
     return seats;
 };
 
-const SEAT_COORDS = generateSeats();
+const FIXED_SEATS = generateSejmLayout();
 
-const SejmHemicycle: React.FC<SejmHemicycleProps> = ({ data, width = 800, height = 500 }) => {
+const SejmHemicycle: React.FC<SejmHemicycleProps> = ({ data }) => {
+    const navigate = useNavigate();
     const [hoveredMP, setHoveredMP] = useState<MPData | null>(null);
-    const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
-    // 1. Sort Data by Party (to group colors) or just Party?
-    // User mentioned: "Możemy układać posłów partiami ... i kolorować ich decyzje"
-    // Standard sorting: Party A, Party B, ...
-    // Within party: Vote? To show clusters of dissent? That looks cool.
-    const sortedData = useMemo(() => {
-        // Clone and sort
-        // Map standard API parties to sort order roughly Left-to-Right or size
-        // Correct Polish Spectrum (Left to Right)
-        const partyOrder: Record<string, number> = {
-            'Lewica': 1,
-            'Koalicja Obywatelska': 2,
-            'Polska 2050 - Trzecia Droga': 3,
-            'Polska 2050': 3,
-            'Polskie Stronnictwo Ludowe - Trzecia Droga': 4,
-            'Polskie Stronnictwo Ludowe': 4,
-            'Kukiz\'15': 5,
-            'Prawo i Sprawiedliwość': 6,
-            'Konfederacja': 7
+    // 1. Sort MPs Logic
+    const sortedMPs = useMemo(() => {
+        const partyConfiguration: Record<string, { shortName: string; order: number; color: string }> = {
+            "Koalicyjny Klub Parlamentarny Lewicy (Nowa Lewica, PP, Unia Pracy, Inicjatywa Polska)": { shortName: "Lewica", order: 1, color: "#8B0000" },
+            "Klub Parlamentarny Koalicja Obywatelska - Platforma Obywatelska, Nowoczesna, Inicjatywa Polska, Zieloni": { shortName: "KO", order: 2, color: "#DC6A26" },
+            "Klub Parlamentarny Polska 2050 - Trzecia Droga": { shortName: "PL2050", order: 3, color: "#F6C102" },
+            "Klub Parlamentarny Polskie Stronnictwo Ludowe - Trzecia Droga": { shortName: "PSL", order: 3, color: "#056608" },
+            "Klub Parlamentarny Prawo i Sprawiedliwość": { shortName: "PiS", order: 4, color: "#182F57" },
+            "Klub Parlamentarny Konfederacja": { shortName: "Konfederacja", order: 5, color: "#0B162A" },
+            "Kukiz'15": { shortName: "Kukiz15", order: 4, color: "#000000" },
+            "Posłowie Niezrzeszeni": { shortName: "Niezrzeszeni", order: 6, color: "#808080" }
+        };
+
+        const getPartyConfig = (clubName: string) => {
+            if (clubName.includes("Lewica")) return partyConfiguration["Koalicyjny Klub Parlamentarny Lewicy (Nowa Lewica, PP, Unia Pracy, Inicjatywa Polska)"];
+            if (clubName.includes("Koalicja Obywatelska") || clubName.includes("KO")) return partyConfiguration["Klub Parlamentarny Koalicja Obywatelska - Platforma Obywatelska, Nowoczesna, Inicjatywa Polska, Zieloni"];
+            if (clubName.includes("Polska 2050")) return partyConfiguration["Klub Parlamentarny Polska 2050 - Trzecia Droga"];
+            if (clubName.includes("PSL") || clubName.includes("Ludowe")) return partyConfiguration["Klub Parlamentarny Polskie Stronnictwo Ludowe - Trzecia Droga"];
+            if (clubName.includes("Prawo i Sprawiedliwość") || clubName.includes("PiS")) return partyConfiguration["Klub Parlamentarny Prawo i Sprawiedliwość"];
+            if (clubName.includes("Konfederacja")) return partyConfiguration["Klub Parlamentarny Konfederacja"];
+            if (clubName.includes("Kukiz")) return partyConfiguration["Kukiz'15"];
+            return partyConfiguration["Posłowie Niezrzeszeni"];
         };
 
         return [...data].sort((a, b) => {
-            // Clean party name helper
-            const getP = (p: string) => {
-                if (p.includes('Polska 2050')) return 'Polska 2050';
-                if (p.includes('PSL') || p.includes('Ludowe')) return 'Polskie Stronnictwo Ludowe';
-                return p;
-            };
-
-            const pa = partyOrder[getP(a.party)] || 99;
-            const pb = partyOrder[getP(b.party)] || 99;
-
-            if (pa !== pb) return pa - pb;
-            // Secondary sort by vote to cluster dissenters
-            return a.vote.localeCompare(b.vote);
+            const configA = getPartyConfig(a.party);
+            const configB = getPartyConfig(b.party);
+            if (configA.order !== configB.order) return configA.order - configB.order;
+            if (a.vote !== b.vote) return a.vote.localeCompare(b.vote);
+            return a.name.localeCompare(b.name);
         });
     }, [data]);
 
-    // Map sorted MPs to Seats
-    // Note: If data.length != 460, we act gracefully.
-    // If < 460, some seats empty. If > 460, truncate/ignore ??
-    // Usually Sejm has 460.
-
     const getColor = (vote: string) => {
         switch (vote) {
-            case 'YES': return '#16a34a'; // green-600
-            case 'NO': return '#dc2626'; // red-600
-            case 'ABSTAIN': return '#f59e0b'; // amber-500
-            case 'ABSENT': return '#d4d4d8'; // zinc-300
+            case 'YES': return '#16a34a';
+            case 'NO': return '#dc2626';
+            case 'ABSTAIN': return '#f59e0b';
+            case 'ABSENT': return '#d4d4d8';
             default: return '#e5e7eb';
         }
     };
-
-    const handleMouseMove = (e: React.MouseEvent) => {
-        // Update tooltip position relative to SVG or Screen
-        // Using simple offset
-        // But better to use the seat coordinates if possible, but hover event is easy
-    };
-
-    // ViewBox: Center is 0,0. 
-    // X goes from -400 to 400. Y goes from -400 to 0. (Plus padding)
-    // Let's add padding.
 
     return (
         <div className="relative flex justify-center w-full overflow-hidden">
@@ -168,50 +135,46 @@ const SejmHemicycle: React.FC<SejmHemicycleProps> = ({ data, width = 800, height
                 className="w-full h-auto max-h-[60vh]"
                 style={{ maxWidth: '100%' }}
             >
-                <AnimatePresence>
-                    {sortedData.slice(0, 460).map((mp, idx) => {
-                        const seat = SEAT_COORDS[idx];
-                        if (!seat) return null;
+                {FIXED_SEATS.map((seat) => {
+                    // Mapping: Seat ID -> Sorted MP Index
+                    // This is "Cinema Seating" - seat 0 gets mp 0.
+                    const occupant = sortedMPs[seat.id];
 
-                        return (
-                            <motion.circle
-                                key={idx}
-                                cx={seat.x}
-                                cy={seat.y}
-                                r={6}
-                                fill={getColor(mp.vote)}
-                                stroke="white"
-                                strokeWidth={1}
-                                initial={{ scale: 0, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{ delay: idx * 0.001, duration: 0.3 }}
-                                className="cursor-pointer hover:stroke-neutral-900 dark:hover:stroke-white transition-colors"
-                                onMouseEnter={(e) => {
-                                    setHoveredMP(mp);
-                                    // Get bounding rect for simple positioning logic or just center?
-                                    // Actually we will render tooltip outside SVG or using ForeignObject?
-                                    // Let's use outside absolute div controlled by state.
-                                }}
-                                onMouseLeave={() => setHoveredMP(null)}
-                            // Link handling would need wrapping or onClick nav
-                            />
-                        );
-                    })}
-                </AnimatePresence>
-
-                {/* Labels for "Left" and "Right" sides potentially? Or Legend? */}
+                    return (
+                        <motion.circle
+                            key={seat.id}
+                            cx={seat.x}
+                            cy={seat.y}
+                            r={6}
+                            fill={occupant ? getColor(occupant.vote) : "#E0E0E0"} // Gray if empty
+                            stroke="white"
+                            strokeWidth={1}
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: seat.id * 0.0005, duration: 0.5 }}
+                            className={occupant ? "cursor-pointer hover:stroke-neutral-900 dark:hover:stroke-white transition-colors" : ""}
+                            onMouseEnter={() => occupant && setHoveredMP(occupant)}
+                            onMouseLeave={() => setHoveredMP(null)}
+                            onClick={() => {
+                                if (occupant && occupant.id) {
+                                    navigate(`/poslowie/${occupant.id}`);
+                                }
+                            }}
+                        />
+                    );
+                })}
             </svg>
 
             {/* Tooltip Overlay */}
             {hoveredMP && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-xl border border-neutral-200 dark:border-slate-700 flex items-center gap-4 animate-in fade-in slide-in-from-bottom-2 z-10 pointer-events-none min-w-[300px]">
                     {hoveredMP.photo_url ? (
-                        <img src={hoveredMP.photo_url} className="w-12 h-12 rounded-full object-cover bg-neutral-100" />
+                        <img src={hoveredMP.photo_url} className="w-12 h-12 rounded-full object-cover bg-neutral-100" alt={hoveredMP.name} />
                     ) : (
                         <div className="w-12 h-12 rounded-full bg-neutral-200" />
                     )}
                     <div>
-                        <div className="font-bold text-lg leading-tight">{hoveredMP.name}</div>
+                        <div className="font-bold text-lg leading-tight text-neutral-900 dark:text-neutral-100">{hoveredMP.name}</div>
                         <div className="text-sm text-neutral-500 dark:text-neutral-400">{hoveredMP.party}</div>
                     </div>
                     <div className={`ml-auto font-bold px-3 py-1 rounded-lg text-sm

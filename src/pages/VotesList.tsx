@@ -347,7 +347,7 @@ const VotesList: React.FC = () => {
                         votes.map((vote) => (
                             <Link
                                 key={vote.id}
-                                to={`/glosowania/${vote.sitting}/${vote.voting_number}`}
+                                to={`/glosowania/${term}/${vote.sitting}/${vote.voting_number}`}
                                 className="group block bg-white border border-neutral-200 p-6 hover:border-blue-500 transition-all shadow-sm hover:shadow-md"
                             >
                                 <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">

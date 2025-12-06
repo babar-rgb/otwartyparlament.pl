@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 // Force HMR update
 import { useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Search, User, FileText, ArrowRight, CheckCircle2, XCircle } from 'lucide-react';
+import { Search, User, FileText, ArrowRight, CheckCircle2, XCircle, MessageSquare } from 'lucide-react';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import MpCard from '../components/MpCard';
 import { MP } from '../api';
@@ -24,6 +24,7 @@ const SearchPage: React.FC = () => {
 
     const [mps, setMps] = useState<MP[]>([]);
     const [votes, setVotes] = useState<VoteResult[]>([]);
+    const [speeches, setSpeeches] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -145,11 +146,14 @@ const SearchPage: React.FC = () => {
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {votes.map(vote => (
-                                        <Link key={vote.id} to={`/glosowania/${vote.sitting}/${vote.voting_number}`} className="group block bg-white rounded-2xl border border-slate-200 p-6 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-lg hover:-translate-y-1 h-full flex flex-col justify-between relative overflow-hidden">
+                                        <Link key={vote.id} to={`/glosowania/${vote.term}/${vote.sitting}/${vote.voting_number}`} className="group block bg-white rounded-2xl border border-slate-200 p-6 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-lg hover:-translate-y-1 h-full flex flex-col justify-between relative overflow-hidden">
                                             <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-50 to-transparent rounded-bl-full -mr-8 -mt-8 opacity-50 group-hover:opacity-100 transition-opacity"></div>
 
                                             <div className="relative z-10">
-                                                <div className="flex items-center gap-2 mb-4">
+                                                <div className="flex items-center gap-2 mb-4 flex-wrap">
+                                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-1 rounded border border-slate-200">
+                                                        Kadencja {vote.term === 9 ? 'IX' : 'X'}
+                                                    </span>
                                                     <span className="text-xs font-bold text-blue-700 uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
                                                         {vote.category || 'Głosowanie'}
                                                     </span>
