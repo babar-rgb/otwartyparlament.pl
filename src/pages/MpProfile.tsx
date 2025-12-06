@@ -69,7 +69,8 @@ const MpProfile = () => {
           rebelVotes: mpData.stats_rebellion || 0,
           email: '',
           voivodeship: '',
-          declarations: mpData.declarations || []
+          declarations: mpData.declarations || [],
+          term: mpData.term // Add term to mapped object
         };
 
         setMp(mappedMp);
@@ -230,7 +231,7 @@ const MpProfile = () => {
 
               {/* Role Badge */}
               <span className="px-4 py-2 rounded-full bg-slate-100 text-slate-600 text-sm font-semibold">
-                Poseł na Sejm X Kadencji
+                Poseł na Sejm {mp.term === 9 ? 'IX' : 'X'} Kadencji
               </span>
             </div>
           </div>
@@ -299,8 +300,8 @@ const MpProfile = () => {
                 <div className="flex justify-between items-start mb-3">
                   <h3 className="font-bold text-lg text-slate-900">{report.topic}</h3>
                   <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${report.verdict === 'Spójny' ? 'bg-green-100 text-green-700' :
-                      report.verdict === 'Niespójny' ? 'bg-red-100 text-red-700' :
-                        'bg-yellow-100 text-yellow-700'
+                    report.verdict === 'Niespójny' ? 'bg-red-100 text-red-700' :
+                      'bg-yellow-100 text-yellow-700'
                     }`}>
                     {report.verdict}
                   </span>
@@ -476,9 +477,9 @@ const MpProfile = () => {
                   <div className="flex items-center justify-between border-t border-slate-100 pt-3">
                     <span className="text-sm text-slate-500">Głos posła:</span>
                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full font-bold text-sm uppercase tracking-wide ${item.vote === 'YES' ? 'bg-green-100 text-green-700' :
-                        item.vote === 'NO' ? 'bg-red-100 text-red-700' :
-                          item.vote === 'ABSTAIN' ? 'bg-neutral-100 text-neutral-700' :
-                            'bg-slate-100 text-slate-500'
+                      item.vote === 'NO' ? 'bg-red-100 text-red-700' :
+                        item.vote === 'ABSTAIN' ? 'bg-neutral-100 text-neutral-700' :
+                          'bg-slate-100 text-slate-500'
                       }`}>
                       {item.vote === 'YES' && <CheckCircle2 size={14} />}
                       {item.vote === 'NO' && <XCircle size={14} />}

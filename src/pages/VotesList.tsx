@@ -3,6 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { CheckCircle2, XCircle, AlertCircle, ArrowRight, Search, SlidersHorizontal, X, Filter } from 'lucide-react';
 import { cleanSejmTitle } from '../utils/titleFormatter';
+import { useTerm } from '../context/TermContext';
+import TermSwitcher from '../components/TermSwitcher';
 
 // Simple debounce hook
 function useDebounce<T extends (...args: any[]) => any>(func: T, wait: number) {
@@ -49,6 +51,7 @@ const CATEGORIES = [
 ];
 
 const VotesList: React.FC = () => {
+    const { term } = useTerm();
     const [votes, setVotes] = useState<Vote[]>([]);
     const [loading, setLoading] = useState(true);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -70,14 +73,14 @@ const VotesList: React.FC = () => {
     const debouncedSearch = useDebounce((query: string) => {
         setPage(0);
         setSliderPage(0);
-        fetchVotes(query, categoryFilter, verdictFilter, dateRange, sortMode, 0);
+        fetchVotes(query, categoryFilter, verdictFilter, dateRange, sortMode, 0, term);
     }, 500);
 
     useEffect(() => {
         // Initial fetch
-        fetchVotes(searchQuery, categoryFilter, verdictFilter, dateRange, sortMode, page);
+        fetchVotes(searchQuery, categoryFilter, verdictFilter, dateRange, sortMode, page, term);
         setSliderPage(page); // Sync slider with page
-    }, [page, categoryFilter, verdictFilter, dateRange, sortMode]);
+    }, [page, categoryFilter, verdictFilter, dateRange, sortMode, term]);
 
     // Handle Search Input Change
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,14 +95,16 @@ const VotesList: React.FC = () => {
         verdict: string,
         dates: { start: string; end: string },
         sort: 'LATEST' | 'IMPORTANT',
-        pageParam: number
+        pageParam: number,
+        termParam: number // Add term param
     ) => {
         setLoading(true);
         setErrorMsg(null);
         try {
             let query = supabase
                 .from('votes')
-                .select('*', { count: 'exact' });
+                .select('id, sitting, voting_number, date, title_clean, title_raw, category, verdict, print_number, details_json, importance_score', { count: 'estimated' })
+                .eq('term', termParam); // Filter by term
 
             // Apply Filters
             if (search) {
@@ -153,7 +158,8 @@ const VotesList: React.FC = () => {
         setSortMode('LATEST');
         setPage(0);
         setSliderPage(0);
-        fetchVotes('', 'WSZYSTKIE', 'WSZYSTKIE', { start: '', end: '' }, 'LATEST', 0);
+        setSliderPage(0);
+        fetchVotes('', 'WSZYSTKIE', 'WSZYSTKIE', { start: '', end: '' }, 'LATEST', 0, term);
     };
 
     const hasActiveFilters = searchQuery || categoryFilter !== 'WSZYSTKIE' || verdictFilter !== 'WSZYSTKIE' || dateRange.start || dateRange.end;
@@ -173,13 +179,17 @@ const VotesList: React.FC = () => {
             <div className="max-w-5xl mx-auto space-y-8">
 
                 {/* Header */}
-                <div className="space-y-4 mb-8">
-                    <h1 className="text-4xl md:text-5xl font-serif font-bold tracking-tight text-neutral-900">
-                        Archiwum Głosowań
-                    </h1>
-                    <p className="text-lg text-neutral-600 max-w-2xl font-sans">
-                        Przeszukuj bazę legislacyjną Sejmu X kadencji.
-                    </p>
+                {/* Header */}
+                <div className="space-y-4 mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div>
+                        <h1 className="text-4xl md:text-5xl font-serif font-bold tracking-tight text-neutral-900">
+                            Archiwum Głosowań
+                        </h1>
+                        <p className="text-lg text-neutral-600 max-w-2xl font-sans mt-2">
+                            Przeszukuj bazę legislacyjną Sejmu {term === 9 ? 'IX' : 'X'} kadencji.
+                        </p>
+                    </div>
+                    <TermSwitcher />
                 </div>
 
                 {/* SEARCH & FILTER ENGINE */}

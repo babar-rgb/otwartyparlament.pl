@@ -59,6 +59,7 @@ export default function App() {
             <Route path="/projekty" element={<BillsList />} /> {/* Added route for BillsList */}
             <Route path="/projekty/:id" element={<BillDetails />} />
             <Route path="/glosowania" element={<VotesList />} />
+            <Route path="/glosowania/:term/:sitting/:votingNumber" element={<VoteDetails />} />
             <Route path="/glosowania/:sitting/:votingNumber" element={<VoteDetails />} />
             <Route path="/europarlament/:id" element={<EuroMPProfile />} />
             <Route path="*" element={<Navigate to="/" replace />} />
