@@ -4,7 +4,36 @@ import re
 import time
 from supabase import create_client, Client
 from datetime import datetime
+import unicodedata
+import sys # Added for path fix
 
+# Add script directory to path to allow import
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+try:
+    from vote_intelligence import VoteAnalyzer
+except ImportError:
+    print("WARNING: Could not import VoteAnalyzer. ML features disabled.")
+    VoteAnalyzer = None
+
+
+def generate_slug(text):
+    """
+    Generate a URL-friendly slug from text.
+    Handles Polish characters: ł -> l, ą -> a, etc.
+    """
+    if not text:
+        return ""
+    
+    # Normalize unicode characters
+    text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8')
+    
+    # Lowercase and remove unwanted characters
+    text = re.sub(r'[^\w\s-]', '', text).lower()
+    
+    # Replace spaces and underscores with hyphens
+    text = re.sub(r'[-\s_]+', '-', text).strip('-')
+    
+    return text
 # --- CONFIGURATION ---
 # Manually load .env
 try:
@@ -199,38 +228,43 @@ def sync_mps(term):
 
             # Use details if available, else fallback to summary
             mp_source = mp_details if 'mp_details' in locals() and mp_details else mp_summary
-
             mp_record = {
                 "id": db_id,
-                "name": f"{mp_source['firstName']} {mp_source['lastName']}",
-                "party": mp_source.get('club', 'Niezrzeszony'),
-                "district": f"Okręg {mp_source.get('districtNum', 0)}",
+                "name": f"{mp_details.get('firstName')} {mp_details.get('lastName')}",
+                "party": mp_details.get('club', 'Niezrzeszony'),
+                "district": f"Okręg {mp_details.get('districtNum', 0)}",
                 "photo_url": f"https://api.sejm.gov.pl/sejm/term{term}/MP/{api_id}/photo",
-                "active": mp_source.get('active', True),
+                "active": mp_details.get('active', True),
                 "stats_attendance": 0, 
                 "stats_rebellion": 0,
                 "term": term,
                 "api_id": api_id,
-                "seat_number": seat_num
+                "seat_number": seat_num,
+                "slug": generate_slug(f"{mp_details.get('firstName')} {mp_details.get('lastName')}")
             }
             mps_to_upsert.append(mp_record)
             
-        try:
-            # Upsert on 'id' (Primary Key)
-            # Make sure 'seat_number' is in the schema!
-            supabase.table('mps').upsert(mps_to_upsert).execute()
-            print(f"Upserted {len(mps_to_upsert)} MPs for Term {term}.")
-        except Exception as e:
-            print(f"Upsert failed (maybe schema mismatch?): {e}")
-
+        # Upsert in chunks
+        chunk_size = 100
+        for i in range(0, len(mps_to_upsert), chunk_size):
+             chunk = mps_to_upsert[i:i + chunk_size]
+             # Make sure to include slug in the upsert
+             supabase.table('mps').upsert(chunk, on_conflict='id').execute()
+        
+        print(f"Synced {len(mps_to_upsert)} MPs for Term {term}.")
+        
     except Exception as e:
         print(f"Error syncing MPs: {e}")
 
+# Initialize ML Engine (Global to avoid reloading)
+ml_engine = VoteAnalyzer() if 'VoteAnalyzer' in globals() else None
+
 def process_sitting(term, sitting_num):
-    print(f"\n--- Processing Term {term}, Sitting {sitting_num} ---")
+    print(f"Processing Sitting {sitting_num} (Term {term})...")
     
     try:
-        response = requests.get(f"{BASE_API_URL}/term{term}/votings/{sitting_num}")
+        url = f"{BASE_API_URL}/term{term}/votings/{sitting_num}"
+        response = requests.get(url)
         if response.status_code != 200:
             print(f"Failed to fetch votes for sitting {sitting_num}: {response.status_code}")
             return
@@ -245,44 +279,57 @@ def process_sitting(term, sitting_num):
             try:
                 # time.sleep(0.05) 
                 
-                title_raw = vote['title']
-                title_clean = clean_title(title_raw)
-                category = classify_vote(title_clean)
-                verdict = "PRZYJĘTO" if vote['yes'] > vote['no'] else "ODRZUCONO"
-                
                 # ID Logic: Term 10 stays original (Sitting * 10000 + Vote), Term 9 gets prefix
                 if term == 10:
                     vote_id = sitting_num * 10000 + vote['votingNumber']
                 else:
                     vote_id = term * 10000000 + sitting_num * 10000 + vote['votingNumber']
                 
-                # Calculate importance score
-                importance_score = calculate_importance(
-                    title_clean, 
-                    vote.get('yes', 0), 
-                    vote.get('no', 0)
-                )
-                is_key_vote = importance_score > 60
+                # --- ML INTELLIGENCE ---
+                importance_score = 0.0
+                topic_tag = "Inne"
+                semantic_weight = 0.0
                 
+                if ml_engine:
+                    try:
+                        # Prepare data
+                        vote_title = clean_title(vote.get('title', ''))
+                        vote_desc = vote.get('description', '') or '' # API might use 'description' or 'topic'
+                        v_yes = vote.get('yes', 0)
+                        v_no = vote.get('no', 0)
+                        v_abstain = vote.get('abstain', 0)
+                        
+                        analysis = ml_engine.calculate_final_score(vote_title, vote_desc, v_yes, v_no, v_abstain)
+                        
+                        importance_score = float(analysis['importance_score'])
+                        topic_tag = analysis['category']
+                        semantic_weight = analysis['components']['text_score']
+                        
+                        # Debug Log for High Importance
+                        if importance_score > 80:
+                            print(f"  [ML] DETECTED KEY VOTE: {vote_title[:60]}... (Score: {importance_score})")
+
+                    except Exception as ml_err:
+                        print(f"  [ML Error] Vote {vote['votingNumber']}: {ml_err}")
+
                 vote_record = {
-                    "id": vote_id,
+                    "id": vote_id, # Keep the ID logic
                     "sitting": sitting_num,
                     "voting_number": vote['votingNumber'],
                     "date": vote['date'],
-                    "title_raw": title_raw,
-                    "title_clean": title_clean,
-                    "category": category,
-                    "verdict": verdict,
-                    "importance_score": importance_score,
-                    "is_key_vote": is_key_vote,
+                    "title_raw": vote['title'],
+                    "title_clean": clean_title(vote['title']),
                     "term": term,
-                    "details_json": {
-                        "kind": vote.get('kind', ''), 
-                        "topic": vote.get('topic', ''),
-                        "yes": vote.get('yes', 0),
-                        "no": vote.get('no', 0),
-                        "abstain": vote.get('abstain', 0)
-                    }
+                    "kind": vote.get('kind', ''), 
+                    "topic": vote.get('topic', ''),
+                    "yes": vote.get('yes', 0),
+                    "no": vote.get('no', 0),
+                    "abstain": vote.get('abstain', 0),
+                    # New Columns
+                    "importance_score": importance_score,
+                    "topic_tag": topic_tag,
+                    "semantic_weight": semantic_weight,
+                    "category": topic_tag # Sync legacy category format if needed
                 }
                 
                 supabase.table('votes').upsert(vote_record).execute()
@@ -378,20 +425,80 @@ def update_existing_categories():
     except Exception as e:
         print(f"Error updating categories: {e}")
 
+def verify_ml():
+    """
+    KROK 3: Weryfikacja (Dry Run)
+    Pobiera ostatnie 10 głosowań z obecnego posiedzenia i wyświetla analizę.
+    """
+    print("\n=== WERYFIKACJA MODUŁU ML (Ostatnie 10 głosowań) ===")
+    print(f"{'TYTUŁ':<60} | {'WYNIK':<10} | {'SCORE':<5} | {'TEMAT':<15}")
+    print("-" * 100)
+    
+    term = 10
+    # Fetch sittings decending
+    sittings = fetch_all_sittings(term)
+    if not sittings:
+        print("Brak posiedzeń.")
+        return
+
+    # Iterate backwards through sittings to find one with votes
+    found_votes = False
+    for sitting_num in reversed(sittings):
+        url = f"{BASE_API_URL}/term{term}/votings/{sitting_num}"
+        print(f"Checking Sitting {sitting_num}...") 
+        try:
+            resp = requests.get(url)
+            if resp.status_code != 200: continue
+            
+            votes = resp.json()
+            if len(votes) > 0:
+                print(f"Found {len(votes)} votes in Sitting {sitting_num}. Analyzing last 10...")
+                recent_votes = votes[-10:]
+                found_votes = True
+                break
+        except:
+             continue
+    
+    if not found_votes:
+        print("Nie znaleziono żadnych głosowań w ostatnich posiedzeniach.")
+        return
+    
+    for vote in recent_votes:
+        if not ml_engine:
+            print("ML Engine not loaded.")
+            break
+            
+        title = clean_title(vote.get('title', ''))
+        desc = vote.get('description', '') or ''
+        
+        analysis = ml_engine.calculate_final_score(
+            title, desc, 
+            vote.get('yes', 0), vote.get('no', 0), vote.get('abstain', 0)
+        )
+        
+        score = analysis['importance_score']
+        topic = analysis['category']
+        
+        # Truncate title for display
+        display_title = (title[:57] + '...') if len(title) > 57 else title
+        res_str = f"{vote.get('yes')}/{vote.get('no')}"
+        
+        print(f"{display_title:<60} | {res_str:<10} | {score:<5} | {topic:<15}")
+
 # --- MAIN ---
 if __name__ == "__main__":
-    import sys
+    print("Starting Data Ingest...")
     
-    print("Starting Multi-Term Data Ingest...")
-    
-    if len(sys.argv) > 1 and sys.argv[1] == "--update-categories":
+    if len(sys.argv) > 1 and sys.argv[1] == "--verify-ml":
+        verify_ml()
+    elif len(sys.argv) > 1 and sys.argv[1] == "--update-categories":
         update_existing_categories()
     else:
         for term in TARGET_TERMS:
-            print(f"\\n=== Processing Term {term} ===")
+            print(f"\n=== Processing Term {term} ===")
             sync_mps(term)
             sittings = fetch_all_sittings(term)
             for sitting in sittings:
                 process_sitting(term, sitting)
                 
-        print("\\nMISSION COMPLETE. All terms ingested.")
+        print("\nMISSION COMPLETE. All terms ingested.")

@@ -1,10 +1,16 @@
 import { Link } from 'react-router-dom';
 import { ChevronDown, Heart, TrendingUp, Wheat, GraduationCap, Shield, Scale, Building, Zap, Cpu, Users, Globe, Palette } from 'lucide-react';
 
+import SEO from '../components/SEO';
+
 export default function Home() {
 
   return (
     <div className="min-h-screen">
+      <SEO
+        title="OtwartyParlament.pl"
+        description="Twoje centrum wiedzy o Sejmie. Sprawdź głosowania, profile posłów i statystyki."
+      />
       {/* Hero Section */}
       <section className="h-screen flex flex-col justify-center items-center relative overflow-hidden">
 

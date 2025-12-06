@@ -21,6 +21,7 @@ export interface MP {
   aktywnosc?: number;
   rebelVotes?: number; // Votes against party line
   seat_number?: number | null;
+  slug?: string;
   term?: number;
   declarations?: { label: string; url: string }[];
   stats?: {

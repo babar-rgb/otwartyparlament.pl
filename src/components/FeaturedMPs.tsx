@@ -23,7 +23,7 @@ function MiniMPCard({ mp, metric, metricValue, accentColor, index }: MiniMPCardP
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
         >
-            <Link to={`/poslowie/${mp.id}`}>
+            <Link to={`/poslowie/${mp.slug || mp.id}`}>
                 <motion.div
                     className="flex-shrink-0 w-48 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden cursor-pointer flex flex-col items-center p-4 relative"
                     whileHover={{ y: -3, boxShadow: "0 8px 20px rgba(0,0,0,0.08)" }}

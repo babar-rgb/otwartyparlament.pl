@@ -5,6 +5,7 @@ import { CheckCircle2, XCircle, AlertCircle, ArrowRight, Search, SlidersHorizont
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import { useTerm } from '../context/TermContext';
 import TermSwitcher from '../components/TermSwitcher';
+import SEO from '../components/SEO';
 
 // Simple debounce hook
 function useDebounce<T extends (...args: any[]) => any>(func: T, wait: number) {
@@ -176,6 +177,10 @@ const VotesList: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-paper text-neutral-900 pt-32 pb-12 px-6 md:px-12 font-serif">
+            <SEO
+                title="Głosowania Sejmowe"
+                description="Pełne archiwum głosowań Sejmu RP. Przeszukuj wyniki, sprawdzaj, jak głosowali posłowie i analizuj kluczowe decyzje."
+            />
             <div className="max-w-5xl mx-auto space-y-8">
 
                 {/* Header */}

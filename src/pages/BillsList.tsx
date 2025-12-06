@@ -10,7 +10,12 @@ interface Process {
     documentId: string;
 }
 
+import { useTerm } from '../context/TermContext';
+import TermSwitcher from '../components/TermSwitcher';
+import SEO from '../components/SEO';
+
 export default function BillsList() {
+    const { term } = useTerm(); // Use global term
     const [processes, setProcesses] = useState<Process[]>([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(0);
@@ -22,7 +27,7 @@ export default function BillsList() {
         const fetchTotalCount = async () => {
             try {
                 // Fetch 1 item to get headers
-                const response = await fetch(`https://api.sejm.gov.pl/sejm/term10/processes?limit=1`);
+                const response = await fetch(`https://api.sejm.gov.pl/sejm/term${term}/processes?limit=1`);
                 const countHeader = response.headers.get('X-Total-Count');
                 if (countHeader) {
                     setTotalCount(parseInt(countHeader, 10));
@@ -32,7 +37,8 @@ export default function BillsList() {
             }
         };
         fetchTotalCount();
-    }, []);
+        setPage(0); // Reset page on term change
+    }, [term]);
 
     // Then fetch data based on page and totalCount
     useEffect(() => {
@@ -43,8 +49,7 @@ export default function BillsList() {
             try {
                 // Calculate API offset to get latest items
                 // If total is 100, limit 20.
-                // Page 0: want 80-100. apiOffset = 100 - 20 * (0 + 1) = 80.
-                // Page 1: want 60-80. apiOffset = 100 - 20 * (1 + 1) = 60.
+                // Page 0: want 80-100. apiOffset = 100 - 20 * (1 + 0) = 80.
 
                 let apiOffset = totalCount - limit * (page + 1);
                 let fetchLimit = limit;
@@ -61,7 +66,7 @@ export default function BillsList() {
                     return;
                 }
 
-                const response = await fetch(`https://api.sejm.gov.pl/sejm/term10/processes?limit=${fetchLimit}&offset=${apiOffset}`);
+                const response = await fetch(`https://api.sejm.gov.pl/sejm/term${term}/processes?limit=${fetchLimit}&offset=${apiOffset}`);
                 if (!response.ok) throw new Error('Failed to fetch processes');
 
                 const data = await response.json();
@@ -90,13 +95,20 @@ export default function BillsList() {
 
     return (
         <div className="container mx-auto px-4 pt-24 pb-12 max-w-5xl animate-fade-in">
-            <div className="mb-12">
-                <h1 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">
-                    Projekty <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">Ustaw</span>
-                </h1>
-                <p className="text-xl text-slate-600 max-w-2xl">
-                    Przeglądaj najnowsze procesy legislacyjne w Sejmie X kadencji.
-                </p>
+            <SEO
+                title="Projekty Ustaw"
+                description="Monitoruj proces legislacyjny. Zobacz najnowsze projekty ustaw, druki sejmowe i postęp prac w Sejmie."
+            />
+            <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <h1 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">
+                        Projekty <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">Ustaw</span>
+                    </h1>
+                    <p className="text-xl text-slate-600 max-w-2xl">
+                        Przeglądaj najnowsze procesy legislacyjne w Sejmie {term === 9 ? 'IX' : 'X'} kadencji.
+                    </p>
+                </div>
+                <TermSwitcher />
             </div>
 
             {loading ? (

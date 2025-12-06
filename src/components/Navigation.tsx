@@ -5,7 +5,7 @@ import Sidebar from './Sidebar';
 import SearchOverlay from './SearchOverlay';
 
 import ThemeToggle from './ThemeToggle';
-import TermSwitcher from './TermSwitcher';
+// TermSwitcher removed
 
 export default function Navigation() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -77,7 +77,7 @@ export default function Navigation() {
             <div className="flex items-center gap-2">
 
               <div className="hidden md:block">
-                <TermSwitcher />
+                {/* TermSwitcher removed to avoid crowding */}
               </div>
 
               <ThemeToggle />

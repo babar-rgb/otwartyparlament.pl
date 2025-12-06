@@ -9,25 +9,8 @@ import MpCard from '../components/MpCard';
 import FeaturedMPs from '../components/FeaturedMPs';
 import { Search } from 'lucide-react';
 
-// Fallback mock data for when API fails
-const fallbackMPs: MP[] = [
-  { id: 101, first_name: 'Anna', last_name: 'Kowalska', club: 'KO', district: 'Warszawa I', photo_url: '', attendanceRate: 98, active: true },
-  { id: 102, first_name: 'Jan', last_name: 'Nowak', club: 'PiS', district: 'Kraków I', photo_url: '', attendanceRate: 95, active: true },
-  { id: 103, first_name: 'Maria', last_name: 'Wiśniewska', club: 'Trzecia Droga', district: 'Gdańsk', photo_url: '', attendanceRate: 92, active: true },
-  { id: 104, first_name: 'Piotr', last_name: 'Lewandowski', club: 'Lewica', district: 'Wrocław', photo_url: '', attendanceRate: 89, active: true },
-  { id: 105, first_name: 'Krzysztof', last_name: 'Zieliński', club: 'Konfederacja', district: 'Poznań', photo_url: '', attendanceRate: 91, active: true },
-  { id: 106, first_name: 'Magdalena', last_name: 'Dąbrowska', club: 'KO', district: 'Łódź', photo_url: '', attendanceRate: 97, active: true },
-  { id: 107, first_name: 'Tomasz', last_name: 'Kamiński', club: 'PiS', district: 'Lublin', photo_url: '', attendanceRate: 93, active: true },
-  { id: 108, first_name: 'Agnieszka', last_name: 'Szymańska', club: 'Trzecia Droga', district: 'Szczecin', photo_url: '', attendanceRate: 88, active: true },
-  { id: 109, first_name: 'Michał', last_name: 'Woźniak', club: 'Lewica', district: 'Katowice', photo_url: '', attendanceRate: 94, active: true },
-  { id: 110, first_name: 'Katarzyna', last_name: 'Kozłowska', club: 'Konfederacja', district: 'Białystok', photo_url: '', attendanceRate: 90, active: true },
-  { id: 111, first_name: 'Paweł', last_name: 'Jankowski', club: 'KO', district: 'Toruń', photo_url: '', attendanceRate: 96, active: true },
-  { id: 112, first_name: 'Barbara', last_name: 'Mazur', club: 'PiS', district: 'Rzeszów', photo_url: '', attendanceRate: 92, active: true },
-  { id: 113, first_name: 'Andrzej', last_name: 'Krawczyk', club: 'Trzecia Droga', district: 'Olsztyn', photo_url: '', attendanceRate: 87, active: true },
-  { id: 114, first_name: 'Ewa', last_name: 'Piotrowska', club: 'Lewica', district: 'Zielona Góra', photo_url: '', attendanceRate: 95, active: true },
-  { id: 115, first_name: 'Marcin', last_name: 'Grabowski', club: 'Konfederacja', district: 'Kielce', photo_url: '', attendanceRate: 89, active: true },
-  { id: 116, first_name: 'Joanna', last_name: 'Pawlak', club: 'KO', district: 'Opole', photo_url: '', attendanceRate: 98, active: true },
-];
+// Fallback mock data removed for production safety
+// const fallbackMPs: MP[] = [];
 
 // Major clubs to exclude from "INNE" filter
 const MAJOR_CLUBS = ['KO', 'PiS', 'Polska2050', 'PSL-TD', 'Lewica', 'Konfederacja'];
@@ -40,33 +23,7 @@ const MIN_PARTY_MAP: Record<string, string> = {
   'NIEZALEŻNI': 'niez.',
 };
 
-// Helper for Party Colors (Same as Europarlament)
-const getPartyColor = (party: string) => {
-  const p = party?.toLowerCase() || '';
-
-  if (p.includes('ko') || p.includes('koalicja obywatelska') || p.includes('po') || p.includes('nowoczesna') || p.includes('inicjatywa polska'))
-    return 'bg-gradient-to-r from-orange-500 to-red-500 text-white border-transparent shadow-md'; // KO
-
-  if (p.includes('pis') || p.includes('prawo i sprawiedliwość') || p.includes('suwerenna polska'))
-    return 'bg-gradient-to-r from-blue-700 to-blue-900 text-white border-transparent shadow-md'; // PiS
-
-  if (p.includes('polska 2050') || p.includes('trzecia droga (polska 2050)'))
-    return 'bg-yellow-400 text-black border-transparent shadow-md'; // PL2050: Yellow + Black text
-
-  if (p.includes('psl') || p.includes('trzecia droga (psl)'))
-    return 'bg-gradient-to-r from-green-600 to-emerald-700 text-white border-transparent shadow-md'; // PSL
-
-  if (p.includes('konfederacja'))
-    return 'bg-gradient-to-r from-[#091F42] to-[#0f284d] text-white border-transparent shadow-md'; // Konfederacja (Dark Navy)
-
-  if (p.includes('lewica') || p.includes('razem'))
-    return 'bg-gradient-to-r from-purple-600 to-red-600 text-white border-transparent shadow-md'; // Lewica
-
-  if (p.includes('kukiz'))
-    return 'bg-gray-700 text-white border-transparent';
-
-  return 'bg-white text-ink border-gray-200 hover:border-brand dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:border-brand';
-};
+import { getPartyStyle } from '../utils/theme';
 
 const PARTIES = [
   { id: 'KO', name: 'Koalicja Obywatelska' },
@@ -122,14 +79,14 @@ export default function Poslowie() {
           photo_url: mp.photo_url,
           attendanceRate: Math.round(mp.stats_attendance || 0),
           active: mp.active,
-          rebelVotes: mp.stats_rebellion || 0
+          rebelVotes: mp.stats_rebellion || 0,
+          slug: mp.slug,
+          term: mp.term
         }));
-
         setMps(mappedMps);
       } catch (error) {
         console.error('Error fetching MPs:', error);
-        if (term === 10) setMps(fallbackMPs);
-        else setMps([]);
+        setMps([]);
       } finally {
         setLoading(false);
       }
@@ -245,7 +202,7 @@ export default function Poslowie() {
               key={party.id}
               onClick={() => setSelectedParty(party.id)}
               className={`px-6 py-3 rounded-full font-bold transition-all border ${selectedParty === party.id
-                ? getPartyColor(party.name)
+                ? getPartyStyle(party.name)
                 : 'bg-white dark:bg-[#24243e] text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-indigo-800 hover:border-blue-300'
                 }`}
             >

@@ -116,7 +116,7 @@ const Europarlament: React.FC = () => {
                                 key={party}
                                 onClick={() => setGroupFilter(party)}
                                 className={`px-4 py-1.5 rounded-full transition-all border ${groupFilter === party
-                                    ? `${getPartyColor(party)} text-white border-transparent shadow-md`
+                                    ? `${getPartyStyle(party)} text-white border-transparent shadow-md`
                                     : 'bg-white dark:bg-[#24243e] text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-indigo-800 hover:border-blue-300'}`}
                             >
                                 {party}
@@ -169,7 +169,7 @@ const Europarlament: React.FC = () => {
                                             </h3>
                                             <div className="flex flex-wrap gap-2">
                                                 {/* National Party Badge */}
-                                                <span className={`px-2 py-0.5 rounded text-xs font-semibold backdrop-blur-sm shadow-sm border border-white/20 text-white ${getPartyColor(mep.national_party)}`}>
+                                                <span className={`px-2 py-0.5 rounded text-xs font-semibold backdrop-blur-sm shadow-sm border border-white/20 text-white ${getPartyStyle(mep.national_party)}`}>
                                                     {mep.national_party !== 'Brak danych' ? mep.national_party : 'Polska'}
                                                 </span>
                                             </div>
@@ -198,34 +198,7 @@ const Europarlament: React.FC = () => {
     );
 };
 
-// Helper for Party Colors (Same as Sejm)
-const getPartyColor = (party: string) => {
-    // Normalize string
-    const p = party?.toLowerCase() || '';
-
-    if (p.includes('koalicja obywatelska') || p.includes('po') || p.includes('nowoczesna') || p.includes('inicjatywa polska'))
-        return 'bg-gradient-to-r from-orange-500 to-red-500'; // KO: Red/Orange
-
-    if (p.includes('prawo i sprawiedliwość') || p.includes('pis') || p.includes('suwerenna polska'))
-        return 'bg-gradient-to-r from-blue-700 to-blue-900'; // PiS: Dark Blue
-
-    if (p.includes('polska 2050') || p.includes('trzecia droga (polska 2050)'))
-        return 'bg-yellow-400 text-black border-transparent shadow-md'; // PL2050: Yellow + Black text
-
-    if (p.includes('psl') || p.includes('ludowe') || p.includes('trzecia droga (psl)'))
-        return 'bg-gradient-to-r from-green-600 to-emerald-700'; // PSL: Green
-
-    if (p.includes('konfederacja') || p.includes('nowa nadzieja') || p.includes('ruch narodowy'))
-        return 'bg-gradient-to-r from-[#091F42] to-[#0f284d] text-white'; // Konfederacja: Dark Navy
-
-    if (p.includes('lewica') || p.includes('razem') || p.includes('nowa lewica'))
-        return 'bg-gradient-to-r from-purple-600 to-red-600'; // Lewica: Purple/Red
-
-    if (p.includes('kukiz'))
-        return 'bg-gray-700';
-
-    return 'bg-gray-500';
-};
+import { getPartyStyle } from '../utils/theme';
 
 const EuroVotesList = () => {
     const [votes, setVotes] = useState<any[]>([]);

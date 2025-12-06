@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { HelmetProvider } from 'react-helmet-async';
 import App from './App.tsx';
 import './index.css';
 
@@ -8,10 +9,13 @@ import { TermProvider } from './context/TermContext';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ThemeProvider>
-      <TermProvider>
-        <App />
-      </TermProvider>
-    </ThemeProvider>
+    {/* ... */}
+    <HelmetProvider>
+      <ThemeProvider>
+        <TermProvider>
+          <App />
+        </TermProvider>
+      </ThemeProvider>
+    </HelmetProvider>
   </StrictMode>
 );

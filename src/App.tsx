@@ -4,8 +4,7 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import Poslowie from './pages/Poslowie';
 import MpProfile from './pages/MpProfile';
-// import Glosowania from './pages/Glosowania';
-// import VoteDetail from './pages/VoteDetail';
+// Old pages removed
 import Partie from './pages/Partie';
 import PartyProfile from './pages/PartyProfile';
 import Rankingi from './pages/Rankingi';
@@ -29,6 +28,7 @@ import SearchPage from './pages/SearchPage';
 import Europarlament from './pages/Europarlament';
 import EuroMPProfile from './pages/EuroMPProfile';
 import EuroVoteDetails from './pages/EuroVoteDetails';
+import NotFound from './pages/NotFound';
 
 export default function App() {
   return (
@@ -39,7 +39,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/poslowie" element={<Poslowie />} />
-            <Route path="/poslowie/:id" element={<MpProfile />} />
+            <Route path="/poslowie/:idOrSlug" element={<MpProfile />} />
             {/* Europarlament Routes */}
             <Route path="/europarlament" element={<Europarlament />} />
             <Route path="/europarlament/:id" element={<EuroMPProfile />} />
@@ -63,7 +63,7 @@ export default function App() {
             <Route path="/glosowania/:term/:sitting/:votingNumber" element={<VoteDetails />} />
             <Route path="/glosowania/:sitting/:votingNumber" element={<VoteDetails />} />
             <Route path="/europarlament/:id" element={<EuroMPProfile />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFound />} />
             <Route path="/tematy/:slug" element={<CategoryDetails />} />
             <Route path="/metodologia" element={<DataSources />} />
             <Route path="/open-source" element={<OpenSource />} />

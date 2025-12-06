@@ -26,7 +26,7 @@ export default function MpCard({ mp }: MpCardProps) {
   const attendanceRate = mp.attendanceRate || Math.floor(Math.random() * 15) + 85; // 85-99%
 
   return (
-    <Link to={`/poslowie/${mp.id}`}>
+    <Link to={`/poslowie/${mp.slug || mp.id}`}>
       <motion.div
         className="group bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-lg hover:-translate-y-1 p-6 flex flex-col items-center text-center relative overflow-hidden"
         whileHover={{ y: -5 }}

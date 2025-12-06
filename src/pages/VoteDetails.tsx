@@ -21,6 +21,9 @@ interface VoteDetail {
         abstain: number;
         notParticipating: number;
     };
+    importance_score?: number;
+    topic_tag?: string;
+    semantic_weight?: number;
 }
 
 interface VoteResult {
@@ -29,6 +32,8 @@ interface VoteResult {
         name: string;
         party: string;
         photo_url: string;
+        slug: string;
+        id: number;
     };
 }
 
@@ -83,7 +88,8 @@ const VoteDetails: React.FC = () => {
             const mpIds = resultsDataRaw.map((r: any) => r.mp_id);
             const { data: mpsData, error: mpsError } = await supabase
                 .from('mps')
-                .select('id, name, party, photo_url, seat_number')
+
+                .select('id, name, party, photo_url, seat_number, slug')
                 .in('id', mpIds);
 
             if (mpsError) throw mpsError;
@@ -173,6 +179,25 @@ const VoteDetails: React.FC = () => {
                             {vote.verdict === 'PRZYJĘTO' ? <CheckCircle2 className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
                             {vote.verdict}
                         </div>
+
+                        {/* AI Intelligence Badge */}
+                        {vote.importance_score && (
+                            <div className="flex flex-wrap gap-4 mt-4">
+                                <div className="flex items-center gap-3 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white px-4 py-2 rounded-xl shadow-md">
+                                    <Sparkles className="w-5 h-5" />
+                                    <div>
+                                        <div className="text-xs font-medium opacity-90 uppercase tracking-wider">Importance Score</div>
+                                        <div className="text-xl font-bold">{vote.importance_score}/100</div>
+                                    </div>
+                                </div>
+
+                                {vote.topic_tag && (
+                                    <div className="flex items-center gap-2 bg-slate-100 text-slate-700 px-4 py-2 rounded-xl border border-slate-200">
+                                        <span className="text-sm font-bold">#{vote.topic_tag}</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -250,7 +275,10 @@ const VoteDetails: React.FC = () => {
                                 name: r.mps?.name || 'Nieznany',
                                 party: r.mps?.party || 'Niezrzeszeni',
                                 photo_url: r.mps?.photo_url || '',
-                                vote: r.vote
+                                vote: r.vote,
+                                id: r.mps?.id,
+                                seat_number: undefined,
+                                slug: r.mps?.slug
                             }))}
                         />
                         <div className="flex flex-wrap justify-center gap-6 mt-6 text-sm font-medium text-neutral-600 dark:text-neutral-400">

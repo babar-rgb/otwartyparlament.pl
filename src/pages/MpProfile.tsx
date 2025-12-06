@@ -1,9 +1,11 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { MP } from '../api';
 import { supabase } from '../lib/supabase';
 import { MapPin, Mail, FileText, Sparkles, Scale, Star, CheckCircle2, XCircle, MinusCircle, HelpCircle, ArrowLeft, ArrowRight, MessageSquare } from 'lucide-react';
 import { cleanSejmTitle } from '../utils/titleFormatter';
+import { getPartyHexColor } from '../utils/theme';
+import SEO from '../components/SEO';
 
 interface VoteHistoryItem {
   vote: string;
@@ -34,7 +36,8 @@ interface AssetDeclaration {
 }
 
 const MpProfile = () => {
-  const { id } = useParams();
+  const { idOrSlug } = useParams();
+  const navigate = useNavigate();
   const [mp, setMp] = useState<MP | null>(null);
   const [voteHistory, setVoteHistory] = useState<VoteHistoryItem[]>([]);
   const [keyDecisions, setKeyDecisions] = useState<VoteHistoryItem[]>([]);
@@ -46,14 +49,17 @@ const MpProfile = () => {
 
   useEffect(() => {
     const loadMpData = async () => {
-      if (!id) return;
+      if (!idOrSlug) return;
       try {
-        // 1. Fetch MP Details
-        const { data: mpData, error: mpError } = await supabase
-          .from('mps')
-          .select('*')
-          .eq('id', id)
-          .single();
+        // 1. Fetch MP Details (resolve ID or Slug)
+        let query = supabase.from('mps').select('*');
+        if (/^\d+$/.test(idOrSlug)) {
+          query = query.eq('id', idOrSlug);
+        } else {
+          query = query.eq('slug', idOrSlug);
+        }
+
+        const { data: mpData, error: mpError } = await query.single();
 
         if (mpError) throw mpError;
 
@@ -71,8 +77,15 @@ const MpProfile = () => {
           email: '',
           voivodeship: '',
           declarations: mpData.declarations || [],
-          term: mpData.term // Add term to mapped object
+          term: mpData.term, // Add term to mapped object
+          slug: mpData.slug
         };
+
+        // AUTO-REDIRECT: If visited by ID but slug exists, replace URL
+        if (/^\d+$/.test(idOrSlug) && mpData.slug) {
+          navigate(`/poslowie/${mpData.slug}`, { replace: true });
+          return; // Stop execution to restart with new URL
+        }
 
         setMp(mappedMp);
 
@@ -88,7 +101,7 @@ const MpProfile = () => {
         const { data: speechData } = await supabase
           .from('speeches')
           .select('*')
-          .eq('mp_id', id)
+          .eq('mp_id', mpData.id)
           .order('date', { ascending: false })
           .limit(3);
 
@@ -98,7 +111,7 @@ const MpProfile = () => {
         const { data: consistencyData } = await supabase
           .from('consistency_reports')
           .select('*')
-          .eq('mp_id', id)
+          .eq('mp_id', mpData.id)
           .order('created_at', { ascending: false });
 
         if (consistencyData) setConsistencyReports(consistencyData);
@@ -107,7 +120,7 @@ const MpProfile = () => {
         const { data: historyData, error: historyError } = await supabase
           .from('vote_results')
           .select('vote, votes!inner(id, sitting, voting_number, title_clean, title_raw, date, verdict, term)')
-          .eq('mp_id', id)
+          .eq('mp_id', mpData.id)
           .order('vote_id', { ascending: false })
           .limit(10);
 
@@ -119,7 +132,7 @@ const MpProfile = () => {
         const { data: keyData, error: keyError } = await supabase
           .from('vote_results')
           .select('vote, votes!inner(id, sitting, voting_number, title_clean, title_raw, date, verdict, category, is_key_vote)')
-          .eq('mp_id', id)
+          .eq('mp_id', mpData.id)
           .eq('votes.is_key_vote', true)
           .order('vote_id', { ascending: false })
           .limit(5);
@@ -132,7 +145,7 @@ const MpProfile = () => {
         const { data: interpellationData, error: interpellationError } = await supabase
           .from('interpellation_authors')
           .select('interpellations(id, title, sent_date)')
-          .eq('mp_id', id)
+          .eq('mp_id', mpData.id)
           .order('interpellation_id', { ascending: false })
           .limit(5);
 
@@ -148,7 +161,7 @@ const MpProfile = () => {
       }
     };
     loadMpData();
-  }, [id]);
+  }, [idOrSlug]);
 
   if (loading) return <div className="text-center py-12">Ładowanie profilu posła...</div>;
 
@@ -163,29 +176,26 @@ const MpProfile = () => {
     );
   }
 
-  const getPartyColor = (party: string) => {
-    const colors: Record<string, string> = {
-      'PiS': '#800000',
-      'KO': '#0096FF',
-      'Polska2050': '#00A150',
-      'PSL-TD': '#90EE90',
-      'Lewica': '#FF0000',
-      'Konfederacja': '#000080',
-      'INNE': '#1F2937',
-    };
-    return colors[party] || '#64748B';
-  };
+  // Removed local getPartyColor
+  // import { getPartyHexColor } from '../utils/theme'; moved to top
 
   // Use real stats from DB
   const attendance = mp.attendanceRate || 0;
   const rebelVotes = mp.rebelVotes || 0;
+
   const speeches = Math.floor(Math.random() * 30) + 5; // Speeches not yet in DB, keeping mock for now
 
   // Use photo URL from DB
   const photoUrl = mp.photo_url;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pt-24 pb-12 px-4 animate-fade-in">
+    <div className="container mx-auto px-4 py-8 animate-fade-in font-serif">
+      <SEO
+        title={`${mp.first_name} ${mp.last_name}`}
+        description={`Profil posła ${mp.first_name} ${mp.last_name}. Zobacz statystyki głosowań, oświadczenia majątkowe i aktywność w Sejmie.`}
+        image={mp.photo_url}
+      />
+      {/* Left Column: Profile Card */}
       {/* Back Button */}
       <Link to="/poslowie" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold">
         <ArrowLeft size={20} />
@@ -216,7 +226,7 @@ const MpProfile = () => {
               {/* Party Badge */}
               <span
                 className="px-4 py-2 rounded-full text-white text-sm font-bold uppercase tracking-wide shadow-sm"
-                style={{ backgroundColor: getPartyColor(mp.club) }}
+                style={{ backgroundColor: getPartyHexColor(mp.club) }}
               >
                 {mp.club}
               </span>
@@ -285,119 +295,126 @@ const MpProfile = () => {
         </div>
       </div>
 
-      {/* Consistency Analysis Section */}
-      <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200 animate-slide-up" style={{ animationDelay: '0.5s' }}>
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-purple-100 rounded-xl text-purple-600">
-            <Scale size={24} />
+
+
+      {/* MIDDLE SECTION GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8 items-start">
+
+        {/* Consistency Analysis Section */}
+        <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200 animate-slide-up" style={{ animationDelay: '0.5s' }}>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 bg-purple-100 rounded-xl text-purple-600">
+              <Scale size={24} />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900">Analiza Spójności (AI)</h2>
           </div>
-          <h2 className="text-2xl font-bold text-slate-900">Analiza Spójności (AI)</h2>
+
+          <div className="space-y-4">
+            {consistencyReports.length > 0 ? (
+              consistencyReports.map((report) => (
+                <div key={report.id} className="p-5 bg-slate-50 rounded-xl border border-slate-100">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="font-bold text-lg text-slate-900">{report.topic}</h3>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${report.verdict === 'Spójny' ? 'bg-green-100 text-green-700' :
+                      report.verdict === 'Niespójny' ? 'bg-red-100 text-red-700' :
+                        'bg-yellow-100 text-yellow-700'
+                      }`}>
+                      {report.verdict}
+                    </span>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4 mb-3">
+                    <div className="bg-white p-3 rounded-lg border border-slate-100">
+                      <p className="text-xs font-bold text-slate-400 uppercase mb-1">Co mówił:</p>
+                      <p className="text-sm text-slate-700 italic">"{report.speech_quote}"</p>
+                    </div>
+                    <div className="bg-white p-3 rounded-lg border border-slate-100">
+                      <p className="text-xs font-bold text-slate-400 uppercase mb-1">Jak głosował:</p>
+                      <p className="text-sm text-slate-700">{report.vote_result}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2 text-sm text-slate-600 bg-purple-50 p-3 rounded-lg">
+                    <Sparkles size={16} className="text-purple-500 mt-0.5 shrink-0" />
+                    <p>{report.analysis}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-slate-500">
+                <p>Brak raportów spójności dla tego posła.</p>
+                <p className="text-xs mt-2">Analiza jest generowana okresowo dla kluczowych tematów.</p>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="space-y-4">
-          {consistencyReports.length > 0 ? (
-            consistencyReports.map((report) => (
-              <div key={report.id} className="p-5 bg-slate-50 rounded-xl border border-slate-100">
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="font-bold text-lg text-slate-900">{report.topic}</h3>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${report.verdict === 'Spójny' ? 'bg-green-100 text-green-700' :
-                    report.verdict === 'Niespójny' ? 'bg-red-100 text-red-700' :
-                      'bg-yellow-100 text-yellow-700'
-                    }`}>
-                    {report.verdict}
-                  </span>
-                </div>
+        {/* Recent Speeches Section */}
+        <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200 animate-slide-up" style={{ animationDelay: '0.4s' }}>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 bg-blue-100 rounded-xl text-blue-600">
+              <MessageSquare size={24} />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900">Ostatnie Wypowiedzi</h2>
+          </div>
 
-                <div className="grid md:grid-cols-2 gap-4 mb-3">
-                  <div className="bg-white p-3 rounded-lg border border-slate-100">
-                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">Co mówił:</p>
-                    <p className="text-sm text-slate-700 italic">"{report.speech_quote}"</p>
+          <div className="space-y-4">
+            {recentSpeeches.length > 0 ? (
+              recentSpeeches.map((speech) => (
+                <div key={speech.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-200 transition-colors">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                      Posiedzenie {speech.sitting} • {speech.date}
+                    </span>
                   </div>
-                  <div className="bg-white p-3 rounded-lg border border-slate-100">
-                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">Jak głosował:</p>
-                    <p className="text-sm text-slate-700">{report.vote_result}</p>
-                  </div>
+                  <p className="text-slate-700 text-sm line-clamp-3 italic">
+                    "{speech.content}"
+                  </p>
+                  <Link to={`/wypowiedzi?q=${encodeURIComponent(speech.content.slice(0, 50))}`} className="text-xs font-bold text-blue-600 mt-2 inline-block hover:underline">
+                    Zobacz pełną wypowiedź &rarr;
+                  </Link>
                 </div>
+              ))
+            ) : (
+              <p className="text-slate-500 italic">Brak zarejestrowanych wypowiedzi w bazie.</p>
+            )}
 
-                <div className="flex items-start gap-2 text-sm text-slate-600 bg-purple-50 p-3 rounded-lg">
-                  <Sparkles size={16} className="text-purple-500 mt-0.5 shrink-0" />
-                  <p>{report.analysis}</p>
-                </div>
+            <Link to="/wypowiedzi" className="block text-center text-sm font-bold text-slate-500 hover:text-blue-600 mt-4 transition-colors">
+              Przeszukaj wszystkie stenogramy &rarr;
+            </Link>
+          </div>
+        </div>
+
+        {/* SECTION G: Asset Declarations (NEW) */}
+        {
+          mp.declarations && mp.declarations.length > 0 && (
+            <div className="bg-white rounded-xl border-2 border-slate-200 p-8 shadow-sm">
+              <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                <FileText size={24} className="text-emerald-600" />
+                Oświadczenia Majątkowe
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {mp.declarations.map((decl, idx) => (
+                  <a
+                    key={idx}
+                    href={decl.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-4 rounded-lg border border-slate-100 hover:bg-emerald-50 hover:border-emerald-200 transition-all group"
+                  >
+                    <div className="p-2 bg-slate-100 rounded-lg text-slate-500 group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors">
+                      <FileText size={20} />
+                    </div>
+                    <span className="font-medium text-slate-700 group-hover:text-emerald-800 transition-colors">
+                      {decl.label}
+                    </span>
+                  </a>
+                ))}
               </div>
-            ))
-          ) : (
-            <div className="text-center py-8 text-slate-500">
-              <p>Brak raportów spójności dla tego posła.</p>
-              <p className="text-xs mt-2">Analiza jest generowana okresowo dla kluczowych tematów.</p>
             </div>
           )}
-        </div>
-      </div>
 
-      {/* Recent Speeches Section */}
-      <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200 animate-slide-up" style={{ animationDelay: '0.4s' }}>
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-blue-100 rounded-xl text-blue-600">
-            <MessageSquare size={24} />
-          </div>
-          <h2 className="text-2xl font-bold text-slate-900">Ostatnie Wypowiedzi</h2>
-        </div>
-
-        <div className="space-y-4">
-          {recentSpeeches.length > 0 ? (
-            recentSpeeches.map((speech) => (
-              <div key={speech.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-200 transition-colors">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">
-                    Posiedzenie {speech.sitting} • {speech.date}
-                  </span>
-                </div>
-                <p className="text-slate-700 text-sm line-clamp-3 italic">
-                  "{speech.content}"
-                </p>
-                <Link to={`/wypowiedzi?q=${encodeURIComponent(speech.content.slice(0, 50))}`} className="text-xs font-bold text-blue-600 mt-2 inline-block hover:underline">
-                  Zobacz pełną wypowiedź &rarr;
-                </Link>
-              </div>
-            ))
-          ) : (
-            <p className="text-slate-500 italic">Brak zarejestrowanych wypowiedzi w bazie.</p>
-          )}
-
-          <Link to="/wypowiedzi" className="block text-center text-sm font-bold text-slate-500 hover:text-blue-600 mt-4 transition-colors">
-            Przeszukaj wszystkie stenogramy &rarr;
-          </Link>
-        </div>
-      </div>
-
-      {/* SECTION G: Asset Declarations (NEW) */}
-      {mp.declarations && mp.declarations.length > 0 && (
-        <div className="bg-white rounded-xl border-2 border-slate-200 p-8 shadow-sm">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-            <FileText size={24} className="text-emerald-600" />
-            Oświadczenia Majątkowe
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {mp.declarations.map((decl, idx) => (
-              <a
-                key={idx}
-                href={decl.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 p-4 rounded-lg border border-slate-100 hover:bg-emerald-50 hover:border-emerald-200 transition-all group"
-              >
-                <div className="p-2 bg-slate-100 rounded-lg text-slate-500 group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors">
-                  <FileText size={20} />
-                </div>
-                <span className="font-medium text-slate-700 group-hover:text-emerald-800 transition-colors">
-                  {decl.label}
-                </span>
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
-
+      </div> {/* End Middle Section Grid */}
 
       {/* SECTION H: Digitized Declarations (AI) */}
       {
@@ -630,7 +647,7 @@ const MpProfile = () => {
           </a>
         </p>
       </div>
-    </div>
+    </div >
   );
 }
 
