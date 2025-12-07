@@ -13,6 +13,7 @@ import WealthRankings from './pages/WealthRankings';
 import SpeechesList from './pages/SpeechesList';
 import SpeechDetails from './pages/SpeechDetails';
 import InterpellationsList from './pages/InterpellationsList';
+import InterpellationDetails from './pages/InterpellationDetails';
 import OProjekcie from './pages/OProjekcie';
 import VoteDetails from './pages/VoteDetails';
 import CategoryDetails from './pages/CategoryDetails';
@@ -28,6 +29,9 @@ import SearchPage from './pages/SearchPage';
 import Europarlament from './pages/Europarlament';
 import EuroMPProfile from './pages/EuroMPProfile';
 import EuroVoteDetails from './pages/EuroVoteDetails';
+import Komisje from './pages/Komisje';
+import KomisjaDetails from './pages/KomisjaDetails';
+import CommitteeSittingDetails from './pages/CommitteeSittingDetails';
 import NotFound from './pages/NotFound';
 
 export default function App() {
@@ -44,6 +48,10 @@ export default function App() {
             <Route path="/europarlament" element={<Europarlament />} />
             <Route path="/europarlament/:id" element={<EuroMPProfile />} />
             <Route path="/europarlament/glosowanie/:id" element={<EuroVoteDetails />} />
+            {/* Komisje Routes */}
+            <Route path="/komisje" element={<Komisje />} />
+            <Route path="/komisje/:code" element={<KomisjaDetails />} />
+            <Route path="/komisje/:committeeCode/posiedzenie/:sittingId" element={<CommitteeSittingDetails />} />
             {/* <Route path="/glosowania" element={<Glosowania />} /> */} {/* Original /glosowania route */}
             {/* <Route path="/glosowania/:id" element={<VoteDetails />} /> */} {/* Original /glosowania/:id route */}
             {/* <Route path="/glosowania/details" element={<VoteDetails />} /> */}
@@ -54,6 +62,7 @@ export default function App() {
             <Route path="/wypowiedzi" element={<SpeechesList />} />
             <Route path="/wypowiedzi/:id" element={<SpeechDetails />} />
             <Route path="/interpelacje" element={<InterpellationsList />} />
+            <Route path="/interpelacje/:id" element={<InterpellationDetails />} />
             <Route path="/test" element={<TestWyborczy />} />
             <Route path="/o-projekcie" element={<OProjekcie />} />
             <Route path="/ustawy/:id" element={<BillDetails />} /> {/* Added route for BillDetails */}

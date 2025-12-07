@@ -64,6 +64,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             </h3>
                             <nav className="space-y-2 mb-8">
                                 <Link to="/poslowie" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Posłowie</Link>
+                                <Link to="/komisje" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Komisje</Link>
                                 <Link to="/europarlament" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Europarlament</Link>
                                 <Link to="/glosowania" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Głosowania</Link>
                                 <Link to="/rankingi" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Rankingi</Link>

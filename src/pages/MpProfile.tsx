@@ -45,7 +45,10 @@ const MpProfile = () => {
   const [recentSpeeches, setRecentSpeeches] = useState<any[]>([]);
   const [consistencyReports, setConsistencyReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [interpellations, setInterpellations] = useState<{ id: number; title: string; sent_date: string }[]>([]);
+  const [interpellations, setInterpellations] = useState<{ id: number; title: string; sent_date: string; topic?: string }[]>([]);
+  const [interpellationCount, setInterpellationCount] = useState<number>(0);
+  const [interpellationCategories, setInterpellationCategories] = useState<{ category: string; count: number }[]>([]);
+  const [showAllInterpellations, setShowAllInterpellations] = useState(false);
 
   useEffect(() => {
     const loadMpData = async () => {
@@ -141,17 +144,66 @@ const MpProfile = () => {
           setKeyDecisions(keyData as unknown as VoteHistoryItem[]);
         }
 
-        // 4. Fetch Interpellations (New)
+        // 4. Fetch Interpellations with full count and categories
+        // First get total count
+        const { count: interpCount } = await supabase
+          .from('interpellation_authors')
+          .select('*', { count: 'exact', head: true })
+          .eq('mp_id', mpData.id);
+
+        setInterpellationCount(interpCount || 0);
+
+        // Fetch more interpellations for display (up to 20)
         const { data: interpellationData, error: interpellationError } = await supabase
           .from('interpellation_authors')
-          .select('interpellations(id, title, sent_date)')
+          .select('interpellations(id, title, sent_date, topic)')
           .eq('mp_id', mpData.id)
           .order('interpellation_id', { ascending: false })
-          .limit(5);
+          .limit(20);
 
         if (!interpellationError && interpellationData) {
-          const mappedInterpellations = interpellationData.map((item: any) => item.interpellations);
+          const mappedInterpellations = interpellationData
+            .map((item: any) => item.interpellations)
+            .filter(Boolean);
           setInterpellations(mappedInterpellations);
+
+          // Calculate category breakdown from titles
+          const categoryCounts: Record<string, number> = {};
+          const categoryKeywords: Record<string, string[]> = {
+            'Zdrowie': ['szpital', 'zdrowie', 'lekarz', 'medyc', 'nfz', 'pacjent', 'leczeni'],
+            'Edukacja': ['szkoła', 'edukac', 'nauczyc', 'ucze', 'studia', 'uniwersytet'],
+            'Transport': ['drog', 'kolej', 'pkp', 'transport', 'autobus', 'most', 'trasa'],
+            'Rolnictwo': ['rolnic', 'rolnik', 'upraw', 'hodowl', 'agrarn'],
+            'Środowisko': ['środowisk', 'ekolog', 'klimat', 'odpady', 'zanieczyszcz'],
+            'Sprawy lokalne': ['gmina', 'powiat', 'województw', 'samorząd', 'miasto'],
+            'Gospodarka': ['gospodar', 'przedsiębior', 'firma', 'podatk', 'vat'],
+            'Bezpieczeństwo': ['policja', 'bezpieczeńst', 'wojsko', 'obron', 'straż'],
+            'Sprawy społeczne': ['emerytur', 'rent', 'zus', 'społeczn', 'rodzin', '500+'],
+          };
+
+          for (const interp of mappedInterpellations) {
+            const titleLower = (interp.title || '').toLowerCase();
+            let matched = false;
+
+            for (const [category, keywords] of Object.entries(categoryKeywords)) {
+              if (keywords.some(kw => titleLower.includes(kw))) {
+                categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+                matched = true;
+                break;
+              }
+            }
+
+            if (!matched) {
+              categoryCounts['Inne'] = (categoryCounts['Inne'] || 0) + 1;
+            }
+          }
+
+          // Sort categories by count
+          const sortedCategories = Object.entries(categoryCounts)
+            .map(([category, count]) => ({ category, count }))
+            .sort((a, b) => b.count - a.count);
+
+          setInterpellationCategories(sortedCategories);
         }
 
       } catch (error) {
@@ -515,37 +567,84 @@ const MpProfile = () => {
         )
       }
 
-      {/* SECTION F: Interpellations (NEW) */}
+      {/* SECTION F: Interpellations - Enhanced */}
       {
-        interpellations.length > 0 && (
+        (interpellations.length > 0 || interpellationCount > 0) && (
           <div className="bg-white rounded-xl border-2 border-slate-200 p-8 shadow-sm">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-              <Mail size={24} className="text-blue-600" />
-              Ostatnie Interpelacje
-            </h2>
-            <div className="space-y-4">
-              {interpellations.map((interpellation) => (
-                <a
+            <div className="flex justify-between items-start mb-6">
+              <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                <Mail size={24} className="text-blue-600" />
+                Interpelacje Poselskie
+              </h2>
+              <div className="text-right">
+                <div className="text-3xl font-bold text-blue-600">{interpellationCount}</div>
+                <div className="text-xs text-slate-500">złożonych interpelacji</div>
+              </div>
+            </div>
+
+            {/* Category Breakdown */}
+            {interpellationCategories.length > 0 && (
+              <div className="mb-6 p-4 bg-slate-50 rounded-lg">
+                <h3 className="font-semibold text-slate-700 mb-3 text-sm">Najpopularniejsze tematy:</h3>
+                <div className="flex flex-wrap gap-2">
+                  {interpellationCategories.slice(0, 5).map((cat) => (
+                    <span
+                      key={cat.category}
+                      className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+                    >
+                      {cat.category} ({cat.count})
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Interpellation List */}
+            <div className="space-y-3">
+              {(showAllInterpellations ? interpellations : interpellations.slice(0, 5)).map((interpellation) => (
+                <Link
                   key={interpellation.id}
-                  href={`https://sejm.gov.pl/Sejm10.nsf/interpelacja.xsp?typ=INT&nr=${interpellation.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block p-4 border border-slate-100 rounded-lg hover:bg-slate-50 transition-colors group"
+                  to={`/interpelacje/${interpellation.id}`}
+                  className="block p-4 border border-slate-100 rounded-lg hover:bg-slate-50 hover:border-blue-200 transition-colors group"
                 >
                   <div className="flex justify-between items-start gap-4">
-                    <div>
-                      <h3 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors mb-1">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors mb-1 line-clamp-2">
                         {interpellation.title}
                       </h3>
                       <span className="text-xs text-slate-500">
                         Nr {interpellation.id} • Złożono: {interpellation.sent_date}
                       </span>
                     </div>
-                    <ArrowRight size={16} className="text-slate-300 group-hover:text-blue-600 transition-colors mt-1" />
+                    <ArrowRight size={16} className="text-slate-300 group-hover:text-blue-600 transition-colors mt-1 flex-shrink-0" />
                   </div>
-                </a>
+                </Link>
               ))}
             </div>
+
+            {/* Show more/less button */}
+            {interpellations.length > 5 && (
+              <button
+                onClick={() => setShowAllInterpellations(!showAllInterpellations)}
+                className="mt-4 w-full py-2 text-blue-600 hover:text-blue-800 font-semibold text-sm border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
+              >
+                {showAllInterpellations
+                  ? `Pokaż mniej`
+                  : `Pokaż więcej (${interpellations.length - 5} pozostałych)`}
+              </button>
+            )}
+
+            {/* Link to all interpellations */}
+            {interpellationCount > 20 && (
+              <a
+                href={`https://sejm.gov.pl/Sejm10.nsf/interpelacje.xsp?view=3&syg=${mp.first_name}%20${mp.last_name}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block mt-4 text-center text-sm text-slate-500 hover:text-blue-600"
+              >
+                Zobacz wszystkie {interpellationCount} interpelacji na sejm.gov.pl →
+              </a>
+            )}
           </div>
         )
       }

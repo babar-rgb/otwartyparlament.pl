@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
-import { ChevronDown, Heart, TrendingUp, Wheat, GraduationCap, Shield, Scale, Building, Zap, Cpu, Users, Globe, Palette } from 'lucide-react';
+import { ChevronDown, Heart, TrendingUp, Wheat, GraduationCap, Shield, Scale, Building, Zap, Cpu, Users, Globe, Palette, Building2 } from 'lucide-react';
 
 import SEO from '../components/SEO';
+import UpcomingVotesWidget from '../components/UpcomingVotesWidget';
 
 export default function Home() {
 
@@ -48,6 +49,11 @@ export default function Home() {
       {/* Top 3 Priority Votes Section */}
       <section className="bg-white dark:bg-paper py-24 px-6 relative z-20 -mt-12 rounded-t-[3rem] shadow-2xl">
         <div className="container mx-auto max-w-5xl">
+          {/* Upcoming Votes Widget */}
+          <div className="mb-12">
+            <UpcomingVotesWidget />
+          </div>
+
           <div className="flex items-end gap-4 mb-16">
             <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight">
               Kluczowe Decyzje
@@ -267,6 +273,15 @@ export default function Home() {
                 <Palette className="w-12 h-12 text-slate-600 mb-4" />
                 <h3 className="font-bold text-ink mb-2">Kultura</h3>
                 <p className="text-sm text-slate-500">14 głosowań</p>
+              </div>
+            </Link>
+
+            {/* Komisje */}
+            <Link to="/komisje">
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-blue-400 hover:scale-105 transition-all duration-300 cursor-pointer h-full">
+                <Building2 className="w-12 h-12 text-blue-600 mb-4" />
+                <h3 className="font-bold text-blue-900 mb-2">Komisje</h3>
+                <p className="text-sm text-blue-600">39 komisji sejmowych</p>
               </div>
             </Link>
           </div>

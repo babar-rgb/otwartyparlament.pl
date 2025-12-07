@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { CheckCircle2, XCircle, AlertCircle, ArrowRight, Search, SlidersHorizontal, X, Filter } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertCircle, ArrowRight, Search, SlidersHorizontal, X, Filter, Star } from 'lucide-react';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import { useTerm } from '../context/TermContext';
 import TermSwitcher from '../components/TermSwitcher';
@@ -36,6 +36,8 @@ interface Vote {
         no: number;
         abstain: number;
     };
+    importance_score?: number;
+    is_key_vote?: boolean;
 }
 
 const CATEGORIES = [
@@ -359,7 +361,12 @@ const VotesList: React.FC = () => {
 
                                     {/* Info */}
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-3 mb-2 font-sans">
+                                        <div className="flex items-center gap-3 mb-2 font-sans flex-wrap">
+                                            {(vote.importance_score && vote.importance_score >= 7) && (
+                                                <span className="flex items-center gap-1 text-xs font-bold text-amber-600 uppercase tracking-wider bg-amber-50 px-2 py-1 border border-amber-200">
+                                                    <Star className="w-3 h-3 fill-amber-500" /> Kluczowe
+                                                </span>
+                                            )}
                                             <span className="text-xs font-bold text-blue-600 uppercase tracking-wider bg-blue-50 px-2 py-1">
                                                 {vote.category || 'Głosowanie'}
                                             </span>
