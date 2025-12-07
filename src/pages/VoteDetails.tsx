@@ -5,6 +5,7 @@ import { ArrowLeft, Calendar, CheckCircle2, XCircle, PieChart, Users, Sparkles, 
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import VoteTechnicalDetails from '../components/VoteTechnicalDetails';
 import SejmHemicycle from '../components/SejmHemicycle';
+import SEO from '../components/SEO';
 
 interface VoteDetail {
     id: number;
@@ -138,12 +139,28 @@ const VoteDetails: React.FC = () => {
         }
     };
 
-    if (loading) return <div className="p-12 text-center">Ładowanie szczegółów...</div>;
-    if (!vote) return <div className="p-12 text-center">Nie znaleziono głosowania.</div>;
+    if (loading) return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sejm-gold"></div>
+        </div>
+    );
+
+    if (!vote) return (
+        <div>
+            <SEO title="Głosowanie nie znalezione" />
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500">
+                Głosowanie nie znalezione
+            </div>
+        </div>
+    );
 
     return (
-        <div className="min-h-screen bg-neutral-50 text-neutral-900 p-6 md:p-12 font-sans">
-            <div className="max-w-5xl mx-auto space-y-8">
+        <div className="min-h-screen bg-[var(--background-base)] pb-12">
+            <SEO
+                title={cleanSejmTitle(vote.title_clean || vote.title_raw || "Szczegóły Głosowania")}
+                description={`Wynik głosowania: ${vote.verdict}. Data: ${new Date(vote.date).toLocaleDateString()}. Zobacz jak głosowali posłowie.`}
+            />
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
 
                 {/* Back Link */}
                 <Link to="/glosowania" className="inline-flex items-center gap-2 text-neutral-500 hover:text-blue-600 transition-colors">

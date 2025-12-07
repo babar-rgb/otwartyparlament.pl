@@ -8,6 +8,7 @@ import TermSwitcher from '../components/TermSwitcher';
 import MpCard from '../components/MpCard';
 import FeaturedMPs from '../components/FeaturedMPs';
 import { Search } from 'lucide-react';
+import SEO from '../components/SEO';
 
 // Fallback mock data removed for production safety
 // const fallbackMPs: MP[] = [];
@@ -155,84 +156,90 @@ export default function Poslowie() {
   if (loading) return <div className="text-center py-12">Ładowanie danych z Sejmu...</div>;
 
   return (
-    <div className="container mx-auto px-4 pt-24 pb-12 max-w-7xl">
+    <div className="min-h-screen bg-paper pb-12 pt-32 px-6 md:px-12 font-serif">
+      <SEO
+        title="Lista Posłów"
+        description={`Poznaj posłów Sejmu RP ${term === 9 ? 'IX' : 'X'} kadencji. Sprawdź ich frekwencję, bunty i przynależność klubową.`}
+      />
+      <div className="max-w-7xl mx-auto space-y-12">
 
-      {/* Header */}
-      <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <h1 className="text-5xl md:text-6xl font-extrabold text-ink dark:text-white mb-4 tracking-tight">
-            Nasi Reprezentanci
-          </h1>
-          <p className="text-xl text-ink-light dark:text-slate-400">
-            {mps.length} posłów. Znajdź i weryfikuj.
-          </p>
+        {/* Header */}
+        <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <h1 className="text-5xl md:text-6xl font-extrabold text-ink dark:text-white mb-4 tracking-tight">
+              Nasi Reprezentanci
+            </h1>
+            <p className="text-xl text-ink-light dark:text-slate-400">
+              {mps.length} posłów. Znajdź i weryfikuj.
+            </p>
+          </div>
+          <TermSwitcher />
         </div>
-        <TermSwitcher />
-      </div>
 
-      {/* Search Bar */}
-      <div className="mb-8">
-        <div className="relative max-w-2xl mx-auto">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={24} />
-          <input
-            type="text"
-            placeholder="Wyszukaj nazwisko posła..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-14 pr-6 py-4 text-lg border-2 border-gray-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400"
-          />
+        {/* Search Bar */}
+        <div className="mb-8">
+          <div className="relative max-w-2xl mx-auto">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={24} />
+            <input
+              type="text"
+              placeholder="Wyszukaj nazwisko posła..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-14 pr-6 py-4 text-lg border-2 border-gray-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400"
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Party Filter Buttons */}
-      <div className="mb-12">
-        <div className="flex flex-wrap justify-center gap-3">
-          <button
-            onClick={() => setSelectedParty('')}
-            className={`px-6 py-3 rounded-full font-bold transition-all border ${selectedParty === ''
-              ? 'bg-blue-600 text-white border-blue-600'
-              : 'bg-white dark:bg-[#24243e] text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-indigo-800 hover:border-blue-300'
-              } `}
-          >
-            Wszyscy {selectedParty === '' && <span className="text-sm ml-1">({mps.length})</span>}
-          </button>
-
-          {PARTIES.map((party) => (
+        {/* Party Filter Buttons */}
+        <div className="mb-12">
+          <div className="flex flex-wrap justify-center gap-3">
             <button
-              key={party.id}
-              onClick={() => setSelectedParty(party.id)}
-              className={`px-6 py-3 rounded-full font-bold transition-all border ${selectedParty === party.id
-                ? getPartyStyle(party.name)
+              onClick={() => setSelectedParty('')}
+              className={`px-6 py-3 rounded-full font-bold transition-all border ${selectedParty === ''
+                ? 'bg-blue-600 text-white border-blue-600'
                 : 'bg-white dark:bg-[#24243e] text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-indigo-800 hover:border-blue-300'
-                }`}
+                } `}
             >
-              {party.name}
+              Wszyscy {selectedParty === '' && <span className="text-sm ml-1">({mps.length})</span>}
             </button>
+
+            {PARTIES.map((party) => (
+              <button
+                key={party.id}
+                onClick={() => setSelectedParty(party.id)}
+                className={`px-6 py-3 rounded-full font-bold transition-all border ${selectedParty === party.id
+                  ? getPartyStyle(party.name)
+                  : 'bg-white dark:bg-[#24243e] text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-indigo-800 hover:border-blue-300'
+                  }`}
+              >
+                {party.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Featured MPs Dashboard - Only show when no filters active */}
+        {!searchTerm && !selectedParty && (
+          <FeaturedMPs
+            topAttendance={featuredMPs.topAttendance}
+            topRebels={featuredMPs.topRebels}
+            lowAttendance={featuredMPs.lowAttendance}
+          />
+        )}
+
+        {/* Main Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          {filtered.map((mp) => (
+            <MpCard key={mp.id} mp={mp} />
           ))}
         </div>
+
+        {filtered.length === 0 && (
+          <div className="text-center py-12 text-ink-light dark:text-slate-400">
+            Nie znaleziono posłów spełniających kryteria.
+          </div>
+        )}
       </div>
-
-      {/* Featured MPs Dashboard - Only show when no filters active */}
-      {!searchTerm && !selectedParty && (
-        <FeaturedMPs
-          topAttendance={featuredMPs.topAttendance}
-          topRebels={featuredMPs.topRebels}
-          lowAttendance={featuredMPs.lowAttendance}
-        />
-      )}
-
-      {/* Main Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {filtered.map((mp) => (
-          <MpCard key={mp.id} mp={mp} />
-        ))}
-      </div>
-
-      {filtered.length === 0 && (
-        <div className="text-center py-12 text-ink-light dark:text-slate-400">
-          Nie znaleziono posłów spełniających kryteria.
-        </div>
-      )}
     </div>
   );
 }

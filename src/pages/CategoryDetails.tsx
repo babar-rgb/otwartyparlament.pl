@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, FileText, CheckCircle, XCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import SEO from '../components/SEO';
 
 interface Vote {
     id: number;
@@ -123,6 +123,10 @@ export default function CategoryDetails() {
 
     return (
         <div className="min-h-screen bg-paper pt-32 pb-12 px-6">
+            <SEO
+                title={`${title} - Głosowania i Ustawy`}
+                description={`Przegląd legislacji, kluczowych głosowań i debat w obszarze: ${title}. Sprawdź jak głosowano w sprawach kategorii ${title}.`}
+            />
             <div className="container mx-auto max-w-5xl">
 
                 {/* Breadcrumbs */}

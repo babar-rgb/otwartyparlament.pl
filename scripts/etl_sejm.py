@@ -1,5 +1,7 @@
 import os
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 import re
 import time
 from supabase import create_client, Client
@@ -58,8 +60,14 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Multi-Term Config
-TARGET_TERMS = [10]
+TARGET_TERMS = [9]
 BASE_API_URL = "https://api.sejm.gov.pl/sejm"
+
+# --- SRE: RETRY SESSION ---
+session = requests.Session()
+retries = Retry(total=5, backoff_factor=1, status_forcelist=[500, 502, 503, 504])
+session.mount('https://', HTTPAdapter(max_retries=retries))
+
 
 # --- UTILS ---
 
@@ -178,7 +186,7 @@ def calculate_importance(title, yes_count, no_count):
 def fetch_all_sittings(term):
     print(f"Fetching sittings for Term {term}...")
     try:
-        response = requests.get(f"{BASE_API_URL}/term{term}/proceedings")
+        response = session.get(f"{BASE_API_URL}/term{term}/proceedings")
         if response.status_code != 200:
             print(f"Error fetching proceedings for term {term}: {response.status_code}")
             return []
@@ -193,7 +201,7 @@ def fetch_all_sittings(term):
 def sync_mps(term):
     print(f"Fetching MPs for Term {term}...")
     try:
-        response = requests.get(f"{BASE_API_URL}/term{term}/MP")
+        response = session.get(f"{BASE_API_URL}/term{term}/MP")
         # List endpoint might not have numberOfSeat, let's verification fetch
         mps_list = response.json()
         print(f"Found {len(mps_list)} MPs in Term {term}. Syncing to DB...")
@@ -206,7 +214,7 @@ def sync_mps(term):
             try:
                 # Polite fetching
                 # time.sleep(0.05) 
-                details_resp = requests.get(f"{BASE_API_URL}/term{term}/MP/{api_id}")
+                details_resp = session.get(f"{BASE_API_URL}/term{term}/MP/{api_id}")
                 if details_resp.status_code == 200:
                     mp_details = details_resp.json()
                     seat_num = mp_details.get('numberOfSeat')
@@ -264,7 +272,7 @@ def process_sitting(term, sitting_num):
     
     try:
         url = f"{BASE_API_URL}/term{term}/votings/{sitting_num}"
-        response = requests.get(url)
+        response = session.get(url)
         if response.status_code != 200:
             print(f"Failed to fetch votes for sitting {sitting_num}: {response.status_code}")
             return
@@ -286,7 +294,7 @@ def process_sitting(term, sitting_num):
                     vote_id = term * 10000000 + sitting_num * 10000 + vote['votingNumber']
                 
                 # --- ML INTELLIGENCE ---
-                importance_score = 0.0
+                importance_score = 0
                 topic_tag = "Inne"
                 semantic_weight = 0.0
                 
@@ -301,7 +309,7 @@ def process_sitting(term, sitting_num):
                         
                         analysis = ml_engine.calculate_final_score(vote_title, vote_desc, v_yes, v_no, v_abstain)
                         
-                        importance_score = float(analysis['importance_score'])
+                        importance_score = int(analysis['importance_score'])
                         topic_tag = analysis['category']
                         semantic_weight = analysis['components']['text_score']
                         
@@ -320,11 +328,13 @@ def process_sitting(term, sitting_num):
                     "title_raw": vote['title'],
                     "title_clean": clean_title(vote['title']),
                     "term": term,
-                    "kind": vote.get('kind', ''), 
-                    "topic": vote.get('topic', ''),
-                    "yes": vote.get('yes', 0),
-                    "no": vote.get('no', 0),
-                    "abstain": vote.get('abstain', 0),
+                    "details_json": {
+                        "yes": int(vote.get('yes', 0) or 0),
+                        "no": int(vote.get('no', 0) or 0),
+                        "abstain": int(vote.get('abstain', 0) or 0),
+                        "kind": str(vote.get('kind', '') or ''),
+                        "topic": str(vote.get('topic', '') or ''),
+                    },
                     # New Columns
                     "importance_score": importance_score,
                     "topic_tag": topic_tag,
@@ -338,7 +348,7 @@ def process_sitting(term, sitting_num):
                 mp_votes = []
                 retries = 3
                 while retries > 0:
-                    details_resp = requests.get(f"{BASE_API_URL}/term{term}/votings/{sitting_num}/{vote['votingNumber']}")
+                    details_resp = session.get(f"{BASE_API_URL}/term{term}/votings/{sitting_num}/{vote['votingNumber']}")
                     if details_resp.status_code == 200:
                         details = details_resp.json()
                         mp_votes = details.get('votes', [])
@@ -447,7 +457,7 @@ def verify_ml():
         url = f"{BASE_API_URL}/term{term}/votings/{sitting_num}"
         print(f"Checking Sitting {sitting_num}...") 
         try:
-            resp = requests.get(url)
+            resp = session.get(url)
             if resp.status_code != 200: continue
             
             votes = resp.json()
