@@ -40,7 +40,7 @@ export default function MpCard({ mp }: MpCardProps) {
         <div className="relative mb-4 z-10">
           <div className="w-40 h-40 rounded-full p-1 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm group-hover:shadow-md transition-shadow">
             <img
-              src={mp.photo_url || 'https://via.placeholder.com/200x200/E2E8F0/64748B?text=MP'}
+              src={mp.photo_url || '/assets/mps/placeholder.jpg'}
               alt={`${mp.first_name} ${mp.last_name}`}
               className="w-full h-full rounded-full object-cover"
             />

@@ -13,6 +13,7 @@ interface Process {
 import { useTerm } from '../context/TermContext';
 import TermSwitcher from '../components/TermSwitcher';
 import SEO from '../components/SEO';
+import { supabase } from '../lib/supabase';
 
 export default function BillsList() {
     const { term } = useTerm(); // Use global term
@@ -22,66 +23,48 @@ export default function BillsList() {
     const [totalCount, setTotalCount] = useState<number | null>(null);
     const limit = 20;
 
-    // First, fetch total count
+    // Fetch data locally
     useEffect(() => {
-        const fetchTotalCount = async () => {
-            try {
-                // Fetch 1 item to get headers
-                const response = await fetch(`https://api.sejm.gov.pl/sejm/term${term}/processes?limit=1`);
-                const countHeader = response.headers.get('X-Total-Count');
-                if (countHeader) {
-                    setTotalCount(parseInt(countHeader, 10));
-                }
-            } catch (error) {
-                console.error('Error fetching total count:', error);
-            }
-        };
-        fetchTotalCount();
-        setPage(0); // Reset page on term change
-    }, [term]);
-
-    // Then fetch data based on page and totalCount
-    useEffect(() => {
-        const fetchProcesses = async () => {
-            if (totalCount === null) return;
-
+        const loadData = async () => {
             setLoading(true);
             try {
-                // Calculate API offset to get latest items
-                // If total is 100, limit 20.
-                // Page 0: want 80-100. apiOffset = 100 - 20 * (1 + 0) = 80.
+                // Get Count
+                const { count, error: countError } = await supabase
+                    .from('processes')
+                    // .select('*', { count: 'exact', head: true }) // HEAD not always supported via JS client simply
+                    .select('id', { count: 'exact', head: true });
 
-                let apiOffset = totalCount - limit * (page + 1);
-                let fetchLimit = limit;
+                if (countError) throw countError;
+                setTotalCount(count);
 
-                // Handle last page (start of list)
-                if (apiOffset < 0) {
-                    fetchLimit = limit + apiOffset; // e.g. 20 + (-15) = 5
-                    apiOffset = 0;
-                }
+                // Get Data
+                // Order by date desc
+                const { data, error } = await supabase
+                    .from('processes')
+                    .select('id, title, description, print_number, process_start_date')
+                    .order('process_start_date', { ascending: false })
+                    .range(page * limit, (page + 1) * limit - 1);
 
-                if (fetchLimit <= 0) {
-                    setProcesses([]);
-                    setLoading(false);
-                    return;
-                }
+                if (error) throw error;
 
-                const response = await fetch(`https://api.sejm.gov.pl/sejm/term${term}/processes?limit=${fetchLimit}&offset=${apiOffset}`);
-                if (!response.ok) throw new Error('Failed to fetch processes');
+                // Map to Interface
+                const mapped = (data || []).map(p => ({
+                    number: parseInt(p.print_number || '0'), // Fallback
+                    title: p.title,
+                    description: p.description,
+                    processStartDate: p.process_start_date,
+                    documentId: p.id
+                }));
+                setProcesses(mapped);
 
-                const data = await response.json();
-
-                // Reverse to show newest first
-                setProcesses(data.reverse());
-            } catch (error) {
-                console.error('Error fetching processes:', error);
+            } catch (err) {
+                console.error("Local fetch error:", err);
             } finally {
                 setLoading(false);
             }
-        };
-
-        fetchProcesses();
-    }, [page, totalCount]);
+        }
+        loadData();
+    }, [term, page]);
 
     const handleNext = () => {
         setPage(prev => prev + 1);

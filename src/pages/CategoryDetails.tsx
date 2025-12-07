@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { ArrowLeft, FileText, CheckCircle, XCircle } from 'lucide-react';
 import SEO from '../components/SEO';
 
 interface Vote {

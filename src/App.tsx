@@ -65,6 +65,7 @@ export default function App() {
             <Route path="/europarlament/:id" element={<EuroMPProfile />} />
             <Route path="*" element={<NotFound />} />
             <Route path="/tematy/:slug" element={<CategoryDetails />} />
+            <Route path="/kategoria/:slug" element={<CategoryDetails />} />
             <Route path="/metodologia" element={<DataSources />} />
             <Route path="/open-source" element={<OpenSource />} />
             <Route path="/newsletter" element={<Newsletter />} />

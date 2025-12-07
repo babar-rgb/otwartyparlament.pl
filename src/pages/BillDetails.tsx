@@ -4,12 +4,7 @@ import BillTimeline, { TimelineStage } from '../components/BillTimeline';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
-interface ProcessStage {
-    date: string;
-    stageName: string;
-    stageType: string;
-    children?: any[];
-}
+
 
 interface BillData {
     id: string;
@@ -45,51 +40,40 @@ export default function BillDetails() {
     useEffect(() => {
         const fetchBillDetails = async () => {
             try {
-                const response = await fetch(`https://api.sejm.gov.pl/sejm/term10/processes/${id}`);
-                if (!response.ok) throw new Error('Failed to fetch process');
-                const data = await response.json();
+                // Fetch basic info from Local DB
+                // Assuming ID in URL is the Print Number or Process ID
+                // My ETL used Print Number as ID
+                const { data, error } = await supabase
+                    .from('processes')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
 
-                // Determine current stage based on the last stage in the array
-                const stages = data.stages || [];
-                const lastStage = stages[stages.length - 1];
+                if (error) throw error;
+                if (!data) throw new Error("Process not found locally");
 
-                let currentStage: TimelineStage = 'submitted';
-                let status: 'processing' | 'passed' | 'rejected' = 'processing';
-
-                // Simple mapping logic - can be expanded
-                // We iterate through stages to find the furthest progress
-                if (stages.some((s: ProcessStage) => s.stageName.includes('I czytanie'))) currentStage = 'reading1';
-                if (stages.some((s: ProcessStage) => s.stageName.includes('Komisj'))) currentStage = 'committee';
-                if (stages.some((s: ProcessStage) => s.stageName.includes('II czytanie'))) currentStage = 'reading2';
-                if (stages.some((s: ProcessStage) => s.stageName.includes('Głosowanie') || s.stageName.includes('III czytanie'))) currentStage = 'voting';
-                if (stages.some((s: ProcessStage) => s.stageName.includes('Senat'))) currentStage = 'senate';
-                if (stages.some((s: ProcessStage) => s.stageName.includes('Prezydent'))) currentStage = 'president';
-
-                // Check for completion/rejection
-                if (data.finished) {
-                    status = 'passed'; // Default to passed if finished, need more specific check for rejection
-                    if (lastStage?.stageName.includes('odrzuc')) status = 'rejected';
-                }
-
-                const printNumber = data.documentId;
+                // Mock Stages for now (as we didn't ETL deep stages yet)
+                // TODO: Enhance ETL to fetch stages
+                const currentStage: TimelineStage = 'committee';
+                const status: 'processing' | 'passed' | 'rejected' = 'processing';
 
                 setBill({
                     id: data.id,
-                    title: data.title || `Proces legislacyjny nr ${data.id}`,
+                    title: data.title,
                     description: data.description || 'Brak opisu.',
-                    printNumber: printNumber || 'Brak',
-                    date: data.startDate,
-                    proposer: 'Sejm RP', // API doesn't always provide proposer directly in process, might need separate fetch
+                    printNumber: data.print_number || 'Brak',
+                    date: data.process_start_date,
+                    proposer: 'Sejm RP',
                     currentStage,
                     status
                 });
 
-                // Fetch related votes if print number exists
-                if (printNumber) {
+                // Fetch related votes
+                if (data.print_number) {
                     const { data: votesData, error: votesError } = await supabase
                         .from('votes')
                         .select('*')
-                        .eq('print_number', printNumber)
+                        .eq('print_number', data.print_number)
                         .order('date', { ascending: false });
 
                     if (!votesError && votesData) {
@@ -98,7 +82,7 @@ export default function BillDetails() {
                 }
 
             } catch (error) {
-                console.error('Error fetching bill:', error);
+                console.error('Error fetching bill locally:', error);
             } finally {
                 setLoading(false);
             }
@@ -198,8 +182,8 @@ export default function BillDetails() {
                                                 {new Date(vote.date).toLocaleDateString('pl-PL')}
                                             </span>
                                             <span className={`flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${vote.verdict === 'PRZYJĘTO'
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-red-100 text-red-700'
+                                                ? 'bg-green-100 text-green-700'
+                                                : 'bg-red-100 text-red-700'
                                                 }`}>
                                                 {vote.verdict === 'PRZYJĘTO' ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
                                                 {vote.verdict}

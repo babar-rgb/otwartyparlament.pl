@@ -124,23 +124,37 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
                     if (uniqueVotes.length >= 5) break;
                 }
 
-                // 2. Fetch individual decisions for each vote from Sejm API
+                // 2. Fetch individual decisions for each vote from Local DB
+                // We can do this in one batch query if possible, or per vote.
+                // Doing per-vote is easier to integrate with existing map structure.
+
                 const votesWithDecisions = await Promise.all(uniqueVotes.map(async (vote) => {
                     try {
-                        const response = await fetch(`https://api.sejm.gov.pl/sejm/term10/votings/${vote.sitting}/${vote.voting_number}`);
-                        const votingData = await response.json();
+                        const { data: results, error } = await supabase
+                            .from('vote_results')
+                            .select('mp_id, vote')
+                            .eq('vote_id', vote.id)
+                            .in('mp_id', [mpA.id, mpB.id]);
+
+                        if (error) throw error;
 
                         // Find MP votes
-                        const voteA = votingData.votes.find((v: any) => v.mpId === mpA.id)?.vote || 'Nieobecny';
-                        const voteB = votingData.votes.find((v: any) => v.mpId === mpB.id)?.vote || 'Nieobecny';
+                        // results will ideally have 2 rows
+                        const voteAResult = results?.find(r => r.mp_id === mpA.id)?.vote || 'Nieobecny';
+                        const voteBResult = results?.find(r => r.mp_id === mpB.id)?.vote || 'Nieobecny';
+
+                        // Map English/DB codes to Polish if needed?
+                        // DB likely has "Za", "Przeciw" etc as text from ETL.
+                        // Assuming they are localized.
 
                         return {
                             ...vote,
-                            voteA,
-                            voteB
+                            voteA: voteAResult,
+                            voteB: voteBResult
                         };
                     } catch (e) {
-                        console.error(`Error fetching details for vote ${vote.sitting}/${vote.voting_number}`, e);
+                        // Fallback or error
+                        console.error(`Error fetching details for vote ${vote.id}`, e);
                         return { ...vote, voteA: '?', voteB: '?' };
                     }
                 }));

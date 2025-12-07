@@ -76,19 +76,16 @@ const SearchPage: React.FC = () => {
 
             if (votesData) setVotes(votesData);
 
-            // 3. Search Speeches (NEW)
-            let speechesQuery = supabase
+            // 3. Search Speeches (OPTIMIZED with Full-Text Search)
+            const { data: speechesData } = await supabase
                 .from('speeches')
-                .select('*');
-
-            // For each word, require it to be in content
-            searchWords.forEach(word => {
-                speechesQuery = speechesQuery.ilike('content', `%${word}%`);
-            });
-
-            const { data: speechesData } = await speechesQuery
+                .select('*')
+                .textSearch('content_tsv', searchQuery, {
+                    type: 'websearch',
+                    config: 'simple'
+                })
                 .order('date', { ascending: false })
-                .limit(3);
+                .limit(10);  // Increased from 3 to 10
 
             if (speechesData) setSpeeches(speechesData);
 
