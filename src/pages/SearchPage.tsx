@@ -1,21 +1,19 @@
 import React, { useEffect, useState } from 'react';
-// Force HMR update
 import { useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Search, User, FileText, ArrowRight, CheckCircle2, XCircle, MessageSquare } from 'lucide-react';
+import { Search, User, FileText, ArrowRight, CheckCircle2, XCircle, MessageSquare, BookOpen, Zap } from 'lucide-react';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import MpCard from '../components/MpCard';
 import { MP } from '../api';
 
-interface VoteResult {
-    id: number;
-    sitting: number;
-    voting_number: number;
+interface SearchResult {
+    type: 'process' | 'vote' | 'speech' | 'interpellation';
+    id: string;
+    title: string;
+    ux_category?: string;
+    content_preview?: string;
     date: string;
-    title_clean: string;
-    title_raw?: string;
-    category: string;
-    verdict: string;
+    relevance: number;
 }
 
 const SearchPage: React.FC = () => {
@@ -23,8 +21,7 @@ const SearchPage: React.FC = () => {
     const query = searchParams.get('q') || '';
 
     const [mps, setMps] = useState<MP[]>([]);
-    const [votes, setVotes] = useState<VoteResult[]>([]);
-    const [speeches, setSpeeches] = useState<any[]>([]);
+    const [results, setResults] = useState<SearchResult[]>([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -36,7 +33,7 @@ const SearchPage: React.FC = () => {
     const performSearch = async (searchQuery: string) => {
         setLoading(true);
         try {
-            // 1. Search MPs
+            // 1. Search MPs (Always separate)
             const { data: mpsData } = await supabase
                 .from('mps')
                 .select('*')
@@ -58,36 +55,16 @@ const SearchPage: React.FC = () => {
                 setMps(mappedMps);
             }
 
-            // 2. Search Votes
-            const searchWords = searchQuery.split(/\s+/).filter(w => w.length > 0);
-
-            let votesQuery = supabase
-                .from('votes')
-                .select('*');
-
-            // For each word, require it to be in title_clean OR title_raw
-            searchWords.forEach(word => {
-                votesQuery = votesQuery.or(`title_clean.ilike.%${word}%,title_raw.ilike.%${word}%`);
-            });
-
-            const { data: votesData } = await votesQuery
-                .order('date', { ascending: false })
-                .limit(6);
-
-            if (votesData) setVotes(votesData);
-
-            // 3. Search Speeches (OPTIMIZED with Full-Text Search)
-            const { data: speechesData } = await supabase
-                .from('speeches')
+            // 2. Unified Semantic Search
+            const { data: searchData, error } = await supabase
+                .from('view_search_all')
                 .select('*')
-                .textSearch('content_tsv', searchQuery, {
-                    type: 'websearch',
-                    config: 'simple'
-                })
-                .order('date', { ascending: false })
-                .limit(10);  // Increased from 3 to 10
+                .ilike('title', `%${searchQuery}%`)
+                .order('relevance', { ascending: false })
+                .limit(30);
 
-            if (speechesData) setSpeeches(speechesData);
+            if (error) throw error;
+            if (searchData) setResults(searchData as SearchResult[]);
 
         } catch (error) {
             console.error('Search error:', error);
@@ -96,8 +73,13 @@ const SearchPage: React.FC = () => {
         }
     };
 
+    // Grouping results for UI
+    const processes = results.filter(r => r.type === 'process');
+    const votes = results.filter(r => r.type === 'vote');
+    const speeches = results.filter(r => r.type === 'speech');
+
     return (
-        <div className="min-h-screen bg-paper pt-32 pb-12 px-6 md:px-12">
+        <div className="min-h-screen bg-paper pt-32 pb-12 px-6 md:px-12 text-ink">
             <div className="max-w-7xl mx-auto space-y-16">
 
                 {/* Header */}
@@ -112,7 +94,7 @@ const SearchPage: React.FC = () => {
                 ) : (
                     <div className="space-y-16">
 
-                        {/* MPs Section */}
+                        {/* 1. MPs Section */}
                         {mps.length > 0 && (
                             <section>
                                 <div className="flex items-center gap-3 mb-8 border-b border-neutral-200 pb-4">
@@ -124,17 +106,42 @@ const SearchPage: React.FC = () => {
                                         <MpCard key={mp.id} mp={mp} />
                                     ))}
                                 </div>
-                                {mps.length === 5 && (
-                                    <div className="mt-8 text-center">
-                                        <Link to={`/poslowie?q=${query}`} className="inline-flex items-center gap-2 text-blue-600 font-bold hover:text-blue-800 transition-colors uppercase tracking-wide text-xs">
-                                            Zobacz wszystkich posłów <ArrowRight className="w-4 h-4" />
-                                        </Link>
-                                    </div>
-                                )}
                             </section>
                         )}
 
-                        {/* Votes Section */}
+                        {/* 2. Processes (Laws) Section - NEW */}
+                        {processes.length > 0 && (
+                            <section>
+                                <div className="flex items-center gap-3 mb-6 border-b border-neutral-200 pb-4">
+                                    <BookOpen className="w-6 h-6 text-amber-600" />
+                                    <h2 className="text-2xl font-bold">Projekty Ustaw i Uchwał</h2>
+                                </div>
+                                <div className="grid grid-cols-1 gap-4">
+                                    {processes.map(proc => (
+                                        <Link key={proc.id} to={`/projekty/${proc.id}`} className="block bg-white p-6 rounded-xl border border-amber-100 hover:border-amber-300 hover:shadow-md transition-all group">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <span className="text-xs font-bold text-amber-600 uppercase tracking-wide bg-amber-50 px-2 py-1 rounded mb-2 inline-block">
+                                                        {proc.ux_category || 'Projekt'}
+                                                    </span>
+                                                    <h3 className="text-lg font-bold text-slate-900 group-hover:text-amber-700 transition-colors">
+                                                        {cleanSejmTitle(proc.title)}
+                                                    </h3>
+                                                    {proc.content_preview && (
+                                                        <p className="text-slate-600 mt-2 text-sm line-clamp-2">
+                                                            {proc.content_preview}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <Zap className="text-amber-300 group-hover:text-amber-500 transition" />
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* 3. Votes Section */}
                         {votes.length > 0 && (
                             <section>
                                 <div className="flex items-center gap-3 mb-6 border-b border-neutral-200 pb-4">
@@ -143,94 +150,52 @@ const SearchPage: React.FC = () => {
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {votes.map(vote => (
-                                        <Link key={vote.id} to={`/glosowania/${vote.term}/${vote.sitting}/${vote.voting_number}`} className="group block bg-white rounded-2xl border border-slate-200 p-6 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-lg hover:-translate-y-1 h-full flex flex-col justify-between relative overflow-hidden">
-                                            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-50 to-transparent rounded-bl-full -mr-8 -mt-8 opacity-50 group-hover:opacity-100 transition-opacity"></div>
-
-                                            <div className="relative z-10">
+                                        <Link key={vote.id} to={`/glosowanie/${vote.id}`} className="block bg-white rounded-2xl border border-slate-200 p-6 hover:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-lg h-full flex flex-col justify-between">
+                                            <div>
                                                 <div className="flex items-center gap-2 mb-4 flex-wrap">
-                                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-1 rounded border border-slate-200">
-                                                        Kadencja {vote.term === 9 ? 'IX' : 'X'}
-                                                    </span>
                                                     <span className="text-xs font-bold text-blue-700 uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-                                                        {vote.category || 'Głosowanie'}
+                                                        {vote.ux_category || 'Głosowanie'}
                                                     </span>
                                                     <span className="text-xs text-slate-400 font-medium">
                                                         {new Date(vote.date).toLocaleDateString('pl-PL')}
                                                     </span>
                                                 </div>
-                                                <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug mb-4 line-clamp-3">
-                                                    {cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
+                                                <h3 className="text-lg font-bold text-slate-900 mb-4 line-clamp-3">
+                                                    {cleanSejmTitle(vote.title)}
                                                 </h3>
                                             </div>
-
-                                            <div className="flex justify-between items-end border-t border-slate-100 pt-4 mt-auto relative z-10">
-                                                <div className={`flex items-center gap-2 text-sm font-bold ${vote.verdict === 'PRZYJĘTO' ? 'text-green-600' : 'text-red-600'}`}>
-                                                    {vote.verdict === 'PRZYJĘTO' ? (
-                                                        <>
-                                                            <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center">
-                                                                <CheckCircle2 className="w-5 h-5" />
-                                                            </div>
-                                                            <span>Przyjęto</span>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center">
-                                                                <XCircle className="w-5 h-5" />
-                                                            </div>
-                                                            <span>Odrzucono</span>
-                                                        </>
-                                                    )}
-                                                </div>
-                                                <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                                                    <ArrowRight className="w-4 h-4" />
-                                                </div>
+                                            <div className="flex justify-end">
+                                                <ArrowRight className="w-5 h-5 text-slate-300" />
                                             </div>
                                         </Link>
                                     ))}
                                 </div>
-                                {votes.length === 6 && (
-                                    <div className="mt-8 text-center">
-                                        <Link to={`/glosowania?q=${query}`} className="inline-flex items-center gap-2 text-blue-600 font-bold hover:text-blue-800 transition-colors uppercase tracking-wide text-sm">
-                                            Zobacz wszystkie głosowania <ArrowRight className="w-4 h-4" />
-                                        </Link>
-                                    </div>
-                                )}
                             </section>
                         )}
 
-                        {/* Speeches Section */}
+                        {/* 4. Speeches Section */}
                         {speeches.length > 0 && (
                             <section>
                                 <div className="flex items-center gap-3 mb-6 border-b border-neutral-200 pb-4">
-                                    <MessageSquare className="w-5 h-5 text-blue-600" />
+                                    <MessageSquare className="w-5 h-5 text-indigo-600" />
                                     <h2 className="text-2xl font-bold">Wypowiedzi</h2>
                                 </div>
                                 <div className="space-y-4">
-                                    {speeches.map((speech: any) => (
-                                        <div key={speech.id} className="p-6 bg-white rounded-xl border border-slate-200 hover:border-blue-300 transition-colors">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">
-                                                    Posiedzenie {speech.sitting} • {speech.date}
-                                                </span>
-                                            </div>
+                                    {speeches.map((speech) => (
+                                        <div key={speech.id} className="p-6 bg-white rounded-xl border border-slate-200 hover:border-indigo-300 transition-colors">
                                             <p className="text-slate-700 text-sm line-clamp-3 italic mb-3">
-                                                "{speech.content}"
+                                                "{speech.content_preview}..."
                                             </p>
-                                            <Link to={`/wypowiedzi/${speech.id}`} className="text-sm font-bold text-blue-600 hover:underline flex items-center gap-1">
+                                            <Link to={`/wypowiedzi/${speech.id}`} className="text-sm font-bold text-indigo-600 hover:underline flex items-center gap-1">
                                                 Czytaj całość <ArrowRight size={14} />
                                             </Link>
                                         </div>
                                     ))}
                                 </div>
-                                <div className="mt-6 text-center">
-                                    <Link to={`/wypowiedzi?q=${query}`} className="inline-flex items-center gap-2 text-blue-600 font-bold hover:text-blue-800 transition-colors uppercase tracking-wide text-sm">
-                                        Przeszukaj wszystkie wypowiedzi <ArrowRight className="w-4 h-4" />
-                                    </Link>
-                                </div>
                             </section>
                         )}
 
-                        {mps.length === 0 && votes.length === 0 && speeches.length === 0 && (
+                        {mps.length === 0 && results.length === 0 && (
                             <div className="text-center py-24 bg-white rounded-2xl border border-neutral-200">
                                 <Search className="w-16 h-16 text-neutral-200 mx-auto mb-6" />
                                 <h3 className="text-2xl font-bold text-ink mb-3">Brak wyników</h3>

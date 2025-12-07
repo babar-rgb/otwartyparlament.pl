@@ -1,10 +1,9 @@
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, FileText, Calendar, User, Tag, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
 import BillTimeline, { TimelineStage } from '../components/BillTimeline';
+import ProcessTLDR from '../components/ProcessTLDR';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-
-
 
 interface BillData {
     id: string;
@@ -15,6 +14,7 @@ interface BillData {
     proposer: string;
     currentStage: TimelineStage;
     status: 'processing' | 'passed' | 'rejected';
+    simple_summary?: any;
 }
 
 interface RelatedVote {
@@ -65,7 +65,8 @@ export default function BillDetails() {
                     date: data.process_start_date,
                     proposer: 'Sejm RP',
                     currentStage,
-                    status
+                    status,
+                    simple_summary: data.simple_summary
                 });
 
                 // Fetch related votes
@@ -141,6 +142,13 @@ export default function BillDetails() {
                         {bill.description}
                     </p>
                 </div>
+
+                {/* AI TL;DR Section */}
+                {bill.simple_summary && (
+                    <div className="px-8 pt-8 bg-white">
+                        <ProcessTLDR data={bill.simple_summary} />
+                    </div>
+                )}
 
                 {/* Timeline Section */}
                 <div className="p-8 bg-white">

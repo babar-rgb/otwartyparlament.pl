@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
-import { ChevronDown, Heart, TrendingUp, Wheat, GraduationCap, Shield, Scale, Building, Zap, Cpu, Users, Globe, Palette, Building2 } from 'lucide-react';
+import { ChevronDown, Building2 } from 'lucide-react';
 
 import SEO from '../components/SEO';
 import UpcomingVotesWidget from '../components/UpcomingVotesWidget';
+import WeeklyHighlights from '../components/WeeklyHighlights';
+import TopicClusters from '../components/TopicClusters';
 
 export default function Home() {
 
@@ -54,103 +56,12 @@ export default function Home() {
             <UpcomingVotesWidget />
           </div>
 
-          <div className="flex items-end gap-4 mb-16">
-            <h2 className="text-4xl md:text-5xl font-extrabold text-ink tracking-tight">
-              Kluczowe Decyzje
-            </h2>
-            <div className="h-4 w-4 bg-black rounded-full mb-2 animate-pulse"></div>
+          <div className="flex items-end gap-4 mb-4">
+            {/* Header moved to component */}
           </div>
 
           <div className="space-y-0">
-            {/* Vote Item 1 */}
-            <div className="flex flex-col md:flex-row gap-8 py-12 border-b border-slate-200 group hover:bg-slate-50 transition px-4 -mx-4 rounded-xl">
-              <div className="flex-shrink-0 pt-1">
-                <span className="text-4xl font-light text-slate-300 group-hover:text-ink transition duration-300">01</span>
-              </div>
-              <div className="flex-grow">
-                <h3 className="text-2xl font-bold text-ink mb-3 group-hover:text-blue-600 transition">
-                  Ustawa o finansowaniu in vitro
-                </h3>
-                <p className="text-slate-600 text-lg leading-relaxed max-w-2xl">
-                  Temat, który zdominował nagłówki i dyskusje w mediach społecznościowych w zeszłym tygodniu. Decyzja o przywróceniu finansowania z budżetu państwa.
-                </p>
-              </div>
-              <div className="flex-shrink-0 w-full md:w-64 flex flex-col justify-center gap-3">
-                <div className="bg-vote-yesBg text-vote-yes border border-vote-yes/20 text-center py-2 rounded-full font-bold uppercase tracking-wider text-sm">
-                  PRZYJĘTO
-                </div>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold text-slate-500 uppercase tracking-wide">
-                    <span>Za: 293</span>
-                    <span>Przeciw: 142</span>
-                  </div>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden flex">
-                    <div className="h-full bg-vote-yes w-[65%]"></div>
-                    <div className="h-full bg-red-500 w-[35%]"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Vote Item 2 */}
-            <div className="flex flex-col md:flex-row gap-8 py-12 border-b border-slate-200 group hover:bg-slate-50 transition px-4 -mx-4 rounded-xl">
-              <div className="flex-shrink-0 pt-1">
-                <span className="text-4xl font-light text-slate-300 group-hover:text-ink transition duration-300">02</span>
-              </div>
-              <div className="flex-grow">
-                <h3 className="text-2xl font-bold text-ink mb-3 group-hover:text-blue-600 transition">
-                  Wybór Marszałka Sejmu X kadencji
-                </h3>
-                <p className="text-slate-600 text-lg leading-relaxed max-w-2xl">
-                  Pierwsze posiedzenie Sejmu nowej kadencji i kluczowe głosowanie personalne, ustalające układ sił w prezydium.
-                </p>
-              </div>
-              <div className="flex-shrink-0 w-full md:w-64 flex flex-col justify-center gap-3">
-                <div className="bg-vote-yesBg text-vote-yes border border-vote-yes/20 text-center py-2 rounded-full font-bold uppercase tracking-wider text-sm">
-                  PRZYJĘTO
-                </div>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold text-slate-500 uppercase tracking-wide">
-                    <span>Za: 265</span>
-                    <span>Przeciw: 193</span>
-                  </div>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden flex">
-                    <div className="h-full bg-vote-yes w-[58%]"></div>
-                    <div className="h-full bg-red-500 w-[42%]"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Vote Item 3 */}
-            <div className="flex flex-col md:flex-row gap-8 py-12 border-b border-slate-200 group hover:bg-slate-50 transition px-4 -mx-4 rounded-xl">
-              <div className="flex-shrink-0 pt-1">
-                <span className="text-4xl font-light text-slate-300 group-hover:text-ink transition duration-300">03</span>
-              </div>
-              <div className="flex-grow">
-                <h3 className="text-2xl font-bold text-ink mb-3 group-hover:text-blue-600 transition">
-                  Odrzucenie wotum zaufania dla rządu
-                </h3>
-                <p className="text-slate-600 text-lg leading-relaxed max-w-2xl">
-                  Historyczne głosowanie kończące misję tworzenia rządu przez dotychczasową większość. Otwarcie drogi do tzw. drugiego kroku konstytucyjnego.
-                </p>
-              </div>
-              <div className="flex-shrink-0 w-full md:w-64 flex flex-col justify-center gap-3">
-                <div className="bg-vote-noBg text-vote-no border border-vote-no/20 text-center py-2 rounded-full font-bold uppercase tracking-wider text-sm">
-                  ODRZUCONO
-                </div>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold text-slate-500 uppercase tracking-wide">
-                    <span>Za: 190</span>
-                    <span>Przeciw: 266</span>
-                  </div>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden flex">
-                    <div className="h-full bg-vote-yes w-[41%]"></div>
-                    <div className="h-full bg-red-500 w-[59%]"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <WeeklyHighlights />
           </div>
         </div>
       </section>
@@ -158,130 +69,15 @@ export default function Home() {
       {/* Thematic Areas Section */}
       <section className="bg-slate-50 dark:bg-transparent py-20 px-6">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-extrabold text-ink mb-4 tracking-tight">
-              Obszary Tematyczne
-            </h2>
-            <p className="text-lg text-slate-600">
-              Przeglądaj archiwum Sejmu według sektorów.
-            </p>
-          </div>
+          <TopicClusters />
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {/* Health */}
-            <Link to="/tematy/zdrowie">
-              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
-                <Heart className="w-12 h-12 text-slate-600 mb-4" />
-                <h3 className="font-bold text-ink mb-2">Zdrowie</h3>
-                <p className="text-sm text-slate-500">42 głosowania</p>
-              </div>
-            </Link>
-
-            {/* Economy */}
-            <Link to="/tematy/gospodarka">
-              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
-                <TrendingUp className="w-12 h-12 text-slate-600 mb-4" />
-                <h3 className="font-bold text-ink mb-2">Gospodarka</h3>
-                <p className="text-sm text-slate-500">68 głosowań</p>
-              </div>
-            </Link>
-
-            {/* Agriculture */}
-            <Link to="/tematy/rolnictwo">
-              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
-                <Wheat className="w-12 h-12 text-slate-600 mb-4" />
-                <h3 className="font-bold text-ink mb-2">Rolnictwo</h3>
-                <p className="text-sm text-slate-500">23 głosowania</p>
-              </div>
-            </Link>
-
-            {/* Education */}
-            <Link to="/tematy/edukacja">
-              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
-                <GraduationCap className="w-12 h-12 text-slate-600 mb-4" />
-                <h3 className="font-bold text-ink mb-2">Edukacja</h3>
-                <p className="text-sm text-slate-500">31 głosowań</p>
-              </div>
-            </Link>
-
-            {/* Defense */}
-            <Link to="/tematy/obronnosc">
-              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
-                <Shield className="w-12 h-12 text-slate-600 mb-4" />
-                <h3 className="font-bold text-ink mb-2">Obronność</h3>
-                <p className="text-sm text-slate-500">19 głosowań</p>
-              </div>
-            </Link>
-
-            {/* Justice */}
-            <Link to="/tematy/sprawiedliwosc">
-              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
-                <Scale className="w-12 h-12 text-slate-600 mb-4" />
-                <h3 className="font-bold text-ink mb-2">Sprawiedliwość</h3>
-                <p className="text-sm text-slate-500">54 głosowania</p>
-              </div>
-            </Link>
-
-            {/* Infrastructure */}
-            <Link to="/tematy/infrastruktura">
-              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
-                <Building className="w-12 h-12 text-slate-600 mb-4" />
-                <h3 className="font-bold text-ink mb-2">Infrastruktura</h3>
-                <p className="text-sm text-slate-500">27 głosowań</p>
-              </div>
-            </Link>
-
-            {/* Energy */}
-            <Link to="/tematy/energetyka">
-              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
-                <Zap className="w-12 h-12 text-slate-600 mb-4" />
-                <h3 className="font-bold text-ink mb-2">Energetyka</h3>
-                <p className="text-sm text-slate-500">35 głosowań</p>
-              </div>
-            </Link>
-
-            {/* Technology */}
-            <Link to="/tematy/technologia">
-              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
-                <Cpu className="w-12 h-12 text-slate-600 mb-4" />
-                <h3 className="font-bold text-ink mb-2">Technologia</h3>
-                <p className="text-sm text-slate-500">16 głosowań</p>
-              </div>
-            </Link>
-
-            {/* Social Policy */}
-            <Link to="/tematy/polityka-spoleczna">
-              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
-                <Users className="w-12 h-12 text-slate-600 mb-4" />
-                <h3 className="font-bold text-ink mb-2">Polityka Społeczna</h3>
-                <p className="text-sm text-slate-500">49 głosowań</p>
-              </div>
-            </Link>
-
-            {/* Foreign Affairs */}
-            <Link to="/tematy/sprawy-zagraniczne">
-              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
-                <Globe className="w-12 h-12 text-slate-600 mb-4" />
-                <h3 className="font-bold text-ink mb-2">Sprawy Zagraniczne</h3>
-                <p className="text-sm text-slate-500">38 głosowań</p>
-              </div>
-            </Link>
-
-            {/* Culture */}
-            <Link to="/tematy/kultura">
-              <div className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-black hover:scale-105 transition-all duration-300 cursor-pointer h-full">
-                <Palette className="w-12 h-12 text-slate-600 mb-4" />
-                <h3 className="font-bold text-ink mb-2">Kultura</h3>
-                <p className="text-sm text-slate-500">14 głosowań</p>
-              </div>
-            </Link>
-
-            {/* Komisje */}
-            <Link to="/komisje">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-12">
+            {/* Komisje - Keep as static link */}
+            <Link to="/komisje" className="col-span-2 md:col-start-2 lg:col-start-auto">
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 flex flex-col items-center text-center hover:border-blue-400 hover:scale-105 transition-all duration-300 cursor-pointer h-full">
                 <Building2 className="w-12 h-12 text-blue-600 mb-4" />
-                <h3 className="font-bold text-blue-900 mb-2">Komisje</h3>
-                <p className="text-sm text-blue-600">39 komisji sejmowych</p>
+                <h3 className="font-bold text-blue-900 mb-2">Komisje Sejmowe</h3>
+                <p className="text-sm text-blue-600">Zobacz czym zajmują się posłowie</p>
               </div>
             </Link>
           </div>
