@@ -47,6 +47,8 @@ export default function KomisjaDetails() {
     const [loading, setLoading] = useState(true);
     const [expandedSitting, setExpandedSitting] = useState<number | null>(null);
     const [showAllMembers, setShowAllMembers] = useState(false);
+    const [sittingsLimit, setSittingsLimit] = useState(20);
+    const [totalSittings, setTotalSittings] = useState(0);
 
     useEffect(() => {
         const loadData = async () => {
@@ -87,15 +89,18 @@ export default function KomisjaDetails() {
                 }
 
                 // Fetch sittings
-                const { data: sittingData } = await supabase
+                const { data: sittingData, count } = await supabase
                     .from('committee_sittings')
-                    .select('*')
+                    .select('*', { count: 'exact' })
                     .eq('committee_code', code)
                     .order('date', { ascending: false })
-                    .limit(20);
+                    .limit(sittingsLimit);
 
                 if (sittingData) {
                     setSittings(sittingData);
+                }
+                if (count !== null) {
+                    setTotalSittings(count);
                 }
             } catch (error) {
                 console.error('Error loading committee:', error);
@@ -105,7 +110,7 @@ export default function KomisjaDetails() {
         };
 
         loadData();
-    }, [code]);
+    }, [code, sittingsLimit]);
 
     if (loading) {
         return (
@@ -302,10 +307,13 @@ export default function KomisjaDetails() {
                     </div>
                 )}
 
-                {sittings.length >= 20 && (
-                    <div className="mt-4 text-center text-sm text-slate-500">
-                        Pokazano 20 ostatnich posiedzeń
-                    </div>
+                {sittings.length > 0 && sittings.length < totalSittings && (
+                    <button
+                        onClick={() => setSittingsLimit(prev => prev + 20)}
+                        className="mt-4 w-full py-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-medium rounded-lg transition-colors"
+                    >
+                        Pokaż więcej posiedzeń ({sittings.length} z {totalSittings})
+                    </button>
                 )}
             </div>
         </div>

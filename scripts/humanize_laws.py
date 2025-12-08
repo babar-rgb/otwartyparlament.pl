@@ -31,14 +31,11 @@ def run_sql(query, return_output=False):
 
 
 def get_processes_without_summary():
-    """Get processes that need summaries"""
+    """Get processes that need summaries (including those with short/no description)"""
     output = run_sql("""
-    SELECT id, title, description, category
+    SELECT id, title, COALESCE(description, ''), category
     FROM processes 
-    WHERE simple_summary IS NULL
-    AND description IS NOT NULL 
-    AND length(description) > 50
-    LIMIT 100;
+    WHERE simple_summary IS NULL;
     """, return_output=True)
     
     if not output:

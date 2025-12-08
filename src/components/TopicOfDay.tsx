@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Flame, Sparkles, TrendingUp, ArrowRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import ControversyBar from './ControversyBar';
+import SejmHemicycle from './SejmHemicycle';
 
 interface TopVote {
     id: number;
@@ -25,6 +26,7 @@ interface TopVote {
 
 export default function TopicOfDay() {
     const [topVote, setTopVote] = useState<TopVote | null>(null);
+    const [voteResults, setVoteResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -60,6 +62,31 @@ export default function TopicOfDay() {
                     ...data,
                     ai_summary: analysisData?.summary
                 });
+
+                // Fetch vote results for hemicycle (simple query without join)
+                const { data: resultsData } = await supabase
+                    .from('vote_results')
+                    .select('vote, mp_id')
+                    .eq('vote_id', data.id)
+                    .limit(460);
+
+                if (resultsData && resultsData.length > 0) {
+                    // Fetch MPs data separately
+                    const mpIds = resultsData.map(r => r.mp_id);
+                    const { data: mpsData } = await supabase
+                        .from('mps')
+                        .select('id, name, party, seat_number')
+                        .in('id', mpIds);
+
+                    // Join in code
+                    const mpsMap = new Map(mpsData?.map(mp => [mp.id, mp]) || []);
+                    const enrichedResults = resultsData.map(r => ({
+                        ...r,
+                        mps: mpsMap.get(r.mp_id) || null
+                    }));
+
+                    setVoteResults(enrichedResults);
+                }
             }
         } catch (err) {
             console.error('Error fetching topic of day:', err);
@@ -113,11 +140,25 @@ export default function TopicOfDay() {
 
                     {/* AI Summary */}
                     {topVote.ai_summary && (
-                        <div className="flex items-start gap-3 mb-8 p-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur rounded-xl border border-amber-100 dark:border-amber-800/30">
+                        <div className="flex items-start gap-3 mb-6 p-4 bg-white/60 dark:bg-slate-800/60 backdrop-blur rounded-xl border border-amber-100 dark:border-amber-800/30">
                             <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                            <p className="text-lg text-slate-700 dark:text-slate-200 leading-relaxed">
+                            <p className="text-base text-slate-700 dark:text-slate-200 leading-relaxed">
                                 {topVote.ai_summary}
                             </p>
+                        </div>
+                    )}
+
+                    {/* Hemicycle Visualization */}
+                    {voteResults.length > 0 && (
+                        <div className="mb-6 p-4 bg-slate-900 rounded-2xl overflow-hidden">
+                            <SejmHemicycle data={voteResults.map((r: any) => ({
+                                id: r.mps?.id || r.mp_id,
+                                name: r.mps?.name || 'Nieznany',
+                                party: r.mps?.party || 'Niezrzeszony',
+                                photo_url: '',
+                                vote: r.vote,
+                                seat_number: r.mps?.seat_number
+                            }))} />
                         </div>
                     )}
 

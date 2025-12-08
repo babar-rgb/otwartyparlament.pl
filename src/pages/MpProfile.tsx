@@ -29,6 +29,7 @@ interface AssetDeclaration {
   pdf_url: string;
   year: string;
   summary: string;
+  file_path?: string;
   parsed_content: {
     savings: number;
     real_estate: string[];
@@ -520,9 +521,22 @@ const MpProfile = () => {
                 <div key={decl.id} className="bg-white p-6 rounded-xl border border-emerald-100 shadow-sm">
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="font-bold text-lg text-slate-800">{decl.year}</h3>
-                    <span className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full font-medium">
-                      AI Analysis
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {decl.file_path && (
+                        <a
+                          href={decl.file_path}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 bg-emerald-100 text-emerald-700 text-xs px-3 py-1 rounded-full font-medium hover:bg-emerald-200 transition-colors"
+                        >
+                          <FileText size={12} />
+                          Zobacz PDF
+                        </a>
+                      )}
+                      <span className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full font-medium">
+                        AI Analysis
+                      </span>
+                    </div>
                   </div>
 
                   <p className="text-slate-600 italic mb-4 text-sm border-l-4 border-emerald-200 pl-3">
@@ -532,20 +546,22 @@ const MpProfile = () => {
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between border-b border-slate-100 pb-2">
                       <span className="text-slate-500">Oszczędności:</span>
-                      <span className="font-bold text-slate-900">{decl.parsed_content.savings?.toLocaleString()} PLN</span>
+                      <span className="font-bold text-slate-900">{decl.parsed_content?.savings?.toLocaleString() || 'Brak danych'} PLN</span>
                     </div>
                     <div className="flex justify-between border-b border-slate-100 pb-2">
                       <span className="text-slate-500">Dochód roczny:</span>
-                      <span className="font-bold text-slate-900">{decl.parsed_content.income?.toLocaleString()} PLN</span>
+                      <span className="font-bold text-slate-900">{decl.parsed_content?.income?.toLocaleString() || 'Brak danych'} PLN</span>
                     </div>
-                    <div>
-                      <span className="text-slate-500 block mb-1">Nieruchomości:</span>
-                      <ul className="list-disc list-inside text-slate-700 space-y-1">
-                        {decl.parsed_content.real_estate?.map((item, i) => (
-                          <li key={i} className="truncate">{item}</li>
-                        ))}
-                      </ul>
-                    </div>
+                    {decl.parsed_content?.real_estate && decl.parsed_content.real_estate.length > 0 && (
+                      <div>
+                        <span className="text-slate-500 block mb-1">Nieruchomości:</span>
+                        <ul className="list-disc list-inside text-slate-700 space-y-1">
+                          {decl.parsed_content.real_estate.map((item, i) => (
+                            <li key={i} className="truncate">{item}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

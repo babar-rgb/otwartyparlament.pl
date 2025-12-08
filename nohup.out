@@ -1,3 +1,13 @@
 2025-12-07 22:56:59,519 [ERROR] APScheduler not installed. Run: pip install apscheduler
 2025-12-07 22:56:59,520 [INFO] Falling back to simple loop mode...
 2025-12-07 22:56:59,520 [INFO] Simple scheduler mode (checks every hour)
+2025-12-08 14:09:33,736 [INFO] ============================================================
+2025-12-08 14:09:33,743 [INFO] DAILY MAINTENANCE STARTED
+2025-12-08 14:09:33,744 [INFO] Time: 2025-12-08 14:09:33
+2025-12-08 14:09:33,744 [INFO] ============================================================
+2025-12-08 14:09:33,744 [INFO] Starting incremental ETL...
+2025-12-08 14:09:34,372 [INFO] Incremental ETL completed successfully
+2025-12-08 14:09:34,372 [INFO] Generating vote analyses...
+2025-12-08 14:09:34,571 [INFO] Vote analyses completed
+2025-12-08 14:09:34,571 [INFO] Maintenance completed in 0.8 seconds
+2025-12-08 14:09:34,571 [INFO] ============================================================

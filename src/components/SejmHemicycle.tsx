@@ -168,7 +168,7 @@ const SejmHemicycle: React.FC<SejmHemicycleProps> = ({ data }) => {
             {/* Main Hemicycle */}
             <div className="relative flex justify-center w-full overflow-hidden">
                 <svg
-                    viewBox="-450 -450 900 500"
+                    viewBox="-480 -500 960 560"
                     className="w-full h-auto max-h-[60vh] select-none"
                     style={{ maxWidth: '100%' }}
                     role="img"
