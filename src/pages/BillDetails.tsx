@@ -138,9 +138,12 @@ export default function BillDetails() {
                         {bill.title}
                     </h1>
 
-                    <p className="text-lg text-slate-600 leading-relaxed max-w-3xl">
-                        {bill.description}
-                    </p>
+                    {/* Reader-friendly description */}
+                    <div className="prose prose-lg prose-slate max-w-[65ch]">
+                        <p className="text-lg text-slate-600 leading-[1.8] font-serif">
+                            {bill.description}
+                        </p>
+                    </div>
                 </div>
 
                 {/* AI TL;DR Section */}

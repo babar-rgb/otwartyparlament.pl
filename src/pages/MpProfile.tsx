@@ -2,10 +2,12 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { MP } from '../api';
 import { supabase } from '../lib/supabase';
-import { MapPin, Mail, FileText, Sparkles, Scale, Star, CheckCircle2, XCircle, MinusCircle, HelpCircle, ArrowLeft, ArrowRight, MessageSquare } from 'lucide-react';
+import { MapPin, Mail, FileText, Sparkles, Scale, Star, CheckCircle2, XCircle, MinusCircle, HelpCircle, ArrowLeft, ArrowRight, MessageSquare, Activity } from 'lucide-react';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import { getPartyHexColor } from '../utils/theme';
 import SEO from '../components/SEO';
+import TopicRadar from '../components/TopicRadar';
+import ActivityStream from '../components/ActivityStream';
 
 interface VoteHistoryItem {
   vote: string;
@@ -349,6 +351,43 @@ const MpProfile = () => {
 
 
 
+      {/* ACTIVITY STREAM SECTION */}
+      <div className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200 mb-8">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-3 bg-blue-100 rounded-xl text-blue-600">
+            <Activity size={24} />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900">Oś Czasu</h2>
+            <p className="text-sm text-slate-500">Ostatnia aktywność tego posła</p>
+          </div>
+        </div>
+        <ActivityStream
+          activities={[
+            ...voteHistory.map(v => ({
+              type: 'vote' as const,
+              date: v.votes.date,
+              title: cleanSejmTitle(v.votes.title_clean || ''),
+              url: `/glosowania/${v.votes.term}/${v.votes.sitting}/${v.votes.voting_number}`,
+              result: v.vote
+            })),
+            ...recentSpeeches.map(s => ({
+              type: 'speech' as const,
+              date: s.date,
+              title: s.content?.substring(0, 100) + '...',
+              url: `/wypowiedzi?q=${encodeURIComponent(s.content?.slice(0, 30) || '')}`
+            })),
+            ...interpellations.slice(0, 5).map(i => ({
+              type: 'interpellation' as const,
+              date: i.sent_date,
+              title: i.title,
+              url: `/interpelacje/${i.id}`
+            }))
+          ]}
+          maxItems={15}
+        />
+      </div>
+
       {/* MIDDLE SECTION GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8 items-start">
 
@@ -582,20 +621,10 @@ const MpProfile = () => {
               </div>
             </div>
 
-            {/* Category Breakdown */}
+            {/* Topic Radar */}
             {interpellationCategories.length > 0 && (
-              <div className="mb-6 p-4 bg-slate-50 rounded-lg">
-                <h3 className="font-semibold text-slate-700 mb-3 text-sm">Najpopularniejsze tematy:</h3>
-                <div className="flex flex-wrap gap-2">
-                  {interpellationCategories.slice(0, 5).map((cat) => (
-                    <span
-                      key={cat.category}
-                      className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
-                    >
-                      {cat.category} ({cat.count})
-                    </span>
-                  ))}
-                </div>
+              <div className="mb-6">
+                <TopicRadar topics={interpellationCategories} maxTopics={5} />
               </div>
             )}
 

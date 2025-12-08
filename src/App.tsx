@@ -71,8 +71,7 @@ export default function App() {
             <Route path="/glosowania" element={<VotesList />} />
             <Route path="/glosowania/:term/:sitting/:votingNumber" element={<VoteDetails />} />
             <Route path="/glosowania/:sitting/:votingNumber" element={<VoteDetails />} />
-            <Route path="/europarlament/:id" element={<EuroMPProfile />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="/glosowanie/:id" element={<VoteDetails />} />
             <Route path="/tematy/:slug" element={<CategoryDetails />} />
             <Route path="/kategoria/:slug" element={<CategoryDetails />} />
             <Route path="/metodologia" element={<DataSources />} />
@@ -81,6 +80,8 @@ export default function App() {
             <Route path="/kontakt" element={<Contact />} />
             <Route path="/porownywarka" element={<Comparator />} />
             <Route path="/szukaj" element={<SearchPage />} />
+            {/* Catch-all MUST be last */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
         <Footer />

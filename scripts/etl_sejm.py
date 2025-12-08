@@ -60,7 +60,7 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Multi-Term Config
-TARGET_TERMS = [9]
+TARGET_TERMS = [10]
 BASE_API_URL = "https://api.sejm.gov.pl/sejm"
 
 # --- SRE: RETRY SESSION ---
