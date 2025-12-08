@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, Calendar, CheckCircle2, XCircle, PieChart, Users, Sparkles, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, CheckCircle2, XCircle, PieChart, Users, Sparkles, ThumbsUp, ThumbsDown, Network, ExternalLink } from 'lucide-react';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import VoteTechnicalDetails from '../components/VoteTechnicalDetails';
 import SejmHemicycle from '../components/SejmHemicycle';
@@ -54,6 +54,7 @@ const VoteDetails: React.FC = () => {
     const [loading, setLoading] = useState(true);
 
     const [analysis, setAnalysis] = useState<{ summary: string; pros: string[]; cons: string[] } | null>(null);
+    const [linkedProcessId, setLinkedProcessId] = useState<string | null>(null);
 
     useEffect(() => {
         if (sitting && votingNumber) {
@@ -133,6 +134,20 @@ const VoteDetails: React.FC = () => {
                 setAnalysis(analysisData);
             }
 
+            // 5. Try to link to Law Map (Process)
+            if (voteData.print_number) {
+                const { data: procData } = await supabase
+                    .from('processes')
+                    .select('id')
+                    .ilike('print_number', `${voteData.print_number}%`)
+                    .limit(1)
+                    .maybeSingle();
+
+                if (procData) {
+                    setLinkedProcessId(procData.id);
+                }
+            }
+
         } catch (error) {
             console.error('Error fetching vote details:', error);
         } finally {
@@ -199,14 +214,31 @@ const VoteDetails: React.FC = () => {
                         {cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
                     </h1>
 
+                    {/* Law Map CTA */}
+                    {linkedProcessId && (
+                        <Link
+                            to={`/mapa/${linkedProcessId}`}
+                            className="inline-flex items-center gap-3 px-6 py-4 mb-8 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-blue-900/40 hover:shadow-blue-500/40 hover:scale-[1.02] transition-all group border border-white/10"
+                        >
+                            <div className="p-2 bg-white/20 rounded-lg group-hover:rotate-12 transition-transform">
+                                <Network size={20} />
+                            </div>
+                            <div className="text-left">
+                                <div className="text-xs font-medium opacity-80 uppercase tracking-wider">Wizualizacja</div>
+                                <div className="text-lg leading-none">Zobacz Mapę Myśli Ustawy</div>
+                            </div>
+                            <ArrowRight className="ml-2 opacity-80 group-hover:translate-x-1 transition-transform" />
+                        </Link>
+                    )}
+
                     {/* Vote Result Card */}
                     <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50">
                         {/* Verdict + Bar */}
                         <div className="flex flex-col lg:flex-row lg:items-center gap-6">
                             {/* Verdict Badge */}
                             <div className={`shrink-0 inline-flex items-center gap-3 px-5 py-3 rounded-xl font-bold text-lg ${vote.verdict === 'PRZYJĘTO'
-                                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                : 'bg-red-500/20 text-red-400 border border-red-500/30'
                                 }`}>
                                 {vote.verdict === 'PRZYJĘTO' ? <CheckCircle2 className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
                                 {vote.verdict}

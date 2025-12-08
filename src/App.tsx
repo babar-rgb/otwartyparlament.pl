@@ -33,6 +33,7 @@ import Komisje from './pages/Komisje';
 import KomisjaDetails from './pages/KomisjaDetails';
 import CommitteeSittingDetails from './pages/CommitteeSittingDetails';
 import Categories from './pages/Categories';
+import LawMap from './pages/LawMap';
 import NotFound from './pages/NotFound';
 
 export default function App() {
@@ -67,6 +68,7 @@ export default function App() {
             <Route path="/test" element={<TestWyborczy />} />
             <Route path="/o-projekcie" element={<OProjekcie />} />
             <Route path="/ustawy/:id" element={<BillDetails />} /> {/* Added route for BillDetails */}
+            <Route path="/mapa/:processId" element={<LawMap />} />
             <Route path="/projekty" element={<BillsList />} /> {/* Added route for BillsList */}
             <Route path="/projekty/:id" element={<BillDetails />} />
             <Route path="/glosowania" element={<VotesList />} />

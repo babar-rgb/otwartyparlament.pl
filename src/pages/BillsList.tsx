@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, Calendar, ChevronRight, ChevronLeft, ArrowRight } from 'lucide-react';
+import { FileText, Calendar, ChevronRight, ChevronLeft, ArrowRight, Network } from 'lucide-react';
 
 interface Process {
     number: number;
@@ -101,37 +101,49 @@ export default function BillsList() {
             ) : (
                 <div className="space-y-4">
                     {processes.map((process) => (
-                        <Link
-                            key={process.number}
-                            to={`/ustawy/${process.number}`}
-                            className="block bg-white rounded-xl border border-slate-200 p-6 hover:shadow-md hover:border-blue-300 transition-all group"
+                        <div
+                            key={process.documentId}
+                            className="block bg-white rounded-xl border border-slate-200 hover:shadow-md hover:border-blue-300 transition-all group overflow-hidden"
                         >
-                            <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-3 text-sm text-slate-500 mb-2">
-                                        <span className="flex items-center gap-1 bg-slate-100 px-2 py-1 rounded text-xs font-bold uppercase tracking-wide">
-                                            <FileText size={12} />
-                                            {process.documentId ? `Druk ${process.documentId}` : 'Bez druku'}
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                            <Calendar size={12} />
-                                            {process.processStartDate}
-                                        </span>
+                            <Link to={`/ustawy/${process.documentId}`} className="block p-6 group/link">
+                                <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-3 text-sm text-slate-500 mb-2">
+                                            <span className="flex items-center gap-1 bg-slate-100 px-2 py-1 rounded text-xs font-bold uppercase tracking-wide">
+                                                <FileText size={12} />
+                                                {process.documentId ? `Druk ${process.documentId}` : 'Bez druku'}
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                                <Calendar size={12} />
+                                                {process.processStartDate}
+                                            </span>
+                                        </div>
+                                        <h3 className="text-lg font-bold text-slate-900 group-hover/link:text-blue-600 transition-colors line-clamp-2">
+                                            {process.title}
+                                        </h3>
+                                        {process.description && (
+                                            <p className="text-slate-600 mt-2 line-clamp-2 text-sm">
+                                                {process.description}
+                                            </p>
+                                        )}
                                     </div>
-                                    <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2">
-                                        {process.title}
-                                    </h3>
-                                    {process.description && (
-                                        <p className="text-slate-600 mt-2 line-clamp-2 text-sm">
-                                            {process.description}
-                                        </p>
-                                    )}
+                                    <div className="flex items-center text-blue-600 font-bold text-sm whitespace-nowrap group-hover/link:translate-x-1 transition-transform">
+                                        Szczegóły <ArrowRight size={16} className="ml-1" />
+                                    </div>
                                 </div>
-                                <div className="flex items-center text-blue-600 font-bold text-sm whitespace-nowrap group-hover:translate-x-1 transition-transform">
-                                    Szczegóły <ArrowRight size={16} className="ml-1" />
-                                </div>
+                            </Link>
+
+                            {/* Actions Footer */}
+                            <div className="px-6 pb-4 pt-0 flex items-center justify-between">
+                                <Link
+                                    to={`/mapa/${process.documentId}`}
+                                    className="flex items-center gap-2 text-indigo-600 hover:text-indigo-800 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors z-10"
+                                >
+                                    <Network size={16} />
+                                    Mapa Myśli
+                                </Link>
                             </div>
-                        </Link>
+                        </div>
                     ))}
                 </div>
             )}

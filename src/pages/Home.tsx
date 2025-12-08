@@ -6,6 +6,7 @@ import TopicOfDay from '../components/TopicOfDay';
 import WeeklyHighlights from '../components/WeeklyHighlights';
 import TopicClusters from '../components/TopicClusters';
 import PersonaSelector from '../components/PersonaSelector';
+import SmartSearch from '../components/SmartSearch';
 
 export default function Home() {
   return (
@@ -62,6 +63,13 @@ export default function Home() {
       <section className="py-12 px-4 md:px-8">
         <div className="container mx-auto max-w-6xl">
           <PersonaSelector />
+        </div>
+      </section>
+
+      {/* Smart Search - "Inteligentna Wyszukiwarka" */}
+      <section className="py-16 px-4 md:px-8 bg-gradient-to-br from-amber-50 via-white to-orange-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-amber-950">
+        <div className="container mx-auto max-w-4xl">
+          <SmartSearch showHero={true} />
         </div>
       </section>
 

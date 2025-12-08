@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, FileText, Calendar, User, Tag, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
+import { ArrowLeft, FileText, Calendar, User, Tag, CheckCircle2, XCircle, ArrowRight, Network } from 'lucide-react';
 import BillTimeline, { TimelineStage } from '../components/BillTimeline';
 import ProcessTLDR from '../components/ProcessTLDR';
 import { useState, useEffect } from 'react';
@@ -143,6 +143,23 @@ export default function BillDetails() {
                         <p className="text-lg text-slate-600 leading-[1.8] font-serif">
                             {bill.description}
                         </p>
+                    </div>
+
+                    {/* Law Map CTA */}
+                    <div className="mt-8">
+                        <Link
+                            to={`/mapa/${bill.id}`}
+                            className="inline-flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 hover:shadow-indigo-300 hover:scale-[1.02] transition-all group"
+                        >
+                            <div className="p-2 bg-white/20 rounded-lg group-hover:rotate-12 transition-transform">
+                                <Network size={24} />
+                            </div>
+                            <div className="text-left">
+                                <div className="text-sm font-medium opacity-90">Nowość</div>
+                                <div className="text-lg">Zobacz Mapę Myśli Prawa</div>
+                            </div>
+                            <ArrowRight className="ml-2 opacity-80 group-hover:translate-x-1 transition-transform" />
+                        </Link>
                     </div>
                 </div>
 
