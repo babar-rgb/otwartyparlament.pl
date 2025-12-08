@@ -32,6 +32,7 @@ import EuroVoteDetails from './pages/EuroVoteDetails';
 import Komisje from './pages/Komisje';
 import KomisjaDetails from './pages/KomisjaDetails';
 import CommitteeSittingDetails from './pages/CommitteeSittingDetails';
+import Categories from './pages/Categories';
 import NotFound from './pages/NotFound';
 
 export default function App() {
@@ -74,6 +75,7 @@ export default function App() {
             <Route path="/glosowanie/:id" element={<VoteDetails />} />
             <Route path="/tematy/:slug" element={<CategoryDetails />} />
             <Route path="/kategoria/:slug" element={<CategoryDetails />} />
+            <Route path="/kategorie" element={<Categories />} />
             <Route path="/metodologia" element={<DataSources />} />
             <Route path="/open-source" element={<OpenSource />} />
             <Route path="/newsletter" element={<Newsletter />} />

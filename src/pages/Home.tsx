@@ -5,6 +5,7 @@ import SEO from '../components/SEO';
 import TopicOfDay from '../components/TopicOfDay';
 import WeeklyHighlights from '../components/WeeklyHighlights';
 import TopicClusters from '../components/TopicClusters';
+import PersonaSelector from '../components/PersonaSelector';
 
 export default function Home() {
   return (
@@ -54,6 +55,13 @@ export default function Home() {
               </div>
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Persona Selector - "Kompas Obywatelski" */}
+      <section className="py-12 px-4 md:px-8">
+        <div className="container mx-auto max-w-6xl">
+          <PersonaSelector />
         </div>
       </section>
 

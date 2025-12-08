@@ -28,6 +28,7 @@ interface Vote {
     date: string;
     title_clean: string;
     title_raw?: string;
+    title_short?: string;
     category: string;
     verdict: string;
     print_number: string | null;
@@ -38,6 +39,7 @@ interface Vote {
     };
     importance_score?: number;
     is_key_vote?: boolean;
+    persona_tags?: string[];
 }
 
 const CATEGORIES = [
@@ -66,24 +68,25 @@ const VotesList: React.FC = () => {
     // Filters State
     const [searchParams] = useSearchParams();
     const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+    const [personaFilter, setPersonaFilter] = useState(searchParams.get('persona') || '');
     const [categoryFilter, setCategoryFilter] = useState('WSZYSTKIE');
     const [verdictFilter, setVerdictFilter] = useState('WSZYSTKIE');
     const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: '', end: '' });
-    const [sortMode, setSortMode] = useState<'LATEST' | 'IMPORTANT'>('LATEST'); // New State
+    const [sortMode, setSortMode] = useState<'LATEST' | 'IMPORTANT'>(searchParams.get('persona') ? 'IMPORTANT' : 'LATEST');
     const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
     // Debounced Search
     const debouncedSearch = useDebounce((query: string) => {
         setPage(0);
         setSliderPage(0);
-        fetchVotes(query, categoryFilter, verdictFilter, dateRange, sortMode, 0, term);
+        fetchVotes(query, personaFilter, categoryFilter, verdictFilter, dateRange, sortMode, 0, term);
     }, 500);
 
     useEffect(() => {
         // Initial fetch
-        fetchVotes(searchQuery, categoryFilter, verdictFilter, dateRange, sortMode, page, term);
+        fetchVotes(searchQuery, personaFilter, categoryFilter, verdictFilter, dateRange, sortMode, page, term);
         setSliderPage(page); // Sync slider with page
-    }, [page, categoryFilter, verdictFilter, dateRange, sortMode, term]);
+    }, [page, personaFilter, categoryFilter, verdictFilter, dateRange, sortMode, term]);
 
     // Handle Search Input Change
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,6 +97,7 @@ const VotesList: React.FC = () => {
 
     const fetchVotes = async (
         search: string,
+        persona: string,
         category: string,
         verdict: string,
         dates: { start: string; end: string },
@@ -106,8 +110,13 @@ const VotesList: React.FC = () => {
         try {
             let query = supabase
                 .from('votes')
-                .select('id, sitting, voting_number, date, title_clean, title_raw, category, verdict, print_number, details_json, importance_score', { count: 'estimated' })
+                .select('id, sitting, voting_number, date, title_clean, title_raw, title_short, category, verdict, print_number, details_json, importance_score, persona_tags', { count: 'estimated' })
                 .eq('term', termParam); // Filter by term
+
+            // Apply Persona Filter (uses array contains with cs operator)
+            if (persona) {
+                query = query.filter('persona_tags', 'cs', `{${persona}}`);
+            }
 
             // Apply Filters
             if (search) {
@@ -155,17 +164,17 @@ const VotesList: React.FC = () => {
 
     const clearFilters = () => {
         setSearchQuery('');
+        setPersonaFilter('');
         setCategoryFilter('WSZYSTKIE');
         setVerdictFilter('WSZYSTKIE');
         setDateRange({ start: '', end: '' });
         setSortMode('LATEST');
         setPage(0);
         setSliderPage(0);
-        setSliderPage(0);
-        fetchVotes('', 'WSZYSTKIE', 'WSZYSTKIE', { start: '', end: '' }, 'LATEST', 0, term);
+        fetchVotes('', '', 'WSZYSTKIE', 'WSZYSTKIE', { start: '', end: '' }, 'LATEST', 0, term);
     };
 
-    const hasActiveFilters = searchQuery || categoryFilter !== 'WSZYSTKIE' || verdictFilter !== 'WSZYSTKIE' || dateRange.start || dateRange.end;
+    const hasActiveFilters = searchQuery || personaFilter || categoryFilter !== 'WSZYSTKIE' || verdictFilter !== 'WSZYSTKIE' || dateRange.start || dateRange.end;
 
     // Handle Slider Change (Visual Only)
     const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -374,8 +383,11 @@ const VotesList: React.FC = () => {
                                                 {new Date(vote.date).toLocaleDateString('pl-PL')}
                                             </span>
                                         </div>
-                                        <h3 className="text-xl font-serif font-bold text-neutral-900 group-hover:text-blue-600 transition-colors leading-snug mb-2">
-                                            {cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
+                                        <h3
+                                            className="text-xl font-serif font-bold text-neutral-900 group-hover:text-blue-600 transition-colors leading-snug mb-2"
+                                            title={vote.title_clean || vote.title_raw || ''}
+                                        >
+                                            {vote.title_short || cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
                                         </h3>
                                         <p className="text-sm text-neutral-500 font-sans">
                                             Posiedzenie {vote.sitting}, Głosowanie {vote.voting_number}
