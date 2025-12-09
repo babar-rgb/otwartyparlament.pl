@@ -42,6 +42,8 @@ interface ProcessData {
     simple_summary?: string | any;
     who_affected?: string;
     topic_tag?: string;
+    category?: string;     // ADDED
+    ux_category?: string;  // ADDED
     status?: string;
     document_date?: string;
     term?: number;
@@ -318,7 +320,7 @@ export default function LawMap() {
         }
 
         // Map category to topic_tag if missing
-        const topic = process.topic_tag || (process as any).category || 'Ustawa';
+        const topic = (process.category || process.ux_category || process.topic_tag || 'Ustawa');
 
         // Truncate title for node
         const shortTitle = process.title.length > 60
@@ -334,7 +336,7 @@ export default function LawMap() {
                 position: { x: 400, y: 300 },
                 data: {
                     label: shortTitle,
-                    subtitle: process.topic_tag || 'Ustawa'
+                    subtitle: topic
                 },
             },
             // Left: TL;DR
@@ -363,6 +365,7 @@ export default function LawMap() {
                             ? process.description.substring(0, 150) + '...'
                             : process.description)
                         : 'Brak opisu ustawy.',
+                    fullContent: process.description || 'Brak opisu.',
                     icon: 'file',
                     color: 'blue'
                 },
@@ -374,7 +377,8 @@ export default function LawMap() {
                 position: { x: 750, y: 220 },
                 data: {
                     label: 'Kogo dotyczy?',
-                    groups: affectedGroups.slice(0, 4)
+                    groups: affectedGroups.slice(0, 4),
+                    fullGroups: affectedGroups
                 },
             },
             // Right: Topic
@@ -384,7 +388,7 @@ export default function LawMap() {
                 position: { x: 750, y: 380 },
                 data: {
                     label: 'Kategoria',
-                    content: process.topic_tag || 'Nie sklasyfikowano',
+                    content: topic,
                     icon: 'link',
                     color: 'green'
                 },
@@ -545,7 +549,9 @@ export default function LawMap() {
                         {selectedNode.data.content && (
                             <div>
                                 <p className="text-xs font-bold text-slate-500 uppercase mb-1">Treść</p>
-                                <p className="text-slate-300 leading-relaxed">{selectedNode.data.content}</p>
+                                <p className="text-slate-300 leading-relaxed">
+                                    {selectedNode.data.fullContent || selectedNode.data.content}
+                                </p>
                             </div>
                         )}
 
@@ -553,7 +559,7 @@ export default function LawMap() {
                             <div>
                                 <p className="text-xs font-bold text-slate-500 uppercase mb-1">Grupy</p>
                                 <div className="flex flex-wrap gap-2">
-                                    {selectedNode.data.groups.map((g: string, i: number) => (
+                                    {(selectedNode.data.fullGroups || selectedNode.data.groups).map((g: string, i: number) => (
                                         <span key={i} className="px-3 py-1 bg-emerald-500/20 text-emerald-300 rounded-full text-sm">
                                             {g}
                                         </span>

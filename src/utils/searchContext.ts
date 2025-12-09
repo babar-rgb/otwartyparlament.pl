@@ -96,16 +96,34 @@ export const CATEGORY_SUGGESTIONS: Record<string, string[]> = {
     'wybory': ['wybory'],
 };
 
+import { flattenSemanticMatrix } from './semanticMatrix';
+
+// Generate Matrix Map once
+const MATRIX_MAP = flattenSemanticMatrix();
+
+/**
+ * Get all available search terms for Fuzzy Matching (Fuse.js)
+ */
+export function getAllSearchTerms(): string[] {
+    const combined = { ...CONTEXT_MAP, ...EXPANDED_CONTEXT_MAP, ...MATRIX_MAP };
+    return Object.keys(combined);
+}
+
 /**
  * Expand a search query with related terms
- * Uses both base CONTEXT_MAP and EXPANDED_CONTEXT_MAP for 200+ mappings
+ * Uses both base CONTEXT_MAP, EXPANDED_CONTEXT_MAP and new MATRIX mappings
  */
 export function expandSearchQuery(query: string): string[] {
-    const words = query.toLowerCase().trim().split(/\s+/);
+    const fullQuery = query.toLowerCase().trim();
+    const words = fullQuery.split(/\s+/);
     const expanded = new Set<string>(words);
 
-    // Import expanded map dynamically
-    const COMBINED_MAP = { ...CONTEXT_MAP, ...EXPANDED_CONTEXT_MAP };
+    const COMBINED_MAP = { ...CONTEXT_MAP, ...EXPANDED_CONTEXT_MAP, ...MATRIX_MAP };
+
+    // 1. Check full phrase (e.g. "polski ład", "in vitro")
+    if (COMBINED_MAP[fullQuery]) {
+        COMBINED_MAP[fullQuery].forEach(term => expanded.add(term));
+    }
 
     for (const word of words) {
         // Check direct mapping

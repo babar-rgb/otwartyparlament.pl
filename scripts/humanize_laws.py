@@ -34,8 +34,7 @@ def get_processes_without_summary():
     """Get processes that need summaries (including those with short/no description)"""
     output = run_sql("""
     SELECT id, title, COALESCE(description, ''), category
-    FROM processes 
-    WHERE simple_summary IS NULL;
+    FROM processes;
     """, return_output=True)
     
     if not output:
@@ -87,19 +86,29 @@ def generate_simple_summary(title, description, category):
         "krus": "Rolnicy",
         "rolnik": "Rolnicy",
         "rolnic": "Rolnicy",
+        "gospodarstw": "Rolnicy",
         "student": "Studenci",
-        "ucz": "Uczniowie i rodzice",
+        "uczelni": "Studenci i naukowcy",
+        "szkoł": "Uczniowie i nauczyciele",
         "nauczy": "Nauczyciele",
         "lekar": "Lekarze",
         "pielęgni": "Pielęgniarki",
         "pacjent": "Pacjenci",
         "nfz": "Pacjenci",
+        "szpital": "Pacjenci i szpitale",
         "zdrow": "Pacjenci i służba zdrowia",
+        "farmaceu": "Farmaceuci",
+        "lekami": "Pacjenci",
+        "leków": "Pacjenci",
         "podatk": "Podatnicy",
+        "pit": "Podatnicy",
+        "cit": "Firmy",
         "vat": "Przedsiębiorcy",
         "akcyz": "Konsumenci",
         "przedsiębior": "Przedsiębiorcy",
+        "gospodarcz": "Przedsiębiorcy",
         "firm": "Firmy",
+        "biznes": "Firmy",
         "praco": "Pracownicy",
         "pracodaw": "Pracodawcy",
         "rent": "Renciści",
@@ -107,20 +116,80 @@ def generate_simple_summary(title, description, category):
         "senior": "Seniorzy",
         "rodzin": "Rodziny",
         "dziec": "Rodzice i dzieci",
-        "wojsk": "Wojskowi",
+        "wychow": "Rodzice i dzieci",
+        "wojsk": "Żołnierze",
         "żołnierz": "Żołnierze",
+        "obron": "Siły Zbrojne RP",
         "policj": "Policjanci",
-        "straż": "Strażacy",
+        "straż": "Służby mundurowe",
+        "służb": "Służby mundurowe",
         "górni": "Górnicy",
         "kierow": "Kierowcy",
+        "drog": "Kierowcy",
+        "transport": "Firmy transportowe",
+        "pasażer": "Pasażerowie",
+        "kolej": "Pasażerowie kolei",
         "komunal": "Mieszkańcy miast",
         "gmina": "Samorządy",
         "samorząd": "Samorządy",
+        "wójt": "Samorządy",
+        "powiat": "Samorządy",
+        "wojewódz": "Samorządy",
+        "wybor": "Wyborcy",
+        "głosow": "Wyborcy",
+        "kobi": "Kobiety",
+        "cudzoziem": "Cudzoziemcy",
+        "uchodź": "Uchodźcy",
+        "konsument": "Konsumenci",
+        "bank": "Klienci banków",
+        "kredyt": "Kredytobiorcy",
+        "energi": "Odbiorcy energii",
+        "prąd": "Odbiorcy energii",
+        "ciepł": "Odbiorcy ciepła",
+        "gaz": "Odbiorcy gazu",
+        "klimat": "Wszyscy obywatele",
+        "środowisk": "Wszyscy obywatele",
+        "odpad": "Mieszkańcy",
+        "cyber": "Użytkownicy internetu",
+        "cyfr": "Użytkownicy systemów cyfrowych",
+        "internet": "Internauci",
+        "danych osob": "Administratorzy danych",
+        "rodo": "Administratorzy danych",
+        "sąd": "Strony postępowań sądowych",
+        "prokura": "Prokuratorzy",
+        "sędzi": "Sędziowie",
+        "budownict": "Inwestorzy budowlani",
+        "mieszkań": "Nabywcy mieszkań",
+        "lokator": "Lokatorzy",
     }
     
     for keyword, group in affected_mapping.items():
-        if keyword in combined and group not in who_affected:
+        # Use Regex to match start of word (avoid 'lek' in 'elektrownia')
+        # matches: " lek...", "Nature-lek...", "Startlek..."
+        if re.search(r'(^|\W)' + re.escape(keyword), combined) and group not in who_affected:
             who_affected.append(group)
+    
+    # Category based defaults (if no specific group found OR to augment)
+    if "OBRONNOŚĆ" in category:
+        if "Siły Zbrojne RP" not in who_affected: who_affected.append("Siły Zbrojne RP")
+        if "Wszyscy obywatele" not in who_affected: who_affected.append("Wszyscy obywatele")
+    elif "ZDROWIE" in category and not who_affected:
+        who_affected.extend(["Pacjenci", "Służba zdrowia"])
+    elif "EDUKACJA" in category and not who_affected:
+        who_affected.extend(["Uczniowie", "Nauczyciele"])
+    elif "ROLNICTWO" in category and not who_affected:
+        who_affected.append("Rolnicy")
+    elif "GOSPODARKA" in category and not who_affected:
+        who_affected.append("Przedsiębiorcy")
+    elif "ENERGETYKA" in category and not who_affected:
+        who_affected.extend(["Odbiorcy energii", "Przemysł"])
+    elif "INFRASTRUKTURA" in category and not who_affected:
+        who_affected.append("Podróżni i Kierowcy")
+    elif "CYFRYZACJA" in category or "cyber" in combined:
+        if "Użytkownicy systemów cyfrowych" not in who_affected: who_affected.insert(0, "Instytucje i Firmy (Cyberbezpieczeństwo)")
+
+    # Deduplicate
+    who_affected = list(dict.fromkeys(who_affected))
     
     if not who_affected:
         who_affected = ["Różne grupy obywateli"]

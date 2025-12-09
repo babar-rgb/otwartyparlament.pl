@@ -422,12 +422,18 @@ def update_existing_categories():
                 continue
                 
             title_clean = clean_title(title_raw)
-            new_category = classify_vote(title_clean)
+            if ml_engine:
+                new_category = ml_engine.predict_topic(title_clean)
+            else:
+                new_category = classify_vote(title_clean) # Fallback
             
             # Update if category is different or missing
-            if vote.get('category') != new_category:
+            if vote.get('category') != new_category or vote.get('topic_tag') != new_category:
                 print(f"Updating Vote {vote['id']}: {new_category}")
-                supabase.table('votes').update({'category': new_category}).eq('id', vote['id']).execute()
+                supabase.table('votes').update({
+                    'category': new_category,
+                    'topic_tag': new_category
+                }).eq('id', vote['id']).execute()
                 updated_count += 1
                 
         print(f"Done. Updated {updated_count} votes.")

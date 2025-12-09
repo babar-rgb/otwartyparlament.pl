@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Search, User, FileText, ArrowRight, CheckCircle2, XCircle, MessageSquare, BookOpen, Zap } from 'lucide-react';
+import { Search, User, FileText, ArrowRight, MessageSquare, BookOpen, Zap } from 'lucide-react';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import MpCard from '../components/MpCard';
 import { MP } from '../api';
@@ -32,8 +32,10 @@ const SearchPage: React.FC = () => {
 
     const performSearch = async (searchQuery: string) => {
         setLoading(true);
+        const expanded = searchParams.get('expanded');
+
         try {
-            // 1. Search MPs (Always separate)
+            // 1. Search MPs (Always separate, keep simple fuzzy)
             const { data: mpsData } = await supabase
                 .from('mps')
                 .select('*')
@@ -56,10 +58,44 @@ const SearchPage: React.FC = () => {
             }
 
             // 2. Unified Semantic Search
-            const { data: searchData, error } = await supabase
+            let queryBuilder = supabase
                 .from('view_search_all')
-                .select('*')
-                .ilike('title', `%${searchQuery}%`)
+                .select('*');
+
+            if (expanded) {
+                // Semantic Search: Use expanded terms with OR logic + Heuristic Stemming
+                // Polish morphology often changes the last 1-2 letters.
+                // Rule: If word > 4 chars, trim last char and add :* prefix match.
+                // Else just add :*
+                const semanticQuery = expanded.split(',')
+                    .map(s => {
+                        // Split multi-word phrases (e.g. "ceny w sklepach")
+                        const parts = s.trim().toLowerCase().split(/\s+/);
+
+                        const processedParts = parts.map(word => {
+                            // Heuristic stemming for each word
+                            if (word.length > 4) {
+                                return word.slice(0, -1) + ':*';
+                            }
+                            return word + ':*';
+                        });
+
+                        // Join with phrase operator <-> and wrap in parens if multi-word
+                        if (processedParts.length > 1) {
+                            return `(${processedParts.join(' <-> ')})`;
+                        }
+                        return processedParts[0];
+                    })
+                    .join(' | ');
+
+                console.log("Semantic Query:", semanticQuery);
+                queryBuilder = queryBuilder.textSearch('title', semanticQuery, { config: 'simple' });
+            } else {
+                // Standard Search: Websearch (handles quotes, minus, etc.)
+                queryBuilder = queryBuilder.textSearch('title', searchQuery, { type: 'websearch', config: 'simple' });
+            }
+
+            const { data: searchData, error } = await queryBuilder
                 .order('relevance', { ascending: false })
                 .limit(30);
 

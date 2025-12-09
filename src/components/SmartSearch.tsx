@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Sparkles, ChevronRight, TrendingUp, X, Lightbulb } from 'lucide-react';
-import { expandSearchQuery, getCategorySuggestions, CONTEXT_MAP } from '../utils/searchContext';
+import Fuse from 'fuse.js';
+import { expandSearchQuery, getCategorySuggestions, CONTEXT_MAP, getAllSearchTerms } from '../utils/searchContext';
 
 interface SmartSearchProps {
     initialQuery?: string;
@@ -32,7 +33,23 @@ export default function SmartSearch({
     const [isFocused, setIsFocused] = useState(false);
     const [showExamples, setShowExamples] = useState(false);
 
-    // Debounced context expansion
+    // Fuzzy Search State
+    const [fuse, setFuse] = useState<Fuse<string> | null>(null);
+    const [suggestion, setSuggestion] = useState<string | null>(null);
+
+    // Initialize Fuse
+    useEffect(() => {
+        const terms = getAllSearchTerms();
+        const fuseInstance = new Fuse(terms, {
+            includeScore: true,
+            threshold: 0.4, // Increased to catch "budzer" -> "budżet" (2 typos)
+            distance: 100,
+            minMatchCharLength: 3
+        });
+        setFuse(fuseInstance);
+    }, []);
+
+    // Debounced context expansion & Fuzzy matches
     useEffect(() => {
         if (query.length >= 2) {
             const terms = expandSearchQuery(query);
@@ -43,21 +60,36 @@ export default function SmartSearch({
 
             const cats = getCategorySuggestions(query);
             setCategorySuggestions(cats);
+
+            // Check for typos if no expansion found
+            if (addedTerms.length === 0 && fuse) {
+                const results = fuse.search(query);
+                if (results.length > 0 && results[0].score && results[0].score < 0.3 && results[0].item !== query.toLowerCase()) {
+                    setSuggestion(results[0].item);
+                } else {
+                    setSuggestion(null);
+                }
+            } else {
+                setSuggestion(null);
+            }
+
         } else {
             setExpandedTerms([]);
             setCategorySuggestions([]);
+            setSuggestion(null);
         }
-    }, [query]);
+    }, [query, fuse]);
 
-    const handleSearch = useCallback(() => {
-        if (!query.trim()) return;
+    const handleSearch = useCallback((overrideQuery?: string) => {
+        const q = overrideQuery || query;
+        if (!q.trim()) return;
 
         if (onSearch) {
-            onSearch(query, expandedTerms);
+            onSearch(q, expandedTerms);
         } else {
             // Navigate to search page with expanded query
-            const allTerms = expandSearchQuery(query);
-            navigate(`/szukaj?q=${encodeURIComponent(query)}&expanded=${encodeURIComponent(allTerms.join(','))}`);
+            const allTerms = expandSearchQuery(q);
+            navigate(`/szukaj?q=${encodeURIComponent(q)}&expanded=${encodeURIComponent(allTerms.join(','))}`);
         }
     }, [query, expandedTerms, onSearch, navigate]);
 
@@ -70,6 +102,13 @@ export default function SmartSearch({
     const handleExampleClick = (example: string) => {
         setQuery(example);
         setShowExamples(false);
+    };
+
+    const applySuggestion = () => {
+        if (suggestion) {
+            setQuery(suggestion);
+            handleSearch(suggestion);
+        }
     };
 
     const isSmall = size === 'small';
@@ -130,7 +169,7 @@ export default function SmartSearch({
                     )}
 
                     <button
-                        onClick={handleSearch}
+                        onClick={() => handleSearch()}
                         className={`
               flex items-center gap-2
               ${isSmall ? 'px-4 py-2 text-sm' : 'px-6 py-3'}
@@ -144,6 +183,21 @@ export default function SmartSearch({
                         <span className={isSmall ? 'hidden sm:inline' : ''}>Szukaj</span>
                     </button>
                 </div>
+
+                {/* DID YOU MEAN - Typo Suggestion */}
+                {suggestion && !expandedTerms.length && (
+                    <div className="absolute top-full left-0 mt-2 px-4 py-2 bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm rounded-lg border border-amber-200 dark:border-amber-900/50 shadow-sm flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400 z-10 animate-fade-in-up">
+                        <Search size={14} className="text-amber-500" />
+                        <span>Czy chodziło Ci o:</span>
+                        <button
+                            onClick={applySuggestion}
+                            className="font-bold text-amber-600 hover:underline cursor-pointer"
+                        >
+                            {suggestion}?
+                        </button>
+                    </div>
+                )}
+
 
                 {/* Expanded Context Terms */}
                 {expandedTerms.length > 0 && isFocused && (

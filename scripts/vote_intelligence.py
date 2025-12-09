@@ -141,25 +141,36 @@ class VoteAnalyzer:
 
     def predict_topic(self, text: str) -> str:
         """
-        FILAR 4: THEMATIC (Unsupervised or Keyword fallback)
+        FILAR 4: THEMATIC (Keyword Scoring based on map)
         """
         text = text.lower()
         
-        # Fallback Keywords (if no ML model trained)
-        if 'zdrow' in text or 'lecznict' in text or 'szpital' in text or 'lekars' in text:
-            return 'Zdrowie'
-        if 'sąd' in text or 'trybunał' in text or 'wymiar sprawiedliwości' in text:
-             return 'Sądownictwo'
-        if 'finans' in text or 'budżet' in text or 'vat' in text or 'podat' in text or 'składk' in text:
-            return 'Ekonomia'
-        if 'roln' in text or 'wsi' in text or 'pasz' in text:
-            return 'Rolnictwo'
-        if 'szkoł' in text or 'nauczyciel' in text or 'edukacj' in text:
-            return 'Edukacja'
-        if 'obron' in text or 'wojsk' in text or 'armi' in text:
-            return 'Obronność'
-        if 'unii' in text or 'europejs' in text:
-            return 'Sprawy Zagraniczne'
+        # Import here to avoid circular dependency if mapped differently later
+        try:
+            from keyword_map import CATEGORY_KEYWORDS
+        except ImportError:
+            # Fallback tiny map if file missing
+            return 'Inne'
+
+        scores = {category: 0 for category in CATEGORY_KEYWORDS.keys()}
+        
+        # Scoring Logic
+        for category, keywords in CATEGORY_KEYWORDS.items():
+            for keyword in keywords:
+                # Use word boundary check for short keywords if needed, 
+                # but for now substring match + scoring is effective.
+                if keyword in text:
+                    scores[category] += 1
+                    
+                    # Boost for explicit "ustawa o [keyword]"
+                    if f"ustawy o {keyword}" in text or f"ustawa o {keyword}" in text:
+                        scores[category] += 3
+
+        # Find best category
+        best_category = max(scores, key=scores.get)
+        
+        if scores[best_category] > 0:
+            return best_category
         
         return 'Inne'
 
