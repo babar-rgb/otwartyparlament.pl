@@ -12,6 +12,9 @@ interface EuroMP {
     eu_group: string;
     photo_url: string;
     active: boolean;
+    rebellion_rate?: number;
+    attendance_score?: number;
+    total_votes?: number;
 }
 
 interface EuroVoteHistoryItem {
@@ -23,6 +26,7 @@ interface EuroVoteHistoryItem {
         votes_for: number;
         votes_against: number;
         votes_abstain: number;
+        topic_tag?: string;
     };
 }
 
@@ -51,10 +55,11 @@ const EuroMPProfile = () => {
                 if (mpData && mpData.api_id) {
                     const { data: historyData, error: historyError } = await supabase
                         .from('euro_vote_results')
-                        .select('vote, euro_votes(id, title, date, votes_for, votes_against, votes_abstain)')
+                        .select('vote, euro_votes(id, title, date, votes_for, votes_against, votes_abstain, topic_tag)')
                         .eq('mep_id', mpData.api_id)
                         .order('created_at', { ascending: false }) // OR order by date in join?
-                        .limit(20);
+                        .limit(50); // Increased limit for better context (or keep 20)
+
 
                     if (!historyError && historyData) {
                         // sort by date client side if needed, or trust created_at for now
@@ -175,6 +180,46 @@ const EuroMPProfile = () => {
                 </div>
             </div>
 
+            {/* SECTION B: Key Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Attendance */}
+                <div className="bg-white dark:bg-[#0f0c29] rounded-xl border border-neutral-200 dark:border-indigo-900/50 p-6 shadow-sm">
+                    <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Frekwencja</p>
+                    <div className="flex items-end gap-2">
+                        <span className={`text-4xl font-black ${(mp.attendance_score || 0) >= 90 ? 'text-green-600 dark:text-green-400' :
+                            (mp.attendance_score || 0) >= 75 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
+                            }`}>
+                            {mp.attendance_score ? mp.attendance_score.toFixed(1) : "0"}%
+                        </span>
+                    </div>
+                    <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 mt-4 rounded-full overflow-hidden">
+                        <div className="h-full bg-current transition-all duration-1000" style={{ width: `${mp.attendance_score || 0}%`, color: (mp.attendance_score || 0) >= 90 ? '#16a34a' : '#ca8a04' }} />
+                    </div>
+                </div>
+
+                {/* Rebellion */}
+                <div className="bg-white dark:bg-[#0f0c29] rounded-xl border border-neutral-200 dark:border-indigo-900/50 p-6 shadow-sm">
+                    <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Buntownik (Rebellion Rate)</p>
+                    <div className="flex items-end gap-2">
+                        <span className={`text-4xl font-black ${(mp.rebellion_rate || 0) <= 5 ? 'text-green-600 dark:text-green-400' :
+                            (mp.rebellion_rate || 0) <= 15 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
+                            }`}>
+                            {mp.rebellion_rate ? mp.rebellion_rate.toFixed(1) : "0"}%
+                        </span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-2">Głosów niezgodnych z linią frakcji (delegacji PL).</p>
+                </div>
+
+                {/* Total Votes */}
+                <div className="bg-white dark:bg-[#0f0c29] rounded-xl border border-neutral-200 dark:border-indigo-900/50 p-6 shadow-sm">
+                    <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Wszystkich Głosów</p>
+                    <p className="text-4xl font-black text-slate-900 dark:text-white">
+                        {mp.total_votes || 0}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-2">Wliczając nieobecności</p>
+                </div>
+            </div>
+
             {/* SECTION D: Voting History Timeline */}
             <div className="bg-white dark:bg-[#0f0c29] rounded-xl border border-neutral-200 dark:border-indigo-900/50 p-8 shadow-sm">
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
@@ -186,8 +231,13 @@ const EuroMPProfile = () => {
                         {voteHistory.map((item, index) => (
                             <div key={index} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 py-4 border-b border-slate-100 dark:border-indigo-900/30 last:border-0 hover:bg-slate-50 dark:hover:bg-indigo-900/10 transition-colors rounded-lg px-2">
                                 <div className="flex-1">
-                                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-                                        {item.euro_votes?.date || 'Data nieznana'}
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-xs text-slate-500 dark:text-slate-400">{item.euro_votes?.date || 'Data nieznana'}</span>
+                                        {item.euro_votes?.topic_tag && (
+                                            <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-blue-100/50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                                {item.euro_votes.topic_tag}
+                                            </span>
+                                        )}
                                     </div>
                                     <span className="text-slate-900 dark:text-white font-medium line-clamp-2">
                                         {item.euro_votes?.title || 'Głosowanie bez tytułu'}
@@ -197,9 +247,9 @@ const EuroMPProfile = () => {
                                 <div className="flex items-center gap-4">
                                     {/* MP Vote */}
                                     <div className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm uppercase tracking-wide w-fit border ${item.vote === 'For' ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800' :
-                                            item.vote === 'Against' ? 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800' :
-                                                item.vote === 'Abstain' ? 'bg-neutral-100 text-neutral-800 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700' :
-                                                    'bg-slate-100 text-slate-500 border-slate-200'
+                                        item.vote === 'Against' ? 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800' :
+                                            item.vote === 'Abstain' ? 'bg-neutral-100 text-neutral-800 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700' :
+                                                'bg-slate-100 text-slate-500 border-slate-200'
                                         }`}>
                                         {item.vote === 'For' && <CheckCircle2 size={16} />}
                                         {item.vote === 'Against' && <XCircle size={16} />}

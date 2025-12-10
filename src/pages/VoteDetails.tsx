@@ -47,7 +47,7 @@ interface PartyStats {
 }
 
 const VoteDetails: React.FC = () => {
-    const { term, sitting, votingNumber } = useParams();
+    const { term, sitting, votingNumber, id } = useParams();
     const [vote, setVote] = useState<VoteDetail | null>(null);
     const [results, setResults] = useState<VoteResult[]>([]);
     const [partyStats, setPartyStats] = useState<Record<string, PartyStats>>({});
@@ -57,23 +57,31 @@ const VoteDetails: React.FC = () => {
     const [linkedProcessId, setLinkedProcessId] = useState<string | null>(null);
 
     useEffect(() => {
-        if (sitting && votingNumber) {
+        if (id || (sitting && votingNumber)) {
             fetchVoteDetails();
+        } else {
+            console.warn("Invalid parameters for VoteDetails");
+            setLoading(false);
         }
-    }, [sitting, votingNumber, term]);
+    }, [id, sitting, votingNumber, term]);
 
     const fetchVoteDetails = async () => {
         setLoading(true);
         const termId = term ? parseInt(term) : 10;
         try {
             // 1. Fetch Vote Metadata
-            const { data: voteData, error: voteError } = await supabase
-                .from('votes')
-                .select('*')
-                .eq('sitting', sitting)
-                .eq('voting_number', votingNumber)
-                .eq('term', termId)
-                .single();
+            let query = supabase.from('votes').select('*');
+
+            if (id) {
+                query = query.eq('id', id);
+            } else {
+                query = query
+                    .eq('sitting', sitting)
+                    .eq('voting_number', votingNumber)
+                    .eq('term', termId);
+            }
+
+            const { data: voteData, error: voteError } = await query.single();
 
             if (voteError) throw voteError;
             setVote(voteData);

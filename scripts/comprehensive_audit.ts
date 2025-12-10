@@ -87,7 +87,7 @@ async function runAudit() {
             // console.log(`   [SQL] TSQuery: ${semanticQuery.substring(0, 50)}...`);
 
             const { data, error, count } = await supabase
-                .from('processes')
+                .from('view_search_all')
                 .select('title', { count: 'exact' })
                 .textSearch('title', semanticQuery, { config: 'simple' })
                 .limit(3);

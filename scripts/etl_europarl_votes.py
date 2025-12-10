@@ -1,557 +1,239 @@
 import requests
-import json
+import xml.etree.ElementTree as ET
 import os
-import time
-import concurrent.futures
-from datetime import datetime
-from supabase import create_client, Client
-from dotenv import load_dotenv
-import google.generativeai as genai
+import psycopg2
+from psycopg2.extras import execute_values
+from datetime import datetime, timedelta
+from etl_eu_logger import Logger, RateLimiter
 
-# Env Loading
-load_dotenv()
-# Fallback to manual if needed (legacy safeguard)
-if not os.environ.get("VITE_SUPABASE_URL"):
-    try:
-        with open('.env') as f:
-            for line in f:
-                if '=' in line and not line.startswith('#'):
-                    k, v = line.strip().split('=', 1)
-                    os.environ[k] = v.strip().strip('"').strip("'")
-    except: pass
+# CONFIG
+DB_CONFIG = {
+    "dbname": "otwarty_parlament",
+    "user": "kajtek",
+    "password": "",
+    "host": "localhost",
+    "port": 5432
+}
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL") or os.environ.get("VITE_SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("VITE_SUPABASE_ANON_KEY")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+# TERM DATES
+TERM_10_START = datetime(2024, 7, 16)
+START_DATE = datetime(2024, 1, 1) 
+END_DATE = datetime.now()
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    print("CRITICAL: Missing Supabase Credentials")
-    exit(1)
-
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-else:
-    print("WARNING: GEMINI_API_KEY missing. AI scoring will be skipped.")
-
-# Constants
-TARGET_YEARS = [2024, 2023, 2022, 2021, 2020, 2019]
-TERM_10_START = "2024-07-16"
-
-# Global Set of Polish MEPs
+rate_limiter = RateLimiter(min_delay=0.5)
 POLISH_MEP_IDS = set()
 
-def get_polish_mep_ids():
-    print("Fetching Polish MEPs from DB...")
-    # Fetch ALL (Term 9 and 10 ideally, currently likely just Term 10 in DB)
-    # Ideally should fetch historic MEPs too, but for filtering we take what we have.
-    response = supabase.table('euro_meps').select('api_id').execute()
-    ids = set()
-    for row in response.data:
-        ids.add(row['api_id'])
-    print(f"Loaded {len(ids)} Polish MEP IDs.")
-    return ids
-
-def fetch_details(url):
-    """Fetches JSON-LD details from a given URL with retries."""
-    for attempt in range(3):
-        try:
-            r = requests.get(url, headers={'Accept': 'application/ld+json'}, timeout=45)
-            if r.status_code == 200:
-                try:
-                    return r.json()
-                except ValueError:
-                    return None
-            elif r.status_code == 404:
-                return None
-            else:
-                time.sleep(1)
-        except Exception:
-            time.sleep(1)
-    return None
-
-def determine_term(date_str):
-    """Returns 9 or 10 based on date cutoff (2024-07-16)."""
-    if not date_str: return 10 # Default
+def get_db_connection():
     try:
-        if date_str >= TERM_10_START:
-            return 10
-        return 9
-    except:
-        return 10
+        conn = psycopg2.connect(**DB_CONFIG)
+        conn.autocommit = False # We manage transactions
+        return conn
+    except Exception as e:
+        Logger.error("DB", "Connection Failed", e)
+        exit(1)
 
-def calculate_importance(title, votes_for, votes_against):
-    """
-    Calculates importance score (0-100) and is_key_vote status.
-    """
-    title_lower = title.lower()
-    
-    # 1. Negative Keywords (Noise Filter)
-    exclude_terms = ["składu komisji", "porządku dziennego", "upamiętnienia", "patrona", "sekretarza", "sprawozdanie z działalności", "mianowania", "uchylenie immunitetu"]
-    if any(term in title_lower for term in exclude_terms):
-        return 0, False
-
-    # 2. Controversy Score (Math)
-    total_votes = votes_for + votes_against
-    if total_votes < 10:
-        return 10, False 
-        
-    diff = abs(votes_for - votes_against)
-    ratio = diff / total_votes 
-    
-    # Invert so 1 = Split, 0 = Unanimous
-    controversy_factor = 1.0 - ratio 
-    math_score = int(controversy_factor * 100)
-    
-    # 3. AI Filter
-    ai_score = 0
-    is_hot = False
-    
-    if GEMINI_API_KEY and math_score > 30: 
-        try:
-            model = genai.GenerativeModel('gemini-pro')
-            prompt = f"""
-            Rate the social impact of this European Parliament vote on a scale of 0-100. Is it a 'Hot Topic' in Poland or Europe?
-            Title: "{title}"
-            Return JSON only: {{ "score": number, "is_hot": boolean }}
-            """
-            response = model.generate_content(prompt)
-            text = response.text.strip()
-            if text.startswith("```"): text = text.split("```")[1].replace("json", "").strip()
-            
-            data = json.loads(text)
-            ai_score = data.get("score", 0)
-            is_hot = data.get("is_hot", False)
-        except Exception as e:
-            pass
-            
-    final_score = max(math_score, ai_score)
-    if is_hot: final_score = max(final_score, 85)
-    is_key = final_score >= 75
-    return final_score, is_key
-
-def process_vote_result(vote_id, vote_uri):
-    # 1. Fetch Details
-    url = f"https://data.europarl.europa.eu/eli/dl/event/{vote_id}?format=application%2Fld%2Bjson"
-    data_env = fetch_details(url)
-    
-    if not data_env or 'data' not in data_env or not data_env['data']:
-        return
-
-    vote_data = data_env['data'][0]
-    
-    # Extract Metadata
-    title = "Głosowanie"
-    ref_text = vote_data.get('referenceText', {})
-    if isinstance(ref_text, dict):
-        title = ref_text.get('pl') or ref_text.get('en') or title
-    
-    if title == "Głosowanie":
-        label = vote_data.get('label', {})
-        if isinstance(label, dict):
-            title = label.get('pl') or label.get('en') or title
-            
-    if isinstance(title, list): title = title[0]
-            
-    # Date
-    date_str = vote_data.get('activity_date')
-    if not date_str:
-        parts = vote_id.split('-')
-        if len(parts) >= 5:
-            try:
-                date_str = f"{parts[2]}-{parts[3]}-{parts[4]}"
+def get_polish_mep_ids(conn):
+    Logger.info("DB", "Fetching Polish MEPs...")
+    try:
+        cur = conn.cursor()
+        # Ensure column name is correct (api_id). Check if it's string or int in DB?
+        # Assuming integer compatible or casting.
+        cur.execute("SELECT api_id FROM euro_meps WHERE api_id IS NOT NULL")
+        rows = cur.fetchall()
+        # api_id in DB is text? casting to int for XML matching
+        ids = set()
+        for r in rows:
+            try: ids.add(int(r[0]))
             except: pass
-            
-    if not date_str:
-        date_str = datetime.now().strftime("%Y-%m-%d")
+        
+        Logger.success("DB", f"Loaded {len(ids)} Polish MEP IDs")
+        cur.close()
+        return ids
+    except Exception as e:
+        Logger.error("DB", "Failed to fetch MEPs", e)
+        return set()
 
-    # TERM Logic
-    term = determine_term(date_str)
+def determine_term(date_obj):
+    if date_obj >= TERM_10_START: return 10
+    return 9
 
-    # Counts
-    votes_for = int(vote_data.get('number_of_votes_favor', 0))
-    votes_against = int(vote_data.get('number_of_votes_against', 0))
-    votes_abstain = int(vote_data.get('number_of_votes_abstention', 0))
+def generate_date_range(start, end):
+    delta = end - start
+    for i in range(delta.days + 1):
+        yield start + timedelta(days=i)
 
-    # CALCULATE IMPORTANCE
-    importance_score, is_key_vote = calculate_importance(str(title), votes_for, votes_against)
+def fetch_xml(url):
+    rate_limiter.wait()
+    try:
+        r = requests.get(url, timeout=30)
+        if r.status_code == 200:
+            return r.content
+        return None
+    except Exception as e:
+        Logger.warning("Net", f"Error fetching {url}: {e}")
+        return None
 
-    # UPSERT Vote
-    vote_record = {
-        "id": vote_id,
-        "title": str(title)[:500],
-        "date": date_str,
-        "votes_for": votes_for,
-        "votes_against": votes_against,
-        "votes_abstain": votes_abstain,
-        "importance_score": importance_score,
-        "is_key_vote": is_key_vote,
-        "term": term
-    }
+def parse_votes_from_xml(xml_content, date_str, term):
+    valid_votes = []
     
     try:
-        supabase.table('euro_votes').upsert(vote_record).execute()
-        if is_key_vote:
-            print(f"  🔥 KEY VOTE Found (Term {term}): {title[:50]}... (Score: {importance_score})")
+        root = ET.fromstring(xml_content)
+        # Namespace agnostic
+        for vote_elem in root.findall(".//RollCallVote.Result"):
+            vid = vote_elem.get("Identifier")
+            if not vid: continue
+            
+            # Using XML identifier directly
+            
+            desc_tag = vote_elem.find("RollCallVote.Description.Text")
+            title = desc_tag.text if desc_tag is not None else "No Description"
+            title = (title or "")[:1000]
+            
+            def process_block(tag_name, vote_type):
+                count = 0
+                results = []
+                block = vote_elem.find(tag_name)
+                if block is not None:
+                     count = int(block.get("Number", 0))
+                     for mem in block.findall(".//PoliticalGroup.Member.Name"):
+                         mep_id = mem.get("PersId") # Use PersId to match DB api_id
+                         if mep_id:
+                             try:
+                                 mep_id_int = int(mep_id)
+                                 if mep_id_int in POLISH_MEP_IDS:
+                                     results.append({
+                                         "vote_id": vid,
+                                         "mep_id": mep_id_int, # Assuming DB stores API ID as int or mapped
+                                         "vote": vote_type
+                                     })
+                             except: pass
+                return count, results
+
+            votes_for, r_for = process_block("Result.For", "For")
+            votes_against, r_against = process_block("Result.Against", "Against")
+            votes_abstain, r_abstain = process_block("Result.Abstention", "Abstain")
+            
+            all_results = r_for + r_against + r_abstain
+            
+            importance_score = 0
+            total = votes_for + votes_against + votes_abstain
+            if total > 50:
+                ratio = abs(votes_for - votes_against) / total
+                importance_score = int((1 - ratio) * 100)
+            
+            vote_record = (
+                vid, title, date_str, 
+                votes_for, votes_against, votes_abstain, 
+                importance_score, importance_score > 60, term
+            )
+            
+            valid_votes.append((vote_record, all_results))
+            
     except Exception as e:
-        # Fallback (legacy schema support if partial)
-        if 'column' in str(e):
-             del vote_record['term']
-             try: supabase.table('euro_votes').upsert(vote_record).execute()
-             except: pass
-        return
-
-    # Process Individual Voters (Polish Only)
-    results_to_insert = []
-    
-    def extract_id(person_str):
-        if not person_str: return None
-        try:
-            return int(person_str.split('/')[-1])
-        except: return None
-
-    def get_list(obj, key):
-        val = obj.get(key, [])
-        if isinstance(val, list): return val
-        return [val]
-
-    for p_str in get_list(vote_data, 'had_voter_favor'):
-        pid = extract_id(p_str)
-        if pid in POLISH_MEP_IDS: results_to_insert.append({"vote_id": vote_id, "mep_id": pid, "vote": "For"})
-            
-    for p_str in get_list(vote_data, 'had_voter_against'):
-        pid = extract_id(p_str)
-        if pid in POLISH_MEP_IDS: results_to_insert.append({"vote_id": vote_id, "mep_id": pid, "vote": "Against"})
-            
-    for p_str in get_list(vote_data, 'had_voter_abstain'):
-        pid = extract_id(p_str)
-        if pid in POLISH_MEP_IDS: results_to_insert.append({"vote_id": vote_id, "mep_id": pid, "vote": "Abstain"})
-
-    if results_to_insert:
-        try:
-            supabase.table('euro_vote_results').delete().eq('vote_id', vote_id).execute()
-            supabase.table('euro_vote_results').insert(results_to_insert).execute()
-        except Exception as e:
-            pass
-
-def process_session(session):
-    sid = session.get('id')
-    clean_sid = sid.split('/')[-1]
-    
-    detail_url = f"https://data.europarl.europa.eu/api/v1/meetings/{clean_sid}?format=application%2Fld%2Bjson"
-    s_data = fetch_details(detail_url)
-    
-    if not s_data or 'data' not in s_data or not s_data['data']:
-        return
-
-    session_obj = s_data['data'][0]
-    
-    activities = session_obj.get('consists_of') or session_obj.get('consistsOf') or session_obj.get('hasPart') or []
-    if not isinstance(activities, list): activities = [activities]
-    
-    for act in activities:
-        if isinstance(act, str): continue
-        if not isinstance(act, dict): continue
-
-        sub_items = act.get('consists_of') or act.get('consistsOf') or []
-        if isinstance(sub_items, str): sub_items = [sub_items]
+        Logger.error("XML", f"Failed to parse XML for {date_str}", e)
         
-        if sub_items:
-             for vote_uri in sub_items:
-                 if isinstance(vote_uri, str):
-                     parts = vote_uri.split('/')
-                     vid = parts[-1]
-                     if '-' in vid:
-                         process_vote_result(vid, vote_uri)
+    return valid_votes
+
+def batch_upsert(conn, meta_list, results_list):
+    if not meta_list: return
+    
+    cur = conn.cursor()
+    try:
+        # 1. Upsert Votes
+        # Table keys: id, title, date, votes_for, votes_against, votes_abstain, importance_score, is_key_vote, term
+        sql = """
+            INSERT INTO euro_votes (id, title, date, votes_for, votes_against, votes_abstain, importance_score, is_key_vote, term)
+            VALUES %s
+            ON CONFLICT (id) DO UPDATE SET
+                title = EXCLUDED.title,
+                votes_for = EXCLUDED.votes_for,
+                votes_against = EXCLUDED.votes_against,
+                votes_abstain = EXCLUDED.votes_abstain,
+                importance_score = EXCLUDED.importance_score,
+                is_key_vote = EXCLUDED.is_key_vote,
+                term = EXCLUDED.term;
+        """
+        execute_values(cur, sql, meta_list)
+        
+        # 2. Upsert Results
+        # First delete old results for these votes
+        vote_ids = [m[0] for m in meta_list]
+        cur.execute("DELETE FROM euro_vote_results WHERE vote_id = ANY(%s)", (vote_ids,))
+        
+        # Prepare Result Tuples (mep_id must be API ID? or DB uuid?)
+        # euro_meps table has (id [uuid], api_id [text/int], ...)
+        # euro_vote_results has (vote_id [text], mep_id [int referencing api_id? OR uuid referencing id?])
+        
+        # CHECK SCHEMA of euro_vote_results:
+        # Previously we inserted { "vote_id": vid, "mep_id": pid, "vote": "For" } via Supabase.
+        # This implies `mep_id` column accepts `pid` which is the API ID (Integer).
+        # We'll assume yes.
+        
+        r_tuples = [(r['vote_id'], r['mep_id'], r['vote']) for r in results_list]
+        
+        if r_tuples:
+            sql_res = """
+                INSERT INTO euro_vote_results (vote_id, mep_id, vote)
+                VALUES %s
+            """
+            execute_values(cur, sql_res, r_tuples)
+            
+        conn.commit()
+        Logger.success("DB", f"Upserted {len(meta_list)} Votes & {len(r_tuples)} Results")
+        
+    except Exception as e:
+        conn.rollback()
+        Logger.error("DB", "Transaction Failed", e)
+    finally:
+        cur.close()
 
 def run_etl():
-    print("=== STARTING EURO VOTE DOWNLOAD (2019-2024) ===")
+    Logger.info("ETL", "Starting Europarl DIRECT POSTGRES ETL")
+    
+    conn = get_db_connection()
     global POLISH_MEP_IDS
-    POLISH_MEP_IDS = get_polish_mep_ids()
+    POLISH_MEP_IDS = get_polish_mep_ids(conn)
     
-    for year in TARGET_YEARS:
-        print(f"\nProcessing YEAR: {year}...")
-        api_url = f"https://data.europarl.europa.eu/api/v1/meetings?year={year}&format=application%2Fld%2Bjson&limit=500" # Limit 500 per year
+    found_days = 0
+    total_votes = 0
+    
+    dates = list(generate_date_range(START_DATE, END_DATE))
+    dates.reverse()
+    
+    meta_accum = []
+    results_accum = []
+    
+    # Batch size
+    BATCH_LIMIT = 50
+    
+    for current_date in dates:
+        term = determine_term(current_date)
+        date_fmt = current_date.strftime("%Y-%m-%d")
+        url = f"https://www.europarl.europa.eu/doceo/document/PV-{term}-{date_fmt}-RCV_EN.xml"
         
-        try:
-            r = requests.get(api_url)
-            data = r.json()
-            sessions = data.get('data', [])
-            print(f"Found {len(sessions)} sessions in {year}. Processing...")
+        content = fetch_xml(url)
+        if content:
+            Logger.info("Hit", f"Found Votes for {date_fmt}!")
+            found_days += 1
             
-            with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
-                futures = {executor.submit(process_session, s): s for s in sessions}
-                for future in concurrent.futures.as_completed(futures):
-                    try: future.result()
-                    except: pass
-                    
-        except Exception as e:
-            print(f"Error fetching year {year}: {e}")
-                
-    print("=== ETL COMPLETE ===")
-
-if __name__ == "__main__":
-    run_etl()
-# Manually load .env
-try:
-    with open('.env') as f:
-        for line in f:
-            if '=' in line:
-                key, value = line.strip().split('=', 1)
-                os.environ[key] = value.strip()
-except Exception:
-    pass
-
-SUPABASE_URL = os.environ.get("SUPABASE_URL") or os.environ.get("VITE_SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("VITE_SUPABASE_ANON_KEY")
-
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-# Constants
-YEAR = 2024
-LIMIT_SESSIONS = 1000 # Fetch ALL sessions
-SESSIONS_API = f"https://data.europarl.europa.eu/api/v1/meetings?year={YEAR}&format=application%2Fld%2Bjson&limit={LIMIT_SESSIONS}"
-
-def get_polish_mep_ids():
-    """Fetches all active Polish MEP api_ids from our DB to filter votes."""
-    print("Fetching Polish MEPs from DB...")
-    response = supabase.table('euro_meps').select('api_id').execute()
-    ids = set()
-    for row in response.data:
-        ids.add(row['api_id'])
-    print(f"Loaded {len(ids)} Polish MEP IDs.")
-    return ids
-
-POLISH_MEP_IDS = set()
-
-def fetch_details(url):
-    """Fetches JSON-LD details from a given URL with retries."""
-    for attempt in range(5): # Increased to 5 attempts
-        try:
-            r = requests.get(url, headers={'Accept': 'application/ld+json'}, timeout=30) # Increased timeout to 30s
-            if r.status_code == 200:
-                try:
-                    return r.json()
-                except ValueError:
-                    print(f"JSON Decode Error for {url}")
-                    return None
-            elif r.status_code == 404:
-                return None
-            else:
-                # print(f"Status {r.status_code} for {url}. Retrying...")
-                time.sleep(2 * (attempt + 1)) # Backoff: 2, 4, 6, 8...
-        except Exception as e:
-            print(f"Request error {url}: {e} (Attempt {attempt+1}/5)")
-            time.sleep(2 * (attempt + 1))
-    return None
-
-def process_vote_result(vote_id, vote_uri):
-    """Fetches details of a single vote and saves to DB."""
-    # Resolve ELI URI
-    # format: https://data.europarl.europa.eu/eli/dl/event/{ID}?format=application%2Fld%2Bjson
-    # URL is often: https://data.europarl.europa.eu/eli/dl/event/MTG-PL-2024-01-15-DEC-163200?format=application%2Fld%2Bjson
+            votes_data = parse_votes_from_xml(content, date_fmt, term)
+            total_votes += len(votes_data)
+            
+            for v_rec, v_res_list in votes_data:
+                meta_accum.append(v_rec)
+                results_accum.extend(v_res_list)
+            
+            if len(meta_accum) >= BATCH_LIMIT:
+                batch_upsert(conn, meta_accum, results_accum)
+                meta_accum = []
+                results_accum = []
     
-    # Check if exists to skip? (Optional, but good for speed)
-    # res = supabase.table('euro_votes').select('id').eq('id', vote_id).execute()
-    # if res.data:
-    #     print(f"Vote {vote_id} already exists. Skipping.")
-    #     return
-    
-    url = f"https://data.europarl.europa.eu/eli/dl/event/{vote_id}?format=application%2Fld%2Bjson"
-    data_env = fetch_details(url)
-    
-    if not data_env or 'data' not in data_env:
-        print(f"Failed to fetch details for {vote_id}")
-        return
-
-    # Data is usually a list under 'data'
-    items = data_env['data']
-    if not items: 
-        return
+    # Flush remaining
+    if meta_accum:
+        batch_upsert(conn, meta_accum, results_accum)
         
-    vote_data = items[0]
-    
-    # 1. Extract Metadata
-    # Title logic: try 'label' (dict) or 'referenceText' (dict) -> 'pl' then 'en'
-    title = "Głosowanie bez tytułu"
-    
-    ref_text = vote_data.get('referenceText', {})
-    if isinstance(ref_text, dict):
-        title = ref_text.get('pl') or ref_text.get('en') or title
-    
-    # If title is still generic, try label
-    if title == "Głosowanie bez tytułu":
-        label = vote_data.get('label', {})
-        if isinstance(label, dict):
-            title = label.get('pl') or label.get('en') or title
-            
-    # Date
-    date_str = vote_data.get('activity_date') # e.g. "2024-01-15"
-    if not date_str:
-        # try ID parsing
-        # MTG-PL-2024-01-15...
-        parts = vote_id.split('-')
-        if len(parts) >= 5:
-            date_str = f"{parts[2]}-{parts[3]}-{parts[4]}"
-            
-    # Counts
-    votes_for = vote_data.get('number_of_votes_favor', 0)
-    votes_against = vote_data.get('number_of_votes_against', 0)
-    votes_abstain = vote_data.get('number_of_votes_abstention', 0)
-
-    # 2. Upsert Vote Metadata
-    vote_record = {
-        "id": vote_id,
-        "title": title,
-        "date": date_str,
-        "votes_for": votes_for,
-        "votes_against": votes_against,
-        "votes_abstain": votes_abstain
-    }
-    
-    try:
-        supabase.table('euro_votes').upsert(vote_record).execute()
-        print(f"Saved Vote: {title[:50]}...")
-    except Exception as e:
-        print(f"Error saving vote meta {vote_id}: {e}")
-        return
-
-    # 3. Process Individual Records (Roll Call)
-    # had_voter_favor: ["person/123", "person/456", ...]
-    results_to_insert = []
-    
-    def extract_id(person_str):
-        if not person_str: return None
-        return int(person_str.replace("person/", ""))
-
-    for p_str in vote_data.get('had_voter_favor', []):
-        pid = extract_id(p_str)
-        if pid in POLISH_MEP_IDS:
-            results_to_insert.append({"vote_id": vote_id, "mep_id": pid, "vote": "For"})
-            
-    for p_str in vote_data.get('had_voter_against', []):
-        pid = extract_id(p_str)
-        if pid in POLISH_MEP_IDS:
-            results_to_insert.append({"vote_id": vote_id, "mep_id": pid, "vote": "Against"})
-            
-    for p_str in vote_data.get('had_voter_abstain', []):
-        pid = extract_id(p_str)
-        if pid in POLISH_MEP_IDS:
-            results_to_insert.append({"vote_id": vote_id, "mep_id": pid, "vote": "Abstain"})
-            
-    # Also handle excused/absent if available?
-    # 'had_excused_person'? 
-    # For now simplicity: For/Against/Abstain.
-    
-    if results_to_insert:
-        try:
-            # Delete existing first to avoid dupes? Or use upsert with conflict?
-            # euro_vote_results has ID PK, so upsert needs PK. 
-            # We can delete by vote_id + mep_id manual check or just delete all for this vote first.
-            supabase.table('euro_vote_results').delete().eq('vote_id', vote_id).execute()
-            
-            supabase.table('euro_vote_results').insert(results_to_insert).execute()
-            print(f" -> Saved {len(results_to_insert)} Polish MEP results.")
-        except Exception as e:
-            print(f"Error saving results for {vote_id}: {e}")
-
-def run_etl():
-    print("Starting Europarl Votes ETL...")
-    global POLISH_MEP_IDS
-    POLISH_MEP_IDS = get_polish_mep_ids()
-    
-    # 1. Fetch Sessions
-    print(f"Fetching last {LIMIT_SESSIONS} sessions...")
-    try:
-        r = requests.get(SESSIONS_API)
-        data = r.json()
-    except Exception as e:
-        print(f"API Error: {e}")
-        return
-        
-    sessions = data.get('data', [])
-    print(f"Found {len(sessions)} sessions.")
-    
-import concurrent.futures
-
-# ... existing imports ...
-
-# ... existing functions ...
-
-def process_session(session):
-    sid = session.get('id')
-    print(f"Processing Session: {sid}")
-    
-    # Strategy Change: List view might not have 'consists_of'. 
-    # We probably need to fetch details for each session if 'consists_of' is missing.
-    activities = session.get('consists_of') or session.get('consistsOf') or session.get('hasPart')
-    
-    if not activities:
-            clean_id = sid.split('/')[-1] # MTG-PL-2024-01-15
-            detail_url = f"https://data.europarl.europa.eu/api/v1/meetings/{clean_id}?format=application%2Fld%2Bjson"
-            
-            s_data = fetch_details(detail_url)
-            if s_data and 'data' in s_data and s_data['data']:
-                activities = s_data['data'][0].get('consists_of') or []
-            else:
-                activities = []
-    
-    activities = activities or []
-    
-    for act in activities:
-        atype = act.get('had_activity_type')
-        label = act.get('label', {}).get('pl') or act.get('activity_label', {}).get('pl') or ""
-        
-        is_voting_time = 'VOTE' in str(atype) or 'VOTING' in str(atype) or 'Głosowanie' in label
-        
-        if is_voting_time:
-                sub_items = act.get('consists_of') or act.get('consistsOf') or []
-                
-                # KEY VOTE HEURISTIC
-                # Filter by title keywords to ensure we only get important legislation
-                title_pl = label.lower()
-                keywords = ["rozporządzenie", "dyrektywa", "decyzja", "akt", "regulation", "directive", "act"]
-                is_legislative = any(k in title_pl for k in keywords)
-                
-                # Also ignore common technical strings if needed
-                ignore_terms = ["mianowania", "uchylenie immunitetu", "wniosek o", "appointment of", "request for waiver"]
-                is_ignored = any(t in title_pl for t in ignore_terms)
-                
-                if is_legislative and not is_ignored:
-                    print(f"[{sid}] Found KEY LEGISLATIVE VOTE: {label}")
-                    print(f" -> Found {len(sub_items)} sub-votes.")
-                    
-                    for vote_uri in sub_items:
-                        parts = vote_uri.split('/')
-                        vid = parts[-1]
-                        process_vote_result(vid, vote_uri)
-                else:
-                    # print(f"Skipping non-legislative/technical vote: {label}")
-                    pass
-
-def run_etl():
-    print("Starting Europarl Votes ETL (Multi-threaded)...")
-    global POLISH_MEP_IDS
-    POLISH_MEP_IDS = get_polish_mep_ids()
-    
-    # 1. Fetch Sessions
-    print(f"Fetching last {LIMIT_SESSIONS} sessions...")
-    try:
-        r = requests.get(SESSIONS_API)
-        data = r.json()
-    except Exception as e:
-        print(f"API Error: {e}")
-        return
-        
-    sessions = data.get('data', [])
-    print(f"Found {len(sessions)} sessions. Starting parallel processing...")
-    
-    # Use ThreadPool to process sessions in parallel
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-        executor.map(process_session, sessions)
-
-    print("ETL Finished.")
+    conn.close()
+    Logger.success("ETL", f"Complete. Found {found_days} days. Total {total_votes} votes.")
 
 if __name__ == "__main__":
     run_etl()

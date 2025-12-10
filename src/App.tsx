@@ -29,6 +29,7 @@ import SearchPage from './pages/SearchPage';
 import Europarlament from './pages/Europarlament';
 import EuroMPProfile from './pages/EuroMPProfile';
 import EuroVoteDetails from './pages/EuroVoteDetails';
+import EuroVotes from './pages/EuroVotes';
 import Komisje from './pages/Komisje';
 import KomisjaDetails from './pages/KomisjaDetails';
 import CommitteeSittingDetails from './pages/CommitteeSittingDetails';
@@ -48,6 +49,7 @@ export default function App() {
             <Route path="/poslowie/:idOrSlug" element={<MpProfile />} />
             {/* Europarlament Routes */}
             <Route path="/europarlament" element={<Europarlament />} />
+            <Route path="/europarlament/glosowania" element={<EuroVotes />} />
             <Route path="/europarlament/:id" element={<EuroMPProfile />} />
             <Route path="/europarlament/glosowanie/:id" element={<EuroVoteDetails />} />
             {/* Komisje Routes */}
