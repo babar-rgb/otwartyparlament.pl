@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Trophy, TrendingUp, Swords, TrendingDown, AlertTriangle, Medal, HandCoins, Mic } from 'lucide-react';
+import { Trophy, TrendingUp, Swords, TrendingDown, AlertTriangle, Medal, HandCoins, Mic, ScrollText } from 'lucide-react';
 import Comparator from './Comparator';
 import { supabase } from '../lib/supabase';
 
@@ -15,14 +15,22 @@ interface RankingMP {
   stats_rebellion: number;
 }
 
+interface LegStat {
+  label: string;
+  count: number;
+  color: string;
+}
+
 export default function Rankingi() {
-  const [activeTab, setActiveTab] = useState<'attendance_high' | 'attendance_low' | 'rebellion' | 'comparator'>('attendance_high');
+  const [activeTab, setActiveTab] = useState<'attendance_high' | 'attendance_low' | 'rebellion' | 'comparator' | 'legislation'>('attendance_high');
   const [mps, setMps] = useState<RankingMP[]>([]);
+  const [legStats, setLegStats] = useState<LegStat[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadMps = async () => {
+    const loadData = async () => {
       try {
+        // 1. Load MPs
         const { data, error } = await supabase
           .from('mps')
           .select('id, name, party, district, photo_url, stats_attendance, stats_rebellion')
@@ -42,13 +50,39 @@ export default function Rankingi() {
         }));
 
         setMps(mappedMps);
+
+        // 2. Load Prints
+        const { data: printsData } = await supabase.from('sejm_prints').select('title');
+
+        if (printsData) {
+          let gov = 0, mp = 0, senate = 0, citizen = 0, comm = 0, prez = 0;
+          printsData.forEach((p: any) => {
+            const t = p.title.toLowerCase();
+            if (t.includes('rządowy')) gov++;
+            else if (t.includes('poselski')) mp++;
+            else if (t.includes('senacki')) senate++;
+            else if (t.includes('obywatelski')) citizen++;
+            else if (t.includes('komisyjny')) comm++;
+            else if (t.includes('prezydent')) prez++;
+          });
+
+          setLegStats([
+            { label: 'Rządowe', count: gov, color: 'bg-blue-500' },
+            { label: 'Poselskie', count: mp, color: 'bg-indigo-500' },
+            { label: 'Senackie', count: senate, color: 'bg-orange-500' },
+            { label: 'Komisyjne', count: comm, color: 'bg-slate-500' },
+            { label: 'Obywatelskie', count: citizen, color: 'bg-green-500' },
+            { label: 'Prezydenckie', count: prez, color: 'bg-red-500' },
+          ].sort((a, b) => b.count - a.count));
+        }
+
       } catch (error) {
-        console.error('Error fetching MPs:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
-    loadMps();
+    loadData();
   }, []);
 
   if (loading) return <div className="text-center py-12">Ładowanie rankingów...</div>;
@@ -68,6 +102,9 @@ export default function Rankingi() {
       .sort((a, b) => b.stats_rebellion - a.stats_rebellion)
       .slice(0, 20)
       .map((mp, idx) => ({ ...mp, rank: idx + 1, value: mp.stats_rebellion, unit: 'głosów przeciw klubowi' })),
+
+    legislation: [], // Handled separately
+    comparator: []
   };
 
   const getRankColor = (rank: number) => {
@@ -97,12 +134,13 @@ export default function Rankingi() {
     return colors[party] || 'bg-slate-600';
   };
 
-  const currentRanking = activeTab === 'comparator' ? [] : rankings[activeTab];
+  const currentRanking = (activeTab === 'comparator' || activeTab === 'legislation') ? [] : rankings[activeTab];
 
   const tabs = [
     { id: 'attendance_high', label: 'Najwyższa Frekwencja', icon: TrendingUp },
     { id: 'attendance_low', label: 'Najniższa Frekwencja', icon: TrendingDown },
     { id: 'rebellion', label: 'Buntownicy', icon: AlertTriangle },
+    { id: 'legislation', label: 'Aktywność Legislacyjna', icon: ScrollText },
     { id: 'comparator', label: 'Porównywarka', icon: Swords },
   ];
 
@@ -171,9 +209,45 @@ export default function Rankingi() {
         <div className="p-6">
           {activeTab === 'comparator' ? (
             <Comparator embedded={true} />
+          ) : activeTab === 'legislation' ? (
+            /* Legislative Stats View */
+            <div className="space-y-6 animate-fade-in">
+              <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
+                Kto pisze prawo w Polsce?
+              </h2>
+              <p className="text-slate-600">
+                Analiza {legStats.reduce((sum, item) => sum + item.count, 0)} projektów ustaw (druków sejmowych z X kadencji).
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {legStats.map((stat, idx) => (
+                  <div key={idx} className="bg-slate-50 border border-slate-200 rounded-xl p-5 hover:bg-white hover:shadow-md transition-all">
+                    <div className="flex justify-between items-end mb-2">
+                      <div className="font-bold text-slate-700">{stat.label}</div>
+                      <div className="text-2xl font-bold text-blue-600">{stat.count}</div>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${stat.color}`}
+                        style={{ width: `${(stat.count / Math.max(...legStats.map(s => s.count))) * 100}%` }}
+                      ></div>
+                    </div>
+                    <div className="text-right text-xs text-slate-500 mt-1">
+                      {legStats.reduce((sum, item) => sum + item.count, 0) > 0
+                        ? ((stat.count / legStats.reduce((sum, item) => sum + item.count, 0)) * 100).toFixed(1)
+                        : 0}% całości
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100 text-sm text-blue-800">
+                <strong>Wniosek:</strong> Rządowi przypada większość inicjatywy ustawodawczej. Projekty poselskie są drugą siłą, ale często dotyczą uchwał okolicznościowych.
+              </div>
+            </div>
           ) : (
             <div className="space-y-3">
-              {currentRanking.map((entry: any, _: number) => (
+              {currentRanking.map((entry: any) => (
                 <Link key={entry.id} to={`/poslowie/${entry.id}`}>
                   <div className="flex items-center gap-4 p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition cursor-pointer group">
                     <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg ${getRankColor(entry.rank)}`}>
@@ -253,7 +327,7 @@ export default function Rankingi() {
           </p>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 

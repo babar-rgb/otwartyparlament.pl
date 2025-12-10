@@ -80,6 +80,47 @@ def run_vote_analyses():
         return False
 
 
+def run_europarl_etl():
+    """Run Europarliament ETL"""
+    logger.info("Starting Europarl ETL...")
+    try:
+        result = subprocess.run(
+            [sys.executable, os.path.join(SCRIPT_DIR, 'etl_europarl_votes.py')],
+            capture_output=True,
+            text=True,
+            timeout=3600
+        )
+        if result.returncode == 0:
+            logger.info("Europarl ETL completed")
+        else:
+            logger.error(f"Europarl ETL failed: {result.stderr}")
+        return result.returncode == 0
+    except Exception as e:
+        logger.error(f"Europarl ETL error: {e}")
+        return False
+
+def run_interpellations_import():
+    """Run Interpellations Import"""
+    logger.info("Starting Interpellations Import...")
+    try:
+        # Check if environment variables are set, otherwise load from .env manually in the script?
+        # The script creates Supabase client so it needs ENV.
+        # Subprocess inherits ENV by default.
+        result = subprocess.run(
+            [sys.executable, os.path.join(SCRIPT_DIR, 'import_interpellations.py')],
+            capture_output=True,
+            text=True,
+            timeout=3600
+        )
+        if result.returncode == 0:
+            logger.info("Interpellations Import completed")
+        else:
+            logger.error(f"Interpellations Import failed: {result.stderr}")
+        return result.returncode == 0
+    except Exception as e:
+        logger.error(f"Interpellations Import error: {e}")
+        return False
+
 def run_daily_maintenance():
     """Run daily maintenance tasks"""
     logger.info("="*60)
@@ -89,18 +130,23 @@ def run_daily_maintenance():
     
     start_time = time.time()
     
-    # 1. Incremental ETL
-    etl_ok = run_incremental_etl()
+    # 1. Incremental ETL (Sejm Votes & MPs)
+    run_incremental_etl()
     
-    # 2. Generate vote analyses for new votes
-    if etl_ok:
-        run_vote_analyses()
+    # 2. Europarl
+    run_europarl_etl()
+    
+    # 3. Interpellations
+    run_interpellations_import()
+    
+    # 4. Generate vote analyses for new votes
+    run_vote_analyses()
     
     elapsed = time.time() - start_time
     logger.info(f"Maintenance completed in {elapsed:.1f} seconds")
     logger.info("="*60)
     
-    return etl_ok
+    return True
 
 
 def run_scheduler():

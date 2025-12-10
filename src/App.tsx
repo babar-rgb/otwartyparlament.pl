@@ -15,6 +15,7 @@ import SpeechDetails from './pages/SpeechDetails';
 import InterpellationsList from './pages/InterpellationsList';
 import InterpellationDetails from './pages/InterpellationDetails';
 import OProjekcie from './pages/OProjekcie';
+import LiveAnalysis from './pages/LiveAnalysis';
 import VoteDetails from './pages/VoteDetails';
 import CategoryDetails from './pages/CategoryDetails';
 import DataSources from './pages/DataSources';
@@ -24,6 +25,7 @@ import Contact from './pages/Contact';
 import Comparator from './pages/Comparator';
 import BillDetails from './pages/BillDetails';
 import BillsList from './pages/BillsList';
+import Projekty from './pages/Projekty';
 import VotesList from './pages/VotesList';
 import SearchPage from './pages/SearchPage';
 import Europarlament from './pages/Europarlament';
@@ -71,7 +73,7 @@ export default function App() {
             <Route path="/o-projekcie" element={<OProjekcie />} />
             <Route path="/ustawy/:id" element={<BillDetails />} /> {/* Added route for BillDetails */}
             <Route path="/mapa/:processId" element={<LawMap />} />
-            <Route path="/projekty" element={<BillsList />} /> {/* Added route for BillsList */}
+            <Route path="/projekty" element={<Projekty />} /> {/* Updated route for new Projects Page */}
             <Route path="/projekty/:id" element={<BillDetails />} />
             <Route path="/glosowania" element={<VotesList />} />
             <Route path="/glosowania/:term/:sitting/:votingNumber" element={<VoteDetails />} />
@@ -86,6 +88,7 @@ export default function App() {
             <Route path="/kontakt" element={<Contact />} />
             <Route path="/porownywarka" element={<Comparator />} />
             <Route path="/szukaj" element={<SearchPage />} />
+            <Route path="/live" element={<LiveAnalysis />} />
             {/* Catch-all MUST be last */}
             <Route path="*" element={<NotFound />} />
           </Routes>

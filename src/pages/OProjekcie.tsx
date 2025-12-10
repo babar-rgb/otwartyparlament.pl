@@ -7,14 +7,16 @@ export default function OProjekcie() {
       <div className="text-center mb-20">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full font-bold text-sm mb-6 border border-blue-100">
           <Target size={16} />
-          <span>Nasza Misja</span>
+          <span>Otwarty Parlament</span>
         </div>
         <h1 className="text-5xl md:text-7xl font-black text-slate-900 mb-6 tracking-tight leading-tight">
-          Demokracja potrzebuje <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">transparentności</span>
+          Wiedza to władza. <br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Odzyskaj ją.</span>
         </h1>
         <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-          Wierzymy, że przejrzystość jest fundamentem zaufania. Budujemy narzędzia, które pozwalają każdemu obywatelowi zrozumieć, co się dzieje w Sejmie.
+          Sejm to nie zamknięta twierdza. To miejsce, gdzie zapadają decyzje o Twojej przyszłości.
+          Stworzyliśmy to narzędzie, abyś nie musiał wierzyć politykom na słowo – teraz możesz sprawdzić ich czyny.
+          Szybko, prosto i bez lania wody.
         </p>
       </div>
 
@@ -24,9 +26,9 @@ export default function OProjekcie() {
           <div className="w-14 h-14 bg-blue-50 rounded-xl flex items-center justify-center mb-6 text-blue-600 group-hover:scale-110 transition-transform">
             <Zap size={28} />
           </div>
-          <h3 className="text-2xl font-bold text-slate-900 mb-3">Dostępność</h3>
+          <h3 className="text-2xl font-bold text-slate-900 mb-3">Po ludzku</h3>
           <p className="text-slate-600 leading-relaxed">
-            Zamieniamy skomplikowany język prawniczy na proste podsumowania. Dane sejmowe powinny być zrozumiałe dla każdego, nie tylko dla prawników.
+            Prawniczy bełkot zamieniamy na proste fakty. Nie musisz kończyć prawa, żeby wiedzieć, czy posłowie podnoszą Ci podatki, czy je obniżają.
           </p>
         </div>
 
@@ -34,9 +36,9 @@ export default function OProjekcie() {
           <div className="w-14 h-14 bg-indigo-50 rounded-xl flex items-center justify-center mb-6 text-indigo-600 group-hover:scale-110 transition-transform">
             <Lock size={28} />
           </div>
-          <h3 className="text-2xl font-bold text-slate-900 mb-3">Bezpieczeństwo</h3>
+          <h3 className="text-2xl font-bold text-slate-900 mb-3">Bez szpiegowania</h3>
           <p className="text-slate-600 leading-relaxed">
-            Szanujemy Twoją prywatność. Nie śledzimy Cię, nie sprzedajemy danych. Nasz kod jest otwarty, więc możesz to zweryfikować.
+            Nie interesuje nas kim jesteś. Nie ma tu ciasteczek śledzących, reklam ani ukrytych skryptów. Tylko czyste dane. Jesteś u siebie.
           </p>
         </div>
 
@@ -46,7 +48,7 @@ export default function OProjekcie() {
           </div>
           <h3 className="text-2xl font-bold text-slate-900 mb-3">Niezależność</h3>
           <p className="text-slate-600 leading-relaxed">
-            Jesteśmy inicjatywą non-profit, niezależną od partii politycznych i grup interesu. Naszym jedynym interesariuszem jest społeczeństwo.
+            To projekt robiony "po godzinach". Nie stoi za nami żadna partia, korporacja ani fundusz. Dzięki temu możemy pisać prawdę, nawet te niewygodną.
           </p>
         </div>
       </div>

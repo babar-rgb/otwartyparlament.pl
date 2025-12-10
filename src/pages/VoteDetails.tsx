@@ -55,6 +55,7 @@ const VoteDetails: React.FC = () => {
 
     const [analysis, setAnalysis] = useState<{ summary: string; pros: string[]; cons: string[] } | null>(null);
     const [linkedProcessId, setLinkedProcessId] = useState<string | null>(null);
+    const [linkedPrint, setLinkedPrint] = useState<{ number: string; title: string } | null>(null);
 
     useEffect(() => {
         if (id || (sitting && votingNumber)) {
@@ -144,6 +145,7 @@ const VoteDetails: React.FC = () => {
 
             // 5. Try to link to Law Map (Process)
             if (voteData.print_number) {
+                // Fetch Process ID
                 const { data: procData } = await supabase
                     .from('processes')
                     .select('id')
@@ -154,7 +156,19 @@ const VoteDetails: React.FC = () => {
                 if (procData) {
                     setLinkedProcessId(procData.id);
                 }
+
+                // Fetch Sejm Print Details
+                const { data: printData } = await supabase
+                    .from('sejm_prints')
+                    .select('number, title')
+                    .eq('number', voteData.print_number)
+                    .maybeSingle();
+
+                if (printData) {
+                    setLinkedPrint(printData);
+                }
             }
+
 
         } catch (error) {
             console.error('Error fetching vote details:', error);
@@ -237,6 +251,39 @@ const VoteDetails: React.FC = () => {
                             </div>
                             <ArrowRight className="ml-2 opacity-80 group-hover:translate-x-1 transition-transform" />
                         </Link>
+                    )}
+
+                    {/* Linked Print Card */}
+                    {linkedPrint && (
+                        <div className="mb-8 bg-white/10 backdrop-blur border border-white/20 p-5 rounded-xl flex items-start gap-4">
+                            <div className="p-2 bg-amber-500/20 text-amber-300 rounded-lg">
+                                <ExternalLink size={24} />
+                            </div>
+                            <div>
+                                <div className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">
+                                    Powiązany Druk Sejmowy nr {linkedPrint.number}
+                                </div>
+                                <h3 className="text-white font-semibold text-lg leading-tight mb-2">
+                                    {linkedPrint.title}
+                                </h3>
+                                {/* Source heuristic */}
+                                <div className="flex gap-2 mb-3">
+                                    {linkedPrint.title.toLowerCase().includes('rządowy') && <span className="text-[10px] bg-blue-500/30 text-blue-200 px-2 py-0.5 rounded border border-blue-500/50">Rządowy</span>}
+                                    {linkedPrint.title.toLowerCase().includes('poselski') && <span className="text-[10px] bg-purple-500/30 text-purple-200 px-2 py-0.5 rounded border border-purple-500/50">Poselski</span>}
+                                    {linkedPrint.title.toLowerCase().includes('senacki') && <span className="text-[10px] bg-orange-500/30 text-orange-200 px-2 py-0.5 rounded border border-orange-500/50">Senacki</span>}
+                                    {linkedPrint.title.toLowerCase().includes('obywatelski') && <span className="text-[10px] bg-green-500/30 text-green-200 px-2 py-0.5 rounded border border-green-500/50">Obywatelski</span>}
+                                </div>
+
+                                <a
+                                    href={`https://www.sejm.gov.pl/Sejm10.nsf/druk.xsp?nr=${linkedPrint.number}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-sm text-blue-300 hover:text-white underline decoration-blue-300/50 hover:decoration-white transition-colors"
+                                >
+                                    Otwórz tekst źródłowy na stronie Sejmu →
+                                </a>
+                            </div>
+                        </div>
                     )}
 
                     {/* Vote Result Card */}
