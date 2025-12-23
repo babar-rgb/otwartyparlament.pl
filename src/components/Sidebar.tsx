@@ -65,10 +65,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             <nav className="space-y-2 mb-8">
                                 <Link to="/poslowie" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Posłowie</Link>
                                 <Link to="/komisje" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Komisje</Link>
-                                <Link to="/europarlament" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Europarlament</Link>
                                 <Link to="/glosowania" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Głosowania</Link>
                                 <Link to="/rankingi" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Rankingi</Link>
                                 <Link to="/projekty" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Projekty</Link>
+                                <Link to="/europarlament" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Europarlament</Link>
+                                <div className="border-t border-slate-100 my-1 mx-3" />
+                                <Link to="/live" onClick={onClose} className="flex items-center gap-2 p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">
+                                    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                                    Live
+                                </Link>
                             </nav>
 
                             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-4">

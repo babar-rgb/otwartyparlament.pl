@@ -5,36 +5,40 @@ export default {
   theme: {
     extend: {
       colors: {
-        // 1. Brand Identity (The Hero Color)
+        // 1. Semantic Colors mapped to CSS variables
+        background: 'rgb(var(--bg-page) / <alpha-value>)',
+        surface: 'rgb(var(--bg-surface) / <alpha-value>)',
+        primary: 'rgb(var(--text-primary) / <alpha-value>)',
+        secondary: 'rgb(var(--text-secondary) / <alpha-value>)',
+        border: 'rgb(var(--border-base) / <alpha-value>)',
+
+        // 2. Brand Identity (Keeping gold/mustard)
         brand: {
-          DEFAULT: '#D6B55E', // Mustard Gold
+          DEFAULT: '#D6B55E',
           light: '#E5C773',
           dark: '#B59645',
         },
-        // 2. Backgrounds (Editorial Feel)
+        // Backwards compatibility for old names if needed
         paper: {
-          DEFAULT: '#F9F9F7', // Warm Off-White for page bg
-          pure: '#FFFFFF',    // For Cards
+          DEFAULT: 'rgb(var(--bg-page) / <alpha-value>)',
+          pure: 'rgb(var(--bg-surface) / <alpha-value>)',
         },
-        // 3. Typography (Softer than pure black)
         ink: {
-          DEFAULT: '#111827', // Deep Charcoal
-          light: '#4B5563',   // Secondary Text
+          DEFAULT: 'rgb(var(--text-primary) / <alpha-value>)',
+          light: 'rgb(var(--text-secondary) / <alpha-value>)',
         },
-        // 4. Functional / Voting Results (Muted, Serious tones)
+        // 4. Functional / Voting Results
         vote: {
-          yes: '#166534',     // Deep Forest Green
-          yesBg: '#DCFCE7',   // Light Green Pill bg
-          no: '#991B1B',      // Brick Red
-          noBg: '#FEE2E2',    // Light Red Pill bg
-          abstain: '#4B5563', // Steel Gray
+          yes: '#166534',
+          yesBg: '#DCFCE7',
+          no: '#991B1B',
+          noBg: '#FEE2E2',
+          abstain: '#4B5563',
           abstainBg: '#F3F4F6'
         }
       },
       fontFamily: {
-        // Use a serious Serif for Headings (Editorial vibe)
         serif: ['Merriweather', 'serif'],
-        // Use clean Sans for UI/Data
         sans: ['Inter', 'sans-serif'],
       },
       animation: {

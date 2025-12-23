@@ -59,9 +59,6 @@ export default function Navigation() {
               <Link to="/komisje" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 Komisje
               </Link>
-              <Link to="/europarlament" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                Europarlament
-              </Link>
               <Link to="/glosowania" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 Głosowania
               </Link>
@@ -70,10 +67,6 @@ export default function Navigation() {
               </Link>
               <Link to="/projekty" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 Projekty
-              </Link>
-              <Link to="/live" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-red-600 dark:hover:text-red-400 transition-colors flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                Live
               </Link>
               <Link to="/o-projekcie" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 O Projekcie

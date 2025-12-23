@@ -3,16 +3,54 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --bg-page: 249 249 247;
+    /* #F9F9F7 */
+    --bg-surface: 255 255 255;
+    /* #FFFFFF */
+    --text-primary: 17 24 39;
+    /* #111827 */
+    --text-secondary: 75 85 99;
+    /* #4B5563 */
+    --border-base: 229 231 235;
+    /* #E5E7EB */
+  }
+
+  .dark {
+    --bg-page: 6 6 19;
+    /* #060613 */
+    --bg-surface: 17 17 34;
+    /* #111122 - Elegantszy, głęboki granat dla kart */
+    --text-primary: 243 244 246;
+    /* #F3F4F6 */
+    --text-secondary: 156 163 175;
+    /* #9CA3AF */
+    --border-base: 31 41 55;
+    /* #1F2937 */
+  }
+
   body {
-    @apply bg-paper text-ink font-sans antialiased transition-colors duration-300;
+    background-color: rgb(var(--bg-page));
+    color: rgb(var(--text-primary));
+    @apply font-sans antialiased transition-colors duration-300;
   }
 
-  /* DARK MODE OVERRIDE */
-  .dark body {
-    @apply bg-[#060613] text-[#E0E0E0];
+  #root {
+    @apply min-h-screen;
+    background-color: rgb(var(--bg-page));
   }
 
-  /* Dashboard Mesh Gradient */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-serif font-bold tracking-tight;
+    color: rgb(var(--text-primary));
+  }
+
+  /* Dashboard Mesh Gradient - keeping for decorative use */
   .dashboard-mesh {
     background-color: #060613;
     background-image:
@@ -23,189 +61,40 @@
       radial-gradient(at 0% 100%, hsla(253, 16%, 7%, 1) 0, transparent 50%);
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply font-serif text-ink font-bold;
-  }
+  /* --- CLEAN THEMES --- */
 
-  /* Handle Headings in Dark Mode */
-  .dark h1,
-  .dark h2,
-  .dark h3,
-  .dark h4,
-  .dark h5,
-  .dark h6 {
-    @apply text-[#F3F4F6];
-  }
+  /* Automatyczne mapowanie popularnych klas Tailwinda na zmienne w dark mode */
+  /* To pozwala uniknąć edytowania każdego pliku .tsx, dopóki nie przejdziemy na pełne klasy semantyczne */
 
-  #root {
-    @apply min-h-screen bg-paper;
-  }
-
-  .dark #root {
-    /* SWAPPED: Global background is now purple */
-    @apply bg-[#1e1b4b];
-  }
-
-  /* --- GLOBAL DARK MODE OVERRIDES --- */
-
-  /* 1. Force Light Backgrounds to Dark */
   .dark .bg-white,
+  .dark .bg-paper-pure,
   .dark .bg-slate-50,
-  .dark .bg-neutral-50,
-  .dark .bg-gray-50,
-  .dark .bg-paper {
-    /* SWAPPED: Cards/Sections now use the old global dark background (#0F1115) */
-    background-color: #0F1115 !important;
-    /* gray-950/black */
-    border-color: #1F2937 !important;
-    /* gray-800 */
-    color: #E5E7EB !important;
+  .dark .bg-gray-50 {
+    background-color: rgb(var(--bg-surface)) !important;
   }
 
-  /* 2. Force Dark Text to Light */
+  .dark .border-slate-200,
+  .dark .border-gray-200,
+  .dark .border-slate-100 {
+    border-color: rgb(var(--border-base)) !important;
+  }
+
   .dark .text-slate-900,
-  .dark .text-neutral-900,
   .dark .text-gray-900,
-  .dark .text-ink,
-  .dark .text-black {
-    color: #F3F4F6 !important;
-    /* gray-100 */
+  .dark .text-slate-800 {
+    color: rgb(var(--text-primary)) !important;
   }
 
-  .dark .text-slate-800,
-  .dark .text-neutral-800,
-  .dark .text-gray-800 {
-    color: #E5E7EB !important;
-    /* gray-200 */
-  }
-
-  .dark .text-slate-700,
-  .dark .text-neutral-700,
-  .dark .text-gray-700,
   .dark .text-slate-600,
-  .dark .text-neutral-600,
-  .dark .text-gray-600 {
-    color: #9CA3AF !important;
-    /* gray-400 */
+  .dark .text-gray-600,
+  .dark .text-slate-500 {
+    color: rgb(var(--text-secondary)) !important;
   }
 
-  /* 3. Handle Accent Backgrounds (e.g. bg-blue-50) */
-  .dark .bg-blue-50,
-  .dark .bg-blue-100 {
-    background-color: rgba(59, 130, 246, 0.15) !important;
-    border-color: rgba(59, 130, 246, 0.3) !important;
-  }
-
-  .dark .bg-indigo-50,
-  .dark .bg-indigo-100 {
-    background-color: rgba(99, 102, 241, 0.15) !important;
-    border-color: rgba(99, 102, 241, 0.3) !important;
-  }
-
+  /* Akcenty w Dark Mode - delikatniejsze */
   .dark .bg-purple-50,
-  .dark .bg-purple-100 {
-    background-color: rgba(168, 85, 247, 0.15) !important;
-    border-color: rgba(168, 85, 247, 0.3) !important;
+  .dark .bg-indigo-50 {
+    background-color: rgba(99, 102, 241, 0.1) !important;
+    border-color: rgba(99, 102, 241, 0.2) !important;
   }
-
-  .dark .bg-green-50,
-  .dark .bg-green-100 {
-    background-color: rgba(34, 197, 94, 0.15) !important;
-    border-color: rgba(34, 197, 94, 0.3) !important;
-  }
-
-  .dark .bg-red-50,
-  .dark .bg-red-100 {
-    background-color: rgba(239, 68, 68, 0.15) !important;
-    border-color: rgba(239, 68, 68, 0.3) !important;
-  }
-
-  .dark .bg-yellow-50,
-  .dark .bg-yellow-100 {
-    background-color: rgba(234, 179, 8, 0.15) !important;
-    border-color: rgba(234, 179, 8, 0.3) !important;
-  }
-
-  .dark .bg-slate-100,
-  .dark .bg-neutral-100,
-  .dark .bg-gray-100 {
-    background-color: #374151 !important;
-    color: #E5E7EB !important;
-  }
-
-  /* gray-700 */
-
-  /* 4. Handle Accent Text Colors */
-  .dark .text-blue-700,
-  .dark .text-blue-600 {
-    color: #60A5FA !important;
-  }
-
-  /* blue-400 */
-  .dark .text-indigo-700,
-  .dark .text-indigo-600 {
-    color: #818CF8 !important;
-  }
-
-  /* indigo-400 */
-  .dark .text-purple-700,
-  .dark .text-purple-600 {
-    color: #A78BFA !important;
-  }
-
-  /* purple-400 */
-  .dark .text-green-700,
-  .dark .text-green-600 {
-    color: #4ADE80 !important;
-  }
-
-  /* green-400 */
-  .dark .text-red-700,
-  .dark .text-red-600 {
-    color: #F87171 !important;
-  }
-
-  /* red-400 */
-
-  /* 5. Gradients */
-  .dark .from-slate-50 {
-    --tw-gradient-from: #1F2937 !important;
-    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
-  }
-
-  .dark .to-slate-100 {
-    --tw-gradient-to: #111827 !important;
-  }
-
-  .dark .from-indigo-50 {
-    /* SWAPPED: Section background is now the old global dark (#0F1115) */
-    --tw-gradient-from: #0F1115 !important;
-    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
-  }
-
-  /* indigo-950 */
-  .dark .to-blue-50 {
-    /* SWAPPED: Section background end is also dark */
-    --tw-gradient-to: #0F1115 !important;
-  }
-
-  /* blue-950 */
-
-  /* 6. Borders */
-  .dark .border-indigo-100 {
-    border-color: #312e81 !important;
-  }
-
-  /* indigo-900 */
-  .dark .border-slate-100,
-  .dark .border-slate-200 {
-    border-color: #374151 !important;
-  }
-
-  /* gray-700 */
 }

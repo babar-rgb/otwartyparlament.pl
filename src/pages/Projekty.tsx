@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Search, FileText, Loader2, ScrollText, ChevronDown, ChevronUp } from 'lucide-react';
+import { useTerm } from '../context/TermContext';
 
 interface SejmPrint {
     number: string;
@@ -13,12 +14,16 @@ interface SejmPrint {
 }
 
 export default function Projekty() {
+    const { term } = useTerm();
     const [prints, setPrints] = useState<SejmPrint[]>([]);
     const [filteredPrints, setFilteredPrints] = useState<SejmPrint[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterSource, setFilterSource] = useState<string | null>(null);
     const [expandedPrint, setExpandedPrint] = useState<string | null>(null);
+    const [startIndex, setStartIndex] = useState(0);
+
+    const ITEMS_PER_PAGE = 100;
 
     useEffect(() => {
         fetchPrints();
@@ -26,6 +31,7 @@ export default function Projekty() {
 
     useEffect(() => {
         filterData();
+        setStartIndex(0); // Reset pagination on filter
     }, [searchTerm, filterSource, prints]);
 
     const fetchPrints = async () => {
@@ -114,6 +120,19 @@ export default function Projekty() {
         };
     };
 
+    const cleanText = (text?: string) => {
+        if (!text) return '';
+        return text
+            .replace(/\*/g, '') // Remove all asterisks
+            .replace(/\[\d+\]/g, '') // Remove citation artifacts like [1], [2]
+            .replace(/ġ/g, 'ł') // Fix encoding issue
+            .replace(/^Oto .*?:/i, '') // Remove "Oto opracowanie:", "Oto streszczenie:"
+            .replace(/^Poniżej .*?:/i, '') // Remove "Poniżej znajduje się..."
+            .replace(/---/g, '') // Remove horizontal lines
+            .replace(/::/g, ':') // Remove double colons
+            .trim();
+    };
+
 
     return (
         <div className="container mx-auto px-4 pt-24 pb-12 animate-fade-in">
@@ -124,7 +143,7 @@ export default function Projekty() {
                     Projekty i Dokumenty Sejmowe
                 </h1>
                 <p className="text-slate-600 max-w-2xl text-lg">
-                    Przeglądaj wszystkie druki sejmowe X kadencji. Kliknij w projekt, aby zobaczyć szczegóły i uzasadnienie.
+                    Przeglądaj wszystkie druki sejmowe {term} kadencji. Kliknij w projekt, aby zobaczyć szczegóły i uzasadnienie.
                 </p>
             </div>
 
@@ -198,7 +217,7 @@ export default function Projekty() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-4">
-                    {filteredPrints.slice(0, 100).map((print) => { // Render limit for perf
+                    {filteredPrints.slice(startIndex, startIndex + ITEMS_PER_PAGE).map((print) => { // Render limit for pagination
                         const isExpanded = expandedPrint === print.number;
                         const hasInsight = !!print.ai_summary;
 
@@ -211,7 +230,6 @@ export default function Projekty() {
                             >
                                 <div className="flex items-start gap-4">
                                     <div className="hidden md:flex flex-col items-center justify-center w-16 h-16 rounded-lg shrink-0 transition-colors bg-slate-100 text-slate-700">
-
                                         <span className="text-xs uppercase font-bold opacity-70">Druk</span>
                                         <span className="text-xl font-bold">{print.number}</span>
                                     </div>
@@ -235,22 +253,55 @@ export default function Projekty() {
                                         {/* Minified view props */}
                                         {!isExpanded && hasInsight && (
                                             <p className="text-slate-500 text-sm line-clamp-2 mt-2">
-                                                {print.ai_summary}
+                                                {cleanText(print.ai_summary)}
                                             </p>
                                         )}
 
                                         {/* Expanded Content */}
                                         {isExpanded && (
-                                            <div className="mt-6 pt-6 border-t border-slate-100 animate-fade-in-down">
+                                            <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 animate-fade-in-down">
                                                 {hasInsight ? (
-                                                    <div className="space-y-4">
-                                                        <div className="bg-blue-50/40 p-5 rounded-xl border border-blue-100/50 shadow-sm">
-                                                            <h4 className="flex items-center gap-2 text-blue-800 font-bold mb-3 text-base">
-                                                                <FileText size={18} /> Opracowanie przyjazne
-                                                            </h4>
-                                                            <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">
-                                                                {print.justification_text ? print.justification_text.substring(0, 1500) + (print.justification_text.length > 1500 ? '...' : '') : print.ai_summary}
-                                                            </p>
+                                                    <div className="space-y-6 text-left">
+                                                        <div className="relative overflow-hidden bg-gradient-to-br from-indigo-500/[0.07] via-slate-900/40 to-blue-500/[0.07] p-8 rounded-3xl border border-indigo-500/20 shadow-2xl backdrop-blur-md">
+                                                            <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8 relative z-10">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div>
+                                                                        <div className="text-2xl font-serif font-bold text-white tracking-tight">
+                                                                            Opracowanie dokumentu
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="sm:ml-auto">
+                                                                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-500/10 text-indigo-300 rounded-full border border-indigo-500/20 text-[10px] font-black uppercase tracking-widest">
+                                                                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-ping" />
+                                                                        Premium Insight
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="grid grid-cols-1 gap-6 relative z-10">
+                                                                {cleanText(print.ai_summary).split(/\d+\./).map(p => p.trim()).filter(Boolean).map((point, idx) => (
+                                                                    <div key={idx} className="flex gap-5 group/item">
+                                                                        <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-slate-800/50 border border-slate-700/50 flex items-center justify-center text-indigo-400 font-black text-base group-hover/item:bg-indigo-600 group-hover/item:text-white group-hover/item:border-indigo-400 transition-all duration-300 shadow-xl group-hover/item:scale-110">
+                                                                            {idx + 1}
+                                                                        </div>
+                                                                        <div className="flex-1 text-slate-300 leading-relaxed text-[15px] group-hover/item:text-white transition-colors duration-300 pt-1.5">
+                                                                            {point}
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                                {!print.ai_summary && print.summary && (
+                                                                    <div className="text-slate-300 leading-relaxed whitespace-pre-wrap text-[15px]">
+                                                                        {print.summary}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Bottom Label */}
+                                                            <div className="mt-10 pt-6 border-t border-white/5 flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                                                <span>System Analizy Danych Sejmowych</span>
+                                                                <span>Term {term} · Sejm RP</span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 ) : (
@@ -259,15 +310,15 @@ export default function Projekty() {
                                                     </div>
                                                 )}
 
-                                                <div className="flex items-center gap-4 mt-6">
+                                                <div className="flex items-center gap-4 mt-8">
                                                     <a
                                                         href={`https://www.sejm.gov.pl/Sejm10.nsf/druk.xsp?nr=${print.number}`}
                                                         target="_blank"
                                                         rel="noreferrer"
                                                         onClick={(e) => e.stopPropagation()}
-                                                        className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition-colors"
+                                                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-bold transition-all border border-slate-200 dark:border-slate-700 shadow-lg"
                                                     >
-                                                        <FileText size={16} />
+                                                        <FileText size={18} />
                                                         Otwórz źródłowy PDF
                                                     </a>
                                                 </div>
@@ -276,32 +327,71 @@ export default function Projekty() {
                                     </div>
 
                                     <div className="self-start mt-1 text-slate-400">
-                                        {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                                        {isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
                                     </div>
                                 </div>
                             </div>
                         );
                     })}
                 </div>
-            )
-            }
+            )}
 
-            {
-                !loading && filteredPrints.length === 0 && (
-                    <div className="text-center mt-8 text-slate-500 text-sm">
-                        Brak projektów.
-                    </div>
-                )
-            }
+            {!loading && filteredPrints.length === 0 && (
+                <div className="text-center py-20 bg-slate-50 dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
+                    <FileText size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-4" />
+                    <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">Brak wyników</h3>
+                    <p className="text-slate-500">Spróbuj zmienić filtry lub wyszukać inną frazę.</p>
+                </div>
+            )}
 
-            {
-                !loading && filteredPrints.length > 100 && (
-                    <div className="text-center mt-8 text-slate-500 text-sm">
-                        Pokazano 100 z {filteredPrints.length} wyników. Użyj wyszukiwarki, aby znaleźć konkretny projekt.
+            {!loading && filteredPrints.length > ITEMS_PER_PAGE && (
+                <div className="mt-12 p-8 bg-slate-900 text-white rounded-3xl shadow-2xl border border-slate-800 animate-fade-in-up">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                        <div className="flex-1 w-full">
+                            <div className="flex justify-between mb-4 px-1">
+                                <span className="text-xs font-black text-slate-500 uppercase tracking-tight">Najnowsze druki</span>
+                                <span className="text-sm font-bold text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
+                                    Przedział druków: <span className="text-white">{filteredPrints[startIndex]?.number}</span> — <span className="text-white">{filteredPrints[Math.min(startIndex + ITEMS_PER_PAGE - 1, filteredPrints.length - 1)]?.number}</span>
+                                </span>
+                                <span className="text-xs font-black text-slate-500 uppercase tracking-tight">Starsze druki</span>
+                            </div>
+                            <div className="relative h-10 flex items-center">
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max={Math.max(0, filteredPrints.length - ITEMS_PER_PAGE)}
+                                    step={ITEMS_PER_PAGE}
+                                    value={startIndex}
+                                    onChange={(e) => {
+                                        setStartIndex(parseInt(e.target.value));
+                                        window.scrollTo({ top: 400, behavior: 'smooth' });
+                                    }}
+                                    className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400 transition-all focus:ring-4 focus:ring-blue-500/20"
+                                />
+                            </div>
+                            <div className="flex justify-between mt-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest px-1">
+                                <span>Początek x kadencji</span>
+                                <span>Przewiń suwak, aby cofnąć się w czasie</span>
+                            </div>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-slate-800 to-slate-900 px-8 py-5 rounded-2xl border border-slate-700 text-center shrink-0 shadow-inner min-w-[200px]">
+                            <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Strona katalogu</div>
+                            <div className="text-3xl font-black text-white flex items-center justify-center gap-2">
+                                {Math.floor(startIndex / ITEMS_PER_PAGE) + 1}
+                                <span className="text-slate-600 font-medium text-xl">/</span>
+                                <span className="text-slate-500 font-medium text-xl">{Math.ceil(filteredPrints.length / ITEMS_PER_PAGE)}</span>
+                            </div>
+                        </div>
                     </div>
-                )
-            }
-        </div >
+                </div>
+            )}
+
+            {!loading && filteredPrints.length > 0 && (
+                <div className="text-center mt-8 text-slate-500 text-sm font-medium">
+                    Pokazano {Math.min(ITEMS_PER_PAGE, filteredPrints.length - startIndex)} z {filteredPrints.length} dostępnych druków.
+                </div>
+            )}
+        </div>
     );
 }
-

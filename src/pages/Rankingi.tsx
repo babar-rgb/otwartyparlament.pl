@@ -151,27 +151,27 @@ export default function Rankingi() {
 
         {/* Quick Access Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <Link to="/majatek" className="bg-white p-6 rounded-xl border border-emerald-100 shadow-sm hover:shadow-md transition-all group flex items-center justify-between">
+          <Link to="/majatek" className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-emerald-100 dark:border-emerald-900/30 shadow-sm hover:shadow-md transition-all group flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
+              <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                 <HandCoins size={24} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">Ranking Majątków</h3>
-                <p className="text-sm text-slate-500">Zobacz kto jest najbogatszym posłem</p>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">Ranking Majątków</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Zobacz kto jest najbogatszym posłem</p>
               </div>
             </div>
             <TrendingUp className="text-emerald-300 group-hover:text-emerald-600 transition-colors" />
           </Link>
 
-          <Link to="/wypowiedzi" className="bg-white p-6 rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-all group flex items-center justify-between">
+          <Link to="/wypowiedzi" className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-blue-100 dark:border-blue-900/30 shadow-sm hover:shadow-md transition-all group flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400">
                 <Mic size={24} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-700 transition-colors">Wyszukiwarka Wypowiedzi</h3>
-                <p className="text-sm text-slate-500">Przeszukaj stenogramy z posiedzeń</p>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">Wyszukiwarka Wypowiedzi</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Przeszukaj stenogramy z posiedzeń</p>
               </div>
             </div>
             <TrendingUp className="text-blue-300 group-hover:text-blue-600 transition-colors" />
@@ -420,20 +420,20 @@ export default function Rankingi() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-6">
-          <h3 className="font-bold text-slate-900 mb-2 flex items-center gap-2">
+        <div className="bg-yellow-50/50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800/30 rounded-xl p-6 transition-colors">
+          <h3 className="font-bold text-yellow-900 dark:text-yellow-400 mb-2 flex items-center gap-2">
             <Trophy size={20} className="text-yellow-600" />
             O rankingach
           </h3>
-          <p className="text-sm text-slate-700">
+          <p className="text-sm text-slate-700 dark:text-slate-400">
             Rankingi generowane są automatycznie na podstawie analizy wszystkich głosowań w tej kadencji.
             "Wyłamali się" to posłowie, którzy najczęściej głosują inaczej niż większość ich klubu.
           </p>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="font-bold text-slate-900 mb-2">Metodologia</h3>
-          <p className="text-sm text-slate-700">
+        <div className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800/30 rounded-xl p-6 transition-colors">
+          <h3 className="font-bold text-blue-900 dark:text-blue-400 mb-2">Metodologia</h3>
+          <p className="text-sm text-slate-700 dark:text-slate-400">
             Dane pochodzą z oficjalnych rejestrów Sejmu. Frekwencja liczona jest jako procent udziału w głosowaniach.
           </p>
         </div>

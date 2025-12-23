@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users,
   FileText,
@@ -7,7 +8,7 @@ import {
   Calendar,
   TrendingUp,
   LayoutDashboard,
-  Zap,
+  BarChart3,
   ArrowRight,
   ChevronDown
 } from 'lucide-react';
@@ -35,7 +36,9 @@ interface TopVote {
 }
 
 export default function Home() {
-  const { term } = useTerm();
+  const { term, setTerm } = useTerm();
+  const [termDropdownOpen, setTermDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [viewMode, setViewMode] = useState<'vote' | 'party'>('vote');
   const [stats, setStats] = useState<DashboardStats>({
     mpsCount: 460,
@@ -51,7 +54,18 @@ export default function Home() {
     fetchDashboardData();
     // Safety Force Stop
     const maxWait = setTimeout(() => setLoading(false), 4000);
-    return () => clearTimeout(maxWait);
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setTermDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      clearTimeout(maxWait);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, [term]);
 
   async function fetchDashboardData() {
@@ -150,12 +164,44 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="relative group">
-              <button className="flex items-center gap-2 px-4 py-2 bg-[#16162d] border border-white/10 rounded-xl hover:bg-[#1c1c3a] transition-all">
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setTermDropdownOpen(!termDropdownOpen)}
+                className="flex items-center gap-2 px-4 py-2 bg-[#16162d] border border-white/10 rounded-xl hover:bg-[#1c1c3a] transition-all"
+              >
                 <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
                 <span className="font-bold text-sm tracking-wide">{term} Kadencja</span>
-                <ChevronDown className="w-4 h-4 opacity-50" />
+                <ChevronDown className={`w-4 h-4 opacity-50 transition-transform duration-300 ${termDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
+
+              <AnimatePresence>
+                {termDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute top-full right-0 mt-2 w-48 bg-[#16162d] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 p-1"
+                  >
+                    {[10, 9].map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => {
+                          setTerm(t as any);
+                          setTermDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 rounded-lg text-sm font-bold transition-all flex items-center justify-between group ${term === t ? 'bg-indigo-500 text-white' : 'hover:bg-white/5 text-white/70 hover:text-white'}`}
+                      >
+                        <span>{t} Kadencja</span>
+                        {term === t ? (
+                          <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                        ) : (
+                          <span className="text-[10px] opacity-0 group-hover:opacity-40 transition-opacity">WYBIERZ</span>
+                        )}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             <div className="relative hidden md:block">
@@ -177,17 +223,17 @@ export default function Home() {
 
         {/* Top Row Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {/* Main Status Card -> /live */}
+          {/* Main Status Card -> /rankingi */}
           {loading ? <CardSkeleton /> : (
-            <Link to="/live" className="md:col-span-2 relative group overflow-hidden block">
+            <Link to="/rankingi" className="md:col-span-2 relative group overflow-hidden block">
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="bg-[#111126] border border-white/5 rounded-[2rem] p-8 h-full flex items-center gap-6 relative z-10 transition-transform group-hover:scale-[1.01]">
                 <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center shrink-0">
-                  <Zap className="w-8 h-8 text-indigo-400" />
+                  <BarChart3 className="w-8 h-8 text-indigo-400" />
                 </div>
                 <div>
                   <p className="text-indigo-400 text-xs font-black uppercase tracking-widest mb-1">Status Prac</p>
-                  <h3 className="text-2xl font-black mb-1">Przegląd Sejmowy</h3>
+                  <h3 className="text-2xl font-black mb-1">Rankingi Aktywności</h3>
                   <p className="text-white/50 text-sm">Automatyczna analiza aktywności posłów i komisji.</p>
                 </div>
                 <div className="ml-auto flex -space-x-3">

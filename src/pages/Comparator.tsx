@@ -301,7 +301,7 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
                             </div>
                         </div>
                     ) : (
-                        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 font-black text-xl border-4 border-white shadow-sm">
+                        <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-400 font-black text-xl border-4 border-slate-50 dark:border-slate-900 shadow-sm">
                             VS
                         </div>
                     )}
