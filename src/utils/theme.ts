@@ -1,25 +1,25 @@
 export const getPartyStyle = (party: string): string => {
     const p = party?.toLowerCase() || '';
 
+    // Konfederacja - MUST be before KO check (contains 'ko' substring!)
+    if (p.includes('konfederacja') || p.includes('nowa nadzieja') || p.includes('ruch narodowy'))
+        return 'bg-gradient-to-r from-[#0a1628] to-[#000000] text-white border-transparent shadow-md';
+
     // KO / Koalicja Obywatelska
-    if (p.includes('ko') || p.includes('koalicja obywatelska') || p.includes('po') || p.includes('nowoczesna') || p.includes('inicjatywa polska'))
+    if (p.includes('koalicja obywatelska') || p === 'ko' || p.includes('platforma') || p.includes('nowoczesna') || p.includes('inicjatywa polska'))
         return 'bg-gradient-to-r from-orange-500 to-red-500 text-white border-transparent shadow-md';
 
     // PiS / Prawo i Sprawiedliwość
     if (p.includes('pis') || p.includes('prawo i sprawiedliwość') || p.includes('suwerenna polska'))
         return 'bg-gradient-to-r from-blue-700 to-blue-900 text-white border-transparent shadow-md';
 
-    // Polska 2050
+    // Polska 2050 - official golden yellow
     if (p.includes('polska 2050') || p.includes('trzecia droga (polska 2050)'))
-        return 'bg-yellow-400 text-black border-transparent shadow-md';
+        return 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 border-transparent shadow-md';
 
     // PSL
     if (p.includes('psl') || p.includes('trzecia droga (psl)') || p.includes('ludowe'))
         return 'bg-gradient-to-r from-green-600 to-emerald-700 text-white border-transparent shadow-md';
-
-    // Konfederacja
-    if (p.includes('konfederacja') || p.includes('nowa nadzieja') || p.includes('ruch narodowy'))
-        return 'bg-gradient-to-r from-[#091F42] to-[#0f284d] text-white border-transparent shadow-md';
 
     // Lewica / Razem
     if (p.includes('lewica') || p.includes('razem') || p.includes('nowa lewica'))
@@ -37,15 +37,18 @@ export const getPartyStyle = (party: string): string => {
 export const getPartyHexColor = (party: string): string => {
     const p = party?.toLowerCase() || '';
 
-    if (p.includes('ko') || p.includes('koalicja')) return '#0096FF'; // Blue/Orange hybrid used in charts usually
-    if (p.includes('pis') || p.includes('prawo')) return '#800000'; // Dark Blue/Red? No, PiS is Blue usually. Let's standarize to commonly used. 
-    // Actually, let's match the MpProfile implementation
+    // Konfederacja - check FIRST (contains 'ko' substring!)
+    if (p.includes('konfederacja') || p.includes('konf')) return '#0a1628';
 
-    if (p.includes('pis')) return '#000080';
-    if (p.includes('ko')) return '#E30613'; // KO often red/orange heart
+    // KO
+    if (p.includes('koalicja') || p === 'ko') return '#E30613';
+
+    // PiS
+    if (p.includes('pis') || p.includes('prawo')) return '#000080';
+
+    // Others
     if (p.includes('polska 2050')) return '#FCD34D';
     if (p.includes('psl')) return '#16A34A';
-    if (p.includes('konf')) return '#0F172A';
     if (p.includes('lewica')) return '#C026D3';
 
     return '#64748B';

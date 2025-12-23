@@ -53,7 +53,7 @@ export default function Footer() {
             <span>Projekt non-profit dedykowany przejrzystości i demokracji</span>
           </div>
           <div className="text-center text-xs text-slate-500">
-            © 2024 Otwarty Parlament. Wszystkie dane są publiczne i otwarte.
+            © 2025 Otwarty Parlament. Wszystkie dane są publiczne i otwarte.
           </div>
         </div>
       </div>

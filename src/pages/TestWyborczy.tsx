@@ -4,14 +4,14 @@ import realVotesData from '../data/realTestVotes.json';
 
 // Party colors mapping
 const PARTY_COLORS: Record<string, string> = {
-  'PiS': '#800000',
-  'KO': '#0096FF',
-  'Polska2050': '#00A150',
-  'PSL-TD': '#90EE90',
-  'Lewica': '#FF0000',
-  'Konfederacja': '#000080',
-  'Razem': '#800080',
-  'Kukiz15': '#000000',
+  'PiS': '#1e3a8a',
+  'KO': '#ea580c',
+  'Polska2050': '#eab308',
+  'PSL-TD': '#16a34a',
+  'Lewica': '#dc2626',
+  'Konfederacja': '#0a1628',
+  'Razem': '#9333ea',
+  'Kukiz15': '#334155',
 };
 
 const PARTY_NAMES: Record<string, string> = {

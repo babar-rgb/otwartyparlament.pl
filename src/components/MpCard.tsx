@@ -7,75 +7,71 @@ interface MpCardProps {
 }
 
 export default function MpCard({ mp }: MpCardProps) {
-  const getPartyColor = (party: string): string => {
-    const colors: Record<string, string> = {
-      KO: '#E31E2D', // Red
-      PiS: '#003876', // Blue
-      'Polska2050-TD': '#FDB913', // Yellow
-      'PSL-TD': '#00A150', // Green (same as Polska2050)
-      Lewica: 'linear-gradient(135deg, #6a1b9a 0%, #d32f2f 100%)', // Gradient
-      Konfederacja: '#091F42', // Navy
-      Razem: '#99004F', // Razem Purple
-      Republikanie: '#002D62', // Republikanie Dark Navy
-      Konfederacja_KP: '#D4AF37', // Konfederacja KP Gold
-      Niezależni: 'linear-gradient(135deg, #9CA3AF 0%, #4B5563 100%)', // Grey Gradient
-    };
-    return colors[party] || '#64748B'; // Default gray
+  const getPartyBadge = (party: string): string => {
+    const p = party?.toUpperCase() || '';
+    // Check Konfederacja FIRST (contains 'KO')
+    if (p.includes('KONFEDERACJA')) return 'bg-gradient-to-r from-[#0a1628] to-[#000000] text-white';
+    if (p.includes('KO')) return 'bg-gradient-to-r from-orange-500 to-red-600 text-white';
+    if (p.includes('PIS')) return 'bg-blue-700 text-white';
+    if (p.includes('2050') || p.includes('TD')) return 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900';
+    if (p.includes('PSL')) return 'bg-green-600 text-white';
+    if (p.includes('LEWICA')) return 'bg-gradient-to-r from-purple-600 to-red-500 text-white';
+    return 'bg-slate-500 text-white';
   };
 
-  const attendanceRate = mp.attendanceRate || Math.floor(Math.random() * 15) + 85; // 85-99%
+  const attendanceRate = mp.attendanceRate || 0;
 
   return (
     <Link to={`/poslowie/${mp.slug || mp.id}`}>
       <motion.div
-        className="group bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-lg hover:-translate-y-1 p-6 flex flex-col items-center text-center relative overflow-hidden"
-        whileHover={{ y: -5 }}
+        className="group bg-white rounded-2xl shadow-sm border border-slate-200 hover:shadow-lg hover:border-slate-300 transition-all duration-300 overflow-hidden"
+        whileHover={{ y: -4 }}
         whileTap={{ scale: 0.98 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        transition={{ type: "spring", stiffness: 400, damping: 30 }}
       >
-        {/* Decorative background gradient */}
-        <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-slate-50 dark:from-slate-800 to-transparent opacity-50" />
-
-        {/* Photo with party badge */}
-        <div className="relative mb-4 z-10">
-          <div className="w-40 h-40 rounded-full p-1 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm group-hover:shadow-md transition-shadow">
-            <img
-              src={mp.photo_url || '/assets/mps/placeholder.jpg'}
-              alt={`${mp.first_name} ${mp.last_name}`}
-              className="w-full h-full rounded-full object-cover"
-            />
-          </div>
-          {/* Party Badge - Bottom Center of Photo */}
-          <div
-            className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 px-3 py-0.5 rounded-full text-white text-[10px] font-bold shadow-sm border-2 border-white dark:border-slate-900 whitespace-nowrap"
-            style={{ background: getPartyColor(mp.club) }}
-          >
-            {mp.club}
-          </div>
+        {/* Photo - professional headshot style */}
+        <div className="aspect-[3/4] overflow-hidden bg-slate-100 relative">
+          <img
+            src={mp.photo_url || `https://ui-avatars.com/api/?name=${mp.first_name}+${mp.last_name}&background=e2e8f0&color=475569`}
+            alt={`${mp.first_name} ${mp.last_name}`}
+            className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500 contrast-[1.1] saturate-[1.1] brightness-[1.05]"
+            loading="lazy"
+          />
         </div>
 
-        {/* Card content */}
-        <div className="w-full z-10">
-          <h3 className="font-bold text-slate-900 dark:text-slate-100 text-lg mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-            {mp.first_name} {mp.last_name}
-          </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 font-medium uppercase tracking-wide">
-            {mp.district ? `Okręg ${mp.district}` : 'Poseł na Sejm RP'}
-          </p>
-
-          {/* Attendance with Progress Bar */}
-          <div className="w-full bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 border border-slate-100 dark:border-slate-700">
-            <div className="flex justify-between items-center text-xs mb-1.5">
-              <span className="text-slate-500 dark:text-slate-400 font-medium">Frekwencja</span>
-              <span className="font-bold text-slate-700 dark:text-slate-200">{attendanceRate}%</span>
+        {/* Content */}
+        <div className="p-4 space-y-3 bg-white">
+          {/* Name and party */}
+          <div>
+            <h3 className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition-colors leading-tight">
+              {mp.first_name} {mp.last_name}
+            </h3>
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md ${getPartyBadge(mp.club)}`}>
+                {mp.club}
+              </span>
+              {mp.district && (
+                <span className="text-[11px] text-slate-500">
+                  Okręg {mp.district}
+                </span>
+              )}
             </div>
-            {/* Progress Bar */}
-            <div className="h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+          </div>
+
+          {/* Attendance stat */}
+          <div className="pt-3 border-t border-slate-100">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide">Obecność</span>
+              <span className="text-lg font-bold text-slate-900">
+                {attendanceRate}<span className="text-xs text-slate-400 font-normal">%</span>
+              </span>
+            </div>
+            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full"
+                className={`h-full rounded-full ${attendanceRate >= 90 ? 'bg-emerald-500' : attendanceRate >= 70 ? 'bg-amber-500' : 'bg-rose-500'}`}
                 initial={{ width: 0 }}
                 animate={{ width: `${attendanceRate}%` }}
-                transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
               />
             </div>
           </div>

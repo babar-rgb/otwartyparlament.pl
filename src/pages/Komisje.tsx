@@ -88,134 +88,159 @@ export default function Komisje() {
         return matchesSearch && matchesType;
     });
 
-    const committeeTypes = [...new Set(committees.map(c => c.committee_type).filter(Boolean))];
+
 
     const totalSittings = committees.reduce((sum, c) => sum + (c.sitting_count || 0), 0);
     const totalMembers = committees.reduce((sum, c) => sum + (c.member_count || 0), 0);
 
     if (loading) {
         return (
-            <div className="container mx-auto px-4 pt-24 pb-12">
-                <div className="animate-pulse space-y-4">
-                    <div className="h-8 bg-slate-200 rounded w-48"></div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {[...Array(6)].map((_, i) => (
-                            <div key={i} className="h-40 bg-slate-200 rounded-xl"></div>
-                        ))}
-                    </div>
-                </div>
+            <div className="min-h-screen bg-[#06060c] flex items-center justify-center">
+                <div className="text-white/40 text-sm font-medium tracking-wider uppercase">Ładowanie komisji...</div>
             </div>
         );
     }
 
     return (
-        <div className="container mx-auto px-4 pt-24 pb-12">
+        <div className="min-h-screen bg-[#06060c] pt-24 pb-16 px-4 md:px-8">
             <SEO
                 title="Komisje Sejmowe"
                 description="Lista wszystkich komisji sejmowych z informacjami o posiedzeniach, członkach i agendzie."
             />
 
-            {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-                    Komisje Sejmowe
-                </h1>
-                <p className="text-slate-600 dark:text-slate-400">
-                    Komisje to miejsce, gdzie powstaje prawo — 80% pracy parlamentarnej odbywa się tutaj.
-                </p>
-            </div>
+            <div className="max-w-7xl mx-auto">
+                {/* Header */}
+                <div className="mb-10">
+                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 tracking-tight">
+                        Komisje Sejmowe
+                    </h1>
+                    <p className="text-lg text-white/50 max-w-2xl">
+                        Komisje to miejsce, gdzie powstaje prawo — 80% pracy parlamentarnej odbywa się tutaj.
+                    </p>
+                </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 mb-8">
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-blue-600">{committees.length}</div>
-                    <div className="text-sm text-slate-600 dark:text-slate-400">Komisji</div>
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-4 mb-10">
+                    <div className="bg-[#111126] border border-white/5 rounded-2xl p-6 text-center">
+                        <div className="text-3xl font-bold text-blue-400">{committees.length}</div>
+                        <div className="text-xs font-bold text-white/30 uppercase tracking-widest mt-1">Komisji</div>
+                    </div>
+                    <div className="bg-[#111126] border border-white/5 rounded-2xl p-6 text-center">
+                        <div className="text-3xl font-bold text-emerald-400">{totalSittings.toLocaleString()}</div>
+                        <div className="text-xs font-bold text-white/30 uppercase tracking-widest mt-1">Posiedzeń</div>
+                    </div>
+                    <div className="bg-[#111126] border border-white/5 rounded-2xl p-6 text-center">
+                        <div className="text-3xl font-bold text-purple-400">{totalMembers}</div>
+                        <div className="text-xs font-bold text-white/30 uppercase tracking-widest mt-1">Członkostw</div>
+                    </div>
                 </div>
-                <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-green-600">{totalSittings.toLocaleString()}</div>
-                    <div className="text-sm text-slate-600 dark:text-slate-400">Posiedzeń</div>
-                </div>
-                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4 text-center">
-                    <div className="text-2xl font-bold text-purple-600">{totalMembers}</div>
-                    <div className="text-sm text-slate-600 dark:text-slate-400">Członkostw</div>
-                </div>
-            </div>
 
-            {/* Filters */}
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
-                <div className="relative flex-1">
-                    <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                        type="text"
-                        placeholder="Szukaj komisji..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
+                {/* Filters */}
+                <div className="flex flex-col gap-4 mb-8">
+                    <div className="relative">
+                        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
+                        <input
+                            type="text"
+                            placeholder="Szukaj komisji..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-12 pr-4 py-3 rounded-xl bg-[#111126] border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:border-blue-500/50 transition-all"
+                        />
+                    </div>
+
+                    {/* Filter Buttons */}
+                    <div className="flex flex-wrap gap-2">
+                        <button
+                            onClick={() => setFilterType('all')}
+                            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${filterType === 'all'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white/5 text-white/60 hover:bg-white/10 border border-white/10'
+                                }`}
+                        >
+                            Wszystkie
+                        </button>
+                        <button
+                            onClick={() => setFilterType('STANDING')}
+                            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${filterType === 'STANDING'
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-white/5 text-white/60 hover:bg-white/10 border border-white/10'
+                                }`}
+                        >
+                            Stałe
+                        </button>
+                        <button
+                            onClick={() => setFilterType('EXTRAORDINARY')}
+                            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${filterType === 'EXTRAORDINARY'
+                                ? 'bg-amber-600 text-white'
+                                : 'bg-white/5 text-white/60 hover:bg-white/10 border border-white/10'
+                                }`}
+                        >
+                            Nadzwyczajne
+                        </button>
+                        <button
+                            onClick={() => setFilterType('INVESTIGATIVE')}
+                            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${filterType === 'INVESTIGATIVE'
+                                ? 'bg-rose-600 text-white'
+                                : 'bg-white/5 text-white/60 hover:bg-white/10 border border-white/10'
+                                }`}
+                        >
+                            Śledcze
+                        </button>
+                    </div>
                 </div>
-                <select
-                    value={filterType}
-                    onChange={(e) => setFilterType(e.target.value)}
-                    className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-                >
-                    <option value="all">Wszystkie typy</option>
-                    {committeeTypes.map((type) => (
-                        <option key={type} value={type}>{type}</option>
+
+                {/* Committee Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {filteredCommittees.map((committee) => (
+                        <Link
+                            key={committee.code}
+                            to={`/komisje/${committee.code}`}
+                            className="bg-[#111126] rounded-2xl border border-white/5 p-6 hover:border-white/20 hover:bg-[#16162d] transition-all group"
+                        >
+                            <div className="flex items-start justify-between mb-4">
+                                <div className="p-2 bg-blue-500/10 rounded-xl">
+                                    <Building2 size={20} className="text-blue-400" />
+                                </div>
+                                <span className="text-[10px] font-black text-white/30 bg-white/5 px-2 py-1 rounded-full uppercase tracking-widest">
+                                    {committee.code}
+                                </span>
+                            </div>
+
+                            <h3 className="font-bold text-white mb-3 group-hover:text-blue-400 transition-colors line-clamp-2">
+                                {committee.name}
+                            </h3>
+
+                            <div className="flex flex-wrap gap-4 text-sm text-white/40">
+                                <div className="flex items-center gap-1.5">
+                                    <Users size={14} />
+                                    <span>{committee.member_count || 0} członków</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <Calendar size={14} />
+                                    <span>{committee.sitting_count || 0} posiedzeń</span>
+                                </div>
+                            </div>
+
+                            {committee.last_sitting && (
+                                <div className="mt-4 text-xs text-white/20 flex items-center gap-1">
+                                    <Video size={12} />
+                                    Ostatnie: {new Date(committee.last_sitting).toLocaleDateString('pl-PL')}
+                                </div>
+                            )}
+
+                            <div className="mt-4 flex items-center text-blue-400 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-widest">
+                                Zobacz szczegóły <ArrowRight size={14} className="ml-1" />
+                            </div>
+                        </Link>
                     ))}
-                </select>
-            </div>
-
-            {/* Committee Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredCommittees.map((committee) => (
-                    <Link
-                        key={committee.code}
-                        to={`/komisje/${committee.code}`}
-                        className="bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-200 dark:border-slate-700 p-5 hover:border-blue-300 hover:shadow-lg transition-all group"
-                    >
-                        <div className="flex items-start justify-between mb-3">
-                            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                                <Building2 size={20} className="text-blue-600" />
-                            </div>
-                            <span className="text-xs font-mono text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
-                                {committee.code}
-                            </span>
-                        </div>
-
-                        <h3 className="font-bold text-slate-900 dark:text-white mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
-                            {committee.name}
-                        </h3>
-
-                        <div className="flex flex-wrap gap-3 text-sm text-slate-600 dark:text-slate-400">
-                            <div className="flex items-center gap-1">
-                                <Users size={14} />
-                                <span>{committee.member_count || 0} członków</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <Calendar size={14} />
-                                <span>{committee.sitting_count || 0} posiedzeń</span>
-                            </div>
-                        </div>
-
-                        {committee.last_sitting && (
-                            <div className="mt-3 text-xs text-slate-500 flex items-center gap-1">
-                                <Video size={12} />
-                                Ostatnie: {new Date(committee.last_sitting).toLocaleDateString('pl-PL')}
-                            </div>
-                        )}
-
-                        <div className="mt-3 flex items-center text-blue-600 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                            Zobacz szczegóły <ArrowRight size={14} className="ml-1" />
-                        </div>
-                    </Link>
-                ))}
-            </div>
-
-            {filteredCommittees.length === 0 && (
-                <div className="text-center py-12 text-slate-500">
-                    Nie znaleziono komisji pasujących do kryteriów wyszukiwania.
                 </div>
-            )}
+
+                {filteredCommittees.length === 0 && (
+                    <div className="text-center py-16 text-white/40">
+                        Nie znaleziono komisji pasujących do kryteriów wyszukiwania.
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

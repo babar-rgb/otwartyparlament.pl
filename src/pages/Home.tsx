@@ -236,9 +236,23 @@ export default function Home() {
                   <h3 className="text-2xl font-black mb-1">Rankingi Aktywności</h3>
                   <p className="text-white/50 text-sm">Automatyczna analiza aktywności posłów i komisji.</p>
                 </div>
-                <div className="ml-auto flex -space-x-3">
-                  {[1, 2, 3].map(i => (
-                    <div key={i} className="w-8 h-8 rounded-full border-2 border-[#111126] bg-slate-800" />
+                <div className="ml-auto flex -space-x-2">
+                  {[
+                    { name: 'PiS', abbr: 'PiS', bg: 'bg-blue-700' },
+                    { name: 'KO', abbr: 'KO', bg: 'bg-gradient-to-br from-orange-500 to-red-600' },
+                    { name: 'Polska 2050', abbr: '2050', bg: 'bg-yellow-400' },
+                    { name: 'PSL', abbr: 'PSL', bg: 'bg-green-600' },
+                    { name: 'Lewica', abbr: 'L', bg: 'bg-gradient-to-br from-purple-600 to-red-500' },
+                  ].map((party) => (
+                    <div
+                      key={party.name}
+                      title={party.name}
+                      className={`w-9 h-9 rounded-full border-2 border-[#111126] flex items-center justify-center shadow-lg hover:scale-110 hover:z-10 transition-transform cursor-pointer ${party.bg}`}
+                    >
+                      <span className={`text-[10px] font-black ${party.name === 'Polska 2050' ? 'text-slate-900' : 'text-white'}`}>
+                        {party.abbr}
+                      </span>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -264,9 +278,9 @@ export default function Home() {
               <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                 <TrendingUp className="w-6 h-6 text-amber-400" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-0.5">Na topie</p>
-                <h4 className="text-xl font-black truncate max-w-[120px]">{stats.trendingTopic}</h4>
+                <h4 className="text-xl font-black leading-tight">{stats.trendingTopic}</h4>
               </div>
             </Link>
           )}

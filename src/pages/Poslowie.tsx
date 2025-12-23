@@ -59,12 +59,19 @@ export default function Poslowie() {
     const loadMps = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase
+        // Build query - for historical terms (9), don't filter by active
+        // since all MPs from completed terms are inactive
+        let query = supabase
           .from('mps')
           .select('*')
-          .eq('term', term) // Filter by selected Term
-          .eq('active', true)
-          .order('name', { ascending: true });
+          .eq('term', term);
+
+        // Only filter by active for current term (10)
+        if (term === 10) {
+          query = query.eq('active', true);
+        }
+
+        const { data, error } = await query.order('name', { ascending: true });
 
         if (error) throw error;
 
@@ -153,23 +160,27 @@ export default function Poslowie() {
     };
   }, [mps]);
 
-  if (loading) return <div className="text-center py-12">Ładowanie danych z Sejmu...</div>;
+  if (loading) return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="text-slate-500 text-sm font-medium tracking-wider uppercase">Ładowanie danych...</div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-paper pb-12 pt-32 px-6 md:px-12 font-serif">
+    <div className="min-h-screen bg-slate-50 pb-16 pt-32 px-4 md:px-8">
       <SEO
         title="Lista Posłów"
         description={`Poznaj posłów Sejmu RP ${term === 9 ? 'IX' : 'X'} kadencji. Sprawdź ich frekwencję, bunty i przynależność klubową.`}
       />
-      <div className="max-w-7xl mx-auto space-y-12">
+      <div className="max-w-7xl mx-auto space-y-10">
 
         {/* Header */}
-        <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h1 className="text-5xl md:text-6xl font-extrabold text-ink dark:text-white mb-4 tracking-tight">
+            <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-3 tracking-tight">
               Nasi Reprezentanci
             </h1>
-            <p className="text-xl text-ink-light dark:text-slate-400">
+            <p className="text-lg text-slate-500">
               {mps.length} posłów. Znajdź i weryfikuj.
             </p>
           </div>
@@ -177,39 +188,39 @@ export default function Poslowie() {
         </div>
 
         {/* Search Bar */}
-        <div className="mb-8">
+        <div className="mb-6">
           <div className="relative max-w-2xl mx-auto">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={24} />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={22} />
             <input
               type="text"
               placeholder="Wyszukaj nazwisko posła..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-14 pr-6 py-4 text-lg border-2 border-gray-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400"
+              className="w-full pl-14 pr-6 py-4 text-base bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition text-slate-900 placeholder-slate-400 shadow-sm"
             />
           </div>
         </div>
 
         {/* Party Filter Buttons */}
-        <div className="mb-12">
-          <div className="flex flex-wrap justify-center gap-3">
+        <div className="mb-10">
+          <div className="flex flex-wrap justify-center gap-2.5">
             <button
               onClick={() => setSelectedParty('')}
-              className={`px-6 py-3 rounded-full font-bold transition-all border ${selectedParty === ''
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-white dark:bg-[#24243e] text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-indigo-800 hover:border-blue-300'
-                } `}
+              className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-all border ${selectedParty === ''
+                ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+                : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                }`}
             >
-              Wszyscy {selectedParty === '' && <span className="text-sm ml-1">({mps.length})</span>}
+              Wszyscy {selectedParty === '' && <span className="text-xs ml-1 opacity-70">({mps.length})</span>}
             </button>
 
             {PARTIES.map((party) => (
               <button
                 key={party.id}
                 onClick={() => setSelectedParty(party.id)}
-                className={`px-6 py-3 rounded-full font-bold transition-all border ${selectedParty === party.id
-                  ? getPartyStyle(party.name)
-                  : 'bg-white dark:bg-[#24243e] text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-indigo-800 hover:border-blue-300'
+                className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-all border ${selectedParty === party.id
+                  ? getPartyStyle(party.name) + ' shadow-md'
+                  : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                   }`}
               >
                 {party.name}
@@ -228,14 +239,14 @@ export default function Poslowie() {
         )}
 
         {/* Main Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {filtered.map((mp) => (
             <MpCard key={mp.id} mp={mp} />
           ))}
         </div>
 
         {filtered.length === 0 && (
-          <div className="text-center py-12 text-ink-light dark:text-slate-400">
+          <div className="text-center py-16 text-slate-500">
             Nie znaleziono posłów spełniających kryteria.
           </div>
         )}

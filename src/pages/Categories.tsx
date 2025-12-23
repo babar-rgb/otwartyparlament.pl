@@ -18,14 +18,14 @@ interface Category {
 
 // Color classes for bars
 const BAR_COLORS: Record<string, string> = {
-    blue: 'bg-gradient-to-r from-blue-500 to-blue-600',
-    green: 'bg-gradient-to-r from-green-500 to-green-600',
-    red: 'bg-gradient-to-r from-red-500 to-red-600',
-    slate: 'bg-gradient-to-r from-slate-500 to-slate-600',
-    emerald: 'bg-gradient-to-r from-emerald-500 to-emerald-600',
-    orange: 'bg-gradient-to-r from-orange-500 to-orange-600',
-    purple: 'bg-gradient-to-r from-purple-500 to-purple-600',
-    gray: 'bg-gradient-to-r from-gray-500 to-gray-600',
+    blue: 'bg-gradient-to-r from-blue-500 to-blue-400',
+    green: 'bg-gradient-to-r from-emerald-500 to-emerald-400',
+    red: 'bg-gradient-to-r from-red-500 to-red-400',
+    slate: 'bg-gradient-to-r from-slate-500 to-slate-400',
+    emerald: 'bg-gradient-to-r from-emerald-500 to-emerald-400',
+    orange: 'bg-gradient-to-r from-orange-500 to-orange-400',
+    purple: 'bg-gradient-to-r from-purple-500 to-purple-400',
+    gray: 'bg-gradient-to-r from-slate-500 to-slate-400',
 };
 
 export default function Categories() {
@@ -113,28 +113,23 @@ export default function Categories() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 p-8">
-                <div className="max-w-6xl mx-auto">
-                    <div className="animate-pulse space-y-4">
-                        <div className="h-12 bg-neutral-200 dark:bg-neutral-700 rounded-xl w-1/3" />
-                        <div className="h-64 bg-neutral-200 dark:bg-neutral-700 rounded-xl" />
-                    </div>
-                </div>
+            <div className="min-h-screen bg-[#06060c] flex items-center justify-center">
+                <div className="text-white/40 text-sm font-medium tracking-wider uppercase">Ładowanie kategorii...</div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900">
+        <div className="min-h-screen bg-[#06060c] pt-24 pb-16">
             {/* Header */}
-            <div className="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700">
-                <div className="max-w-6xl mx-auto px-4 py-6">
-                    <div className="flex items-center justify-between mb-4">
+            <div className="border-b border-white/5">
+                <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
+                    <div className="flex items-center justify-between mb-6">
                         <Link
                             to="/"
-                            className="flex items-center gap-2 text-neutral-500 hover:text-blue-600 transition-colors"
+                            className="flex items-center gap-2 text-white/40 hover:text-blue-400 transition-colors text-sm"
                         >
-                            <ArrowLeft size={18} />
+                            <ArrowLeft size={16} />
                             <span>Powrót</span>
                         </Link>
                         <TermSwitcher />
@@ -142,30 +137,30 @@ export default function Categories() {
 
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-3xl font-black text-neutral-900 dark:text-white">
+                            <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 tracking-tight">
                                 Kategorie Głosowań
                             </h1>
-                            <p className="text-neutral-500 mt-1">
+                            <p className="text-white/50 text-lg">
                                 Przeglądaj głosowania według tematyki
                             </p>
                         </div>
 
                         {/* View toggle */}
-                        <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg p-1">
+                        <div className="flex items-center gap-1 bg-white/5 rounded-xl p-1 border border-white/10">
                             <button
                                 onClick={() => setView('chart')}
-                                className={`p-2 rounded-md transition-colors ${view === 'chart'
-                                    ? 'bg-white dark:bg-neutral-600 shadow-sm'
-                                    : 'hover:bg-white/50'
+                                className={`p-2.5 rounded-lg transition-colors ${view === 'chart'
+                                    ? 'bg-white/10 text-white'
+                                    : 'text-white/40 hover:text-white/60'
                                     }`}
                             >
                                 <BarChart3 size={18} />
                             </button>
                             <button
                                 onClick={() => setView('grid')}
-                                className={`p-2 rounded-md transition-colors ${view === 'grid'
-                                    ? 'bg-white dark:bg-neutral-600 shadow-sm'
-                                    : 'hover:bg-white/50'
+                                className={`p-2.5 rounded-lg transition-colors ${view === 'grid'
+                                    ? 'bg-white/10 text-white'
+                                    : 'text-white/40 hover:text-white/60'
                                     }`}
                             >
                                 <Grid3X3 size={18} />
@@ -175,46 +170,46 @@ export default function Categories() {
                 </div>
             </div>
 
-            <div className="max-w-6xl mx-auto px-4 py-8">
+            <div className="max-w-6xl mx-auto px-4 md:px-8 py-10">
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                    <div className="bg-white dark:bg-neutral-800 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-700">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                                <BarChart3 className="text-blue-600" size={20} />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+                    <div className="bg-[#111126] rounded-2xl p-6 border border-white/5">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 bg-blue-500/10 rounded-xl">
+                                <BarChart3 className="text-blue-400" size={20} />
                             </div>
-                            <span className="text-sm text-neutral-500">Wszystkie głosowania</span>
+                            <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Wszystkie głosowania</span>
                         </div>
-                        <p className="text-3xl font-black text-neutral-900 dark:text-white">
+                        <p className="text-3xl font-bold text-white">
                             {totalVotes.toLocaleString()}
                         </p>
                     </div>
 
-                    <div className="bg-white dark:bg-neutral-800 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-700">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                                <Filter className="text-green-600" size={20} />
+                    <div className="bg-[#111126] rounded-2xl p-6 border border-white/5">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 bg-emerald-500/10 rounded-xl">
+                                <Filter className="text-emerald-400" size={20} />
                             </div>
-                            <span className="text-sm text-neutral-500">Sklasyfikowane</span>
+                            <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Sklasyfikowane</span>
                         </div>
-                        <p className="text-3xl font-black text-neutral-900 dark:text-white">
+                        <p className="text-3xl font-bold text-white">
                             {classifiedVotes.toLocaleString()}
-                            <span className="text-lg font-normal text-neutral-400 ml-2">
+                            <span className="text-base font-normal text-white/40 ml-2">
                                 ({coveragePercent}%)
                             </span>
                         </p>
                     </div>
 
-                    <div className="bg-white dark:bg-neutral-800 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-700">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                                <TrendingUp className="text-purple-600" size={20} />
+                    <div className="bg-[#111126] rounded-2xl p-6 border border-white/5">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 bg-purple-500/10 rounded-xl">
+                                <TrendingUp className="text-purple-400" size={20} />
                             </div>
-                            <span className="text-sm text-neutral-500">Kategorie</span>
+                            <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Kategorie</span>
                         </div>
-                        <p className="text-3xl font-black text-neutral-900 dark:text-white">
+                        <p className="text-3xl font-bold text-white">
                             {categories.length}
-                            <span className="text-lg font-normal text-neutral-400 ml-2">
+                            <span className="text-base font-normal text-white/40 ml-2">
                                 domen
                             </span>
                         </p>
@@ -223,12 +218,12 @@ export default function Categories() {
 
                 {/* Chart View */}
                 {view === 'chart' && (
-                    <div className="bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6">
-                        <h2 className="text-xl font-bold text-neutral-900 dark:text-white mb-6">
+                    <div className="bg-[#111126] rounded-2xl border border-white/5 p-6">
+                        <h2 className="text-xl font-bold text-white mb-8">
                             Rozkład głosowań według kategorii
                         </h2>
 
-                        <div className="space-y-6">
+                        <div className="space-y-8">
                             {categories.map(domain => (
                                 <div key={domain.id} className="space-y-3">
                                     {/* Domain bar */}
@@ -236,18 +231,18 @@ export default function Categories() {
                                         to={`/glosowania?category=${domain.slug}&term=${termParam}`}
                                         className="group block"
                                     >
-                                        <div className="flex items-center justify-between mb-1">
-                                            <span className="font-semibold text-neutral-800 dark:text-neutral-200 group-hover:text-blue-600 transition-colors">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="font-semibold text-white group-hover:text-blue-400 transition-colors">
                                                 {domain.name_citizen || domain.name_pl}
                                             </span>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-sm text-neutral-500">
+                                                <span className="text-sm text-white/40">
                                                     {domain.vote_count.toLocaleString()}
                                                 </span>
-                                                <ChevronRight size={16} className="text-neutral-400 group-hover:text-blue-600 transition-colors" />
+                                                <ChevronRight size={16} className="text-white/30 group-hover:text-blue-400 transition-colors" />
                                             </div>
                                         </div>
-                                        <div className="h-8 bg-neutral-100 dark:bg-neutral-700 rounded-lg overflow-hidden">
+                                        <div className="h-8 bg-white/5 rounded-lg overflow-hidden">
                                             <div
                                                 className={`h-full ${BAR_COLORS[domain.color] || BAR_COLORS.gray} rounded-lg transition-all duration-500`}
                                                 style={{ width: `${Math.max((domain.vote_count / maxVotes) * 100, 2)}%` }}
@@ -264,22 +259,22 @@ export default function Categories() {
                                                     to={`/glosowania?category=${area.slug}&term=${termParam}`}
                                                     className="group flex items-center gap-3"
                                                 >
-                                                    <div className="w-32 text-sm text-neutral-600 dark:text-neutral-400 group-hover:text-blue-600 truncate">
+                                                    <div className="w-32 text-sm text-white/40 group-hover:text-blue-400 truncate">
                                                         {area.name_citizen || area.name_pl}
                                                     </div>
-                                                    <div className="flex-1 h-4 bg-neutral-100 dark:bg-neutral-700 rounded overflow-hidden">
+                                                    <div className="flex-1 h-4 bg-white/5 rounded overflow-hidden">
                                                         <div
                                                             className={`h-full ${BAR_COLORS[area.color || domain.color] || BAR_COLORS.gray} opacity-70 rounded transition-all duration-500`}
                                                             style={{ width: `${Math.max((area.vote_count / maxVotes) * 100, 1)}%` }}
                                                         />
                                                     </div>
-                                                    <span className="text-xs text-neutral-500 w-16 text-right">
+                                                    <span className="text-xs text-white/30 w-16 text-right">
                                                         {area.vote_count.toLocaleString()}
                                                     </span>
                                                 </Link>
                                             ))}
                                             {domain.children.length > 5 && (
-                                                <p className="text-xs text-neutral-400 ml-32">
+                                                <p className="text-xs text-white/20 ml-32">
                                                     +{domain.children.length - 5} więcej podkategorii
                                                 </p>
                                             )}
@@ -293,36 +288,36 @@ export default function Categories() {
 
                 {/* Grid View */}
                 {view === 'grid' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                         {categories.map(domain => (
                             <Link
                                 key={domain.id}
                                 to={`/glosowania?category=${domain.slug}&term=${termParam}`}
-                                className="group bg-white dark:bg-neutral-800 rounded-2xl border border-neutral-200 dark:border-neutral-700 p-6 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-700 transition-all"
+                                className="group bg-[#111126] rounded-2xl border border-white/5 p-6 hover:border-white/20 hover:bg-[#16162d] transition-all"
                             >
                                 <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-lg font-bold text-neutral-900 dark:text-white group-hover:text-blue-600 transition-colors">
+                                    <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
                                         {domain.name_citizen || domain.name_pl}
                                     </h3>
-                                    <ChevronRight className="text-neutral-400 group-hover:text-blue-600 transition-colors" size={20} />
+                                    <ChevronRight className="text-white/30 group-hover:text-blue-400 transition-colors" size={20} />
                                 </div>
 
-                                <p className="text-3xl font-black text-neutral-900 dark:text-white mb-4">
+                                <p className="text-3xl font-bold text-white mb-4">
                                     {domain.vote_count.toLocaleString()}
-                                    <span className="text-sm font-normal text-neutral-400 ml-2">głosowań</span>
+                                    <span className="text-sm font-normal text-white/40 ml-2">głosowań</span>
                                 </p>
 
                                 {/* Mini bar chart for subcategories */}
                                 <div className="space-y-2">
                                     {domain.children?.slice(0, 3).map(area => (
                                         <div key={area.id} className="flex items-center gap-2">
-                                            <div className="flex-1 h-2 bg-neutral-100 dark:bg-neutral-700 rounded overflow-hidden">
+                                            <div className="flex-1 h-2 bg-white/5 rounded overflow-hidden">
                                                 <div
                                                     className={`h-full ${BAR_COLORS[domain.color] || BAR_COLORS.gray} opacity-60 rounded`}
                                                     style={{ width: `${Math.max((area.vote_count / (domain.vote_count || 1)) * 100, 5)}%` }}
                                                 />
                                             </div>
-                                            <span className="text-xs text-neutral-500 w-20 truncate">
+                                            <span className="text-xs text-white/30 w-20 truncate">
                                                 {area.name_pl}
                                             </span>
                                         </div>

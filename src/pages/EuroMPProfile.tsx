@@ -127,7 +127,7 @@ const EuroMPProfile = () => {
     };
 
     return (
-        <div className="max-w-5xl mx-auto space-y-6 pt-28 pb-12 px-4 animate-fade-in bg-paper dark:bg-[#1e1b4b] min-h-screen text-neutral-900 dark:text-white">
+        <div className="max-w-5xl mx-auto space-y-6 pt-28 pb-12 px-4 animate-fade-in bg-paper dark:bg-slate-900 min-h-screen text-neutral-900 dark:text-white">
             {/* Back Button */}
             <Link to="/europarlament" className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 font-semibold">
                 <ArrowLeft size={20} />

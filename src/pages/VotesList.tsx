@@ -6,6 +6,7 @@ import { cleanSejmTitle } from '../utils/titleFormatter';
 import { useTerm } from '../context/TermContext';
 import TermSwitcher from '../components/TermSwitcher';
 import SEO from '../components/SEO';
+import { expandSearchQuery } from '../utils/searchContext';
 
 // Simple debounce hook
 function useDebounce<T extends (...args: any[]) => any>(func: T, wait: number) {
@@ -120,7 +121,15 @@ const VotesList: React.FC = () => {
 
             // Apply Filters
             if (search) {
-                query = query.or(`title_clean.ilike.%${search}%,title_raw.ilike.%${search}%`);
+                // Contextual Search Logic
+                const expandedTerms = expandSearchQuery(search);
+                // Create OR pattern for all expanded terms (checking both clean and raw titles)
+                // Format: column.ilike.%term%,column.ilike.%term%
+                const patterns = expandedTerms.map(term =>
+                    `title_clean.ilike.%${term}%,title_raw.ilike.%${term}%`
+                ).join(',');
+
+                query = query.or(patterns);
             }
 
             if (category !== 'WSZYSTKIE') {
@@ -187,21 +196,20 @@ const VotesList: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-paper text-neutral-900 pt-32 pb-12 px-6 md:px-12 font-serif">
+        <div className="min-h-screen bg-[#06060c] text-white pt-24 pb-16 px-4 md:px-8">
             <SEO
                 title="Głosowania Sejmowe"
                 description="Pełne archiwum głosowań Sejmu RP. Przeszukuj wyniki, sprawdzaj, jak głosowali posłowie i analizuj kluczowe decyzje."
             />
-            <div className="max-w-5xl mx-auto space-y-8">
+            <div className="max-w-6xl mx-auto space-y-8">
 
                 {/* Header */}
-                {/* Header */}
-                <div className="space-y-4 mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
-                        <h1 className="text-4xl md:text-5xl font-serif font-bold tracking-tight text-neutral-900">
+                        <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-3">
                             Archiwum Głosowań
                         </h1>
-                        <p className="text-lg text-neutral-600 max-w-2xl font-sans mt-2">
+                        <p className="text-lg text-white/50">
                             Przeszukuj bazę legislacyjną Sejmu {term === 9 ? 'IX' : 'X'} kadencji.
                         </p>
                     </div>
@@ -209,23 +217,28 @@ const VotesList: React.FC = () => {
                 </div>
 
                 {/* SEARCH & FILTER ENGINE */}
-                <div className="bg-white border border-neutral-200 shadow-sm rounded-lg overflow-hidden">
+                <div className="bg-[#111126] border border-white/5 rounded-2xl overflow-hidden">
 
                     {/* A. Top Bar */}
-                    <div className="flex flex-col md:flex-row items-center border-b border-neutral-200">
-                        <div className="relative flex-1 w-full">
-                            <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
+                    <div className="flex flex-col md:flex-row items-center border-b border-white/5">
+                        <div className="relative flex-1 w-full group">
+                            <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 text-white/30 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
                             <input
                                 type="text"
                                 placeholder="Szukaj po tytule (np. podatki, aborcja)..."
                                 value={searchQuery}
                                 onChange={handleSearchChange}
-                                className="w-full pl-16 pr-6 py-6 text-lg bg-transparent border-none focus:ring-0 placeholder:text-neutral-400 font-sans text-neutral-900"
+                                className="w-full pl-14 pr-6 py-5 text-base bg-transparent border-none focus:ring-0 placeholder:text-white/30 text-white"
                             />
+                            {/* Context Search Badge */}
+                            <div className="absolute right-4 top-1/2 transform -translate-y-1/2 hidden md:flex items-center gap-1.5 pointer-events-none opacity-50 group-focus-within:opacity-100 transition-opacity">
+                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
+                                <span className="text-[10px] uppercase font-bold text-blue-400 tracking-wider">AI Context Search</span>
+                            </div>
                         </div>
                         <button
                             onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-                            className={`flex items-center gap-2 px-8 py-6 border-t md:border-t-0 md:border-l border-neutral-200 hover:bg-neutral-50 transition-colors font-sans font-medium text-sm uppercase tracking-wide ${isFiltersOpen ? 'bg-neutral-50 text-blue-600' : 'text-neutral-600'}`}
+                            className={`flex items-center gap-2 px-8 py-5 border-t md:border-t-0 md:border-l border-white/5 hover:bg-white/5 transition-colors text-xs font-bold uppercase tracking-widest ${isFiltersOpen ? 'bg-white/5 text-blue-400' : 'text-white/50'}`}
                         >
                             <SlidersHorizontal className="w-4 h-4" />
                             Filtry
@@ -233,38 +246,38 @@ const VotesList: React.FC = () => {
                     </div>
 
                     {/* B. Collapsible Filter Drawer */}
-                    <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 p-8 bg-neutral-50 border-b border-neutral-200 transition-all duration-300 ease-in-out ${isFiltersOpen ? 'block' : 'hidden'}`}>
+                    <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-[#0c0c1a] border-b border-white/5 transition-all duration-300 ease-in-out ${isFiltersOpen ? 'block' : 'hidden'}`}>
 
                         {/* Control 1: Category */}
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider font-sans">Kategoria</label>
+                            <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">Kategoria</label>
                             <div className="relative">
                                 <select
                                     value={categoryFilter}
                                     onChange={(e) => { setCategoryFilter(e.target.value); setPage(0); setSliderPage(0); }}
-                                    className="w-full appearance-none bg-white border border-neutral-300 rounded-none px-4 py-3 pr-10 focus:border-neutral-900 focus:ring-0 font-sans text-sm"
+                                    className="w-full appearance-none bg-[#111126] border border-white/10 rounded-xl px-4 py-3 pr-10 focus:border-blue-500/50 focus:ring-0 text-sm text-white"
                                 >
                                     {CATEGORIES.map(cat => (
                                         <option key={cat} value={cat}>{cat === 'WSZYSTKIE' ? 'Wszystkie kategorie' : cat}</option>
                                     ))}
                                 </select>
-                                <Filter className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-4 h-4 pointer-events-none" />
+                                <Filter className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/30 w-4 h-4 pointer-events-none" />
                             </div>
                         </div>
 
                         {/* Control 2: Verdict (Segmented Control) */}
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider font-sans">Wynik</label>
-                            <div className="flex rounded-none border border-neutral-300 bg-white overflow-hidden">
+                            <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">Wynik</label>
+                            <div className="flex rounded-xl border border-white/10 bg-[#111126] overflow-hidden">
                                 {['WSZYSTKIE', 'PRZYJĘTO', 'ODRZUCONO'].map((v) => (
                                     <button
                                         key={v}
                                         onClick={() => { setVerdictFilter(v); setPage(0); setSliderPage(0); }}
-                                        className={`flex-1 py-3 text-xs font-bold font-sans transition-colors ${verdictFilter === v
-                                            ? v === 'PRZYJĘTO' ? 'bg-green-600 text-white'
-                                                : v === 'ODRZUCONO' ? 'bg-red-600 text-white'
-                                                    : 'bg-neutral-900 text-white'
-                                            : 'hover:bg-neutral-50 text-neutral-600'
+                                        className={`flex-1 py-3 text-xs font-bold transition-colors ${verdictFilter === v
+                                            ? v === 'PRZYJĘTO' ? 'bg-emerald-500/20 text-emerald-400'
+                                                : v === 'ODRZUCONO' ? 'bg-red-500/20 text-red-400'
+                                                    : 'bg-white/10 text-white'
+                                            : 'hover:bg-white/5 text-white/40'
                                             }`}
                                     >
                                         {v === 'WSZYSTKIE' ? 'WSZYSTKIE' : v}
@@ -275,20 +288,20 @@ const VotesList: React.FC = () => {
 
                         {/* Control 3: Date Range */}
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider font-sans">Data</label>
+                            <label className="text-[10px] font-black text-white/40 uppercase tracking-widest">Data</label>
                             <div className="flex gap-2">
                                 <input
                                     type="date"
                                     value={dateRange.start}
                                     onChange={(e) => { setDateRange(prev => ({ ...prev, start: e.target.value })); setPage(0); setSliderPage(0); }}
-                                    className="w-full bg-white border border-neutral-300 rounded-none px-3 py-3 focus:border-neutral-900 focus:ring-0 font-sans text-sm"
+                                    className="w-full bg-[#111126] border border-white/10 rounded-xl px-3 py-3 focus:border-blue-500/50 focus:ring-0 text-sm text-white [color-scheme:dark]"
                                     placeholder="Od"
                                 />
                                 <input
                                     type="date"
                                     value={dateRange.end}
                                     onChange={(e) => { setDateRange(prev => ({ ...prev, end: e.target.value })); setPage(0); setSliderPage(0); }}
-                                    className="w-full bg-white border border-neutral-300 rounded-none px-3 py-3 focus:border-neutral-900 focus:ring-0 font-sans text-sm"
+                                    className="w-full bg-[#111126] border border-white/10 rounded-xl px-3 py-3 focus:border-blue-500/50 focus:ring-0 text-sm text-white [color-scheme:dark]"
                                     placeholder="Do"
                                 />
                             </div>
@@ -296,18 +309,22 @@ const VotesList: React.FC = () => {
                     </div>
 
                     {/* Sort Toggles */}
-                    <div className="px-8 py-4 bg-white border-t border-neutral-100 flex items-center gap-4">
-                        <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider font-sans">Sortuj:</span>
+                    <div className="px-6 py-4 bg-[#0c0c18] border-t border-white/5 flex items-center gap-4">
+                        <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">Sortuj:</span>
                         <div className="flex gap-2">
                             <button
                                 onClick={() => setSortMode('LATEST')}
-                                className={`px-4 py-2 text-xs font-bold uppercase tracking-wide rounded-full transition-colors font-sans ${sortMode === 'LATEST' ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'}`}
+                                className={`px-5 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all border ${sortMode === 'LATEST'
+                                    ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)] border-blue-500'
+                                    : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white'}`}
                             >
                                 Najnowsze
                             </button>
                             <button
                                 onClick={() => setSortMode('IMPORTANT')}
-                                className={`px-4 py-2 text-xs font-bold uppercase tracking-wide rounded-full transition-colors font-sans ${sortMode === 'IMPORTANT' ? 'bg-blue-600 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'}`}
+                                className={`px-5 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all border ${sortMode === 'IMPORTANT'
+                                    ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)] border-blue-500'
+                                    : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white'}`}
                             >
                                 Najważniejsze
                             </button>
@@ -315,15 +332,15 @@ const VotesList: React.FC = () => {
                     </div>
 
                     {/* Results Counter & Active Filters */}
-                    <div className="px-8 py-4 bg-white flex justify-between items-center">
-                        <span className="text-sm font-sans text-neutral-500">
-                            Znaleziono <strong className="text-neutral-900">{totalCount}</strong> wyników
-                            {searchQuery && <span> dla frazy "<span className="text-neutral-900">{searchQuery}</span>"</span>}
+                    <div className="px-6 py-4 flex justify-between items-center">
+                        <span className="text-sm text-white/50">
+                            Znaleziono <strong className="text-white">{totalCount}</strong> wyników
+                            {searchQuery && <span> dla frazy "<span className="text-white">{searchQuery}</span>"</span>}
                         </span>
                         {hasActiveFilters && (
                             <button
                                 onClick={clearFilters}
-                                className="text-xs font-bold text-red-600 hover:text-red-700 uppercase tracking-wide font-sans flex items-center gap-1"
+                                className="text-xs font-bold text-red-400 hover:text-red-300 uppercase tracking-wide flex items-center gap-1"
                             >
                                 <X className="w-3 h-3" />
                                 Wyczyść filtry
@@ -333,27 +350,27 @@ const VotesList: React.FC = () => {
                 </div>
 
                 {/* List */}
-                <div className="space-y-4">
+                <div className="space-y-3">
                     {errorMsg ? (
-                        <div className="p-4 bg-red-50 border border-red-200 text-red-600 flex items-center gap-2 font-sans">
+                        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 flex items-center gap-2">
                             <AlertCircle className="w-5 h-5" />
                             <span>Błąd: {errorMsg}</span>
                         </div>
                     ) : loading && votes.length === 0 ? (
-                        <div className="text-center py-12 text-neutral-500 font-sans">Ładowanie archiwum...</div>
+                        <div className="text-center py-16 text-white/40">Ładowanie archiwum...</div>
                     ) : votes.length === 0 ? (
-                        <div className="text-center py-16 bg-white border border-neutral-200 rounded-lg">
+                        <div className="text-center py-16 bg-[#111126] border border-white/5 rounded-2xl">
                             <div className="flex flex-col items-center gap-4">
-                                <div className="p-4 bg-neutral-100 rounded-full">
-                                    <Search className="w-8 h-8 text-neutral-400" />
+                                <div className="p-4 bg-white/5 rounded-full">
+                                    <Search className="w-8 h-8 text-white/30" />
                                 </div>
-                                <h3 className="text-lg font-bold text-neutral-900 font-sans">Brak wyników</h3>
-                                <p className="text-neutral-500 font-sans max-w-md mx-auto">
+                                <h3 className="text-lg font-bold text-white">Brak wyników</h3>
+                                <p className="text-white/40 max-w-md mx-auto">
                                     Nie znaleziono głosowań spełniających wybrane kryteria. Spróbuj zmienić filtry lub wpisać inną frazę.
                                 </p>
                                 <button
                                     onClick={clearFilters}
-                                    className="mt-2 px-6 py-2 bg-neutral-900 text-white text-sm font-bold uppercase tracking-wide hover:bg-neutral-800 transition-colors"
+                                    className="mt-2 px-6 py-2 bg-white text-[#06060c] text-xs font-bold uppercase tracking-wide hover:bg-white/90 transition-colors rounded-full"
                                 >
                                     Wyczyść filtry
                                 </button>
@@ -364,60 +381,60 @@ const VotesList: React.FC = () => {
                             <Link
                                 key={vote.id}
                                 to={`/glosowania/${term}/${vote.sitting}/${vote.voting_number}`}
-                                className="group block bg-white border border-neutral-200 p-6 hover:border-blue-500 transition-all shadow-sm hover:shadow-md"
+                                className="group block bg-[#111126] border border-white/5 rounded-xl p-5 hover:border-white/20 hover:bg-[#16162d] transition-all"
                             >
-                                <div className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
+                                <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
 
                                     {/* Info */}
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-3 mb-2 font-sans flex-wrap">
+                                        <div className="flex items-center gap-2 mb-2 flex-wrap">
                                             {(vote.importance_score && vote.importance_score >= 7) && (
-                                                <span className="flex items-center gap-1 text-xs font-bold text-amber-600 uppercase tracking-wider bg-amber-50 px-2 py-1 border border-amber-200">
-                                                    <Star className="w-3 h-3 fill-amber-500" /> Kluczowe
+                                                <span className="flex items-center gap-1 text-[10px] font-black text-amber-400 uppercase tracking-widest bg-amber-500/10 px-2 py-1 rounded-full border border-amber-500/20">
+                                                    <Star className="w-3 h-3 fill-amber-400" /> Kluczowe
                                                 </span>
                                             )}
-                                            <span className="text-xs font-bold text-blue-600 uppercase tracking-wider bg-blue-50 px-2 py-1">
+                                            <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest bg-blue-500/10 px-2 py-1 rounded-full">
                                                 {vote.category || 'Głosowanie'}
                                             </span>
-                                            <span className="text-xs text-neutral-400">
+                                            <span className="text-xs text-white/30">
                                                 {new Date(vote.date).toLocaleDateString('pl-PL')}
                                             </span>
                                         </div>
                                         <h3
-                                            className="text-xl font-serif font-bold text-neutral-900 group-hover:text-blue-600 transition-colors leading-snug mb-2"
+                                            className="text-base font-bold text-white group-hover:text-blue-400 transition-colors leading-snug mb-1"
                                             title={vote.title_clean || vote.title_raw || ''}
                                         >
                                             {vote.title_short || cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
                                         </h3>
-                                        <p className="text-sm text-neutral-500 font-sans">
+                                        <p className="text-xs text-white/30">
                                             Posiedzenie {vote.sitting}, Głosowanie {vote.voting_number}
                                         </p>
                                     </div>
 
                                     {/* Verdict & Stats */}
-                                    <div className="flex items-center gap-6 md:pl-8 md:border-l border-neutral-100 min-w-[220px]">
+                                    <div className="flex items-center gap-4 md:pl-6 md:border-l border-white/5 min-w-[180px]">
                                         <div className="flex flex-col items-end gap-1 w-full">
-                                            <div className={`flex items-center gap-2 text-sm font-bold uppercase tracking-wide px-3 py-1 rounded-full ${vote.verdict === 'PRZYJĘTO' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                            <div className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full ${vote.verdict === 'PRZYJĘTO' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
                                                 }`}>
                                                 {vote.verdict === 'PRZYJĘTO' ? (
                                                     <>
-                                                        <CheckCircle2 className="w-4 h-4" />
+                                                        <CheckCircle2 className="w-3.5 h-3.5" />
                                                         <span>Przyjęto</span>
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <XCircle className="w-4 h-4" />
+                                                        <XCircle className="w-3.5 h-3.5" />
                                                         <span>Odrzucono</span>
                                                     </>
                                                 )}
                                             </div>
-                                            <div className="text-xs text-neutral-400 font-sans mt-1 flex gap-3">
-                                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500"></span> {vote.details_json?.yes || 0}</span>
+                                            <div className="text-xs text-white/30 mt-1 flex gap-3">
+                                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> {vote.details_json?.yes || 0}</span>
                                                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500"></span> {vote.details_json?.no || 0}</span>
-                                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-neutral-300"></span> {vote.details_json?.abstain || 0}</span>
+                                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-white/30"></span> {vote.details_json?.abstain || 0}</span>
                                             </div>
                                         </div>
-                                        <ArrowRight className="w-5 h-5 text-neutral-300 group-hover:text-blue-500 transition-colors" />
+                                        <ArrowRight className="w-5 h-5 text-white/20 group-hover:text-blue-400 transition-colors" />
                                     </div>
 
                                 </div>
@@ -428,11 +445,11 @@ const VotesList: React.FC = () => {
 
                 {/* Pagination */}
                 {votes.length > 0 && (
-                    <div className="flex flex-col items-center gap-6 pt-8 pb-12">
+                    <div className="flex flex-col items-center gap-6 pt-10">
 
                         {/* Slider Control */}
                         <div className="w-full max-w-md flex items-center gap-4">
-                            <span className="text-xs font-bold text-neutral-400 font-sans">1</span>
+                            <span className="text-xs font-bold text-white/30">1</span>
                             <input
                                 type="range"
                                 min={0}
@@ -441,31 +458,31 @@ const VotesList: React.FC = () => {
                                 onChange={handleSliderChange}
                                 onMouseUp={handleSliderCommit}
                                 onTouchEnd={handleSliderCommit}
-                                className="flex-1 h-2 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-neutral-900 dark:accent-white"
+                                className="flex-1 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-500"
                             />
-                            <span className="text-xs font-bold text-neutral-400 font-sans">
+                            <span className="text-xs font-bold text-white/30">
                                 {Math.ceil(totalCount / PAGE_SIZE)}
                             </span>
                         </div>
 
                         {/* Page Info & Buttons */}
-                        <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-4">
                             <button
                                 onClick={() => setPage(p => Math.max(0, p - 1))}
                                 disabled={page === 0}
-                                className="px-6 py-2 bg-white dark:bg-slate-800 border border-neutral-200 dark:border-slate-700 text-xs font-bold uppercase tracking-wide disabled:opacity-50 hover:bg-neutral-50 dark:hover:bg-slate-700 transition-colors font-sans rounded-lg text-neutral-900 dark:text-white"
+                                className="px-5 py-2.5 bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-wide disabled:opacity-30 hover:bg-white/10 transition-colors rounded-full text-white"
                             >
                                 Poprzednia
                             </button>
 
-                            <span className="text-sm font-bold font-sans text-neutral-900 dark:text-white">
+                            <span className="text-sm font-bold text-white">
                                 Strona {sliderPage + 1} z {Math.ceil(totalCount / PAGE_SIZE)}
                             </span>
 
                             <button
                                 onClick={() => setPage(p => Math.min(Math.ceil(totalCount / PAGE_SIZE) - 1, p + 1))}
                                 disabled={page >= Math.ceil(totalCount / PAGE_SIZE) - 1}
-                                className="px-6 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 border border-neutral-900 dark:border-white text-xs font-bold uppercase tracking-wide hover:bg-neutral-800 dark:hover:bg-slate-200 transition-colors font-sans disabled:opacity-50 rounded-lg"
+                                className="px-5 py-2.5 bg-blue-600 text-white text-xs font-bold uppercase tracking-wide hover:bg-blue-500 transition-colors disabled:opacity-30 rounded-full"
                             >
                                 Następna
                             </button>

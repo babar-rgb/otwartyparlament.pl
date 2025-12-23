@@ -76,7 +76,7 @@ const Europarlament: React.FC = () => {
     const topRebels = [...meps].sort((a, b) => (b.rebellion_rate || 0) - (a.rebellion_rate || 0)).slice(0, 3);
 
     return (
-        <div className="min-h-screen bg-paper dark:bg-[#1e1b4b] text-neutral-900 dark:text-white font-sans transition-colors duration-300">
+        <div className="min-h-screen bg-paper dark:bg-slate-900 text-neutral-900 dark:text-white font-sans transition-colors duration-300">
             {/* Hero Section */}
             <div className="bg-white dark:bg-[#0f0c29] border-b border-neutral-200 dark:border-indigo-900/50 pt-28 pb-12 px-6 md:pt-32">
                 <div className="max-w-7xl mx-auto">

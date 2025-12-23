@@ -7,6 +7,7 @@ import VoteTechnicalDetails from '../components/VoteTechnicalDetails';
 import SejmHemicycle from '../components/SejmHemicycle';
 import OutliersSection from '../components/OutliersSection';
 import SEO from '../components/SEO';
+import VoteMindMap from '../components/VoteMindMap';
 
 interface VoteDetail {
     id: number;
@@ -405,61 +406,71 @@ const VoteDetails: React.FC = () => {
 
             {/* AI Analysis Section */}
             {analysis && (
-                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-[#0f0c29] dark:via-[#302b63] dark:to-[#24243e] rounded-3xl p-8 shadow-lg border border-indigo-100 dark:border-indigo-500/30 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 dark:opacity-20">
-                        <Sparkles className="w-32 h-32 text-indigo-600 dark:text-purple-400" />
-                    </div>
+                <div className="space-y-8">
+                    {/* Mind Map Visualization */}
+                    <VoteMindMap
+                        title={cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
+                        summary={analysis.summary}
+                        pros={analysis.pros || []}
+                        cons={analysis.cons || []}
+                    />
 
-                    <div className="relative z-10 space-y-6">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-white dark:bg-indigo-500/20 rounded-lg shadow-sm text-indigo-600 dark:text-indigo-300">
-                                <Sparkles className="w-6 h-6" />
-                            </div>
-                            <h2 className="text-2xl font-bold text-indigo-900 dark:text-indigo-100">Analiza AI</h2>
+                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-[#0f0c29] dark:via-[#302b63] dark:to-[#24243e] rounded-3xl p-8 shadow-lg border border-indigo-100 dark:border-indigo-500/30 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 dark:opacity-20">
+                            <Sparkles className="w-32 h-32 text-indigo-600 dark:text-purple-400" />
                         </div>
 
-                        <div className="bg-white/60 dark:bg-indigo-950/40 backdrop-blur-md rounded-xl p-6 border border-indigo-100 dark:border-indigo-500/30 shadow-sm">
-                            <p className="text-lg text-indigo-900 dark:text-indigo-100 leading-relaxed font-medium">
-                                {analysis.summary}
-                            </p>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Pros */}
-                            <div className="bg-white/60 dark:bg-emerald-950/20 backdrop-blur-md rounded-xl p-6 border border-green-100 dark:border-emerald-500/20">
-                                <h3 className="font-bold text-green-800 dark:text-emerald-400 mb-4 flex items-center gap-2">
-                                    <ThumbsUp className="w-5 h-5" />
-                                    Argumenty ZA
-                                </h3>
-                                <ul className="space-y-3">
-                                    {analysis.pros?.map((pro, i) => (
-                                        <li key={i} className="flex gap-3 text-green-900 dark:text-emerald-100">
-                                            <span className="text-green-500 dark:text-emerald-400 font-bold shrink-0">•</span>
-                                            <span className="opacity-90">{pro}</span>
-                                        </li>
-                                    ))}
-                                </ul>
+                        <div className="relative z-10 space-y-6">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-white dark:bg-indigo-500/20 rounded-lg shadow-sm text-indigo-600 dark:text-indigo-300">
+                                    <Sparkles className="w-6 h-6" />
+                                </div>
+                                <h2 className="text-2xl font-bold text-indigo-900 dark:text-indigo-100">Analiza AI</h2>
                             </div>
 
-                            {/* Cons */}
-                            <div className="bg-white/60 dark:bg-rose-950/20 backdrop-blur-md rounded-xl p-6 border border-red-100 dark:border-rose-500/20">
-                                <h3 className="font-bold text-red-800 dark:text-rose-400 mb-4 flex items-center gap-2">
-                                    <ThumbsDown className="w-5 h-5" />
-                                    Argumenty PRZECIW
-                                </h3>
-                                <ul className="space-y-3">
-                                    {analysis.cons?.map((con, i) => (
-                                        <li key={i} className="flex gap-3 text-red-900 dark:text-rose-100">
-                                            <span className="text-red-500 dark:text-rose-400 font-bold shrink-0">•</span>
-                                            <span className="opacity-90">{con}</span>
-                                        </li>
-                                    ))}
-                                </ul>
+                            <div className="bg-white/60 dark:bg-indigo-950/40 backdrop-blur-md rounded-xl p-6 border border-indigo-100 dark:border-indigo-500/30 shadow-sm">
+                                <p className="text-lg text-indigo-900 dark:text-indigo-100 leading-relaxed font-medium">
+                                    {analysis.summary}
+                                </p>
                             </div>
-                        </div>
 
-                        <div className="text-xs text-indigo-400 dark:text-indigo-300/60 text-center pt-2">
-                            Analiza wygenerowana automatycznie przez model sztucznej inteligencji. Może zawierać uproszczenia.
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Pros */}
+                                <div className="bg-white/60 dark:bg-emerald-950/20 backdrop-blur-md rounded-xl p-6 border border-green-100 dark:border-emerald-500/20">
+                                    <h3 className="font-bold text-green-800 dark:text-emerald-400 mb-4 flex items-center gap-2">
+                                        <ThumbsUp className="w-5 h-5" />
+                                        Argumenty ZA
+                                    </h3>
+                                    <ul className="space-y-3">
+                                        {analysis.pros?.map((pro, i) => (
+                                            <li key={i} className="flex gap-3 text-green-900 dark:text-emerald-100">
+                                                <span className="text-green-500 dark:text-emerald-400 font-bold shrink-0">•</span>
+                                                <span className="opacity-90">{pro}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                {/* Cons */}
+                                <div className="bg-white/60 dark:bg-rose-950/20 backdrop-blur-md rounded-xl p-6 border border-red-100 dark:border-rose-500/20">
+                                    <h3 className="font-bold text-red-800 dark:text-rose-400 mb-4 flex items-center gap-2">
+                                        <ThumbsDown className="w-5 h-5" />
+                                        Argumenty PRZECIW
+                                    </h3>
+                                    <ul className="space-y-3">
+                                        {analysis.cons?.map((con, i) => (
+                                            <li key={i} className="flex gap-3 text-red-900 dark:text-rose-100">
+                                                <span className="text-red-500 dark:text-rose-400 font-bold shrink-0">•</span>
+                                                <span className="opacity-90">{con}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div className="text-xs text-indigo-400 dark:text-indigo-300/60 text-center pt-2">
+                                Analiza wygenerowana automatycznie przez model sztucznej inteligencji. Może zawierać uproszczenia.
+                            </div>
                         </div>
                     </div>
                 </div>

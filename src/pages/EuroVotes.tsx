@@ -73,7 +73,7 @@ const EuroVotes = () => {
     };
 
     return (
-        <div className="min-h-screen bg-paper dark:bg-[#1e1b4b] text-neutral-900 dark:text-white font-sans transition-colors duration-300 pt-28 pb-12 px-6">
+        <div className="min-h-screen bg-paper dark:bg-slate-900 text-neutral-900 dark:text-white font-sans transition-colors duration-300 pt-28 pb-12 px-6">
             <div className="max-w-7xl mx-auto space-y-8">
 
                 {/* Header */}
