@@ -101,10 +101,10 @@ export default function OutliersSection({ results, partyStats }: OutliersSection
                 </div>
                 <div>
                     <h2 className="text-xl font-bold text-amber-900 dark:text-amber-100">
-                        Buntownicy ({outliers.length})
+                        Wyłamali się ({outliers.length})
                     </h2>
                     <p className="text-sm text-amber-700 dark:text-amber-300">
-                        Posłowie, którzy głosowali wbrew większości swojego klubu
+                        Posłowie, którzy zagłosowali inaczej niż większość ich klubu
                     </p>
                 </div>
             </div>

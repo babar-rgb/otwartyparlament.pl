@@ -1,107 +1,388 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Building2, Users, FileText, Vote } from 'lucide-react';
-
+import {
+  Users,
+  FileText,
+  Search,
+  Calendar,
+  TrendingUp,
+  LayoutDashboard,
+  Zap,
+  ArrowRight,
+  ChevronDown
+} from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { useTerm } from '../context/TermContext';
+import SejmHemicycle from '../components/SejmHemicycle';
+import { Skeleton, CardSkeleton, ChartSkeleton } from '../components/Skeleton';
 import SEO from '../components/SEO';
-import TopicOfDay from '../components/TopicOfDay';
-import WeeklyHighlights from '../components/WeeklyHighlights';
-import TopicClusters from '../components/TopicClusters';
-import PersonaSelector from '../components/PersonaSelector';
-import SmartSearch from '../components/SmartSearch';
+
+interface DashboardStats {
+  mpsCount: number;
+  votesCount: number;
+  printsCount: number;
+  lastSittingDate: string;
+  trendingTopic: string;
+}
+
+interface TopVote {
+  id: number;
+  title: string;
+  date: string;
+  summary: string;
+  ux_category: string;
+  results: any[];
+}
 
 export default function Home() {
+  const { term } = useTerm();
+  const [viewMode, setViewMode] = useState<'vote' | 'party'>('vote');
+  const [stats, setStats] = useState<DashboardStats>({
+    mpsCount: 460,
+    votesCount: 0,
+    printsCount: 0,
+    lastSittingDate: '---',
+    trendingTopic: '---'
+  });
+  const [topVote, setTopVote] = useState<TopVote | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardData();
+    // Safety Force Stop
+    const maxWait = setTimeout(() => setLoading(false), 4000);
+    return () => clearTimeout(maxWait);
+  }, [term]);
+
+  async function fetchDashboardData() {
+    setLoading(true);
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Timeout')), 4000)
+    );
+
+    try {
+      const fetchData = async () => {
+        // OPTIMIZED: Select only necessary count, avoid overkill
+        const [votesCountReq, printsCountReq, lastVoteReq, topVoteReq] = await Promise.all([
+          supabase.from('votes').select('id', { count: 'exact', head: true }).eq('term', term),
+          supabase.from('sejm_prints').select('id', { count: 'exact', head: true }),
+          supabase.from('votes').select('date, ux_category').eq('term', term).order('date', { ascending: false }).limit(20),
+          supabase.from('votes').select(`id, title_clean, date, ux_category, details_json, importance_score`)
+            .eq('term', term)
+            .order('importance_score', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+        ]);
+
+        // Process Stats
+        const lastDate = lastVoteReq.data?.[0]?.date || '---';
+        const topics = lastVoteReq.data?.map(v => v.ux_category).filter(Boolean) as string[] || [];
+        const mostFrequentTopic = topics.length > 0
+          ? topics.sort((a, b) => topics.filter(v => v === a).length - topics.filter(v => v === b).length).pop()
+          : 'Legislacja';
+
+        setStats({
+          mpsCount: 460,
+          votesCount: votesCountReq.count || 0,
+          printsCount: printsCountReq.count || 0,
+          lastSittingDate: lastDate !== '---' ? new Date(lastDate).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' }) : 'Brak danych',
+          trendingTopic: mostFrequentTopic || 'Legislacja'
+        });
+
+        // Process Top Vote
+        const topV = topVoteReq.data;
+        if (topV) {
+          // Optimized: Fetch minimal fields for Hemicycle
+          const [resDataReq, analysisReq] = await Promise.all([
+            // Limit to 460 to enable fast client-side rendering
+            supabase.from('vote_results').select('vote, mp_id').eq('vote_id', topV.id).limit(460),
+            supabase.from('vote_analyses').select('summary').eq('vote_id', topV.id).maybeSingle()
+          ]);
+
+          let enrichedResults: any[] = [];
+          if (resDataReq.data) {
+            const mpIds = resDataReq.data.map(r => r.mp_id);
+            // Optimized: Only fetch what Hemicycle needs (color + name + photo)
+            const { data: mpsData } = await supabase.from('mps').select('id, name, party, seat_number, photo_url').in('id', mpIds);
+            const mpsMap = new Map(mpsData?.map(mp => [mp.id, mp]) || []);
+
+            enrichedResults = resDataReq.data.map(r => ({
+              ...r,
+              mps: mpsMap.get(r.mp_id) || null
+            }));
+          }
+
+          setTopVote({
+            id: topV.id,
+            title: topV.title_clean,
+            date: topV.date,
+            summary: analysisReq.data?.summary || "Trwa analiza treści ustawy przez model AI...",
+            ux_category: topV.ux_category || 'Ogólne',
+            results: enrichedResults
+          });
+        }
+      };
+
+      await Promise.race([fetchData(), timeoutPromise]);
+    } catch (err) {
+      console.error('Dashboard fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-paper dark:bg-slate-950">
+    <div className="min-h-screen bg-[#060613] dashboard-mesh text-white pt-24 pb-12 px-4 md:px-8 font-sans transition-all duration-500">
       <SEO
-        title="OtwartyParlament.pl - Centrum Wiedzy o Sejmie"
-        description="Twoje centrum wiedzy o Sejmie. Sprawdź głosowania, profile posłów i statystyki."
+        title="Dashboard | OtwartyParlament.pl"
+        description="Monitoruj prace Sejmu na żywo. Analizy AI, wizualizacje głosowań i statystyki kadencji."
       />
 
-      {/* Hero: Topic of Day */}
-      <section className="pt-28 pb-12 px-4 md:px-8">
-        <div className="container mx-auto max-w-6xl">
-          <TopicOfDay />
-        </div>
-      </section>
-
-      {/* Quick Stats Bar */}
-      <section className="py-8 px-4 md:px-8 bg-slate-100 dark:bg-slate-900/50">
-        <div className="container mx-auto max-w-6xl">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Link to="/glosowania" className="group">
-              <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-lg transition-all">
-                <Vote className="w-8 h-8 text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
-                <div className="text-2xl font-black text-slate-900 dark:text-white">3,456</div>
-                <div className="text-sm text-slate-500 dark:text-slate-400">Głosowań</div>
-              </div>
-            </Link>
-            <Link to="/poslowie" className="group">
-              <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 hover:border-emerald-400 dark:hover:border-emerald-500 hover:shadow-lg transition-all">
-                <Users className="w-8 h-8 text-emerald-500 mb-2 group-hover:scale-110 transition-transform" />
-                <div className="text-2xl font-black text-slate-900 dark:text-white">460</div>
-                <div className="text-sm text-slate-500 dark:text-slate-400">Posłów</div>
-              </div>
-            </Link>
-            <Link to="/projekty" className="group">
-              <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 hover:border-amber-400 dark:hover:border-amber-500 hover:shadow-lg transition-all">
-                <FileText className="w-8 h-8 text-amber-500 mb-2 group-hover:scale-110 transition-transform" />
-                <div className="text-2xl font-black text-slate-900 dark:text-white">892</div>
-                <div className="text-sm text-slate-500 dark:text-slate-400">Projektów</div>
-              </div>
-            </Link>
-            <Link to="/komisje" className="group">
-              <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 hover:border-purple-400 dark:hover:border-purple-500 hover:shadow-lg transition-all">
-                <Building2 className="w-8 h-8 text-purple-500 mb-2 group-hover:scale-110 transition-transform" />
-                <div className="text-2xl font-black text-slate-900 dark:text-white">39</div>
-                <div className="text-sm text-slate-500 dark:text-slate-400">Komisji</div>
-              </div>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Persona Selector - "Kompas Obywatelski" */}
-      <section className="py-12 px-4 md:px-8">
-        <div className="container mx-auto max-w-6xl">
-          <PersonaSelector />
-        </div>
-      </section>
-
-      {/* Smart Search - "Inteligentna Wyszukiwarka" */}
-      <section className="py-16 px-4 md:px-8 bg-gradient-to-br from-amber-50 via-white to-orange-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-amber-950">
-        <div className="container mx-auto max-w-4xl">
-          <SmartSearch showHero={true} />
-        </div>
-      </section>
-
-      {/* Weekly Highlights */}
-      <section className="py-16 px-4 md:px-8">
-        <div className="container mx-auto max-w-6xl">
-          <WeeklyHighlights />
-        </div>
-      </section>
-
-      {/* Topic Clusters */}
-      <section className="py-16 px-4 md:px-8 bg-slate-50 dark:bg-slate-900/30">
-        <div className="container mx-auto max-w-6xl">
-          <TopicClusters />
-        </div>
-      </section>
-
-      {/* Komisje CTA */}
-      <section className="py-16 px-4 md:px-8">
-        <div className="container mx-auto max-w-4xl">
-          <Link to="/komisje" className="block group">
-            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-10 text-center text-white shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
-              <Building2 className="w-16 h-16 mx-auto mb-4 opacity-80 group-hover:opacity-100 transition" />
-              <h3 className="text-3xl font-black mb-2">Komisje Sejmowe</h3>
-              <p className="text-lg text-blue-100">
-                Zobacz czym zajmują się posłowie za zamkniętymi drzwiami
-              </p>
+      <div className="container mx-auto max-w-7xl">
+        {/* Header Section */}
+        <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-indigo-500/20 rounded-lg">
+              <LayoutDashboard className="w-6 h-6 text-indigo-400" />
             </div>
-          </Link>
+            <h1 className="text-3xl font-black tracking-tight text-white m-0">Dashboard</h1>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="relative group">
+              <button className="flex items-center gap-2 px-4 py-2 bg-[#16162d] border border-white/10 rounded-xl hover:bg-[#1c1c3a] transition-all">
+                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
+                <span className="font-bold text-sm tracking-wide">{term} Kadencja</span>
+                <ChevronDown className="w-4 h-4 opacity-50" />
+              </button>
+            </div>
+
+            <div className="relative hidden md:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Szukaj..."
+                className="bg-[#16162d] border border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all w-64"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const target = e.target as HTMLInputElement;
+                    window.location.href = `/szukaj?q=${target.value}`;
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </header>
+
+        {/* Top Row Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          {/* Main Status Card -> /live */}
+          {loading ? <CardSkeleton /> : (
+            <Link to="/live" className="md:col-span-2 relative group overflow-hidden block">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="bg-[#111126] border border-white/5 rounded-[2rem] p-8 h-full flex items-center gap-6 relative z-10 transition-transform group-hover:scale-[1.01]">
+                <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center shrink-0">
+                  <Zap className="w-8 h-8 text-indigo-400" />
+                </div>
+                <div>
+                  <p className="text-indigo-400 text-xs font-black uppercase tracking-widest mb-1">Status Prac</p>
+                  <h3 className="text-2xl font-black mb-1">Przegląd Sejmowy</h3>
+                  <p className="text-white/50 text-sm">Automatyczna analiza aktywności posłów i komisji.</p>
+                </div>
+                <div className="ml-auto flex -space-x-3">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="w-8 h-8 rounded-full border-2 border-[#111126] bg-slate-800" />
+                  ))}
+                </div>
+              </div>
+            </Link>
+          )}
+
+          {/* Session Date -> /glosowania */}
+          {loading ? <Skeleton className="bg-[#111126] border border-white/5 rounded-[2rem] h-full min-h-[160px]" /> : (
+            <Link to="/glosowania" className="bg-[#111126] border border-white/5 rounded-[2rem] p-8 flex items-center gap-5 hover:bg-white/5 transition-all group">
+              <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                <Calendar className="w-6 h-6 text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-0.5">Ostatnie Posiedzenie</p>
+                <h4 className="text-xl font-black">{stats.lastSittingDate}</h4>
+              </div>
+            </Link>
+          )}
+
+          {/* Trending -> /kategorie */}
+          {loading ? <Skeleton className="bg-[#111126] border border-white/5 rounded-[2rem] h-full min-h-[160px]" /> : (
+            <Link to="/kategorie" className="bg-[#111126] border border-white/5 rounded-[2rem] p-8 flex items-center gap-5 hover:bg-white/5 transition-all group">
+              <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                <TrendingUp className="w-6 h-6 text-amber-400" />
+              </div>
+              <div>
+                <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-0.5">Na topie</p>
+                <h4 className="text-xl font-black truncate max-w-[120px]">{stats.trendingTopic}</h4>
+              </div>
+            </Link>
+          )}
         </div>
-      </section>
+
+        {/* Main Grid: Hemicycle + Topic of the Day */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+          {/* Left Large Card: Plenary Hall */}
+          {loading ? <ChartSkeleton /> : (
+            <div className="lg:col-span-3 bg-[#111126] border border-white/5 rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden group">
+              {/* Background Blur decoration */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-indigo-500/20 blur-[100px] rounded-full pointer-events-none" />
+
+              <div className="flex items-center justify-between mb-12 relative z-10">
+                <div>
+                  <h2 className="text-3xl font-black text-white m-0">Sala Plenarna</h2>
+                  <p className="text-white/40 text-sm mt-1 uppercase tracking-widest font-bold">Rozkład głosów (Kadencja {term})</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setViewMode('vote')}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border ${viewMode === 'vote' ? 'bg-white/20 border-white/20' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}
+                  >
+                    Głosowanie
+                  </button>
+                  <button
+                    onClick={() => setViewMode('party')}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border ${viewMode === 'party' ? 'bg-white/20 border-white/20' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}
+                  >
+                    Partie
+                  </button>
+                </div>
+              </div>
+
+              <div className="relative min-h-[400px] flex items-center justify-center">
+                {topVote?.results && topVote.results.length > 0 ? (
+                  <SejmHemicycle
+                    mode={viewMode}
+                    data={topVote.results.map((r: any) => ({
+                      id: r.mps?.id || r.mp_id,
+                      name: r.mps?.name || 'Nieznany',
+                      party: r.mps?.party || 'Niezrzeszony',
+                      photo_url: r.mps?.photo_url || '',
+                      vote: r.vote,
+                      seat_number: r.mps?.seat_number
+                    }))}
+                  />
+                ) : (
+                  <div className="text-white/20 font-black text-2xl uppercase tracking-tighter">Wczytywanie mapy...</div>
+                )}
+              </div>
+
+              {/* Legend Component (Minimal) */}
+              <div className="flex flex-wrap justify-center gap-6 mt-12 relative z-10">
+                {[
+                  { label: 'Lewica', color: '#dc2626' },
+                  { label: 'KO', color: '#3b82f6' },
+                  { label: 'PL2050', color: '#eab308' },
+                  { label: 'PiS', color: '#1d4ed8' },
+                  { label: 'Konfederacja', color: '#0f172a' }
+                ].map(party => (
+                  <div key={party.label} className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: party.color }} />
+                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">{party.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Right Column: Topic of the Day Card */}
+          {loading ? <Skeleton className="h-[600px] rounded-[2.5rem] w-full bg-[#111126] border border-white/5" /> : (
+            <div className="flex flex-col gap-6">
+              <div className="bg-[#111126] border border-white/5 rounded-[2.5rem] p-8 h-full relative overflow-hidden flex flex-col min-h-[500px]">
+                <div className="absolute top-0 right-0 p-8">
+                  <p className="text-white/30 text-xs font-black font-mono">
+                    {topVote ? new Date(topVote.date).toISOString().split('T')[0] : '2023-12-15'}
+                  </p>
+                </div>
+
+                <div className="mt-8 mb-8">
+                  <span className="px-3 py-1 bg-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase tracking-widest rounded-md border border-indigo-500/20">
+                    TEMAT DNIA
+                  </span>
+                  <h3 className="text-2xl font-black mt-4 leading-tight">
+                    {topVote?.title || "Wybór Marszałka Sejmu X Kadencji"}
+                  </h3>
+                </div>
+
+                <div className="flex-grow">
+                  <p className="text-white/60 text-sm leading-relaxed mb-6 italic">
+                    "{topVote?.summary || "Najważniejsza decyzja polityczna rozpoczęcia nowej kadencji, definiująca układ sił w parlamencie."}"
+                  </p>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-white/40 font-bold uppercase tracking-widest italic">Analiza AI</span>
+                      <span className="text-indigo-400 font-bold">100% Complete</span>
+                    </div>
+                    <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full bg-indigo-500 w-full shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
+                    </div>
+                  </div>
+                </div>
+
+                <Link
+                  to={topVote ? `/glosowanie/${topVote.id}` : "/glosowania"}
+                  className="mt-12 group flex items-center justify-between p-4 bg-indigo-500 rounded-2xl text-white font-black uppercase tracking-widest text-xs hover:bg-indigo-400 transition-all shadow-[0_10px_30px_rgba(99,102,241,0.3)]"
+                >
+                  Analiza Decyzji
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </div>
+
+              {/* Tiny quick stats cards below */}
+              <div className="grid grid-cols-2 gap-4">
+                <Link to="/poslowie" className="bg-[#111126] border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center hover:bg-white/5 transition-all">
+                  <Users className="w-5 h-5 text-indigo-400 mb-1" />
+                  <span className="text-lg font-black">{stats.mpsCount}</span>
+                  <span className="text-[8px] text-white/30 uppercase tracking-widest font-bold">Posłów</span>
+                </Link>
+                <Link to="/glosowania" className="bg-[#111126] border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center hover:bg-white/5 transition-all">
+                  <FileText className="w-5 h-5 text-emerald-400 mb-1" />
+                  <span className="text-lg font-black">{stats.votesCount}</span>
+                  <span className="text-[8px] text-white/30 uppercase tracking-widest font-bold">Głosowań</span>
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+        
+        body {
+          font-family: 'Space Grotesk', sans-serif !important;
+        }
+
+        .dashboard-card {
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+        }
+
+        /* Customize scrollbars for dark theme */
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+          background: #060613;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: #111126;
+          border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: #1c1c3a;
+        }
+      `}} />
     </div>
   );
 }
+
 

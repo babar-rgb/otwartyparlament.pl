@@ -162,19 +162,30 @@ def process_sitting(sitting_num):
                 supabase.table('votes').upsert(vote_record).execute()
                 
                 # Fetch Individual Results
+                # Fetch Individual Results (PERSISTENT MODE)
                 mp_votes = []
-                retries = 3
-                while retries > 0:
-                    details_resp = requests.get(f"{SEJM_API_URL}/votings/{sitting_num}/{vote['votingNumber']}")
-                    if details_resp.status_code == 200:
-                        details = details_resp.json()
-                        mp_votes = details.get('votes', [])
-                        if len(mp_votes) > 0: break
-                    retries -= 1
-                    time.sleep(1)
+                retry_delay = 1
                 
+                while True:
+                    try:
+                        details_resp = requests.get(f"{SEJM_API_URL}/votings/{sitting_num}/{vote['votingNumber']}", timeout=10)
+                        if details_resp.status_code == 200:
+                            details = details_resp.json()
+                            mp_votes = details.get('votes', [])
+                            if len(mp_votes) > 0: 
+                                break # Success!
+                        else:
+                            print(f"  ⚠️  API Error {details_resp.status_code}. Retrying in {retry_delay}s...")
+                    except Exception as e:
+                         print(f"  ⚠️  Connection Error: {e}. Retrying in {retry_delay}s...")
+                    
+                    # Exponential Backoff (max 60s)
+                    time.sleep(retry_delay)
+                    retry_delay = min(retry_delay * 2, 60)
+                
+                # Check for empty results after success (shouldn't happen often if API is good, but good to be safe)
                 if not mp_votes:
-                    print(f"  Skipping results for vote {vote['votingNumber']} (no data)")
+                    print(f"  ❌ Critical: API returned empty votes list after success. Skipping to avoid bad data.")
                     continue
 
                 for v in mp_votes:

@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { Trophy, TrendingUp, Swords, TrendingDown, AlertTriangle, Medal, HandCoins, Mic, ScrollText } from 'lucide-react';
 import Comparator from './Comparator';
 import { supabase } from '../lib/supabase';
-
 interface RankingMP {
   id: number;
   first_name: string;
@@ -114,12 +113,7 @@ export default function Rankingi() {
     return 'bg-blue-100 text-blue-800';
   };
 
-  const getRankIcon = (rank: number) => {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
-    return `#${rank}`;
-  };
+
 
   const getPartyColor = (party: string) => {
     const colors: Record<string, string> = {
@@ -139,7 +133,7 @@ export default function Rankingi() {
   const tabs = [
     { id: 'attendance_high', label: 'Najwyższa Frekwencja', icon: TrendingUp },
     { id: 'attendance_low', label: 'Najniższa Frekwencja', icon: TrendingDown },
-    { id: 'rebellion', label: 'Buntownicy', icon: AlertTriangle },
+    { id: 'rebellion', label: 'Wyłamali się', icon: AlertTriangle },
     { id: 'legislation', label: 'Aktywność Legislacyjna', icon: ScrollText },
     { id: 'comparator', label: 'Porównywarka', icon: Swords },
   ];
@@ -210,39 +204,156 @@ export default function Rankingi() {
           {activeTab === 'comparator' ? (
             <Comparator embedded={true} />
           ) : activeTab === 'legislation' ? (
-            /* Legislative Stats View */
-            <div className="space-y-6 animate-fade-in">
-              <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
-                Kto pisze prawo w Polsce?
-              </h2>
-              <p className="text-slate-600">
-                Analiza {legStats.reduce((sum, item) => sum + item.count, 0)} projektów ustaw (druków sejmowych z X kadencji).
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {legStats.map((stat, idx) => (
-                  <div key={idx} className="bg-slate-50 border border-slate-200 rounded-xl p-5 hover:bg-white hover:shadow-md transition-all">
-                    <div className="flex justify-between items-end mb-2">
-                      <div className="font-bold text-slate-700">{stat.label}</div>
-                      <div className="text-2xl font-bold text-blue-600">{stat.count}</div>
-                    </div>
-                    <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${stat.color}`}
-                        style={{ width: `${(stat.count / Math.max(...legStats.map(s => s.count))) * 100}%` }}
-                      ></div>
-                    </div>
-                    <div className="text-right text-xs text-slate-500 mt-1">
-                      {legStats.reduce((sum, item) => sum + item.count, 0) > 0
-                        ? ((stat.count / legStats.reduce((sum, item) => sum + item.count, 0)) * 100).toFixed(1)
-                        : 0}% całości
-                    </div>
-                  </div>
-                ))}
+            /* Legislative Stats View - Custom Premium Design */
+            <div className="space-y-8 animate-fade-in">
+              {/* Header */}
+              <div>
+                <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-500 mb-2">
+                  Kto pisze prawo w Polsce?
+                </h2>
+                <p className="text-slate-600 dark:text-slate-400">
+                  Analiza {legStats.reduce((sum, item) => sum + item.count, 0)} projektów ustaw (druków sejmowych z X kadencji).
+                </p>
               </div>
 
-              <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100 text-sm text-blue-800">
-                <strong>Wniosek:</strong> Rządowi przypada większość inicjatywy ustawodawczej. Projekty poselskie są drugą siłą, ale często dotyczą uchwał okolicznościowych.
+              {/* Main Stats Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Custom Pie Chart */}
+                <div className="lg:col-span-1 bg-white dark:bg-slate-800/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-700/50 backdrop-blur">
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Podział projektów</h3>
+                  <div className="relative w-48 h-48 mx-auto">
+                    {/* Conic gradient pie chart */}
+                    <div
+                      className="w-full h-full rounded-full"
+                      style={{
+                        background: (() => {
+                          const total = legStats.reduce((sum, item) => sum + item.count, 0);
+                          const colors = ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981', '#f43f5e', '#06b6d4'];
+                          let gradient = 'conic-gradient(';
+                          let cumulative = 0;
+                          legStats.forEach((stat, idx) => {
+                            const percentage = (stat.count / total) * 100;
+                            gradient += `${colors[idx]} ${cumulative}% ${cumulative + percentage}%`;
+                            cumulative += percentage;
+                            if (idx < legStats.length - 1) gradient += ', ';
+                          });
+                          gradient += ')';
+                          return gradient;
+                        })()
+                      }}
+                    >
+                      {/* Inner circle for donut effect */}
+                      <div className="absolute inset-6 rounded-full bg-white dark:bg-slate-800/50 flex items-center justify-center">
+                        <div className="text-center">
+                          <p className="text-3xl font-bold text-slate-900 dark:text-white">
+                            {legStats.reduce((sum, item) => sum + item.count, 0)}
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide">projektów</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Legend */}
+                  <div className="mt-6 grid grid-cols-2 gap-2">
+                    {legStats.map((stat, idx) => {
+                      const colors = ['bg-blue-500', 'bg-violet-500', 'bg-amber-500', 'bg-emerald-500', 'bg-rose-500', 'bg-cyan-500'];
+                      return (
+                        <div key={idx} className="flex items-center gap-2">
+                          <div className={`w-3 h-3 rounded-full ${colors[idx]}`} />
+                          <span className="text-xs text-slate-600 dark:text-slate-400 truncate">{stat.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* KPI Cards */}
+                <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {legStats.slice(0, 6).map((stat, idx) => {
+                    const total = legStats.reduce((sum, item) => sum + item.count, 0);
+                    const percentage = total > 0 ? (stat.count / total) * 100 : 0;
+                    const gradients = [
+                      'from-blue-500 to-blue-600',
+                      'from-violet-500 to-violet-600',
+                      'from-amber-500 to-amber-600',
+                      'from-emerald-500 to-emerald-600',
+                      'from-rose-500 to-rose-600',
+                      'from-cyan-500 to-cyan-600'
+                    ];
+                    const bgColors = [
+                      'bg-blue-500',
+                      'bg-violet-500',
+                      'bg-amber-500',
+                      'bg-emerald-500',
+                      'bg-rose-500',
+                      'bg-cyan-500'
+                    ];
+                    return (
+                      <div
+                        key={idx}
+                        className="group bg-white dark:bg-slate-800/50 rounded-xl p-5 border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600 transition-all hover:shadow-lg"
+                      >
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-2 h-12 rounded-full bg-gradient-to-b ${gradients[idx]}`} />
+                            <div>
+                              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{stat.label}</p>
+                              <p className="text-3xl font-bold text-slate-900 dark:text-white">{stat.count}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">udział</p>
+                            <p className="text-xl font-bold text-slate-700 dark:text-slate-300">{percentage.toFixed(1)}%</p>
+                          </div>
+                        </div>
+                        {/* Animated progress bar */}
+                        <div className="h-2 bg-slate-100 dark:bg-slate-700/50 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${bgColors[idx]} transition-all duration-1000 ease-out`}
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Horizontal Bar Chart */}
+              <div className="bg-white dark:bg-slate-800/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-700/50">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Porównanie liczby projektów</h3>
+                <div className="space-y-4">
+                  {legStats.map((stat, idx) => {
+                    const maxCount = Math.max(...legStats.map(s => s.count));
+                    const percentage = (stat.count / maxCount) * 100;
+                    const colors = ['bg-blue-500', 'bg-violet-500', 'bg-amber-500', 'bg-emerald-500', 'bg-rose-500', 'bg-cyan-500'];
+                    return (
+                      <div key={idx} className="group">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{stat.label}</span>
+                          <span className="text-sm font-bold text-slate-900 dark:text-white">{stat.count}</span>
+                        </div>
+                        <div className="h-8 bg-slate-100 dark:bg-slate-700/30 rounded-lg overflow-hidden">
+                          <div
+                            className={`h-full ${colors[idx]} rounded-lg transition-all duration-1000 ease-out flex items-center justify-end pr-3`}
+                            style={{ width: `${percentage}%` }}
+                          >
+                            {percentage > 15 && (
+                              <span className="text-xs font-bold text-white/90">{stat.count}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Insight Card */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-5 rounded-xl border border-blue-200 dark:border-blue-800/50">
+                <p className="text-blue-800 dark:text-blue-300">
+                  <strong>💡 Wniosek:</strong> Rządowi przypada większość inicjatywy ustawodawczej ({legStats.find(s => s.label === 'Rządowe')?.count || 0} projektów, {((legStats.find(s => s.label === 'Rządowe')?.count || 0) / legStats.reduce((sum, item) => sum + item.count, 0) * 100).toFixed(0)}%). Projekty poselskie są drugą siłą, ale często dotyczą uchwał okolicznościowych.
+                </p>
               </div>
             </div>
           ) : (
@@ -316,7 +427,7 @@ export default function Rankingi() {
           </h3>
           <p className="text-sm text-slate-700">
             Rankingi generowane są automatycznie na podstawie analizy wszystkich głosowań w tej kadencji.
-            "Buntownicy" to posłowie, którzy najczęściej głosują inaczej niż większość ich klubu.
+            "Wyłamali się" to posłowie, którzy najczęściej głosują inaczej niż większość ich klubu.
           </p>
         </div>
 

@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Nazwa sesji
+SESSION="parlament"
+
+# Sprawdź czy sesja już istnieje
+tmux has-session -t $SESSION 2>/dev/null
+
+if [ $? != 0 ]; then
+  # 1. Stwórz nową sesję i okno "Dev"
+  tmux new-session -d -s $SESSION -n "Dev"
+
+  # 2. Pierwszy panel: URUCHOM VITE
+  tmux send-keys -t $SESSION:Dev "npm run dev" C-m
+
+  # 3. Podziel pionowo i uruchom POSTGREST
+  tmux split-window -h -t $SESSION:Dev
+  tmux send-keys -t $SESSION:Dev "postgrest postgrest.conf" C-m
+
+  # 4. Podziel poziomo pod PostgRESTem (zostanie czysty terminal)
+  tmux split-window -v -t $SESSION:Dev.1
+  
+  # Wybierz pierwszy panel (Vite) jako aktywny
+  tmux select-pane -t $SESSION:Dev.0
+fi
+
+# Podłącz się do sesji
+tmux attach-session -t $SESSION

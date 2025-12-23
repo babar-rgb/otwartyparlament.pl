@@ -12,6 +12,7 @@ interface MPData {
 
 interface SejmHemicycleProps {
     data: MPData[];
+    mode?: 'vote' | 'party';
 }
 
 interface Seat {
@@ -66,7 +67,7 @@ const generateSejmLayout = (): Seat[] => {
 // Memoize globally to avoid recalc
 const FIXED_SEATS = generateSejmLayout();
 
-const SejmHemicycle: React.FC<SejmHemicycleProps> = ({ data }) => {
+const SejmHemicycle: React.FC<SejmHemicycleProps> = ({ data, mode = 'vote' }) => {
     const navigate = useNavigate();
     const [hoveredMP, setHoveredMP] = useState<MPData | null>(null);
 
@@ -146,8 +147,27 @@ const SejmHemicycle: React.FC<SejmHemicycleProps> = ({ data }) => {
         return { occupiedSeats: assigned, overflowMPs: overflow };
     }, [sortedMPs, data]);
 
-    const getColor = (vote: string) => {
-        switch (vote) {
+    const getPartyColor = (party: string) => {
+        if (!party) return '#9ca3af';
+        // Normalize party name for checking
+        const p = party.toLowerCase();
+
+        if (p.includes('pis') || p.includes('prawo i sprawiedliwość')) return '#1d4ed8'; // Blue
+        if (p.includes('koalicja obywatelska') || p.includes('ko') || p.includes('platforma')) return '#f97316'; // Orange (KO brand)
+        if (p.includes('polska 2050') || p.includes('trzecia droga') || p.includes('psl')) return '#eab308'; // Yellow
+        if (p.includes('lewica')) return '#dc2626'; // Red
+        if (p.includes('konfederacja')) return '#1e293b'; // Dark Navy
+        if (p.includes('kukiz')) return '#4b5563'; // Gray
+        return '#9ca3af'; // Default Gray
+    };
+
+    const getColor = (mp: MPData) => {
+        if (mode === 'party') {
+            return getPartyColor(mp.party);
+        }
+
+        // Vote mode
+        switch (mp.vote) {
             case 'YES': return '#16a34a';
             case 'NO': return '#dc2626';
             case 'ABSTAIN': return '#f59e0b';
@@ -183,7 +203,7 @@ const SejmHemicycle: React.FC<SejmHemicycleProps> = ({ data }) => {
                                     cx={seat.x}
                                     cy={seat.y}
                                     r={6}
-                                    fill={occupant ? getColor(occupant.vote) : "#E5E7EB"}
+                                    fill={occupant ? getColor(occupant) : "#E5E7EB"}
                                     stroke={occupant ? "#ffffff" : "none"} // High contrast stroke
                                     strokeWidth={1}
                                     style={{ transition: 'fill 0.3s ease, stroke 0.3s ease' }} // CSS Transition
@@ -245,7 +265,7 @@ const SejmHemicycle: React.FC<SejmHemicycleProps> = ({ data }) => {
                                 onMouseEnter={() => setHoveredMP(mp)}
                                 onMouseLeave={() => setHoveredMP(null)}
                                 className="w-3 h-3 rounded-full cursor-pointer hover:scale-125 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 ring-offset-neutral-50 focus:ring-blue-500"
-                                style={{ backgroundColor: getColor(mp.vote) }}
+                                style={{ backgroundColor: getColor(mp) }}
                             />
                         ))}
                     </div>

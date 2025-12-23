@@ -164,7 +164,7 @@ const Europarlament: React.FC = () => {
                             <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full -mr-16 -mt-16" />
                             <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-orange-700 dark:text-orange-400">
                                 <div className="w-2 h-2 rounded-full bg-orange-500" />
-                                Najwięksi Buntownicy
+                                Wyłamali się
                             </h3>
                             <div className="space-y-3">
                                 {topRebels.map((m, i) => (

@@ -9,8 +9,18 @@
 
   /* DARK MODE OVERRIDE */
   .dark body {
-    /* SWAPPED: Global background is now the purple from the section (#1e1b4b) */
-    @apply bg-[#1e1b4b] text-[#E0E0E0];
+    @apply bg-[#060613] text-[#E0E0E0];
+  }
+
+  /* Dashboard Mesh Gradient */
+  .dashboard-mesh {
+    background-color: #060613;
+    background-image:
+      radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+      radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 0.2) 0, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 0.1) 0, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(225, 39%, 30%, 0.1) 0, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(253, 16%, 7%, 1) 0, transparent 50%);
   }
 
   h1,

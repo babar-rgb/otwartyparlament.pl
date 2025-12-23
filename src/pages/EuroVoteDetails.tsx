@@ -258,7 +258,7 @@ const EuroVoteDetails: React.FC = () => {
 
                         {/* Rebel Stats */}
                         <div className="bg-slate-800/50 backdrop-blur rounded-2xl p-6 border border-slate-700/50 flex flex-col">
-                            <h3 className="text-slate-400 font-bold uppercase tracking-wider text-sm mb-4">Buntownicy</h3>
+                            <h3 className="text-slate-400 font-bold uppercase tracking-wider text-sm mb-4">Wyłamali się</h3>
                             <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar max-h-[300px]">
                                 {(() => {
                                     // Calculate Rebels

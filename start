@@ -1,0 +1,23 @@
+#!/bin/bash
+
+echo "🚀 Otwarty Parlament - Start Systemu"
+echo "-----------------------------------"
+
+# 1. Check PostgreSQL
+if ! pg_isready -h localhost -p 5432 > /dev/null 2>&1; then
+  echo "⚠️  PostgreSQL nie jest uruchomiony!"
+  echo "👉 Uruchamiam PostgreSQL..."
+  brew services start postgresql@17
+  sleep 3
+fi
+echo "✅ PostgreSQL gotowy!"
+
+# 2. Start PostgREST (REST API)
+echo "� Startuję API (PostgREST)..."
+postgrest postgrest.conf &
+sleep 2
+echo "✅ API działa na porcie 3001"
+
+# 3. Start Frontend
+echo "💻 Startuję stronę (Vite)..."
+npm run dev

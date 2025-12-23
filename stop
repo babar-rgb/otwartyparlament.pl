@@ -1,0 +1,15 @@
+#!/bin/bash
+
+echo "🛑 Zatrzymuję Otwarty Parlament..."
+echo "-----------------------------------"
+
+# 1. Stop PostgREST
+echo "🔌 Zatrzymuję API..."
+pkill -f postgrest || true
+
+# 2. Stop Docker Desktop
+echo "🐳 Zamykam Docker Desktop..."
+osascript -e 'quit app "Docker"' 2>/dev/null || true
+
+echo "✅ Wszystko zatrzymane. PostgreSQL działa w tle (to normalne)."
+echo "💡 Tip: Możesz też wyłączyć bazę: brew services stop postgresql@17"

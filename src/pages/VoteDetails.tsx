@@ -56,6 +56,7 @@ const VoteDetails: React.FC = () => {
     const [analysis, setAnalysis] = useState<{ summary: string; pros: string[]; cons: string[] } | null>(null);
     const [linkedProcessId, setLinkedProcessId] = useState<string | null>(null);
     const [linkedPrint, setLinkedPrint] = useState<{ number: string; title: string } | null>(null);
+    const [projectContext, setProjectContext] = useState<{ ai_summary: string; justification_text: string; pdf_url: string } | null>(null);
 
     useEffect(() => {
         if (id || (sitting && votingNumber)) {
@@ -143,7 +144,7 @@ const VoteDetails: React.FC = () => {
                 setAnalysis(analysisData);
             }
 
-            // 5. Try to link to Law Map (Process)
+            // 5. Try to link to Law Map (Process) & Project Context
             if (voteData.print_number) {
                 // Fetch Process ID
                 const { data: procData } = await supabase
@@ -166,6 +167,17 @@ const VoteDetails: React.FC = () => {
 
                 if (printData) {
                     setLinkedPrint(printData);
+                }
+
+                // Fetch Bill Insights (Project Context from PDF)
+                const { data: insightsData } = await supabase
+                    .from('bill_insights')
+                    .select('ai_summary, justification_text, pdf_url')
+                    .eq('print_number', voteData.print_number)
+                    .maybeSingle();
+
+                if (insightsData) {
+                    setProjectContext(insightsData);
                 }
             }
 
@@ -255,34 +267,56 @@ const VoteDetails: React.FC = () => {
 
                     {/* Linked Print Card */}
                     {linkedPrint && (
-                        <div className="mb-8 bg-white/10 backdrop-blur border border-white/20 p-5 rounded-xl flex items-start gap-4">
-                            <div className="p-2 bg-amber-500/20 text-amber-300 rounded-lg">
-                                <ExternalLink size={24} />
-                            </div>
-                            <div>
-                                <div className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">
-                                    Powiązany Druk Sejmowy nr {linkedPrint.number}
+                        <div className="mb-8 bg-white/10 backdrop-blur border border-white/20 p-5 rounded-xl flex flex-col gap-4">
+                            <div className="flex items-start gap-4">
+                                <div className="p-2 bg-amber-500/20 text-amber-300 rounded-lg">
+                                    <ExternalLink size={24} />
                                 </div>
-                                <h3 className="text-white font-semibold text-lg leading-tight mb-2">
-                                    {linkedPrint.title}
-                                </h3>
-                                {/* Source heuristic */}
-                                <div className="flex gap-2 mb-3">
-                                    {linkedPrint.title.toLowerCase().includes('rządowy') && <span className="text-[10px] bg-blue-500/30 text-blue-200 px-2 py-0.5 rounded border border-blue-500/50">Rządowy</span>}
-                                    {linkedPrint.title.toLowerCase().includes('poselski') && <span className="text-[10px] bg-purple-500/30 text-purple-200 px-2 py-0.5 rounded border border-purple-500/50">Poselski</span>}
-                                    {linkedPrint.title.toLowerCase().includes('senacki') && <span className="text-[10px] bg-orange-500/30 text-orange-200 px-2 py-0.5 rounded border border-orange-500/50">Senacki</span>}
-                                    {linkedPrint.title.toLowerCase().includes('obywatelski') && <span className="text-[10px] bg-green-500/30 text-green-200 px-2 py-0.5 rounded border border-green-500/50">Obywatelski</span>}
-                                </div>
+                                <div>
+                                    <div className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">
+                                        Powiązany Druk Sejmowy nr {linkedPrint.number}
+                                    </div>
+                                    <h3 className="text-white font-semibold text-lg leading-tight mb-2">
+                                        {linkedPrint.title}
+                                    </h3>
+                                    {/* Source heuristic */}
+                                    <div className="flex gap-2 mb-3">
+                                        {linkedPrint.title.toLowerCase().includes('rządowy') && <span className="text-[10px] bg-blue-500/30 text-blue-200 px-2 py-0.5 rounded border border-blue-500/50">Rządowy</span>}
+                                        {linkedPrint.title.toLowerCase().includes('poselski') && <span className="text-[10px] bg-purple-500/30 text-purple-200 px-2 py-0.5 rounded border border-purple-500/50">Poselski</span>}
+                                        {linkedPrint.title.toLowerCase().includes('senacki') && <span className="text-[10px] bg-orange-500/30 text-orange-200 px-2 py-0.5 rounded border border-orange-500/50">Senacki</span>}
+                                        {linkedPrint.title.toLowerCase().includes('obywatelski') && <span className="text-[10px] bg-green-500/30 text-green-200 px-2 py-0.5 rounded border border-green-500/50">Obywatelski</span>}
+                                    </div>
 
-                                <a
-                                    href={`https://www.sejm.gov.pl/Sejm10.nsf/druk.xsp?nr=${linkedPrint.number}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-sm text-blue-300 hover:text-white underline decoration-blue-300/50 hover:decoration-white transition-colors"
-                                >
-                                    Otwórz tekst źródłowy na stronie Sejmu →
-                                </a>
+                                    <a
+                                        href={`https://www.sejm.gov.pl/Sejm10.nsf/druk.xsp?nr=${linkedPrint.number}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-sm text-blue-300 hover:text-white underline decoration-blue-300/50 hover:decoration-white transition-colors"
+                                    >
+                                        Otwórz tekst źródłowy na stronie Sejmu →
+                                    </a>
+                                </div>
                             </div>
+
+                            {/* Project Scanner Context - Nested inside the print card */}
+                            {projectContext && (
+                                <div className="mt-4 pt-4 border-t border-white/10">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                                            <Sparkles size={12} />
+                                            Kontekst z PDF
+                                        </div>
+                                    </div>
+                                    <div className="text-slate-300 text-sm leading-relaxed mb-3 italic">
+                                        "{projectContext.ai_summary}"
+                                    </div>
+                                    {projectContext.pdf_url && (
+                                        <a href={projectContext.pdf_url} target="_blank" rel="noreferrer" className="text-xs text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1">
+                                            Zobacz pełny PDF <ExternalLink size={10} />
+                                        </a>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -367,6 +401,7 @@ const VoteDetails: React.FC = () => {
                     )}
                 </div>
             </div>
+
 
             {/* AI Analysis Section */}
             {analysis && (
