@@ -82,7 +82,7 @@ def main():
         WHERE (content IS NULL OR content = '')
         AND raw_data IS NOT NULL
         ORDER BY id
-        LIMIT 500
+        LIMIT 5000
     """)
     
     print(f"\nFetching content for {len(rows)} interpellations...")

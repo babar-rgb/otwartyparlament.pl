@@ -1,22 +1,22 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Link } from 'react-router-dom';
-import { Search, Calendar, FileText, User } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Search, FileText } from 'lucide-react';
 
 interface Interpellation {
     id: number;
     term: number;
-    num: number;
     title: string;
-    date: string;
-    receipt_date: string;
-    last_modified: string;
-    from_mp: string; // JSON string or array
-    to_minister: string; // JSON string or array
     sent_date: string;
-    replies: any;
+    last_modified: string;
+    content: string;
+    reply_content: string;
     raw_data: {
         content?: string;
+        key?: string;
+        num?: number;
+        from?: string[];
+        to?: string[];
         [key: string]: any;
     };
 }
@@ -29,11 +29,75 @@ export default function InterpellationsList() {
     const [hasSearched, setHasSearched] = useState(false);
     const [totalCount, setTotalCount] = useState<number>(0);
 
-    // Load recent on mount
+    const [searchParams] = useSearchParams();
+    const mpIdFilter = searchParams.get('mp_id');
+    const [filterMpName, setFilterMpName] = useState<string>('');
+
+    // Load recent on mount or change of mpIdFilter
     useEffect(() => {
-        fetchRecent();
+        if (mpIdFilter) {
+            fetchByMp(mpIdFilter);
+        } else {
+            fetchRecent();
+        }
         fetchTotalCount();
-    }, []);
+    }, [mpIdFilter]);
+
+    const fetchByMp = async (mpId: string) => {
+        setLoading(true);
+        console.log('[DEBUG] fetchByMp called with mpId:', mpId);
+        try {
+            // 1. Fetch MP Name separately
+            const { data: mpData } = await supabase
+                .from('mps')
+                .select('name')
+                .eq('id', mpId)
+                .single();
+
+            console.log('[DEBUG] MP Data:', mpData);
+            if (mpData) setFilterMpName(mpData.name);
+
+            // 2. Get interpellation IDs for this MP
+            const { data: authorData, error: authorError } = await supabase
+                .from('interpellation_authors')
+                .select('interpellation_id')
+                .eq('mp_id', mpId);
+
+            console.log('[DEBUG] Author Data:', authorData);
+            console.log('[DEBUG] Author Error:', authorError);
+
+            if (authorError) throw authorError;
+
+            if (authorData && authorData.length > 0) {
+                const ids = authorData.map(a => a.interpellation_id);
+                console.log('[DEBUG] Interpellation IDs:', ids);
+
+                // 3. Fetch the actual interpellations
+                const { data, error } = await supabase
+                    .from('interpellations')
+                    .select('*')
+                    .in('id', ids)
+                    .order('sent_date', { ascending: false });
+
+                console.log('[DEBUG] Interpellations Data:', data);
+                console.log('[DEBUG] Interpellations Error:', error);
+
+                if (error) throw error;
+                setInterpellations(data || []);
+                setHasSearched(true);
+            } else {
+                console.log('[DEBUG] No author data found for this MP');
+                setInterpellations([]);
+                setHasSearched(true);
+            }
+        } catch (err) {
+            console.error('[DEBUG] Error in fetchByMp:', err);
+            setInterpellations([]);
+            setHasSearched(true);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const fetchTotalCount = async () => {
         const { count } = await supabase
@@ -47,7 +111,7 @@ export default function InterpellationsList() {
             const { data, error } = await supabase
                 .from('interpellations')
                 .select('*')
-                .order('receipt_date', { ascending: false })
+                .order('sent_date', { ascending: false })
                 .limit(10);
 
             if (error) throw error;
@@ -64,21 +128,11 @@ export default function InterpellationsList() {
         setLoading(true);
         setHasSearched(true);
         try {
-            // Search in title AND raw_data->content
-            // Note: Supabase 'ilike' on JSONB text fields requires casting or specific syntax.
-            // For simplicity in MVP, we might just search title or use a text search if we had a dedicated column.
-            // Since we stored content in raw_data->content, we can try to filter.
-            // However, querying JSONB content with ilike is tricky without a generated column.
-            // Let's try to search title first, and if we can, content.
-
-            // Actually, the user specifically asked for CONTENT search.
-            // We can use the ->> operator to get text and then ilike.
-
             const { data, error } = await supabase
                 .from('interpellations')
                 .select('*')
-                .or(`title.ilike.%${query}%,raw_data->>content.ilike.%${query}%`)
-                .order('receipt_date', { ascending: false })
+                .or(`title.ilike.%${query}%,content.ilike.%${query}%`)
+                .order('sent_date', { ascending: false })
                 .limit(50);
 
             if (error) throw error;
@@ -160,9 +214,11 @@ export default function InterpellationsList() {
             <div className="space-y-6">
                 <div className="flex items-center justify-between border-b border-slate-200 pb-4">
                     <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                        {hasSearched
-                            ? (interpellations.length > 0 ? `Wyniki wyszukiwania (${interpellations.length})` : `Brak wyników dla "${query}"`)
-                            : 'Ostatnie interpelacje'
+                        {mpIdFilter && filterMpName
+                            ? `Interpelacje posła ${filterMpName} (${interpellations.length})`
+                            : hasSearched
+                                ? (interpellations.length > 0 ? `Wyniki wyszukiwania (${interpellations.length})` : `Brak wyników dla "${query}"`)
+                                : 'Ostatnie interpelacje'
                         }
                     </h2>
                 </div>
@@ -185,20 +241,18 @@ export default function InterpellationsList() {
                     )}
 
                     {(!hasSearched ? recentInterpellations : interpellations).map((item) => {
-                        // Parse authors if string
-                        let authors = item.from_mp;
-                        try {
-                            if (typeof item.from_mp === 'string') authors = JSON.parse(item.from_mp);
-                        } catch (e) { }
+                        // Get author from raw_data
+                        const authorList = item.raw_data?.from || [];
+                        const authorName = Array.isArray(authorList) ? (authorList[0] || 'Nieznany poseł') : authorList;
 
-                        // Ensure authors is array
-                        const authorList = Array.isArray(authors) ? authors : [authors];
-                        const authorName = authorList[0] || 'Nieznany poseł';
-
-                        const content = item.raw_data?.content || item.title;
+                        const contentText = item.content || item.raw_data?.content || item.title;
 
                         return (
-                            <div key={item.id} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                            <Link
+                                key={item.id}
+                                to={`/interpelacje/${item.id}`}
+                                className="block bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer"
+                            >
                                 <div className="flex justify-between items-start gap-4 mb-3">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
@@ -209,14 +263,14 @@ export default function InterpellationsList() {
                                                 {authorName}
                                             </p>
                                             <p className="text-xs font-bold text-slate-500 uppercase">
-                                                Interpelacja nr {item.num}
+                                                Interpelacja nr {item.raw_data?.num || item.id}
                                             </p>
                                         </div>
                                     </div>
 
                                     <div className="text-right">
                                         <span className="text-sm font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded">
-                                            {item.receipt_date}
+                                            {item.sent_date}
                                         </span>
                                     </div>
                                 </div>
@@ -229,20 +283,15 @@ export default function InterpellationsList() {
                                     <p
                                         className="text-slate-700 leading-relaxed line-clamp-3 text-sm"
                                         dangerouslySetInnerHTML={{
-                                            __html: query ? highlightText(content, query) : (content.slice(0, 300) + '...')
+                                            __html: query ? highlightText(contentText || '', query) : ((contentText || '').slice(0, 300) + '...')
                                         }}
                                     />
                                 </div>
 
-                                <a
-                                    href={`https://www.sejm.gov.pl/Sejm10.nsf/InterpelacjaTresc.xsp?key=${item.raw_data?.key || ''}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-sm font-bold text-blue-600 hover:text-blue-700 hover:underline"
-                                >
-                                    Zobacz źródło na sejm.gov.pl &rarr;
-                                </a>
-                            </div>
+                                <span className="text-sm font-bold text-blue-600">
+                                    Zobacz szczegóły →
+                                </span>
+                            </Link>
                         );
                     })}
                 </div>

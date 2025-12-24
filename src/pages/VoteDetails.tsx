@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, ArrowRight, Calendar, CheckCircle2, XCircle, PieChart, Users, Sparkles, ThumbsUp, ThumbsDown, Network, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, CheckCircle2, XCircle, PieChart, Users, Sparkles, Network, ExternalLink, Search } from 'lucide-react';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import VoteTechnicalDetails from '../components/VoteTechnicalDetails';
 import SejmHemicycle from '../components/SejmHemicycle';
@@ -55,6 +55,7 @@ const VoteDetails: React.FC = () => {
     const [loading, setLoading] = useState(true);
 
     const [analysis, setAnalysis] = useState<{ summary: string; pros: string[]; cons: string[] } | null>(null);
+    const [mpSearch, setMpSearch] = useState('');
     const [linkedProcessId, setLinkedProcessId] = useState<string | null>(null);
     const [linkedPrint, setLinkedPrint] = useState<{ number: string; title: string } | null>(null);
     const [projectContext, setProjectContext] = useState<{ ai_summary: string; justification_text: string; pdf_url: string } | null>(null);
@@ -142,7 +143,10 @@ const VoteDetails: React.FC = () => {
                 .single();
 
             if (!analysisError && analysisData) {
+                console.log('✅ Analysis loaded:', analysisData);
                 setAnalysis(analysisData);
+            } else {
+                console.log('❌ Analysis not loaded:', analysisError);
             }
 
             // 5. Try to link to Law Map (Process) & Project Context
@@ -213,7 +217,7 @@ const VoteDetails: React.FC = () => {
             />
 
             {/* Hero Section - Full Width Dark */}
-            <div className="relative bg-slate-900 overflow-hidden">
+            <div className="relative bg-slate-50 dark:bg-slate-950 overflow-hidden">
                 {/* Subtle gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-purple-900/20" />
 
@@ -322,7 +326,7 @@ const VoteDetails: React.FC = () => {
                     )}
 
                     {/* Vote Result Card */}
-                    <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50">
+                    <div className="bg-white dark:bg-[#111126] rounded-[2rem] p-8 border border-slate-200 dark:border-white/5 shadow-sm">
                         {/* Verdict + Bar */}
                         <div className="flex flex-col lg:flex-row lg:items-center gap-6">
                             {/* Verdict Badge */}
@@ -383,13 +387,13 @@ const VoteDetails: React.FC = () => {
                 <div className="space-y-10">
 
                     {/* AI Intelligence Badge */}
-                    {vote.importance_score && (
+                    {(vote.importance_score ?? 0) > 0 && (
                         <div className="flex flex-wrap gap-4 mt-4">
                             <div className="flex items-center gap-3 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white px-4 py-2 rounded-xl shadow-md">
                                 <Sparkles className="w-5 h-5" />
                                 <div>
                                     <div className="text-xs font-medium opacity-90 uppercase tracking-wider">Importance Score</div>
-                                    <div className="text-xl font-bold">{vote.importance_score}/100</div>
+                                    <div className="text-xl font-bold">{vote.importance_score!}/100</div>
                                 </div>
                             </div>
 
@@ -414,65 +418,6 @@ const VoteDetails: React.FC = () => {
                         pros={analysis.pros || []}
                         cons={analysis.cons || []}
                     />
-
-                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-[#0f0c29] dark:via-[#302b63] dark:to-[#24243e] rounded-3xl p-8 shadow-lg border border-indigo-100 dark:border-indigo-500/30 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-4 opacity-10 dark:opacity-20">
-                            <Sparkles className="w-32 h-32 text-indigo-600 dark:text-purple-400" />
-                        </div>
-
-                        <div className="relative z-10 space-y-6">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-white dark:bg-indigo-500/20 rounded-lg shadow-sm text-indigo-600 dark:text-indigo-300">
-                                    <Sparkles className="w-6 h-6" />
-                                </div>
-                                <h2 className="text-2xl font-bold text-indigo-900 dark:text-indigo-100">Analiza AI</h2>
-                            </div>
-
-                            <div className="bg-white/60 dark:bg-indigo-950/40 backdrop-blur-md rounded-xl p-6 border border-indigo-100 dark:border-indigo-500/30 shadow-sm">
-                                <p className="text-lg text-indigo-900 dark:text-indigo-100 leading-relaxed font-medium">
-                                    {analysis.summary}
-                                </p>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Pros */}
-                                <div className="bg-white/60 dark:bg-emerald-950/20 backdrop-blur-md rounded-xl p-6 border border-green-100 dark:border-emerald-500/20">
-                                    <h3 className="font-bold text-green-800 dark:text-emerald-400 mb-4 flex items-center gap-2">
-                                        <ThumbsUp className="w-5 h-5" />
-                                        Argumenty ZA
-                                    </h3>
-                                    <ul className="space-y-3">
-                                        {analysis.pros?.map((pro, i) => (
-                                            <li key={i} className="flex gap-3 text-green-900 dark:text-emerald-100">
-                                                <span className="text-green-500 dark:text-emerald-400 font-bold shrink-0">•</span>
-                                                <span className="opacity-90">{pro}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                {/* Cons */}
-                                <div className="bg-white/60 dark:bg-rose-950/20 backdrop-blur-md rounded-xl p-6 border border-red-100 dark:border-rose-500/20">
-                                    <h3 className="font-bold text-red-800 dark:text-rose-400 mb-4 flex items-center gap-2">
-                                        <ThumbsDown className="w-5 h-5" />
-                                        Argumenty PRZECIW
-                                    </h3>
-                                    <ul className="space-y-3">
-                                        {analysis.cons?.map((con, i) => (
-                                            <li key={i} className="flex gap-3 text-red-900 dark:text-rose-100">
-                                                <span className="text-red-500 dark:text-rose-400 font-bold shrink-0">•</span>
-                                                <span className="opacity-90">{con}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <div className="text-xs text-indigo-400 dark:text-indigo-300/60 text-center pt-2">
-                                Analiza wygenerowana automatycznie przez model sztucznej inteligencji. Może zawierać uproszczenia.
-                            </div>
-                        </div>
-                    </div>
                 </div>
             )}
 
@@ -508,26 +453,26 @@ const VoteDetails: React.FC = () => {
                     <h2 className="text-2xl font-bold">Głosowanie w Klubach</h2>
                 </div>
 
-                <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-neutral-200">
+                <div className="bg-slate-900/50 rounded-2xl overflow-hidden shadow-sm border border-slate-700">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-neutral-50 text-sm uppercase tracking-wider text-neutral-500">
+                                <tr className="bg-slate-800/50 text-sm uppercase tracking-wider text-slate-400">
                                     <th className="p-4 font-semibold">Klub / Koło</th>
-                                    <th className="p-4 font-semibold text-green-600">Za</th>
-                                    <th className="p-4 font-semibold text-red-600">Przeciw</th>
-                                    <th className="p-4 font-semibold text-neutral-600">Wstrzymał się</th>
-                                    <th className="p-4 font-semibold text-neutral-400">Nieobecny</th>
+                                    <th className="p-4 font-semibold text-green-400">Za</th>
+                                    <th className="p-4 font-semibold text-red-400">Przeciw</th>
+                                    <th className="p-4 font-semibold text-slate-400">Wstrzymał się</th>
+                                    <th className="p-4 font-semibold text-slate-500">Nieobecny</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-neutral-100">
+                            <tbody className="divide-y divide-slate-700/50">
                                 {Object.entries(partyStats).map(([party, stats]) => (
-                                    <tr key={party} className="hover:bg-neutral-50 transition-colors">
-                                        <td className="p-4 font-medium">{party}</td>
-                                        <td className="p-4 font-bold text-green-600">{stats.yes}</td>
-                                        <td className="p-4 font-bold text-red-600">{stats.no}</td>
-                                        <td className="p-4 font-bold text-neutral-600">{stats.abstain}</td>
-                                        <td className="p-4 text-neutral-400">{stats.absent}</td>
+                                    <tr key={party} className="hover:bg-slate-800/30 transition-colors">
+                                        <td className="p-4 font-medium text-white">{party}</td>
+                                        <td className="p-4 font-bold text-green-400">{stats.yes}</td>
+                                        <td className="p-4 font-bold text-red-400">{stats.no}</td>
+                                        <td className="p-4 font-bold text-slate-400">{stats.abstain}</td>
+                                        <td className="p-4 text-slate-500">{stats.absent}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -545,30 +490,44 @@ const VoteDetails: React.FC = () => {
             Listing 460 rows is a bit much but acceptable for a details page. 
         */}
             <div className="space-y-4 pt-8">
-                <div className="flex items-center gap-3">
-                    <Users className="w-6 h-6 text-indigo-600" />
-                    <h2 className="text-2xl font-bold">Wyniki Indywidualne</h2>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <Users className="w-6 h-6 text-indigo-600" />
+                        <h2 className="text-2xl font-bold">Wyniki Indywidualne</h2>
+                    </div>
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 w-4 h-4" />
+                        <input
+                            type="text"
+                            placeholder="Szukaj posła..."
+                            value={mpSearch}
+                            onChange={(e) => setMpSearch(e.target.value)}
+                            className="pl-10 pr-4 py-2 border border-slate-600 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 w-full sm:w-64 bg-slate-800 text-white placeholder:text-slate-400"
+                        />
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {results.map((r, idx) => (
-                        <div key={idx} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-neutral-100">
-                            <div className={`w-2 h-10 rounded-full ${r.vote === 'YES' ? 'bg-green-500' :
-                                r.vote === 'NO' ? 'bg-red-500' :
-                                    r.vote === 'ABSTAIN' ? 'bg-neutral-400' : 'bg-neutral-200'
-                                }`} />
-                            <div>
-                                <div className="font-medium text-sm">{r.mps?.name}</div>
-                                <div className="text-xs text-neutral-500">{r.mps?.party}</div>
+                    {results
+                        .filter(r => !mpSearch || r.mps?.name?.toLowerCase().includes(mpSearch.toLowerCase()) || r.mps?.party?.toLowerCase().includes(mpSearch.toLowerCase()))
+                        .map((r, idx) => (
+                            <div key={idx} className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-xl border border-slate-700">
+                                <div className={`w-2 h-10 rounded-full ${r.vote === 'YES' ? 'bg-green-500' :
+                                    r.vote === 'NO' ? 'bg-red-500' :
+                                        r.vote === 'ABSTAIN' ? 'bg-amber-500' : 'bg-slate-600'
+                                    }`} />
+                                <div>
+                                    <div className="font-medium text-sm text-white">{r.mps?.name}</div>
+                                    <div className="text-xs text-slate-400">{r.mps?.party}</div>
+                                </div>
+                                <div className="ml-auto text-sm font-bold">
+                                    {r.vote === 'YES' && <span className="text-green-400">ZA</span>}
+                                    {r.vote === 'NO' && <span className="text-red-400">PRZECIW</span>}
+                                    {r.vote === 'ABSTAIN' && <span className="text-amber-400">WSTRZ.</span>}
+                                    {r.vote === 'ABSENT' && <span className="text-slate-500">NIEOB.</span>}
+                                </div>
                             </div>
-                            <div className="ml-auto text-sm font-bold">
-                                {r.vote === 'YES' && <span className="text-green-600">ZA</span>}
-                                {r.vote === 'NO' && <span className="text-red-600">PRZECIW</span>}
-                                {r.vote === 'ABSTAIN' && <span className="text-neutral-500">WSTRZ.</span>}
-                                {r.vote === 'ABSENT' && <span className="text-neutral-300">NIEOB.</span>}
-                            </div>
-                        </div>
-                    ))}
+                        ))}
                 </div>
             </div>
         </div>

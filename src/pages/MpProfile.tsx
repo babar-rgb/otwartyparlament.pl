@@ -392,7 +392,7 @@ const MpProfile = () => {
             {/* Interpellations Link */}
             {interpellationCount > 0 && (
               <Link
-                to="/interpelacje"
+                to={`/interpelacje?mp_id=${mp.id}`}
                 className="block bg-[#111126] rounded-2xl border border-white/5 p-5 hover:border-white/20 transition-colors group"
               >
                 <div className="flex items-center justify-between">

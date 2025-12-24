@@ -1,6 +1,5 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { ThumbsUp, ThumbsDown, BrainCircuit, Activity } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, AlignLeft } from 'lucide-react';
 
 interface VoteMindMapProps {
     summary: string;
@@ -10,141 +9,105 @@ interface VoteMindMapProps {
 }
 
 export default function VoteMindMap({ summary, pros, cons, title }: VoteMindMapProps) {
-    // We limit to top 3 arguments to keep the graph clean
-    const displayPros = pros.slice(0, 3);
-    const displayCons = cons.slice(0, 3);
-
     return (
-        <div className="relative w-full overflow-hidden bg-[#0c0c1a] rounded-3xl p-8 border border-white/5 shadow-2xl">
-            {/* Background Grid */}
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
+        <div className="w-full space-y-8 font-sans">
 
-            <div className="relative z-10 flex flex-col items-center gap-12 py-8">
 
-                {/* Header */}
-                <div className="text-center">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/10 text-indigo-400 rounded-full text-xs font-bold uppercase tracking-wider mb-4 border border-indigo-500/20">
-                        <BrainCircuit size={14} />
-                        Mapa Myśli Ustawy
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+                {/* Left Column: Summary Card (Full Height) */}
+                <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="bg-white dark:bg-[#111126] border border-slate-200 dark:border-white/5 rounded-[2rem] p-8 md:p-10 shadow-sm relative overflow-hidden flex flex-col h-full"
+                >
+                    <div className="relative z-10 flex flex-col h-full">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg text-xs font-black uppercase tracking-widest mb-6 border border-indigo-500/20 w-fit">
+                            <AlignLeft size={12} />
+                            Podsumowanie
+                        </div>
+
+                        <h3 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white mb-6 leading-tight">
+                            {title}
+                        </h3>
+
+                        <div className="prose dark:prose-invert max-w-none flex-grow">
+                            <p className="text-slate-600 dark:text-white/70 text-lg leading-relaxed font-medium">
+                                {summary}
+                            </p>
+                        </div>
                     </div>
-                </div>
+                </motion.div>
 
-                {/* Graph Container */}
-                <div className="w-full max-w-5xl relative">
-
-                    {/* SVG Connector Lines */}
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none stroke-white/10" style={{ overflow: 'visible' }}>
-                        {/* Center to Top (Summary) */}
-                        <path d="M50% 160 L50% 80" fill="none" strokeWidth="2" strokeDasharray="4 4" />
-
-                        {/* Center to Left (Pros) */}
-                        <path d="M50% 160 C 40% 160, 25% 160, 20% 250" fill="none" strokeWidth="2" className="stroke-emerald-500/30" />
-
-                        {/* Center to Right (Cons) */}
-                        <path d="M50% 160 C 60% 160, 75% 160, 80% 250" fill="none" strokeWidth="2" className="stroke-red-500/30" />
-                    </svg>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start relative">
-
-                        {/* LEFT COLUMN: PROS */}
-                        <div className="space-y-6 lg:mt-32 order-2 lg:order-1">
-                            <motion.div
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.3 }}
-                                className="flex items-center gap-3 justify-center lg:justify-start"
-                            >
-                                <div className="p-2 bg-emerald-500/20 rounded-lg text-emerald-400">
-                                    <ThumbsUp size={20} />
-                                </div>
-                                <h3 className="text-emerald-400 font-bold uppercase tracking-wider text-sm">Korzyści</h3>
-                            </motion.div>
-
-                            <div className="space-y-4">
-                                {displayPros.map((pro, i) => (
-                                    <motion.div
-                                        key={i}
-                                        initial={{ opacity: 0, scale: 0.9 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: 0.4 + (i * 0.1) }}
-                                        className="bg-[#0f111a] border border-emerald-500/30 p-4 rounded-xl relative group hover:bg-[#151824] transition-colors"
-                                    >
-                                        <div className="absolute top-1/2 -right-3 w-3 h-[1px] bg-emerald-500/30 hidden lg:block" />
-                                        <p className="text-emerald-100/80 text-sm leading-relaxed">{pro}</p>
-                                    </motion.div>
-                                ))}
+                {/* Right Column: Pros and Cons Stacked */}
+                <div className="flex flex-col gap-6 h-full">
+                    {/* Pros Card */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="bg-white dark:bg-[#111126] border border-slate-200 dark:border-white/5 rounded-[2rem] p-8 shadow-sm flex flex-col flex-1 hover:shadow-md transition-shadow group"
+                    >
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center border border-emerald-500/20 shadow-inner group-hover:scale-110 transition-transform duration-300">
+                                <ThumbsUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black text-slate-900 dark:text-white">Korzyści</h3>
+                                <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold uppercase tracking-wider">Potencjalne zalety</p>
                             </div>
                         </div>
 
-                        {/* CENTER COLUMN: MAIN TOPIC & SUMMARY */}
-                        <div className="flex flex-col items-center gap-8 order-1 lg:order-2">
-                            {/* Summary Node */}
-                            <motion.div
-                                initial={{ opacity: 0, y: -20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="bg-indigo-950/40 backdrop-blur border border-indigo-500/30 p-6 rounded-2xl text-center max-w-sm"
-                            >
-                                <p className="text-indigo-200 text-sm italic">{summary}</p>
-                            </motion.div>
-
-                            {/* Central Node */}
-                            <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                                className="relative w-32 h-32 flex items-center justify-center"
-                            >
-                                <div className="absolute inset-0 bg-blue-500/20 rounded-full animate-ping opacity-20" />
-                                <div className="absolute inset-0 border-2 border-blue-500/30 rounded-full" />
-                                <div className="w-24 h-24 bg-[#0c0c1a] border-4 border-blue-500/40 rounded-full flex items-center justify-center p-4 relative z-10 shadow-[0_0_30px_rgba(59,130,246,0.2)]">
-                                    <Activity size={32} className="text-blue-400" />
+                        <div className="space-y-3 flex-grow">
+                            {pros.slice(0, 3).map((pro, i) => (
+                                <div key={i} className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 flex gap-3 items-start group/item hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:border-emerald-100 dark:hover:border-emerald-500/20 transition-all">
+                                    <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:scale-110 transition-transform">
+                                        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">{i + 1}</span>
+                                    </div>
+                                    <p className="text-slate-600 dark:text-white/80 text-sm leading-relaxed font-medium">
+                                        {pro}
+                                    </p>
                                 </div>
-                            </motion.div>
-
-                            {/* Title */}
-                            <motion.h2
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="text-white font-bold text-lg text-center leading-tight max-w-xs"
-                            >
-                                {title}
-                            </motion.h2>
+                            ))}
                         </div>
+                    </motion.div>
 
-                        {/* RIGHT COLUMN: CONS */}
-                        <div className="space-y-6 lg:mt-32 order-3">
-                            <motion.div
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.3 }}
-                                className="flex items-center gap-3 justify-center lg:justify-end"
-                            >
-                                <h3 className="text-red-400 font-bold uppercase tracking-wider text-sm">Zagrożenia</h3>
-                                <div className="p-2 bg-red-500/20 rounded-lg text-red-400">
-                                    <ThumbsDown size={20} />
-                                </div>
-                            </motion.div>
-
-                            <div className="space-y-4">
-                                {displayCons.map((con, i) => (
-                                    <motion.div
-                                        key={i}
-                                        initial={{ opacity: 0, scale: 0.9 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: 0.4 + (i * 0.1) }}
-                                        className="bg-[#0f111a] border border-red-500/30 p-4 rounded-xl relative group hover:bg-[#151824] transition-colors text-right"
-                                    >
-                                        <div className="absolute top-1/2 -left-3 w-3 h-[1px] bg-red-500/30 hidden lg:block" />
-                                        <p className="text-red-100/80 text-sm leading-relaxed">{con}</p>
-                                    </motion.div>
-                                ))}
+                    {/* Cons Card */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="bg-white dark:bg-[#111126] border border-slate-200 dark:border-white/5 rounded-[2rem] p-8 shadow-sm flex flex-col flex-1 hover:shadow-md transition-shadow group"
+                    >
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="w-10 h-10 bg-rose-500/10 rounded-xl flex items-center justify-center border border-rose-500/20 shadow-inner group-hover:scale-110 transition-transform duration-300">
+                                <ThumbsDown className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black text-slate-900 dark:text-white">Zagrożenia</h3>
+                                <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold uppercase tracking-wider">Potencjalne wady</p>
                             </div>
                         </div>
 
-                    </div>
+                        <div className="space-y-3 flex-grow">
+                            {cons.slice(0, 3).map((con, i) => (
+                                <div key={i} className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 flex gap-3 items-start group/item hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:border-rose-100 dark:hover:border-rose-500/20 transition-all">
+                                    <div className="w-5 h-5 rounded-full bg-rose-500/10 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:scale-110 transition-transform">
+                                        <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400">{i + 1}</span>
+                                    </div>
+                                    <p className="text-slate-600 dark:text-white/80 text-sm leading-relaxed font-medium">
+                                        {con}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
                 </div>
+            </div>
 
+            <div className="text-center">
+                <p className="text-[10px] text-slate-400 dark:text-white/20 uppercase tracking-widest font-bold">
+                    Powered by Gemini Pro • Dane wygenerowane automatycznie
+                </p>
             </div>
         </div>
     );
