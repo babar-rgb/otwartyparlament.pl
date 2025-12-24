@@ -14,6 +14,7 @@ interface SearchResult {
     content_preview?: string;
     date: string;
     relevance: number;
+    term?: number;
 }
 
 const SearchPage: React.FC = () => {
@@ -157,9 +158,16 @@ const SearchPage: React.FC = () => {
                                         <Link key={proc.id} to={`/projekty/${proc.id}`} className="block bg-white p-6 rounded-xl border border-amber-100 hover:border-amber-300 hover:shadow-md transition-all group">
                                             <div className="flex justify-between items-start">
                                                 <div>
-                                                    <span className="text-xs font-bold text-amber-600 uppercase tracking-wide bg-amber-50 px-2 py-1 rounded mb-2 inline-block">
-                                                        {proc.ux_category || 'Projekt'}
-                                                    </span>
+                                                    <div className="flex gap-2 mb-2">
+                                                        <span className="text-xs font-bold text-amber-600 uppercase tracking-wide bg-amber-50 px-2 py-1 rounded inline-block">
+                                                            {proc.ux_category || 'Projekt'}
+                                                        </span>
+                                                        {proc.term && (
+                                                            <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded border ${proc.term === 10 ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200'}`}>
+                                                                {proc.term}. Kadencja
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <h3 className="text-lg font-bold text-slate-900 group-hover:text-amber-700 transition-colors">
                                                         {cleanSejmTitle(proc.title)}
                                                     </h3>
@@ -192,6 +200,11 @@ const SearchPage: React.FC = () => {
                                                     <span className="text-xs font-bold text-blue-700 uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
                                                         {vote.ux_category || 'Głosowanie'}
                                                     </span>
+                                                    {vote.term && (
+                                                        <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full border ${vote.term === 10 ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200'}`}>
+                                                            {vote.term}. Kadencja
+                                                        </span>
+                                                    )}
                                                     <span className="text-xs text-slate-400 font-medium">
                                                         {new Date(vote.date).toLocaleDateString('pl-PL')}
                                                     </span>
@@ -218,7 +231,12 @@ const SearchPage: React.FC = () => {
                                 </div>
                                 <div className="space-y-4">
                                     {speeches.map((speech) => (
-                                        <div key={speech.id} className="p-6 bg-white rounded-xl border border-slate-200 hover:border-indigo-300 transition-colors">
+                                        <div key={speech.id} className="p-6 bg-white rounded-xl border border-slate-200 hover:border-indigo-300 transition-colors relative">
+                                            {speech.term && (
+                                                <span className={`absolute top-4 right-4 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded border ${speech.term === 10 ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-white text-slate-400 border-slate-100'}`}>
+                                                    {speech.term}. Kadencja
+                                                </span>
+                                            )}
                                             <p className="text-slate-700 text-sm line-clamp-3 italic mb-3">
                                                 "{speech.content_preview}..."
                                             </p>

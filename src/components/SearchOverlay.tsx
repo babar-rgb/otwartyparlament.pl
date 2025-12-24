@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, X, Calendar, FileText, Flame } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SmartSuggestions from './SmartSuggestions';
+import { expandSearchQuery } from '../utils/searchContext';
 
 interface SearchOverlayProps {
     isOpen: boolean;
@@ -65,6 +66,10 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
         const params = new URLSearchParams();
         params.set('q', query);
 
+        // Add Contextual Search logic
+        const expanded = expandSearchQuery(query).join(',');
+        params.set('expanded', expanded);
+
         activeFilters.forEach(filterId => {
             const chip = FILTER_CHIPS.find(c => c.id === filterId);
             if (chip) {
@@ -125,8 +130,8 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                                 key={chip.id}
                                 onClick={() => toggleFilter(chip.id)}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${isActive
-                                        ? 'bg-blue-600 text-white shadow-md'
-                                        : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-blue-400 dark:hover:border-blue-500'
+                                    ? 'bg-blue-600 text-white shadow-md'
+                                    : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-blue-400 dark:hover:border-blue-500'
                                     }`}
                             >
                                 <Icon className="w-4 h-4" />

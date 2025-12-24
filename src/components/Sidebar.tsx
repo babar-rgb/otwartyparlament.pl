@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { X, Github, Mail, BookOpen, Database, Heart, Search } from 'lucide-react';
+import { X, Github, Mail, BookOpen, Database, Heart, Search, Users, Briefcase, CheckSquare, BarChart3, FileText, Globe, Radio } from 'lucide-react';
 
 interface SidebarProps {
     isOpen: boolean;
@@ -42,7 +42,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <div className="mb-8">
                             {/* Mobile Search Input */}
                             <div className="mb-6 relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" size={20} />
                                 <input
                                     type="text"
                                     placeholder="Szukaj..."
@@ -63,15 +63,33 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                 Główna Nawigacja
                             </h3>
                             <nav className="space-y-2 mb-8">
-                                <Link to="/poslowie" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Posłowie</Link>
-                                <Link to="/komisje" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Komisje</Link>
-                                <Link to="/glosowania" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Głosowania</Link>
-                                <Link to="/rankingi" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Rankingi</Link>
-                                <Link to="/projekty" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Projekty</Link>
-                                <Link to="/europarlament" onClick={onClose} className="block p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">Europarlament</Link>
+                                <Link to="/poslowie" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900 group">
+                                    <Users size={20} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
+                                    Posłowie
+                                </Link>
+                                <Link to="/komisje" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900 group">
+                                    <Briefcase size={20} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
+                                    Komisje
+                                </Link>
+                                <Link to="/glosowania" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900 group">
+                                    <CheckSquare size={20} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
+                                    Głosowania
+                                </Link>
+                                <Link to="/rankingi" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900 group">
+                                    <BarChart3 size={20} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
+                                    Rankingi
+                                </Link>
+                                <Link to="/projekty" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900 group">
+                                    <FileText size={20} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
+                                    Projekty
+                                </Link>
+                                <Link to="/europarlament" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900 group">
+                                    <Globe size={20} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
+                                    Europarlament
+                                </Link>
                                 <div className="border-t border-slate-100 my-1 mx-3" />
-                                <Link to="/live" onClick={onClose} className="flex items-center gap-2 p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900">
-                                    <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                                <Link to="/live" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900 group">
+                                    <Radio size={20} className="text-red-500 animate-pulse" />
                                     Live
                                 </Link>
                             </nav>

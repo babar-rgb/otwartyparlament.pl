@@ -1,52 +1,8 @@
+import { MP, Vote } from './types/domain';
+
 const API_URL = 'https://api.sejm.gov.pl/sejm/term10';
 
-export interface MP {
-  id: number;
-  first_name: string;
-  last_name: string;
-  club: string;
-  district: string;
-  photo_url: string;
-  active: boolean;
-  // District details
-  districtNum?: number;
-  districtName?: string;
-  voivodeship?: string;
-  // Contact
-  email?: string;
-  // Optional fields for UI
-  votesCount?: number;
-  billsCount?: number;
-  attendanceRate?: number;
-  aktywnosc?: number;
-  rebelVotes?: number; // Votes against party line
-  seat_number?: number | null;
-  slug?: string;
-  term?: number;
-  declarations?: { label: string; url: string }[];
-  stats?: {
-    speeches?: number;
-    interpellations?: number;
-    voteParticipation?: number;
-  };
-}
-
-export interface Vote {
-  id: number;
-  date: string;
-  title: string;
-  description: string;
-  topic: string;
-  importance: number;
-  kind: string;
-  // Optional fields for UI
-  result?: string;
-  categoryIcon?: string;
-  for?: number;
-  against?: number;
-  abstained?: number;
-  absent?: number;
-}
+export type { MP, Vote };
 
 export const fetchMPs = async (): Promise<MP[]> => {
   const response = await fetch(`${API_URL}/MP`);

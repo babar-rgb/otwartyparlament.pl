@@ -1,100 +1,23 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { useState } from 'react';
 import { Search, FileText, Loader2, ScrollText, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTerm } from '../context/TermContext';
-
-interface SejmPrint {
-    number: string;
-    title: string;
-    summary: string | null;
-    process_id: string | null;
-    ai_summary?: string;
-    justification_text?: string;
-    document_type?: string;
-}
+import { useSejmPrints } from '../hooks/useSejmPrints';
 
 export default function Projekty() {
     const { term } = useTerm();
-    const [prints, setPrints] = useState<SejmPrint[]>([]);
-    const [filteredPrints, setFilteredPrints] = useState<SejmPrint[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterSource, setFilterSource] = useState<string | null>(null);
+    const {
+        filteredPrints,
+        loading,
+        searchTerm,
+        setSearchTerm,
+        filterSource,
+        setFilterSource,
+        startIndex,
+        setStartIndex,
+        ITEMS_PER_PAGE
+    } = useSejmPrints();
+
     const [expandedPrint, setExpandedPrint] = useState<string | null>(null);
-    const [startIndex, setStartIndex] = useState(0);
-
-    const ITEMS_PER_PAGE = 100;
-
-    useEffect(() => {
-        fetchPrints();
-    }, []);
-
-    useEffect(() => {
-        filterData();
-        setStartIndex(0); // Reset pagination on filter
-    }, [searchTerm, filterSource, prints]);
-
-    const fetchPrints = async () => {
-        setLoading(true);
-        try {
-            // 1. Fetch Prints
-            const { data: printsData, error: printsError } = await supabase
-                .from('sejm_prints')
-                .select('*')
-                .limit(5000);
-
-            if (printsError) throw printsError;
-
-            // 2. Fetch Insights
-            const { data: insightsData, error: insightsError } = await supabase
-                .from('bill_insights')
-                .select('print_number, ai_summary, justification_text, document_type')
-                .limit(5000);
-
-            if (insightsError) console.warn("Insights fetch error (ignoring):", insightsError);
-
-            const insightsMap = new Map(insightsData?.map((i: any) => [i.print_number, i]));
-
-            // 3. Merge
-            const merged = (printsData || []).map((p: any) => ({
-                ...p,
-                ai_summary: insightsMap.get(p.number)?.ai_summary,
-                justification_text: insightsMap.get(p.number)?.justification_text,
-                document_type: insightsMap.get(p.number)?.document_type
-            }));
-
-            // Sort by number descending (attempt to parse number)
-            const sorted = merged.sort((a: any, b: any) => {
-                const numA = parseInt(a.number.replace(/\D/g, '')) || 0;
-                const numB = parseInt(b.number.replace(/\D/g, '')) || 0;
-                return numB - numA;
-            });
-
-            setPrints(sorted);
-        } catch (error) {
-            console.error('Error fetching prints:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const filterData = () => {
-        let result = prints;
-
-        if (searchTerm) {
-            const lowerInfo = searchTerm.toLowerCase();
-            result = result.filter(p =>
-                p.title.toLowerCase().includes(lowerInfo) ||
-                p.number.toLowerCase().includes(lowerInfo)
-            );
-        }
-
-        if (filterSource) {
-            result = result.filter(p => p.title.toLowerCase().includes(filterSource.toLowerCase()));
-        }
-
-        setFilteredPrints(result);
-    };
 
     const toggleExpand = (number: string) => {
         if (expandedPrint === number) {

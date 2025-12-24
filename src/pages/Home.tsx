@@ -2,59 +2,32 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Users,
-  FileText,
   Search,
   Calendar,
   TrendingUp,
   LayoutDashboard,
-  BarChart3,
-  ArrowRight,
   ChevronDown
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { expandSearchQuery } from '../utils/searchContext';
 import { useTerm } from '../context/TermContext';
 import SejmHemicycle from '../components/SejmHemicycle';
-import { Skeleton, CardSkeleton, ChartSkeleton } from '../components/Skeleton';
+import { Skeleton, ChartSkeleton } from '../components/ui/Skeleton';
 import SEO from '../components/SEO';
-
-interface DashboardStats {
-  mpsCount: number;
-  votesCount: number;
-  printsCount: number;
-  lastSittingDate: string;
-  trendingTopic: string;
-}
-
-interface TopVote {
-  id: number;
-  title: string;
-  date: string;
-  summary: string;
-  ux_category: string;
-  results: any[];
-}
+import { useDashboardData } from '../hooks/useDashboardData';
+import TopVoteCard from '../components/dashboard/TopVoteCard';
+import ActivityCard from '../components/dashboard/ActivityCard';
+import QuickStats from '../components/dashboard/QuickStats';
 
 export default function Home() {
   const { term, setTerm } = useTerm();
   const [termDropdownOpen, setTermDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [viewMode, setViewMode] = useState<'vote' | 'party'>('vote');
-  const [stats, setStats] = useState<DashboardStats>({
-    mpsCount: 460,
-    votesCount: 0,
-    printsCount: 0,
-    lastSittingDate: '---',
-    trendingTopic: '---'
-  });
-  const [topVote, setTopVote] = useState<TopVote | null>(null);
-  const [loading, setLoading] = useState(true);
+
+  // Custom hook handles all data fetching
+  const { loading, stats, topVote } = useDashboardData();
 
   useEffect(() => {
-    fetchDashboardData();
-    // Safety Force Stop
-    const maxWait = setTimeout(() => setLoading(false), 4000);
-
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setTermDropdownOpen(false);
@@ -63,88 +36,9 @@ export default function Home() {
     document.addEventListener('mousedown', handleClickOutside);
 
     return () => {
-      clearTimeout(maxWait);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [term]);
-
-  async function fetchDashboardData() {
-    setLoading(true);
-
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Timeout')), 4000)
-    );
-
-    try {
-      const fetchData = async () => {
-        // OPTIMIZED: Select only necessary count, avoid overkill
-        const [votesCountReq, printsCountReq, lastVoteReq, topVoteReq] = await Promise.all([
-          supabase.from('votes').select('id', { count: 'exact', head: true }).eq('term', term),
-          supabase.from('sejm_prints').select('id', { count: 'exact', head: true }),
-          supabase.from('votes').select('date, ux_category').eq('term', term).order('date', { ascending: false }).limit(20),
-          supabase.from('votes').select(`id, title_clean, date, ux_category, details_json, importance_score`)
-            .eq('term', term)
-            .order('importance_score', { ascending: false })
-            .limit(1)
-            .maybeSingle()
-        ]);
-
-        // Process Stats
-        const lastDate = lastVoteReq.data?.[0]?.date || '---';
-        const topics = lastVoteReq.data?.map(v => v.ux_category).filter(Boolean) as string[] || [];
-        const mostFrequentTopic = topics.length > 0
-          ? topics.sort((a, b) => topics.filter(v => v === a).length - topics.filter(v => v === b).length).pop()
-          : 'Legislacja';
-
-        setStats({
-          mpsCount: 460,
-          votesCount: votesCountReq.count || 0,
-          printsCount: printsCountReq.count || 0,
-          lastSittingDate: lastDate !== '---' ? new Date(lastDate).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' }) : 'Brak danych',
-          trendingTopic: mostFrequentTopic || 'Legislacja'
-        });
-
-        // Process Top Vote
-        const topV = topVoteReq.data;
-        if (topV) {
-          // Optimized: Fetch minimal fields for Hemicycle
-          const [resDataReq, analysisReq] = await Promise.all([
-            // Limit to 460 to enable fast client-side rendering
-            supabase.from('vote_results').select('vote, mp_id').eq('vote_id', topV.id).limit(460),
-            supabase.from('vote_analyses').select('summary').eq('vote_id', topV.id).maybeSingle()
-          ]);
-
-          let enrichedResults: any[] = [];
-          if (resDataReq.data) {
-            const mpIds = resDataReq.data.map(r => r.mp_id);
-            // Optimized: Only fetch what Hemicycle needs (color + name + photo)
-            const { data: mpsData } = await supabase.from('mps').select('id, name, party, seat_number, photo_url').in('id', mpIds);
-            const mpsMap = new Map(mpsData?.map(mp => [mp.id, mp]) || []);
-
-            enrichedResults = resDataReq.data.map(r => ({
-              ...r,
-              mps: mpsMap.get(r.mp_id) || null
-            }));
-          }
-
-          setTopVote({
-            id: topV.id,
-            title: topV.title_clean,
-            date: topV.date,
-            summary: analysisReq.data?.summary || "Trwa analiza treści ustawy przez model AI...",
-            ux_category: topV.ux_category || 'Ogólne',
-            results: enrichedResults
-          });
-        }
-      };
-
-      await Promise.race([fetchData(), timeoutPromise]);
-    } catch (err) {
-      console.error('Dashboard fetch error:', err);
-    } finally {
-      setLoading(false);
-    }
-  }
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#060613] dashboard-mesh text-slate-900 dark:text-white pt-24 pb-12 px-4 md:px-8 font-sans transition-all duration-500">
@@ -213,7 +107,9 @@ export default function Home() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     const target = e.target as HTMLInputElement;
-                    window.location.href = `/szukaj?q=${target.value}`;
+                    const query = target.value;
+                    const expanded = expandSearchQuery(query).join(',');
+                    window.location.href = `/szukaj?q=${query}&expanded=${expanded}`;
                   }
                 }}
               />
@@ -223,41 +119,7 @@ export default function Home() {
 
         {/* Top Row Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {/* Main Status Card -> /rankingi */}
-          {loading ? <CardSkeleton /> : (
-            <Link to="/rankingi" className="md:col-span-2 relative group overflow-hidden block">
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="bg-white dark:bg-[#111126] border border-slate-200 dark:border-white/5 rounded-[2rem] p-8 h-full flex items-center gap-6 relative z-10 transition-transform group-hover:scale-[1.01] shadow-sm">
-                <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center shrink-0">
-                  <BarChart3 className="w-8 h-8 text-indigo-500 dark:text-indigo-400" />
-                </div>
-                <div>
-                  <p className="text-indigo-500 dark:text-indigo-400 text-xs font-black uppercase tracking-widest mb-1">Status Prac</p>
-                  <h3 className="text-2xl font-black mb-1 text-slate-900 dark:text-white">Rankingi Aktywności</h3>
-                  <p className="text-slate-500 dark:text-white/50 text-sm">Automatyczna analiza aktywności posłów i komisji.</p>
-                </div>
-                <div className="ml-auto flex -space-x-2">
-                  {[
-                    { name: 'PiS', abbr: 'PiS', bg: 'bg-blue-700' },
-                    { name: 'KO', abbr: 'KO', bg: 'bg-gradient-to-br from-orange-500 to-red-600' },
-                    { name: 'Polska 2050', abbr: '2050', bg: 'bg-yellow-400' },
-                    { name: 'PSL', abbr: 'PSL', bg: 'bg-green-600' },
-                    { name: 'Lewica', abbr: 'L', bg: 'bg-gradient-to-br from-purple-600 to-red-500' },
-                  ].map((party) => (
-                    <div
-                      key={party.name}
-                      title={party.name}
-                      className={`w-9 h-9 rounded-full border-2 border-white dark:border-[#111126] flex items-center justify-center shadow-lg hover:scale-110 hover:z-10 transition-transform cursor-pointer ${party.bg}`}
-                    >
-                      <span className={`text-[10px] font-black ${party.name === 'Polska 2050' ? 'text-slate-900' : 'text-white'}`}>
-                        {party.abbr}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Link>
-          )}
+          <TopVoteCard loading={loading} topVote={topVote} />
 
           {/* Session Date -> /glosowania */}
           {loading ? <Skeleton className="bg-white dark:bg-[#111126] border border-slate-200 dark:border-white/5 rounded-[2rem] h-full min-h-[160px]" /> : (
@@ -286,7 +148,7 @@ export default function Home() {
           )}
         </div>
 
-        {/* Main Grid: Hemicycle + Topic of the Day */}
+        {/* Main Grid: Hemicycle + Activity + QuickStats */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
           {/* Left Large Card: Plenary Hall */}
           {loading ? <ChartSkeleton /> : (
@@ -351,65 +213,11 @@ export default function Home() {
             </div>
           )}
 
-          {/* Right Column: Topic of the Day Card */}
-          {loading ? <Skeleton className="h-[600px] rounded-[2.5rem] w-full bg-white dark:bg-[#111126] border border-slate-200 dark:border-white/5" /> : (
-            <div className="flex flex-col gap-6">
-              <div className="bg-white dark:bg-[#111126] border border-slate-200 dark:border-white/5 rounded-[2.5rem] p-8 h-full relative overflow-hidden flex flex-col min-h-[500px] shadow-sm">
-                <div className="absolute top-0 right-0 p-8">
-                  <p className="text-slate-400 dark:text-white/30 text-xs font-black font-mono">
-                    {topVote ? new Date(topVote.date).toISOString().split('T')[0] : '2023-12-15'}
-                  </p>
-                </div>
-
-                <div className="mt-8 mb-8">
-                  <span className="px-3 py-1 bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 text-[10px] font-black uppercase tracking-widest rounded-md border border-indigo-500/20">
-                    TEMAT DNIA
-                  </span>
-                  <h3 className="text-2xl font-black mt-4 leading-tight text-slate-900 dark:text-white">
-                    {topVote?.title || "Wybór Marszałka Sejmu X Kadencji"}
-                  </h3>
-                </div>
-
-                <div className="flex-grow">
-                  <p className="text-slate-600 dark:text-white/60 text-sm leading-relaxed mb-6 italic">
-                    "{topVote?.summary || "Najważniejsza decyzja polityczna rozpoczęcia nowej kadencji, definiująca układ sił w parlamencie."}"
-                  </p>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-500 dark:text-white/40 font-bold uppercase tracking-widest italic">Analiza AI</span>
-                      <span className="text-indigo-500 dark:text-indigo-400 font-bold">100% Complete</span>
-                    </div>
-                    <div className="h-1 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-indigo-500 w-full shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
-                    </div>
-                  </div>
-                </div>
-
-                <Link
-                  to={topVote ? `/glosowanie/${topVote.id}` : "/glosowania"}
-                  className="mt-12 group flex items-center justify-between p-4 bg-indigo-500 rounded-2xl text-white font-black uppercase tracking-widest text-xs hover:bg-indigo-400 transition-all shadow-[0_10px_30px_rgba(99,102,241,0.3)]"
-                >
-                  Analiza Decyzji
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-
-              {/* Tiny quick stats cards below */}
-              <div className="grid grid-cols-2 gap-4">
-                <Link to="/poslowie" className="bg-white dark:bg-[#111126] border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center hover:bg-slate-50 dark:hover:bg-white/5 transition-all shadow-sm">
-                  <Users className="w-5 h-5 text-indigo-500 dark:text-indigo-400 mb-1" />
-                  <span className="text-lg font-black text-slate-900 dark:text-white">{stats.mpsCount}</span>
-                  <span className="text-[8px] text-slate-500 dark:text-white/30 uppercase tracking-widest font-bold">Posłów</span>
-                </Link>
-                <Link to="/glosowania" className="bg-white dark:bg-[#111126] border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center hover:bg-slate-50 dark:hover:bg-white/5 transition-all shadow-sm">
-                  <FileText className="w-5 h-5 text-emerald-500 dark:text-emerald-400 mb-1" />
-                  <span className="text-lg font-black text-slate-900 dark:text-white">{stats.votesCount}</span>
-                  <span className="text-[8px] text-slate-500 dark:text-white/30 uppercase tracking-widest font-bold">Głosowań</span>
-                </Link>
-              </div>
-            </div>
-          )}
+          {/* Right Column: Topic of the Day Card & QuickStats */}
+          <div className="flex flex-col gap-6">
+            <ActivityCard loading={loading} />
+            <QuickStats stats={stats} />
+          </div>
         </div>
       </div>
 
@@ -441,6 +249,6 @@ export default function Home() {
           background: #1c1c3a;
         }
       `}} />
-    </div>
+    </div >
   );
 }

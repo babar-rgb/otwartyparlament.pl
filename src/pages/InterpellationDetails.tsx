@@ -1,72 +1,14 @@
 import { useParams, Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { useState } from 'react';
 import { ArrowLeft, Mail, Calendar, User, FileText, MessageSquare, ExternalLink } from 'lucide-react';
 import SEO from '../components/SEO';
-
-interface Interpellation {
-    id: number;
-    title: string;
-    sent_date: string;
-    content: string;
-    reply_content: string | null;
-    receipt_date: string | null;
-    addressee: string | null;
-    topic: string | null;
-}
-
-interface Author {
-    mp_id: number;
-    mps: {
-        id: number;
-        name: string;
-        party: string;
-        photo_url: string;
-        slug: string;
-    };
-}
+import { useInterpellationDetails } from '../hooks/useInterpellationDetails';
 
 export default function InterpellationDetails() {
     const { id } = useParams();
-    const [interpellation, setInterpellation] = useState<Interpellation | null>(null);
-    const [authors, setAuthors] = useState<Author[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { interpellation, authors, loading } = useInterpellationDetails(id);
     const [showFullContent, setShowFullContent] = useState(false);
     const [showFullReply, setShowFullReply] = useState(false);
-
-    useEffect(() => {
-        const loadData = async () => {
-            if (!id) return;
-
-            try {
-                // Fetch interpellation
-                const { data: interpData, error: interpError } = await supabase
-                    .from('interpellations')
-                    .select('*')
-                    .eq('id', id)
-                    .single();
-
-                if (interpError) throw interpError;
-                setInterpellation(interpData);
-
-                // Fetch authors
-                const { data: authorsData, error: authorsError } = await supabase
-                    .from('interpellation_authors')
-                    .select('mp_id, mps(id, name, party, photo_url, slug)')
-                    .eq('interpellation_id', id);
-
-                if (!authorsError && authorsData) {
-                    setAuthors(authorsData as unknown as Author[]);
-                }
-            } catch (error) {
-                console.error('Error loading interpellation:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadData();
-    }, [id]);
 
     if (loading) {
         return (
@@ -211,7 +153,7 @@ export default function InterpellationDetails() {
                         </div>
                     ) : (
                         <p className="text-white/40 italic text-sm">
-                            Treść interpelacji nie jest jeszcze dostępna. Trwa pobieranie danych.
+                            Treść niedostępna z powodu błędu po stronie API Sejmu (błąd zewnętrzny). Prosimy spróbować otworzyć oryginał.
                         </p>
                     )}
                 </div>

@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
 import { ArrowLeft, ArrowRight, Calendar, CheckCircle2, XCircle, PieChart, Users, Sparkles, Network, ExternalLink, Search } from 'lucide-react';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import VoteTechnicalDetails from '../components/VoteTechnicalDetails';
@@ -8,191 +7,22 @@ import SejmHemicycle from '../components/SejmHemicycle';
 import OutliersSection from '../components/OutliersSection';
 import SEO from '../components/SEO';
 import VoteMindMap from '../components/VoteMindMap';
-
-interface VoteDetail {
-    id: number;
-    sitting: number;
-    voting_number: number;
-    date: string;
-    title_clean: string;
-    title_raw?: string;
-    verdict: string;
-    print_number: string | null;
-    details_json: {
-        yes: number;
-        no: number;
-        abstain: number;
-        notParticipating: number;
-    };
-    importance_score?: number;
-    topic_tag?: string;
-    semantic_weight?: number;
-}
-
-interface VoteResult {
-    vote: string;
-    mps: {
-        name: string;
-        party: string;
-        photo_url: string;
-        slug: string;
-        id: number;
-    };
-}
-
-interface PartyStats {
-    yes: number;
-    no: number;
-    abstain: number;
-    absent: number;
-}
+import { useVoteDetails } from '../hooks/useVoteDetails';
 
 const VoteDetails: React.FC = () => {
     const { term, sitting, votingNumber, id } = useParams();
-    const [vote, setVote] = useState<VoteDetail | null>(null);
-    const [results, setResults] = useState<VoteResult[]>([]);
-    const [partyStats, setPartyStats] = useState<Record<string, PartyStats>>({});
-    const [loading, setLoading] = useState(true);
+    const {
+        vote,
+        results,
+        partyStats,
+        loading,
+        analysis,
+        linkedProcessId,
+        linkedPrint,
+        projectContext
+    } = useVoteDetails(id, sitting, votingNumber, term);
 
-    const [analysis, setAnalysis] = useState<{ summary: string; pros: string[]; cons: string[] } | null>(null);
     const [mpSearch, setMpSearch] = useState('');
-    const [linkedProcessId, setLinkedProcessId] = useState<string | null>(null);
-    const [linkedPrint, setLinkedPrint] = useState<{ number: string; title: string } | null>(null);
-    const [projectContext, setProjectContext] = useState<{ ai_summary: string; justification_text: string; pdf_url: string } | null>(null);
-
-    useEffect(() => {
-        if (id || (sitting && votingNumber)) {
-            fetchVoteDetails();
-        } else {
-            console.warn("Invalid parameters for VoteDetails");
-            setLoading(false);
-        }
-    }, [id, sitting, votingNumber, term]);
-
-    const fetchVoteDetails = async () => {
-        setLoading(true);
-        const termId = term ? parseInt(term) : 10;
-        try {
-            // 1. Fetch Vote Metadata
-            let query = supabase.from('votes').select('*');
-
-            if (id) {
-                query = query.eq('id', id);
-            } else {
-                query = query
-                    .eq('sitting', sitting)
-                    .eq('voting_number', votingNumber)
-                    .eq('term', termId);
-            }
-
-            const { data: voteData, error: voteError } = await query.single();
-
-            if (voteError) throw voteError;
-            setVote(voteData);
-
-            // 2. Fetch Individual Results (Get MP IDs first)
-            const { data: resultsDataRaw, error: resultsError } = await supabase
-                .from('vote_results')
-                .select('vote, mp_id')
-                .eq('vote_id', voteData.id)
-                .limit(460);
-
-            if (resultsError) throw resultsError;
-
-            // 3. Fetch MPs efficiently
-            const mpIds = resultsDataRaw.map((r: any) => r.mp_id);
-            const { data: mpsData, error: mpsError } = await supabase
-                .from('mps')
-
-                .select('id, name, party, photo_url, seat_number, slug')
-                .in('id', mpIds);
-
-            if (mpsError) throw mpsError;
-
-            // 4. Manual Join
-            const mpMap = new Map(mpsData?.map((mp: any) => [mp.id, mp]));
-            const typedResults: VoteResult[] = resultsDataRaw.map((r: any) => ({
-                vote: r.vote,
-                mps: mpMap.get(r.mp_id)
-            }));
-
-            setResults(typedResults);
-
-            // 5. Calculate Party Stats
-            const stats: Record<string, { yes: number; no: number; abstain: number; absent: number }> = {};
-
-            typedResults.forEach(r => {
-                const party = r.mps?.party || 'Niezrzeszeni';
-                if (!stats[party]) {
-                    stats[party] = { yes: 0, no: 0, abstain: 0, absent: 0 };
-                }
-
-                if (r.vote === 'YES') stats[party].yes++;
-                else if (r.vote === 'NO') stats[party].no++;
-                else if (r.vote === 'ABSTAIN') stats[party].abstain++;
-                else stats[party].absent++;
-            });
-
-            setPartyStats(stats);
-
-            // 4. Fetch AI Analysis
-            const { data: analysisData, error: analysisError } = await supabase
-                .from('vote_analyses')
-                .select('summary, pros, cons')
-                .eq('vote_id', voteData.id)
-                .single();
-
-            if (!analysisError && analysisData) {
-                console.log('✅ Analysis loaded:', analysisData);
-                setAnalysis(analysisData);
-            } else {
-                console.log('❌ Analysis not loaded:', analysisError);
-            }
-
-            // 5. Try to link to Law Map (Process) & Project Context
-            if (voteData.print_number) {
-                // Fetch Process ID
-                const { data: procData } = await supabase
-                    .from('processes')
-                    .select('id')
-                    .ilike('print_number', `${voteData.print_number}%`)
-                    .limit(1)
-                    .maybeSingle();
-
-                if (procData) {
-                    setLinkedProcessId(procData.id);
-                }
-
-                // Fetch Sejm Print Details
-                const { data: printData } = await supabase
-                    .from('sejm_prints')
-                    .select('number, title')
-                    .eq('number', voteData.print_number)
-                    .maybeSingle();
-
-                if (printData) {
-                    setLinkedPrint(printData);
-                }
-
-                // Fetch Bill Insights (Project Context from PDF)
-                const { data: insightsData } = await supabase
-                    .from('bill_insights')
-                    .select('ai_summary, justification_text, pdf_url')
-                    .eq('print_number', voteData.print_number)
-                    .maybeSingle();
-
-                if (insightsData) {
-                    setProjectContext(insightsData);
-                }
-            }
-
-
-        } catch (error) {
-            console.error('Error fetching vote details:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     if (loading) return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -225,7 +55,7 @@ const VoteDetails: React.FC = () => {
                 <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2" />
 
-                <div className="relative max-w-6xl mx-auto px-6 py-10">
+                <div className="relative max-w-6xl mx-auto px-6 pt-32 pb-10">
                     {/* Breadcrumb */}
                     <Link to="/glosowania" className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-all mb-8 group text-sm">
                         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
@@ -235,9 +65,15 @@ const VoteDetails: React.FC = () => {
                     {/* Kategoria + Data */}
                     <div className="flex flex-wrap items-center gap-3 mb-5">
                         {vote.topic_tag && vote.topic_tag !== 'Inne' && (
-                            <span className="px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                                {vote.topic_tag}
-                            </span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold uppercase tracking-wider text-blue-400">
+                                    #{vote.topic_tag}
+                                </span>
+                                {(vote.importance_score ?? 0) > 60 && (
+                                    <Sparkles className="w-3 h-3 text-fuchsia-400 opacity-60" />
+                                )}
+                                <span className="text-slate-700 dark:text-slate-700">|</span>
+                            </div>
                         )}
                         <span className="text-slate-400 text-sm flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
@@ -385,28 +221,9 @@ const VoteDetails: React.FC = () => {
             {/* Content Section */}
             <div className="max-w-6xl mx-auto px-6 py-10">
                 <div className="space-y-10">
-
                     {/* AI Intelligence Badge */}
-                    {(vote.importance_score ?? 0) > 0 && (
-                        <div className="flex flex-wrap gap-4 mt-4">
-                            <div className="flex items-center gap-3 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white px-4 py-2 rounded-xl shadow-md">
-                                <Sparkles className="w-5 h-5" />
-                                <div>
-                                    <div className="text-xs font-medium opacity-90 uppercase tracking-wider">Importance Score</div>
-                                    <div className="text-xl font-bold">{vote.importance_score!}/100</div>
-                                </div>
-                            </div>
-
-                            {vote.topic_tag && (
-                                <div className="flex items-center gap-2 bg-slate-100 text-slate-700 px-4 py-2 rounded-xl border border-slate-200">
-                                    <span className="text-sm font-bold">#{vote.topic_tag}</span>
-                                </div>
-                            )}
-                        </div>
-                    )}
                 </div>
             </div>
-
 
             {/* AI Analysis Section */}
             {analysis && (
@@ -485,10 +302,6 @@ const VoteDetails: React.FC = () => {
             <OutliersSection results={results} partyStats={partyStats} />
 
             {/* Individual Votes (Optional / Collapsible could be better but listing all for now as requested) */}
-            {/* For performance, maybe just show a summary or search? 
-            User asked for "wiedziec jak kazdy posel zaglosowal". 
-            Listing 460 rows is a bit much but acceptable for a details page. 
-        */}
             <div className="space-y-4 pt-8">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">

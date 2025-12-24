@@ -16,4 +16,16 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-core': ['react', 'react-dom', 'react-router-dom'],
+          'visualization': ['recharts', 'reactflow', '@tremor/react'],
+          'ui-libs': ['framer-motion', 'lucide-react', 'date-fns'],
+          'supabase': ['@supabase/supabase-js']
+        }
+      }
+    }
+  }
 });
