@@ -12,9 +12,11 @@ export interface VoteItem {
     kind?: string;
     title_clean?: string;
     term: number;
+    mpVote?: string; // Result of the specific MP if filtered
+    isFinal?: boolean;
 }
 
-export function useVotesList() {
+export function useVotesList(mpId?: string | null) {
     const { term } = useTerm();
     const [votes, setVotes] = useState<VoteItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -58,15 +60,50 @@ export function useVotesList() {
     const fetchVotes = async () => {
         setLoading(true);
         try {
-            const { data, error } = await db
-                .from('votes')
-                .select('*')
-                .eq('term', term)
-                .order('date', { ascending: false })
-                .order('voting_number', { ascending: false });
+            let query;
+
+            if (mpId) {
+                // If filtering by MP, join with vote_results
+                query = db
+                    .from('votes')
+                    .select('*, is_final_vote, vote_results!inner(result, mp_id)')
+                    .eq('term', term)
+                    .eq('vote_results.mp_id', mpId)
+                    .neq('vote_results.result', 'Nieobecny')
+                    .neq('vote_results.result', 'Absent')
+                    .neq('vote_results.result', 'ABSENT') // robustness for uppercase
+                    .order('date', { ascending: false })
+                    .order('voting_number', { ascending: false });
+            } else {
+                query = db
+                    .from('votes')
+                    .select('*, is_final_vote')
+                    .eq('term', term)
+                    .order('date', { ascending: false })
+                    .order('voting_number', { ascending: false });
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
-            setVotes(data || []);
+
+            const mappedData = (data || [])
+                .map((v: any) => {
+                    const isFinal = v.is_final_vote;
+                    if (mpId && v.vote_results && v.vote_results[0]) {
+                        const res = v.vote_results[0].result?.toUpperCase();
+                        let mpVote = 'ABSENT';
+                        if (res === 'ZA' || res === 'YES') mpVote = 'YES';
+                        else if (res === 'PRZECIW' || res === 'NO') mpVote = 'NO';
+                        else if (res === 'WSTRZYMAŁ SIĘ' || res === 'ABSTAIN') mpVote = 'ABSTAIN';
+
+                        return { ...v, mpVote, isFinal };
+                    }
+                    return { ...v, isFinal };
+                })
+                .filter((v: any) => !mpId || v.mpVote !== 'ABSENT');
+
+            setVotes(mappedData);
         } catch (error) {
             console.error('Error fetching votes:', error);
         } finally {

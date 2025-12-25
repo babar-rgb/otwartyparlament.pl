@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, X, Calendar, FileText, Flame } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SmartSuggestions from './SmartSuggestions';
-import { expandSearchQuery } from '../utils/searchContext';
+import { expandSearchQuery, handleSearchNavigation } from '../utils/searchContext';
 
 interface SearchOverlayProps {
     isOpen: boolean;
@@ -60,25 +60,7 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
 
     const handleSearch = (e?: React.FormEvent) => {
         e?.preventDefault();
-        if (!query.trim()) return;
-
-        // Build query string with filters
-        const params = new URLSearchParams();
-        params.set('q', query);
-
-        // Add Contextual Search logic
-        const expanded = expandSearchQuery(query).join(',');
-        params.set('expanded', expanded);
-
-        activeFilters.forEach(filterId => {
-            const chip = FILTER_CHIPS.find(c => c.id === filterId);
-            if (chip) {
-                const [key, value] = chip.param.split('=');
-                params.set(key, value);
-            }
-        });
-
-        navigate(`/szukaj?${params.toString()}`);
+        handleSearchNavigation(navigate, query, activeFilters, FILTER_CHIPS);
         onClose();
         setQuery('');
         setActiveFilters(new Set());
@@ -95,26 +77,26 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
         <div className="fixed inset-0 z-[60] flex items-start justify-center pt-20 md:pt-28 px-4">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-paper/98 dark:bg-slate-950/98 backdrop-blur-md transition-opacity duration-300"
+                className="absolute inset-0 bg-page/98 dark:bg-black/98 backdrop-blur-md transition-opacity duration-300"
                 onClick={onClose}
             />
 
             {/* Search Container */}
             <div className="relative w-full max-w-3xl animate-in fade-in slide-in-from-top-4 duration-300">
                 <form onSubmit={handleSearch} className="relative">
-                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={28} />
+                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-secondary" size={28} />
                     <input
                         ref={inputRef}
                         type="text"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder="Szukaj posła, głosowania, ustawy..."
-                        className="w-full bg-white dark:bg-slate-800 text-2xl md:text-3xl font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 border-2 border-slate-200 dark:border-slate-700 rounded-2xl py-5 pl-16 pr-14 focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 shadow-lg transition-all"
+                        className="w-full bg-surface text-2xl md:text-3xl font-semibold text-primary placeholder:text-secondary border-2 border-border-base rounded-2xl py-5 pl-16 pr-14 focus:outline-none focus:border-accent-blue shadow-lg transition-all"
                     />
                     <button
                         type="button"
                         onClick={onClose}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-400 dark:text-slate-500"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-black/5 rounded-full transition-colors text-secondary"
                     >
                         <X size={24} />
                     </button>
@@ -130,8 +112,8 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                                 key={chip.id}
                                 onClick={() => toggleFilter(chip.id)}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${isActive
-                                    ? 'bg-blue-600 text-white shadow-md'
-                                    : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-blue-400 dark:hover:border-blue-500'
+                                    ? 'bg-accent-blue text-white shadow-md'
+                                    : 'bg-surface border border-border-base text-secondary hover:border-accent-blue'
                                     }`}
                             >
                                 <Icon className="w-4 h-4" />

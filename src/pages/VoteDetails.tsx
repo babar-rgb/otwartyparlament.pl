@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Calendar, CheckCircle2, XCircle, PieChart, Users, Sparkles, Network, ExternalLink, Search } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, CheckCircle2, XCircle, PieChart, Users, Sparkles, Network, ExternalLink, Search, FileText, Share2 } from 'lucide-react';
+import { toPng } from 'html-to-image';
+import SocialShareCard from '../components/SocialShareCard';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import VoteTechnicalDetails from '../components/VoteTechnicalDetails';
 import SejmHemicycle from '../components/SejmHemicycle';
@@ -23,6 +25,33 @@ const VoteDetails: React.FC = () => {
     } = useVoteDetails(id, sitting, votingNumber, term);
 
     const [mpSearch, setMpSearch] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
+
+    const handleDownloadImage = async () => {
+        const node = document.getElementById('social-share-card');
+        if (!node) return;
+
+        setIsGenerating(true);
+        try {
+            // Wait a bit for fonts to potentially load/stabilize
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const dataUrl = await toPng(node, {
+                quality: 1,
+                pixelRatio: 2, // High resolution
+                skipAutoScale: true
+            });
+
+            const link = document.createElement('a');
+            link.download = `OtwartyParlament_Glosowanie_${vote?.voting_number || 'export'}.png`;
+            link.href = dataUrl;
+            link.click();
+        } catch (error) {
+            console.error('Error generating image:', error);
+        } finally {
+            setIsGenerating(false);
+        }
+    };
 
     if (loading) return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -57,9 +86,9 @@ const VoteDetails: React.FC = () => {
 
                 <div className="relative max-w-6xl mx-auto px-6 pt-32 pb-10">
                     {/* Breadcrumb */}
-                    <Link to="/glosowania" className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-all mb-8 group text-sm">
+                    <Link to="/glosowania" className="inline-flex items-center gap-2 text-secondary hover:text-primary transition-all mb-8 group text-sm font-bold uppercase tracking-widest">
                         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                        Lista głosowań
+                        Głosowania
                     </Link>
 
                     {/* Kategoria + Data */}
@@ -89,6 +118,25 @@ const VoteDetails: React.FC = () => {
                         {cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
                     </h1>
 
+                    <div className="flex flex-wrap gap-4 mb-8">
+                        {/* Download Graphics Button */}
+                        <button
+                            onClick={handleDownloadImage}
+                            disabled={isGenerating}
+                            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-lg ${isGenerating
+                                ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                                : 'bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 hover:scale-[1.02] active:scale-95'
+                                }`}
+                        >
+                            {isGenerating ? (
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <Share2 className="w-4 h-4" />
+                            )}
+                            {isGenerating ? 'Generowanie...' : 'Pobierz Grafikę (Instagram/X)'}
+                        </button>
+                    </div>
+
                     {/* Law Map CTA */}
                     {linkedProcessId && (
                         <Link
@@ -106,56 +154,67 @@ const VoteDetails: React.FC = () => {
                         </Link>
                     )}
 
-                    {/* Linked Print Card */}
+                    {/* Linked Print Card - Polished & Prominent */}
                     {linkedPrint && (
-                        <div className="mb-8 bg-white/10 backdrop-blur border border-white/20 p-5 rounded-xl flex flex-col gap-4">
-                            <div className="flex items-start gap-4">
-                                <div className="p-2 bg-amber-500/20 text-amber-300 rounded-lg">
-                                    <ExternalLink size={24} />
+                        <div className="mb-10 bg-white/5 dark:bg-white/5 backdrop-blur-xl border border-white/10 dark:border-white/10 p-6 md:p-8 rounded-[2rem] shadow-2xl relative overflow-hidden group">
+                            {/* Accent blur */}
+                            <div className="absolute -top-10 -right-10 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl group-hover:bg-amber-500/20 transition-all" />
+
+                            <div className="relative z-10 flex flex-col md:flex-row gap-6 items-start">
+                                <div className="p-4 bg-amber-500/20 text-amber-300 rounded-2xl shadow-inner shrink-0 group-hover:scale-110 transition-transform duration-500">
+                                    <FileText size={40} strokeWidth={1.5} />
                                 </div>
-                                <div>
-                                    <div className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">
-                                        Powiązany Druk Sejmowy nr {linkedPrint.number}
+                                <div className="flex-grow space-y-3">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+                                            Druk Sejmowy {linkedPrint.number}
+                                        </span>
+                                        <div className="h-px bg-white/10 flex-grow" />
                                     </div>
-                                    <h3 className="text-white font-semibold text-lg leading-tight mb-2">
+                                    <h3 className="text-xl md:text-2xl font-bold text-white leading-tight">
                                         {linkedPrint.title}
                                     </h3>
-                                    {/* Source heuristic */}
-                                    <div className="flex gap-2 mb-3">
-                                        {linkedPrint.title.toLowerCase().includes('rządowy') && <span className="text-[10px] bg-blue-500/30 text-blue-200 px-2 py-0.5 rounded border border-blue-500/50">Rządowy</span>}
-                                        {linkedPrint.title.toLowerCase().includes('poselski') && <span className="text-[10px] bg-purple-500/30 text-purple-200 px-2 py-0.5 rounded border border-purple-500/50">Poselski</span>}
-                                        {linkedPrint.title.toLowerCase().includes('senacki') && <span className="text-[10px] bg-orange-500/30 text-orange-200 px-2 py-0.5 rounded border border-orange-500/50">Senacki</span>}
-                                        {linkedPrint.title.toLowerCase().includes('obywatelski') && <span className="text-[10px] bg-green-500/30 text-green-200 px-2 py-0.5 rounded border border-green-500/50">Obywatelski</span>}
+
+                                    <div className="flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-wider">
+                                        {linkedPrint.title.toLowerCase().includes('rządowy') && <span className="bg-blue-500/20 text-blue-300 px-3 py-1 rounded-md border border-blue-500/30">Projekt Rządowy</span>}
+                                        {linkedPrint.title.toLowerCase().includes('poselski') && <span className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-md border border-purple-500/30">Projekt Poselski</span>}
+                                        {linkedPrint.title.toLowerCase().includes('senacki') && <span className="bg-orange-500/20 text-orange-300 px-3 py-1 rounded-md border border-orange-500/30">Projekt Senacki</span>}
+                                        {linkedPrint.title.toLowerCase().includes('obywatelski') && <span className="bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-md border border-emerald-500/30">Projekt Obywatelski</span>}
                                     </div>
 
-                                    <a
-                                        href={`https://www.sejm.gov.pl/Sejm10.nsf/druk.xsp?nr=${linkedPrint.number}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-sm text-blue-300 hover:text-white underline decoration-blue-300/50 hover:decoration-white transition-colors"
-                                    >
-                                        Otwórz tekst źródłowy na stronie Sejmu →
-                                    </a>
+                                    <div className="pt-4 flex flex-wrap items-center gap-6">
+                                        <a
+                                            href={`https://www.sejm.gov.pl/Sejm10.nsf/druk.xsp?nr=${linkedPrint.number}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="inline-flex items-center gap-2 text-sm font-bold text-amber-400 hover:text-white transition-colors group/link"
+                                        >
+                                            Tekst źródłowy RP <ExternalLink size={14} className="group-hover/link:translate-x-1 group-hover/link:-translate-y-1 transition-transform" />
+                                        </a>
+                                        {projectContext?.pdf_url && (
+                                            <a
+                                                href={projectContext.pdf_url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="inline-flex items-center gap-2 text-sm font-bold text-emerald-400 hover:text-white transition-colors group/link"
+                                            >
+                                                Pełny Dokument (PDF) <FileText size={14} className="group-hover/link:scale-110 transition-transform" />
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Project Scanner Context - Nested inside the print card */}
-                            {projectContext && (
-                                <div className="mt-4 pt-4 border-t border-white/10">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <div className="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-                                            <Sparkles size={12} />
-                                            Kontekst z PDF
-                                        </div>
+                            {/* AI Context Snippet if available */}
+                            {projectContext?.ai_summary && (
+                                <div className="mt-8 p-4 bg-white/5 rounded-2xl border border-white/5 italic">
+                                    <div className="flex items-center gap-2 mb-2 text-[10px] font-black text-emerald-500 uppercase tracking-widest">
+                                        <Sparkles size={12} />
+                                        Streszczenie AI
                                     </div>
-                                    <div className="text-slate-300 text-sm leading-relaxed mb-3 italic">
+                                    <p className="text-slate-300 text-sm leading-relaxed">
                                         "{projectContext.ai_summary}"
-                                    </div>
-                                    {projectContext.pdf_url && (
-                                        <a href={projectContext.pdf_url} target="_blank" rel="noreferrer" className="text-xs text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1">
-                                            Zobacz pełny PDF <ExternalLink size={10} />
-                                        </a>
-                                    )}
+                                    </p>
                                 </div>
                             )}
                         </div>
@@ -324,24 +383,41 @@ const VoteDetails: React.FC = () => {
                     {results
                         .filter(r => !mpSearch || r.mps?.name?.toLowerCase().includes(mpSearch.toLowerCase()) || r.mps?.party?.toLowerCase().includes(mpSearch.toLowerCase()))
                         .map((r, idx) => (
-                            <div key={idx} className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-xl border border-slate-700">
-                                <div className={`w-2 h-10 rounded-full ${r.vote === 'YES' ? 'bg-green-500' :
+                            <div key={idx} className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-border-base transition-colors hover:border-indigo-500/50">
+                                <div className={`w-2 h-10 rounded-full ${r.vote === 'YES' ? 'bg-emerald-500' :
                                     r.vote === 'NO' ? 'bg-red-500' :
-                                        r.vote === 'ABSTAIN' ? 'bg-amber-500' : 'bg-slate-600'
+                                        r.vote === 'ABSTAIN' ? 'bg-amber-500' : 'bg-slate-500'
                                     }`} />
                                 <div>
-                                    <div className="font-medium text-sm text-white">{r.mps?.name}</div>
-                                    <div className="text-xs text-slate-400">{r.mps?.party}</div>
+                                    <div className="font-bold text-sm text-primary">{r.mps?.name}</div>
+                                    <div className="text-[10px] font-black uppercase tracking-wider text-secondary">{r.mps?.party}</div>
                                 </div>
-                                <div className="ml-auto text-sm font-bold">
-                                    {r.vote === 'YES' && <span className="text-green-400">ZA</span>}
-                                    {r.vote === 'NO' && <span className="text-red-400">PRZECIW</span>}
-                                    {r.vote === 'ABSTAIN' && <span className="text-amber-400">WSTRZ.</span>}
-                                    {r.vote === 'ABSENT' && <span className="text-slate-500">NIEOB.</span>}
+                                <div className="ml-auto text-xs font-black">
+                                    {r.vote === 'YES' && <span className="text-emerald-500">ZA</span>}
+                                    {r.vote === 'NO' && <span className="text-red-500">PRZECIW</span>}
+                                    {r.vote === 'ABSTAIN' && <span className="text-amber-500">WSTRZ.</span>}
+                                    {r.vote === 'ABSENT' && <span className="text-secondary opacity-50">NIEOB.</span>}
                                 </div>
                             </div>
                         ))}
                 </div>
+            </div>
+            {/* Hidden capture target for Social Media Graphics */}
+            <div
+                className="fixed left-[-2000px] top-[-2000px] pointer-events-none"
+                aria-hidden="true"
+            >
+                <SocialShareCard
+                    title={cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
+                    verdict={vote.verdict as 'PRZYJĘTO' | 'ODRZUCONO'}
+                    date={new Date(vote.date).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    stats={{
+                        yes: vote.details_json?.yes || 0,
+                        no: vote.details_json?.no || 0,
+                        abstain: vote.details_json?.abstain || 0
+                    }}
+                    topicTag={vote.topic_tag}
+                />
             </div>
         </div>
     );

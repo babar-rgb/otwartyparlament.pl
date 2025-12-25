@@ -1,6 +1,5 @@
 import { PostgrestClient } from 'postgrest-client';
 
-const apiUrl = import.meta.env.VITE_POSTGREST_URL || 'http://localhost:3001';
 const apiAnonKey = import.meta.env.VITE_API_ANON_KEY;
 
 if (!apiAnonKey) {

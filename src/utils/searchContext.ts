@@ -168,3 +168,33 @@ export function buildSearchPattern(query: string): string {
     // Return terms joined for ILIKE pattern matching
     return expanded.join('|');
 }
+/**
+ * Navigate to search page with expanded query and filters
+ */
+export function handleSearchNavigation(
+    navigate: (url: string) => void,
+    query: string,
+    activeFilters?: Set<string>,
+    filterChips?: any[]
+) {
+    if (!query || !query.trim()) return;
+
+    const params = new URLSearchParams();
+    params.set('q', query);
+
+    // Add Contextual Search logic
+    const expanded = expandSearchQuery(query).join(',');
+    params.set('expanded', expanded);
+
+    if (activeFilters && filterChips) {
+        activeFilters.forEach(filterId => {
+            const chip = filterChips.find((c: any) => c.id === filterId);
+            if (chip) {
+                const [key, value] = chip.param.split('=');
+                params.set(key, value);
+            }
+        });
+    }
+
+    navigate(`/szukaj?${params.toString()}`);
+}

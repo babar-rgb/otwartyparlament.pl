@@ -40,8 +40,10 @@ export default function Navigation() {
   return (
     <>
       <nav
-        className={`fixed top-0 w-full z-50 py-6 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'
-          } ${lastScrollY > 50 ? 'bg-[#060613]/95 backdrop-blur-md shadow-2xl py-4 border-b border-white/5' : 'bg-transparent'
+        className={`fixed top-0 w-full z-50 py-6 transition-all duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'
+          } ${lastScrollY > 50
+            ? 'bg-page/95 backdrop-blur-md shadow-2xl py-4 border-b border-border-base'
+            : 'bg-transparent'
           }`}
       >
         <div className="container mx-auto px-6 md:px-12">

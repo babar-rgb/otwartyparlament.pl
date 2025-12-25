@@ -1,9 +1,15 @@
-import { Link } from 'react-router-dom';
-import { Search, Filter, Sparkles } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Search, Filter, Sparkles, CheckCircle2, XCircle, MinusCircle, HelpCircle, ArrowLeft } from 'lucide-react';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import { useVotesList } from '../hooks/useVotesList';
+import { db } from '../lib/db';
 
 const VotesList = () => {
+    const [searchParams] = useSearchParams();
+    const mpId = searchParams.get('mp_id');
+    const [mpName, setMpName] = useState<string | null>(null);
+
     const {
         filteredVotes,
         loading,
@@ -11,19 +17,35 @@ const VotesList = () => {
         setSearchQuery,
         isContextualSearch,
         term
-    } = useVotesList();
+    } = useVotesList(mpId);
+
+    useEffect(() => {
+        if (mpId) {
+            db.from('mps').select('name').eq('id', mpId).single().then(({ data }) => {
+                if (data) setMpName(data.name);
+            });
+        }
+    }, [mpId]);
 
     return (
         <div className="min-h-screen bg-[#06060c] pt-24 pb-12 px-4 md:px-8">
             <div className="max-w-6xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
                     <div>
+                        {mpId && (
+                            <Link to="/glosowania" className="inline-flex items-center gap-2 text-white/40 hover:text-white mb-4 text-xs font-bold uppercase tracking-widest transition-colors mb-4 block">
+                                <ArrowLeft size={14} />
+                                Wróć do wszystkich głosowań
+                            </Link>
+                        )}
                         <h1 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tighter">
-                            Archiwum Głosowań
+                            {mpName ? `Głosowania: ${mpName}` : 'Archiwum Głosowań'}
                         </h1>
                         <p className="text-white/40 font-medium max-w-xl">
-                            Pełna historia decyzji podjętych przez Sejm {term}. kadencji.
-                            Przeglądaj, filtruj i analizuj wyniki.
+                            {mpName
+                                ? `Wszystkie głosowania, w których brał udział poseł ${mpName} w ${term}. kadencji.`
+                                : `Pełna historia decyzji podjętych przez Sejm ${term}. kadencji. Przeglądaj, filtruj i analizuj wyniki.`
+                            }
                         </p>
                     </div>
                 </div>
@@ -80,6 +102,10 @@ const VotesList = () => {
                                                 <span className="px-3 py-1 bg-white/5 text-white/40 text-[10px] font-black uppercase tracking-widest rounded-lg">
                                                     Głosowanie {vote.voting_number}
                                                 </span>
+                                                {/* Vote Type Badge */}
+                                                <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg ${vote.isFinal ? 'bg-indigo-500/10 text-indigo-400' : 'bg-white/5 text-white/40'}`}>
+                                                    {vote.isFinal ? 'Całość' : 'Poprawka'}
+                                                </span>
                                             </div>
                                             <h3 className="text-lg md:text-xl font-bold text-white group-hover:text-blue-400 transition-colors leading-tight mb-2">
                                                 {vote.title_clean || cleanSejmTitle(vote.title)}
@@ -88,6 +114,32 @@ const VotesList = () => {
                                                 {vote.topic}
                                             </p>
                                         </div>
+
+                                        {vote.mpVote && (
+                                            <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-2xl border border-white/5 shrink-0">
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${vote.mpVote === 'YES' ? 'bg-emerald-500/10 text-emerald-400' :
+                                                    vote.mpVote === 'NO' ? 'bg-rose-500/10 text-rose-400' :
+                                                        vote.mpVote === 'ABSTAIN' ? 'bg-amber-500/10 text-amber-400' :
+                                                            'bg-white/5 text-white/30'
+                                                    }`}>
+                                                    {vote.mpVote === 'YES' && <CheckCircle2 size={16} />}
+                                                    {vote.mpVote === 'NO' && <XCircle size={16} />}
+                                                    {vote.mpVote === 'ABSTAIN' && <MinusCircle size={16} />}
+                                                    {vote.mpVote === 'ABSENT' && <HelpCircle size={16} />}
+                                                </div>
+                                                <span className={`text-[10px] font-black uppercase tracking-wider ${vote.mpVote === 'YES' ? 'text-emerald-400' :
+                                                    vote.mpVote === 'NO' ? 'text-rose-400' :
+                                                        vote.mpVote === 'ABSTAIN' ? 'text-amber-400' :
+                                                            'text-white/30'
+                                                    }`}>
+                                                    {vote.mpVote === 'YES' ? 'ZA' :
+                                                        vote.mpVote === 'NO' ? 'PRZECIW' :
+                                                            vote.mpVote === 'ABSTAIN' ? 'WSTRZYMAŁ SIĘ' :
+                                                                'NIEOBECNY'
+                                                    }
+                                                </span>
+                                            </div>
+                                        )}
 
                                         <div className="hidden md:block">
                                             <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:border-blue-500 group-hover:text-blue-400 transition-colors">

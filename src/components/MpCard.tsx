@@ -24,13 +24,13 @@ export default function MpCard({ mp }: MpCardProps) {
   return (
     <Link to={`/poslowie/${mp.slug || mp.id}`}>
       <motion.div
-        className="group bg-white rounded-2xl shadow-sm border border-slate-200 hover:shadow-lg hover:border-slate-300 transition-all duration-300 overflow-hidden"
+        className="group bg-surface rounded-2xl shadow-sm border border-border-base hover:shadow-lg hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 overflow-hidden"
         whileHover={{ y: -4 }}
         whileTap={{ scale: 0.98 }}
         transition={{ type: "spring", stiffness: 400, damping: 30 }}
       >
         {/* Photo - professional headshot style */}
-        <div className="aspect-[3/4] overflow-hidden bg-slate-100 relative">
+        <div className="aspect-[3/4] overflow-hidden bg-border-base relative">
           <img
             src={mp.photo_url || `https://ui-avatars.com/api/?name=${mp.first_name}+${mp.last_name}&background=e2e8f0&color=475569`}
             alt={`${mp.first_name} ${mp.last_name}`}
@@ -40,18 +40,18 @@ export default function MpCard({ mp }: MpCardProps) {
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-3 bg-white">
+        <div className="p-3 space-y-2 bg-surface">
           {/* Name and party */}
           <div>
-            <h3 className="font-bold text-slate-900 text-sm group-hover:text-blue-600 transition-colors leading-tight">
+            <h3 className="font-bold text-primary text-[13px] group-hover:text-accent-blue transition-colors leading-tight">
               {mp.first_name} {mp.last_name}
             </h3>
-            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-              <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md ${getPartyBadge(mp.club)}`}>
+            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+              <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded-md ${getPartyBadge(mp.club)}`}>
                 {mp.club}
               </span>
               {mp.district && (
-                <span className="text-[11px] text-slate-500">
+                <span className="text-[9px] text-secondary">
                   Okręg {mp.district}
                 </span>
               )}
@@ -59,14 +59,14 @@ export default function MpCard({ mp }: MpCardProps) {
           </div>
 
           {/* Attendance stat */}
-          <div className="pt-3 border-t border-slate-100">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide">Obecność</span>
-              <span className="text-lg font-bold text-slate-900">
-                {attendanceRate}<span className="text-xs text-slate-400 font-normal">%</span>
+          <div className="pt-2 border-t border-border-base">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[9px] text-secondary font-semibold uppercase tracking-wide">Obecność</span>
+              <span className="text-base font-bold text-primary">
+                {attendanceRate}<span className="text-[10px] text-secondary font-normal">%</span>
               </span>
             </div>
-            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-border-base rounded-full overflow-hidden">
               <motion.div
                 className={`h-full rounded-full ${attendanceRate >= 90 ? 'bg-emerald-500' : attendanceRate >= 70 ? 'bg-amber-500' : 'bg-rose-500'}`}
                 initial={{ width: 0 }}

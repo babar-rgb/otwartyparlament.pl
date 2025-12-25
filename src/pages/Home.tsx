@@ -8,8 +8,9 @@ import {
   LayoutDashboard,
   ChevronDown
 } from 'lucide-react';
-import { expandSearchQuery } from '../utils/searchContext';
+import { expandSearchQuery, handleSearchNavigation } from '../utils/searchContext';
 import { useTerm } from '../context/TermContext';
+import { useNavigate } from 'react-router-dom';
 import SejmHemicycle from '../components/SejmHemicycle';
 import { Skeleton, ChartSkeleton } from '../components/ui/Skeleton';
 import SEO from '../components/SEO';
@@ -19,6 +20,7 @@ import ActivityCard from '../components/dashboard/ActivityCard';
 import QuickStats from '../components/dashboard/QuickStats';
 
 export default function Home() {
+  const navigate = useNavigate();
   const { term, setTerm } = useTerm();
   const [termDropdownOpen, setTermDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -51,21 +53,21 @@ export default function Home() {
         {/* Header Section */}
         <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-indigo-500/20 rounded-lg">
-              <LayoutDashboard className="w-6 h-6 text-indigo-500 dark:text-indigo-400" />
+            <div className="p-2 bg-accent-blue/20 rounded-lg">
+              <LayoutDashboard className="w-6 h-6 text-accent-blue" />
             </div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white m-0">Dashboard</h1>
+            <h1 className="text-3xl font-black tracking-tight text-primary m-0">Dashboard</h1>
           </div>
 
           <div className="flex items-center gap-4">
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setTermDropdownOpen(!termDropdownOpen)}
-                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#16162d] border border-slate-200 dark:border-white/10 rounded-xl hover:bg-slate-50 dark:hover:bg-[#1c1c3a] transition-all shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-surface border border-border-base rounded-xl hover:bg-slate-50 dark:hover:bg-[#1c1c3a] transition-all shadow-sm"
               >
-                <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
-                <span className="font-bold text-sm tracking-wide text-slate-900 dark:text-white">{term} Kadencja</span>
-                <ChevronDown className={`w-4 h-4 text-slate-400 dark:opacity-50 transition-transform duration-300 ${termDropdownOpen ? 'rotate-180' : ''}`} />
+                <div className="w-2 h-2 bg-accent-blue rounded-full animate-pulse" />
+                <span className="font-bold text-sm tracking-wide text-primary">{term} Kadencja</span>
+                <ChevronDown className={`w-4 h-4 text-secondary transition-transform duration-300 ${termDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
               <AnimatePresence>
@@ -74,7 +76,7 @@ export default function Home() {
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-[#16162d] border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 p-1"
+                    className="absolute top-full right-0 mt-2 w-48 bg-surface border border-border-base rounded-xl shadow-2xl overflow-hidden z-50 p-1"
                   >
                     {[10, 9].map((t) => (
                       <button
@@ -83,7 +85,7 @@ export default function Home() {
                           setTerm(t as 9 | 10);
                           setTermDropdownOpen(false);
                         }}
-                        className={`w-full text-left px-4 py-3 rounded-lg text-sm font-bold transition-all flex items-center justify-between group ${term === t ? 'bg-indigo-500 text-white' : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-white/70 hover:text-slate-900 dark:hover:text-white'}`}
+                        className={`w-full text-left px-4 py-3 rounded-lg text-sm font-bold transition-all flex items-center justify-between group ${term === t ? 'bg-accent-blue text-white' : 'hover:bg-black/5 text-secondary hover:text-primary'}`}
                       >
                         <span>{t} Kadencja</span>
                         {term === t ? (
@@ -99,17 +101,15 @@ export default function Home() {
             </div>
 
             <div className="relative hidden md:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/30 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary w-4 h-4" />
               <input
                 type="text"
                 placeholder="Szukaj..."
-                className="bg-white dark:bg-[#16162d] border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all w-64 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30"
+                className="bg-surface border border-border-base rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-accent-blue focus:ring-1 focus:ring-accent-blue transition-all w-64 text-primary placeholder:text-secondary opacity-80"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     const target = e.target as HTMLInputElement;
-                    const query = target.value;
-                    const expanded = expandSearchQuery(query).join(',');
-                    window.location.href = `/szukaj?q=${query}&expanded=${expanded}`;
+                    handleSearchNavigation(navigate, target.value);
                   }
                 }}
               />
@@ -122,27 +122,27 @@ export default function Home() {
           <TopVoteCard loading={loading} topVote={topVote} />
 
           {/* Session Date -> /glosowania */}
-          {loading ? <Skeleton className="bg-white dark:bg-[#111126] border border-slate-200 dark:border-white/5 rounded-[2rem] h-full min-h-[160px]" /> : (
-            <Link to="/glosowania" className="bg-white dark:bg-[#111126] border border-slate-200 dark:border-white/5 rounded-[2rem] p-8 flex items-center gap-5 hover:bg-slate-50 dark:hover:bg-white/5 transition-all group shadow-sm">
+          {loading ? <Skeleton className="bg-surface border border-border-base rounded-[2rem] h-full min-h-[160px]" /> : (
+            <Link to="/glosowania" className="bg-surface border border-border-base rounded-[2rem] p-8 flex items-center gap-5 hover:bg-slate-50 dark:hover:bg-white/5 transition-all group shadow-sm">
               <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                <Calendar className="w-6 h-6 text-emerald-500 dark:text-emerald-400" />
+                <Calendar className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
-                <p className="text-slate-400 dark:text-white/40 text-[10px] font-black uppercase tracking-widest mb-0.5">Ostatnie Posiedzenie</p>
-                <h4 className="text-xl font-black text-slate-900 dark:text-white">{stats.lastSittingDate}</h4>
+                <p className="text-secondary text-[10px] font-black uppercase tracking-widest mb-0.5">Ostatnie Posiedzenie</p>
+                <h4 className="text-xl font-black text-primary">{stats.lastSittingDate}</h4>
               </div>
             </Link>
           )}
 
           {/* Trending -> /kategorie */}
-          {loading ? <Skeleton className="bg-white dark:bg-[#111126] border border-slate-200 dark:border-white/5 rounded-[2rem] h-full min-h-[160px]" /> : (
-            <Link to="/kategorie" className="bg-white dark:bg-[#111126] border border-slate-200 dark:border-white/5 rounded-[2rem] p-8 flex items-center gap-5 hover:bg-slate-50 dark:hover:bg-white/5 transition-all group shadow-sm">
+          {loading ? <Skeleton className="bg-surface border border-border-base rounded-[2rem] h-full min-h-[160px]" /> : (
+            <Link to="/kategorie" className="bg-surface border border-border-base rounded-[2rem] p-8 flex items-center gap-5 hover:bg-slate-50 dark:hover:bg-white/5 transition-all group shadow-sm">
               <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                <TrendingUp className="w-6 h-6 text-amber-500 dark:text-amber-400" />
+                <TrendingUp className="w-6 h-6 text-amber-600 dark:text-amber-400" />
               </div>
               <div className="min-w-0">
-                <p className="text-slate-400 dark:text-white/40 text-[10px] font-black uppercase tracking-widest mb-0.5">Na topie</p>
-                <h4 className="text-xl font-black leading-tight text-slate-900 dark:text-white">{stats.trendingTopic}</h4>
+                <p className="text-secondary text-[10px] font-black uppercase tracking-widest mb-0.5">Na topie</p>
+                <h4 className="text-xl font-black leading-tight text-primary">{stats.trendingTopic}</h4>
               </div>
             </Link>
           )}
@@ -152,25 +152,25 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
           {/* Left Large Card: Plenary Hall */}
           {loading ? <ChartSkeleton /> : (
-            <div className="lg:col-span-3 bg-white dark:bg-[#111126] border border-slate-200 dark:border-white/5 rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden group shadow-sm">
+            <div className="lg:col-span-3 bg-surface border border-border-base rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden group shadow-sm">
               {/* Background Blur decoration */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-indigo-500/10 dark:bg-indigo-500/20 blur-[100px] rounded-full pointer-events-none" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-accent-blue/10 dark:bg-accent-blue/20 blur-[100px] rounded-full pointer-events-none" />
 
               <div className="flex items-center justify-between mb-12 relative z-10">
                 <div>
-                  <h2 className="text-3xl font-black text-slate-900 dark:text-white m-0">Sala Plenarna</h2>
-                  <p className="text-slate-500 dark:text-white/40 text-sm mt-1 uppercase tracking-widest font-bold">Rozkład głosów (Kadencja {term})</p>
+                  <h2 className="text-3xl font-black text-primary m-0">Sala Plenarna</h2>
+                  <p className="text-secondary dark:text-white/40 text-sm mt-1 uppercase tracking-widest font-bold">Rozkład głosów (Kadencja {term})</p>
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setViewMode('vote')}
-                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border ${viewMode === 'vote' ? 'bg-slate-200 dark:bg-white/20 border-slate-300 dark:border-white/20 text-slate-900 dark:text-white' : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-white'}`}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border ${viewMode === 'vote' ? 'bg-black/5 dark:bg-white/20 border-border-base text-primary' : 'bg-transparent border-border-base hover:bg-black/5 dark:hover:bg-white/10 text-secondary'}`}
                   >
                     Głosowanie
                   </button>
                   <button
                     onClick={() => setViewMode('party')}
-                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border ${viewMode === 'party' ? 'bg-slate-200 dark:bg-white/20 border-slate-300 dark:border-white/20 text-slate-900 dark:text-white' : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-white'}`}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border ${viewMode === 'party' ? 'bg-black/5 dark:bg-white/20 border-border-base text-primary' : 'bg-transparent border-border-base hover:bg-black/5 dark:hover:bg-white/10 text-secondary'}`}
                   >
                     Partie
                   </button>
@@ -191,7 +191,7 @@ export default function Home() {
                     }))}
                   />
                 ) : (
-                  <div className="text-slate-300 dark:text-white/20 font-black text-2xl uppercase tracking-tighter">Wczytywanie mapy...</div>
+                  <div className="text-secondary opacity-30 font-black text-2xl uppercase tracking-tighter">Wczytywanie mapy...</div>
                 )}
               </div>
 
@@ -206,7 +206,7 @@ export default function Home() {
                 ].map(party => (
                   <div key={party.label} className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: party.color }} />
-                    <span className="text-[10px] font-black text-slate-500 dark:text-white/40 uppercase tracking-widest">{party.label}</span>
+                    <span className="text-[10px] font-black text-secondary uppercase tracking-widest">{party.label}</span>
                   </div>
                 ))}
               </div>

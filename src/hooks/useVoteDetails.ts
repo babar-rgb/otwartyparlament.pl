@@ -82,7 +82,7 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
             // 2. Fetch Individual Results (Get MP IDs first)
             const { data: resultsDataRaw, error: resultsError } = await db
                 .from('vote_results')
-                .select('vote, mp_id')
+                .select('result, mp_id')
                 .eq('vote_id', voteData.id)
                 .limit(460);
 
@@ -97,12 +97,23 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
 
             if (mpsError) throw mpsError;
 
-            // 4. Manual Join
+            // 4. Manual Join & Value Mapping
             const mpMap = new Map(mpsData?.map((mp: any) => [mp.id, mp]));
-            const typedResults: VoteResult[] = resultsDataRaw.map((r: any) => ({
-                vote: r.vote,
-                mps: mpMap.get(r.mp_id)
-            }));
+            const typedResults: VoteResult[] = resultsDataRaw.map((r: any) => {
+                // Map results from DB (can be Polish "Za" or English "YES") to English frontend constants
+                let normalizedVote = 'ABSENT';
+                const res = r.result?.toUpperCase();
+
+                if (res === 'ZA' || res === 'YES') normalizedVote = 'YES';
+                else if (res === 'PRZECIW' || res === 'NO') normalizedVote = 'NO';
+                else if (res === 'WSTRZYMAŁ SIĘ' || res === 'ABSTAIN') normalizedVote = 'ABSTAIN';
+                else if (res === 'NIEOBECNY' || res === 'ABSENT') normalizedVote = 'ABSENT';
+
+                return {
+                    vote: normalizedVote,
+                    mps: mpMap.get(r.mp_id)
+                };
+            });
 
             setResults(typedResults);
 

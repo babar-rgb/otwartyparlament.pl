@@ -38,6 +38,7 @@ export function useMpProfile(idOrSlug?: string) {
     const [voteHistory, setVoteHistory] = useState<VoteHistoryItem[]>([]);
     const [digitizedDeclarations, setDigitizedDeclarations] = useState<AssetDeclaration[]>([]);
     const [recentSpeeches, setRecentSpeeches] = useState<any[]>([]);
+    const [keyVotes, setKeyVotes] = useState<VoteHistoryItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [interpellationCount, setInterpellationCount] = useState<number>(0);
 
@@ -65,7 +66,8 @@ export function useMpProfile(idOrSlug?: string) {
                     attendanceRate: Math.round(mpData.stats_attendance || 0),
                     active: mpData.active,
                     rebelVotes: mpData.stats_rebellion || 0,
-                    email: '',
+                    email: mpData.email || '',
+                    contact_info: mpData.contact_info || {},
                     voivodeship: '',
                     declarations: mpData.declarations || [],
                     term: mpData.term,
@@ -93,18 +95,85 @@ export function useMpProfile(idOrSlug?: string) {
                     .eq('mp_id', mpData.id)
                     .order('date', { ascending: false })
                     .limit(5);
-                if (speechData) setRecentSpeeches(speechData);
+
+                if (speechData) {
+                    const cleanedSpeeches = speechData.map(s => {
+                        // Clean up speech content - remove metadata headers and whitespace
+                        let content = s.content || '';
+                        // Remove header noise: "X. kadencja, Y. posiedzenie..."
+                        content = content.replace(/\d+\. kadencja,.*?\r\n/g, '');
+                        content = content.replace(/.*?punkt porządku dziennego:.*?\r\n/g, '');
+                        content = content.replace(/Poseł .*?:.*?\r\n/g, '');
+                        // Remove multiple \r\n and trim
+                        content = content.replace(/\r\n/g, ' ').replace(/\s+/g, ' ').trim();
+
+                        return { ...s, content };
+                    });
+                    setRecentSpeeches(cleanedSpeeches);
+                }
 
                 // Fetch Voting History
                 const { data: historyData, error: historyError } = await db
                     .from('vote_results')
-                    .select('vote, votes!inner(id, sitting, voting_number, title_clean, title_raw, date, verdict, term)')
+                    .select('result, votes!inner(id, sitting, voting_number, title_clean, title_raw, date, verdict, term, is_final_vote)')
                     .eq('mp_id', mpData.id)
+                    .neq('result', 'Nieobecny')
+                    .neq('result', 'Absent')
+                    .neq('result', 'ABSENT')
                     .order('vote_id', { ascending: false })
                     .limit(10);
 
-                if (!historyError && historyData) {
-                    setVoteHistory(historyData as unknown as VoteHistoryItem[]);
+                if (historyError) {
+                    console.error('[useMpProfile] History error:', historyError);
+                }
+
+                if (historyData) {
+                    const mappedHistory = (historyData as any[])
+                        .map(h => {
+                            let normalizedVote = 'ABSENT';
+                            const res = h.result?.toUpperCase();
+
+                            if (res === 'ZA' || res === 'YES') normalizedVote = 'YES';
+                            else if (res === 'PRZECIW' || res === 'NO') normalizedVote = 'NO';
+                            else if (res === 'WSTRZYMAŁ SIĘ' || res === 'ABSTAIN') normalizedVote = 'ABSTAIN';
+
+                            return {
+                                vote: normalizedVote,
+                                votes: h.votes,
+                                isFinal: h.votes.is_final_vote
+                            };
+                        })
+                        .filter(h => h.vote !== 'ABSENT');
+                    setVoteHistory(mappedHistory);
+                }
+
+                // Fetch Key Votes
+                const { data: keyData } = await db
+                    .from('vote_results')
+                    .select('result, votes!inner(*, is_final_vote)')
+                    .eq('mp_id', mpData.id)
+                    .neq('result', 'Nieobecny')
+                    .neq('result', 'Absent')
+                    .or('is_key_vote.eq.true,importance_score.gte.50', { foreignTable: 'votes' })
+                    .order('vote_id', { ascending: false })
+                    .limit(6);
+
+                if (keyData) {
+                    const mappedKey = (keyData as any[])
+                        .map(h => {
+                            let normalizedVote = 'ABSENT';
+                            const res = h.result?.toUpperCase();
+                            if (res === 'ZA' || res === 'YES') normalizedVote = 'YES';
+                            else if (res === 'PRZECIW' || res === 'NO') normalizedVote = 'NO';
+                            else if (res === 'WSTRZYMAŁ SIĘ' || res === 'ABSTAIN') normalizedVote = 'ABSTAIN';
+                            return {
+                                vote: normalizedVote,
+                                votes: h.votes,
+                                isFinal: h.votes.is_final_vote
+                            };
+                        })
+                        .filter(h => h.vote !== 'ABSENT');
+                    setKeyVotes(mappedKey);
                 }
 
                 // Fetch Interpellation Count
@@ -126,6 +195,7 @@ export function useMpProfile(idOrSlug?: string) {
     return {
         mp,
         voteHistory,
+        keyVotes,
         digitizedDeclarations,
         recentSpeeches,
         loading,

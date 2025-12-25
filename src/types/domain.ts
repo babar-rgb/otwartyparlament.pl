@@ -22,6 +22,13 @@ export interface MP {
     slug?: string;
     term?: number;
     declarations?: { label: string; url: string }[];
+    contact_info?: {
+        twitter?: string;
+        facebook?: string;
+        instagram?: string;
+        website?: string;
+        offices?: { address: string; phone?: string }[];
+    };
     stats?: {
         speeches?: number;
         interpellations?: number;
@@ -131,6 +138,12 @@ export interface Committee {
     members?: { mp_id: number; role: string; mp?: MP }[];
 }
 
+export interface VoteHistoryItem {
+    vote: 'YES' | 'NO' | 'ABSTAIN' | 'ABSENT';
+    votes: Vote;
+    isFinal?: boolean;
+}
+
 export interface VoteAnalysis {
     vote_id: number;
     summary: string;
@@ -140,4 +153,3 @@ export interface VoteAnalysis {
 
 // Party type for strict typing
 export type PartyCode = 'PiS' | 'KO' | 'Polska2050' | 'PSL-TD' | 'Lewica' | 'Konfederacja' | 'Razem' | 'Kukiz15' | 'Niezrzeszeni';
-

@@ -4,29 +4,33 @@
 
 @layer base {
   :root {
-    --bg-page: 249 249 247;
-    /* #F9F9F7 */
-    --bg-surface: 255 255 255;
+    --bg-page: 255 255 255;
     /* #FFFFFF */
-    --text-primary: 17 24 39;
-    /* #111827 */
-    --text-secondary: 75 85 99;
-    /* #4B5563 */
-    --border-base: 229 231 235;
-    /* #E5E7EB */
+    --bg-surface: 249 250 251;
+    /* #F9FAFB (slate-50 equivalent) */
+    --text-primary: 15 23 42;
+    /* #0F172A (slate-900) */
+    --text-secondary: 71 85 105;
+    /* #475569 (slate-600) */
+    --border-base: 226 232 240;
+    /* #E2E8F0 (slate-200) */
+    --accent-blue: 37 99 235;
+    /* #2563EB */
   }
 
   .dark {
     --bg-page: 6 6 12;
-    /* #06060c */
+    /* #06060C */
     --bg-surface: 17 17 38;
     /* #111126 */
-    --text-primary: 243 244 246;
-    /* #F3F4F6 */
-    --text-secondary: 156 163 175;
-    /* #9CA3AF */
-    --border-base: 31 41 55;
-    /* #1F2937 */
+    --text-primary: 241 245 249;
+    /* #F1F5F9 (slate-100) */
+    --text-secondary: 148 163 184;
+    /* #94A7B8 (slate-400) */
+    --border-base: 30 41 59;
+    /* #1E293B (slate-800) */
+    --accent-blue: 59 130 246;
+    /* #3B82F6 */
   }
 
   body {
