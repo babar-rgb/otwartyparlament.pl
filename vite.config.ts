@@ -9,6 +9,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
+      // Proxy /rest/v1 to local PostgREST (for development)
       '/rest/v1': {
         target: 'http://localhost:3001',
         changeOrigin: true,
@@ -23,9 +24,10 @@ export default defineConfig({
           'react-core': ['react', 'react-dom', 'react-router-dom'],
           'visualization': ['recharts', 'reactflow', '@tremor/react'],
           'ui-libs': ['framer-motion', 'lucide-react', 'date-fns'],
-          'supabase': ['@supabase/supabase-js']
+          'postgrest-client': ['postgrest-client'] // PostgREST-compatible client
         }
       }
     }
   }
 });
+

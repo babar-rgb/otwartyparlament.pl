@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import { MapPin, ArrowLeft, CheckCircle2, XCircle, MinusCircle, HelpCircle } from 'lucide-react';
 
 interface EuroMP {
@@ -41,7 +41,7 @@ const EuroMPProfile = () => {
             if (!id) return;
             try {
                 // 1. Fetch MP Details
-                const { data: mpData, error: mpError } = await supabase
+                const { data: mpData, error: mpError } = await db
                     .from('euro_meps')
                     .select('*')
                     .eq('id', id)
@@ -53,7 +53,7 @@ const EuroMPProfile = () => {
                 // 2. Fetch Voting History
                 // Link via api_id (which is in euro_vote_results.mep_id)
                 if (mpData && mpData.api_id) {
-                    const { data: historyData, error: historyError } = await supabase
+                    const { data: historyData, error: historyError } = await db
                         .from('euro_vote_results')
                         .select('vote, euro_votes(id, title, date, votes_for, votes_against, votes_abstain, topic_tag)')
                         .eq('mep_id', mpData.api_id)
@@ -62,8 +62,8 @@ const EuroMPProfile = () => {
 
 
                     if (!historyError && historyData) {
-                        // sort by date client side if needed, or trust created_at for now
-                        setVoteHistory(historyData as any);
+                        // Supabase join returns array structure, cast via unknown
+                        setVoteHistory(historyData as unknown as EuroVoteHistoryItem[]);
                     }
                 }
 

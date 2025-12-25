@@ -4,7 +4,7 @@ import {
     Heart, TrendingUp, Wheat, GraduationCap, Shield, Scale,
     Zap, Users, Globe, Palette, ChevronRight
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 
 interface CategorySummary {
     ux_category: string;
@@ -36,7 +36,7 @@ export default function TopicClusters() {
 
     async function fetchCategories() {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('view_ux_categories_summary')
                 .select('*')
                 .limit(10);

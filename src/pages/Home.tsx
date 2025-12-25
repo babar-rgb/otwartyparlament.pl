@@ -80,7 +80,7 @@ export default function Home() {
                       <button
                         key={t}
                         onClick={() => {
-                          setTerm(t as any);
+                          setTerm(t as 9 | 10);
                           setTermDropdownOpen(false);
                         }}
                         className={`w-full text-left px-4 py-3 rounded-lg text-sm font-bold transition-all flex items-center justify-between group ${term === t ? 'bg-indigo-500 text-white' : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-white/70 hover:text-slate-900 dark:hover:text-white'}`}

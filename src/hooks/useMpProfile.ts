@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import { MP } from '../api';
 
 export interface VoteHistoryItem {
@@ -45,7 +45,7 @@ export function useMpProfile(idOrSlug?: string) {
         const loadMpData = async () => {
             if (!idOrSlug) return;
             try {
-                let query = supabase.from('mps').select('*');
+                let query = db.from('mps').select('*');
                 if (/^\d+$/.test(idOrSlug)) {
                     query = query.eq('id', idOrSlug);
                 } else {
@@ -80,14 +80,14 @@ export function useMpProfile(idOrSlug?: string) {
                 setMp(mappedMp);
 
                 // Fetch digitized declarations
-                const { data: declData } = await supabase
+                const { data: declData } = await db
                     .from('asset_declarations')
                     .select('*')
                     .eq('mp_id', mpData.id);
                 if (declData) setDigitizedDeclarations(declData);
 
                 // Fetch recent speeches
-                const { data: speechData } = await supabase
+                const { data: speechData } = await db
                     .from('speeches')
                     .select('*')
                     .eq('mp_id', mpData.id)
@@ -96,7 +96,7 @@ export function useMpProfile(idOrSlug?: string) {
                 if (speechData) setRecentSpeeches(speechData);
 
                 // Fetch Voting History
-                const { data: historyData, error: historyError } = await supabase
+                const { data: historyData, error: historyError } = await db
                     .from('vote_results')
                     .select('vote, votes!inner(id, sitting, voting_number, title_clean, title_raw, date, verdict, term)')
                     .eq('mp_id', mpData.id)
@@ -108,7 +108,7 @@ export function useMpProfile(idOrSlug?: string) {
                 }
 
                 // Fetch Interpellation Count
-                const { count: interpCount } = await supabase
+                const { count: interpCount } = await db
                     .from('interpellation_authors')
                     .select('*', { count: 'exact', head: true })
                     .eq('mp_id', mpData.id);

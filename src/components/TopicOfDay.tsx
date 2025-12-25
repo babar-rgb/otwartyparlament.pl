@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Flame, Sparkles, TrendingUp, ArrowRight } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import ControversyBar from './ControversyBar';
 import SejmHemicycle from './SejmHemicycle';
 
@@ -36,7 +36,7 @@ export default function TopicOfDay() {
     async function fetchTopVote() {
         try {
             // Fallback: Get most important vote from last 7 days (or all time if none)
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('votes')
                 .select(`
           id, term, sitting, voting_number, title_clean, date, verdict, importance_score, controversy_score, 
@@ -52,7 +52,7 @@ export default function TopicOfDay() {
 
             // Fetch AI summary if available
             if (data) {
-                const { data: analysisData } = await supabase
+                const { data: analysisData } = await db
                     .from('vote_analyses')
                     .select('summary')
                     .eq('vote_id', data.id)
@@ -64,7 +64,7 @@ export default function TopicOfDay() {
                 });
 
                 // Fetch vote results for hemicycle (simple query without join)
-                const { data: resultsData } = await supabase
+                const { data: resultsData } = await db
                     .from('vote_results')
                     .select('vote, mp_id')
                     .eq('vote_id', data.id)
@@ -73,7 +73,7 @@ export default function TopicOfDay() {
                 if (resultsData && resultsData.length > 0) {
                     // Fetch MPs data separately
                     const mpIds = resultsData.map(r => r.mp_id);
-                    const { data: mpsData } = await supabase
+                    const { data: mpsData } = await db
                         .from('mps')
                         .select('id, name, party, seat_number')
                         .in('id', mpIds);

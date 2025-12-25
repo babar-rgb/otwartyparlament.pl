@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import { Search, Filter, Calendar, ArrowLeft, Loader2 } from 'lucide-react';
 import { useTerm } from '../context/TermContext';
 
@@ -32,7 +32,7 @@ const EuroVotes = () => {
     const fetchVotes = async (pageIndex: number, listsReset = false) => {
         setLoading(true);
         try {
-            let query = supabase
+            let query = db
                 .from('euro_votes')
                 .select('*')
                 .eq('term', term)

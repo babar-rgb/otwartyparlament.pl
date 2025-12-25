@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # db service removed to fallback to local Postgres on host
+
+  backend:
+    build: ./backend
+    restart: always
+    environment:
+      # Use host.docker.internal to access host's localhost
+      DB_HOST: host.docker.internal
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER:-kajtek}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      DB_NAME: ${POSTGRES_DB:-otwarty_parlament}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8000:8000"
+
+  postgrest:
+    image: postgrest/postgrest
+    restart: always
+    environment:
+      # Use host.docker.internal to access host's localhost
+      PGRST_DB_URI: postgres://${POSTGRES_USER:-kajtek}:${POSTGRES_PASSWORD:-password}@host.docker.internal:5432/${POSTGRES_DB:-otwarty_parlament}
+      PGRST_DB_SCHEMA: public
+      PGRST_DB_ANON_ROLE: kajtek
+      PGRST_JWT_SECRET: ${VITE_API_ANON_KEY}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "3001:3000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_POSTGREST_URL: http://localhost:3001
+        VITE_API_ANON_KEY: ${VITE_API_ANON_KEY}
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - postgrest

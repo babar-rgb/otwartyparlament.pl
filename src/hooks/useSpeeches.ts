@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import { Speech } from '../types/domain';
+import { PARTIES } from '../constants';
 
 export interface MPFilter {
     id: number;
@@ -32,12 +33,12 @@ export function useSpeeches() {
     }, []);
 
     const fetchMps = async () => {
-        const { data } = await supabase.from('mps').select('id, name, party').order('name');
+        const { data } = await db.from('mps').select('id, name, party').order('name');
         if (data) setMps(data);
     };
 
     const fetchTotalCount = async () => {
-        const { count } = await supabase
+        const { count } = await db
             .from('speeches')
             .select('*', { count: 'exact', head: true });
         if (count) setTotalCount(count);
@@ -49,7 +50,7 @@ export function useSpeeches() {
             const rangeStart = page * ITEMS_PER_PAGE;
             const rangeEnd = rangeStart + ITEMS_PER_PAGE - 1;
 
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('speeches')
                 .select(`
           *,
@@ -60,7 +61,8 @@ export function useSpeeches() {
                 .range(rangeStart, rangeEnd);
 
             if (error) throw error;
-            setRecentSpeeches((data as unknown as Speech[]) || []); // Casting to Speech[]
+            // Type assertion: Join returns array structure, cast via unknown
+            setRecentSpeeches((data ?? []) as Speech[]);
         } catch (err) {
             console.error('Error fetching speeches:', err);
         } finally {
@@ -74,7 +76,7 @@ export function useSpeeches() {
         setLoading(true);
         setHasSearched(true);
         try {
-            let queryBuilder = supabase
+            let queryBuilder = db
                 .from('speeches')
                 .select(`
           *,
@@ -91,9 +93,8 @@ export function useSpeeches() {
                 queryBuilder = queryBuilder.eq('mp_id', selectedMp);
             }
             if (selectedParty) {
-                // Workaround: Filter by speaker_party if it exists on speeches, or use !inner on join
-                // We use !inner to filter by joined table properties
-                queryBuilder = supabase
+                // Use !inner to filter by joined generic relationship
+                queryBuilder = db
                     .from('speeches')
                     .select(`
                      *,
@@ -117,7 +118,8 @@ export function useSpeeches() {
                 .limit(50);
 
             if (error) throw error;
-            setSpeeches((data as unknown as Speech[]) || []);
+            // Type assertion: Join returns data matching our schema
+            setSpeeches((data ?? []) as Speech[]);
         } catch (err) {
             console.error('Error searching speeches:', err);
         } finally {
@@ -151,6 +153,7 @@ export function useSpeeches() {
         dateTo, setDateTo,
         handleSearch,
         clearFilters,
-        fetchSpeeches // exposed for pagination
+        fetchSpeeches,
+        PARTIES // Exposed to component
     };
 }

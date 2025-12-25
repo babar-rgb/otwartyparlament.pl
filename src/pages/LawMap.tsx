@@ -29,7 +29,7 @@ import {
     X,
     ExternalLink
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 
 // ============================================================================
 // TYPES
@@ -39,7 +39,7 @@ interface ProcessData {
     id: string; // Should be string to handle e.g. "16066-z"
     title: string;
     description: string;
-    simple_summary?: string | any;
+    simple_summary?: { tldr?: string } | string;
     who_affected?: string;
     topic_tag?: string;
     category?: string;     // ADDED
@@ -289,7 +289,7 @@ export default function LawMap() {
         const fetchProcess = async () => {
             setLoading(true);
             try {
-                const { data, error } = await supabase
+                const { data, error } = await db
                     .from('processes')
                     .select('*')
                     .eq('id', processId)
@@ -346,8 +346,8 @@ export default function LawMap() {
                 position: { x: 50, y: 200 },
                 data: {
                     label: 'TL;DR',
-                    content: (typeof process.simple_summary === 'object' && process.simple_summary !== null)
-                        ? (process.simple_summary as any).tldr || 'Generowanie podsumowania...'
+                    content: (typeof process.simple_summary === 'object' && process.simple_summary !== null && 'tldr' in process.simple_summary)
+                        ? (process.simple_summary.tldr || 'Generowanie podsumowania...')
                         : (typeof process.simple_summary === 'string' ? process.simple_summary : 'Generowanie podsumowania... 🤖'),
                     icon: 'zap',
                     color: 'purple'

@@ -89,3 +89,55 @@ export interface RankingMP {
     stats_attendance: number;
     stats_rebellion: number;
 }
+
+export interface EuroVote {
+    id: string;
+    title: string;
+    date: string;
+    votes_for: number;
+    votes_against: number;
+    votes_abstain: number;
+    importance_score: number;
+    is_key_vote: boolean;
+    term: number;
+    topic_tag?: string;
+}
+
+export interface EuroMEP {
+    id: string;
+    api_id: number;
+    name: string;
+    party: string;
+    country: string;
+    photo_url?: string;
+    term: number;
+}
+
+export interface Interpellation {
+    id: number;
+    title: string;
+    sent_date: string;
+    last_modified?: string;
+    raw_data?: Record<string, unknown>;
+    authors?: { mp_id: number; mp?: MP }[];
+}
+
+export interface Committee {
+    id: number;
+    name: string;
+    code: string;
+    description?: string;
+    phone?: string;
+    members?: { mp_id: number; role: string; mp?: MP }[];
+}
+
+export interface VoteAnalysis {
+    vote_id: number;
+    summary: string;
+    pros: string[];
+    cons: string[];
+}
+
+// Party type for strict typing
+export type PartyCode = 'PiS' | 'KO' | 'Polska2050' | 'PSL-TD' | 'Lewica' | 'Konfederacja' | 'Razem' | 'Kukiz15' | 'Niezrzeszeni';
+

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import { ArrowLeft, Calendar, MapPin, Video, Clock, FileText, Users, ExternalLink } from 'lucide-react';
 import SEO from '../components/SEO';
 
@@ -37,7 +37,7 @@ export default function CommitteeSittingDetails() {
 
             try {
                 // Fetch sitting details
-                const { data: sittingData, error } = await supabase
+                const { data: sittingData, error } = await db
                     .from('committee_sittings')
                     .select('*')
                     .eq('id', sittingId)
@@ -65,7 +65,7 @@ export default function CommitteeSittingDetails() {
                 }
 
                 // Fetch committee info
-                const { data: commData } = await supabase
+                const { data: commData } = await db
                     .from('committees')
                     .select('code, name')
                     .eq('code', committeeCode)

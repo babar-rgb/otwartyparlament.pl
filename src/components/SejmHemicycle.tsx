@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getPartyColor } from '../constants';
 
 interface MPData {
     name: string;
@@ -147,19 +148,7 @@ const SejmHemicycle: React.FC<SejmHemicycleProps> = ({ data, mode = 'vote' }) =>
         return { occupiedSeats: assigned, overflowMPs: overflow };
     }, [sortedMPs, data]);
 
-    const getPartyColor = (party: string) => {
-        if (!party) return '#9ca3af';
-        // Normalize party name for checking
-        const p = party.toLowerCase();
-
-        if (p.includes('pis') || p.includes('prawo i sprawiedliwość')) return '#1d4ed8'; // Blue
-        if (p.includes('koalicja obywatelska') || p.includes('ko') || p.includes('platforma')) return '#f97316'; // Orange (KO brand)
-        if (p.includes('polska 2050') || p.includes('trzecia droga') || p.includes('psl')) return '#eab308'; // Yellow
-        if (p.includes('lewica')) return '#dc2626'; // Red
-        if (p.includes('konfederacja')) return '#1e293b'; // Dark Navy
-        if (p.includes('kukiz')) return '#4b5563'; // Gray
-        return '#9ca3af'; // Default Gray
-    };
+    // getPartyColor is imported from constants.ts
 
     const getColor = (mp: MPData) => {
         if (mode === 'party') {

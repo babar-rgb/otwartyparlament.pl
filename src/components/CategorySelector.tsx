@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronRight, Filter, X } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 
 interface Category {
     id: number;
@@ -61,7 +61,7 @@ export default function CategorySelector({
     const fetchCategories = async () => {
         try {
             // Fetch categories with vote counts
-            const { data: cats, error: catError } = await supabase
+            const { data: cats, error: catError } = await db
                 .from('categories')
                 .select('*')
                 .order('level')
@@ -70,7 +70,7 @@ export default function CategorySelector({
             if (catError) throw catError;
 
             // Fetch vote counts per category
-            const { data: counts, error: countError } = await supabase
+            const { data: counts, error: countError } = await db
                 .rpc('get_category_vote_counts', { term_id: termId });
 
             // Build hierarchy

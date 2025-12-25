@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, FileText } from 'lucide-react';
 
@@ -48,7 +48,7 @@ export default function InterpellationsList() {
         console.log('[DEBUG] fetchByMp called with mpId:', mpId);
         try {
             // 1. Fetch MP Name separately
-            const { data: mpData } = await supabase
+            const { data: mpData } = await db
                 .from('mps')
                 .select('name')
                 .eq('id', mpId)
@@ -58,7 +58,7 @@ export default function InterpellationsList() {
             if (mpData) setFilterMpName(mpData.name);
 
             // 2. Get interpellation IDs for this MP
-            const { data: authorData, error: authorError } = await supabase
+            const { data: authorData, error: authorError } = await db
                 .from('interpellation_authors')
                 .select('interpellation_id')
                 .eq('mp_id', mpId);
@@ -73,7 +73,7 @@ export default function InterpellationsList() {
                 console.log('[DEBUG] Interpellation IDs:', ids);
 
                 // 3. Fetch the actual interpellations
-                const { data, error } = await supabase
+                const { data, error } = await db
                     .from('interpellations')
                     .select('*')
                     .in('id', ids)
@@ -100,7 +100,7 @@ export default function InterpellationsList() {
     };
 
     const fetchTotalCount = async () => {
-        const { count } = await supabase
+        const { count } = await db
             .from('interpellations')
             .select('*', { count: 'exact', head: true });
         if (count) setTotalCount(count);
@@ -108,7 +108,7 @@ export default function InterpellationsList() {
 
     const fetchRecent = async () => {
         try {
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('interpellations')
                 .select('*')
                 .order('sent_date', { ascending: false })
@@ -128,7 +128,7 @@ export default function InterpellationsList() {
         setLoading(true);
         setHasSearched(true);
         try {
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('interpellations')
                 .select('*')
                 .or(`title.ilike.%${query}%,content.ilike.%${query}%`)

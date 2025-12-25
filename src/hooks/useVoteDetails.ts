@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 
 interface VoteDetail {
     id: number;
@@ -63,7 +63,7 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
         const termId = term ? parseInt(term) : 10;
         try {
             // 1. Fetch Vote Metadata
-            let query = supabase.from('votes').select('*');
+            let query = db.from('votes').select('*');
 
             if (id) {
                 query = query.eq('id', id);
@@ -80,7 +80,7 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
             setVote(voteData);
 
             // 2. Fetch Individual Results (Get MP IDs first)
-            const { data: resultsDataRaw, error: resultsError } = await supabase
+            const { data: resultsDataRaw, error: resultsError } = await db
                 .from('vote_results')
                 .select('vote, mp_id')
                 .eq('vote_id', voteData.id)
@@ -90,7 +90,7 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
 
             // 3. Fetch MPs efficiently
             const mpIds = resultsDataRaw.map((r: any) => r.mp_id);
-            const { data: mpsData, error: mpsError } = await supabase
+            const { data: mpsData, error: mpsError } = await db
                 .from('mps')
                 .select('id, name, party, photo_url, seat_number, slug')
                 .in('id', mpIds);
@@ -124,7 +124,7 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
             setPartyStats(stats);
 
             // 4. Fetch AI Analysis
-            const { data: analysisData, error: analysisError } = await supabase
+            const { data: analysisData, error: analysisError } = await db
                 .from('vote_analyses')
                 .select('summary, pros, cons')
                 .eq('vote_id', voteData.id)
@@ -137,7 +137,7 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
             // 5. Try to link to Law Map (Process) & Project Context
             if (voteData.print_number) {
                 // Fetch Process ID
-                const { data: procData } = await supabase
+                const { data: procData } = await db
                     .from('processes')
                     .select('id')
                     .ilike('print_number', `${voteData.print_number}%`)
@@ -149,7 +149,7 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
                 }
 
                 // Fetch Sejm Print Details
-                const { data: printData } = await supabase
+                const { data: printData } = await db
                     .from('sejm_prints')
                     .select('number, title')
                     .eq('number', voteData.print_number)
@@ -160,7 +160,7 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
                 }
 
                 // Fetch Bill Insights (Project Context from PDF)
-                const { data: insightsData } = await supabase
+                const { data: insightsData } = await db
                     .from('bill_insights')
                     .select('ai_summary, justification_text, pdf_url')
                     .eq('print_number', voteData.print_number)

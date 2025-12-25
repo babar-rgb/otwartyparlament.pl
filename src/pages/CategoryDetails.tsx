@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import { ArrowLeft, FileText, CheckCircle, XCircle } from 'lucide-react';
 import SEO from '../components/SEO';
 
@@ -87,7 +87,7 @@ export default function CategoryDetails() {
         try {
             const category = mapSlugToCategory(slug || '');
 
-            let query = supabase
+            let query = db
                 .from('votes')
                 .select('*')
                 .ilike('category', `%${category}%`)

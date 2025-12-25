@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 
 export interface RankingMP {
     id: number;
@@ -27,7 +27,7 @@ export function useRankings() {
     useEffect(() => {
         const loadData = async () => {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await db
                     .from('mps')
                     .select('id, name, party, district, photo_url, stats_attendance, stats_rebellion')
                     .eq('active', true);
@@ -47,7 +47,7 @@ export function useRankings() {
 
                 setMps(mappedMps);
 
-                const { data: printsData } = await supabase.from('sejm_prints').select('title');
+                const { data: printsData } = await db.from('bills').select('title');
 
                 if (printsData) {
                     let gov = 0, mp = 0, senate = 0, citizen = 0, comm = 0, prez = 0;

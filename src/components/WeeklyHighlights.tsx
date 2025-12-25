@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Flame, TrendingUp, AlertTriangle, Sparkles } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 
 interface Highlight {
     id: number;
@@ -29,7 +29,7 @@ export default function WeeklyHighlights() {
         setLoading(true);
         try {
             const viewName = timeRange === 'week' ? 'view_highlights_week' : 'view_highlights_month';
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from(viewName)
                 .select('*')
                 .limit(5);

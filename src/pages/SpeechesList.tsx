@@ -1,161 +1,30 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Calendar, User, Filter, X } from 'lucide-react';
-
-interface Speech {
-    id: number;
-    mp_id: number | null;
-    sitting: number;
-    date: string;
-    speaker_name: string;
-    content: string;
-    topic: string;
-    mp?: {
-        id: number;
-        name: string;
-        party: string;
-        photo_url: string;
-    };
-}
-
-interface MP {
-    id: number;
-    name: string;
-    party: string;
-}
+import { useSpeeches } from '../hooks/useSpeeches';
 
 export default function SpeechesList() {
-    const [query, setQuery] = useState('');
-    const [speeches, setSpeeches] = useState<Speech[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [recentSpeeches, setRecentSpeeches] = useState<Speech[]>([]);
-    const [hasSearched, setHasSearched] = useState(false);
-    const [totalCount, setTotalCount] = useState<number>(0);
-    const [currentPage, setCurrentPage] = useState(0);
-    const ITEMS_PER_PAGE = 10;
+    const {
+        query, setQuery,
+        speeches,
+        loading,
+        recentSpeeches,
+        hasSearched,
+        totalCount,
+        currentPage, setCurrentPage,
+        ITEMS_PER_PAGE,
+        mps,
+        selectedMp, setSelectedMp,
+        selectedParty, setSelectedParty,
+        dateFrom, setDateFrom,
+        dateTo, setDateTo,
+        handleSearch,
+        clearFilters,
+        fetchSpeeches,
+        PARTIES
+    } = useSpeeches();
 
-    // Filters
     const [showFilters, setShowFilters] = useState(false);
-    const [mps, setMps] = useState<MP[]>([]);
-    const [selectedMp, setSelectedMp] = useState<string>('');
-    const [selectedParty, setSelectedParty] = useState<string>('');
-    const [dateFrom, setDateFrom] = useState('');
-    const [dateTo, setDateTo] = useState('');
-
-    const parties = ['KO', 'PiS', 'Polska2050', 'PSL-TD', 'Lewica', 'Konfederacja', 'Razem', 'Kukiz15'];
-
-    // Load initial data
-    useEffect(() => {
-        fetchSpeeches(0);
-        fetchTotalCount();
-        fetchMps();
-    }, []);
-
-    const fetchMps = async () => {
-        const { data } = await supabase.from('mps').select('id, name, party').order('name');
-        if (data) setMps(data);
-    };
-
-    const fetchTotalCount = async () => {
-        const { count } = await supabase
-            .from('speeches')
-            .select('*', { count: 'exact', head: true });
-        if (count) setTotalCount(count);
-    };
-
-    const fetchSpeeches = async (page: number = 0) => {
-        setLoading(true);
-        try {
-            const rangeStart = page * ITEMS_PER_PAGE;
-            const rangeEnd = rangeStart + ITEMS_PER_PAGE - 1;
-
-            const { data, error } = await supabase
-                .from('speeches')
-                .select(`
-          *,
-          mp:mps(id, name, party, photo_url)
-        `)
-                .order('date', { ascending: false })
-                .order('id', { ascending: false })
-                .range(rangeStart, rangeEnd);
-
-            if (error) throw error;
-            setRecentSpeeches(data || []);
-        } catch (err) {
-            console.error('Error fetching speeches:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleSearch = async (e?: React.FormEvent) => {
-        if (e) e.preventDefault();
-
-        setLoading(true);
-        setHasSearched(true);
-        try {
-            let queryBuilder = supabase
-                .from('speeches')
-                .select(`
-          *,
-          mp:mps(id, name, party, photo_url)
-        `);
-
-            // Text Search
-            if (query.trim()) {
-                queryBuilder = queryBuilder.ilike('content', `%${query}%`);
-            }
-
-            // Filters
-            if (selectedMp) {
-                queryBuilder = queryBuilder.eq('mp_id', selectedMp);
-            }
-            if (selectedParty) {
-                // We need to filter by joined table, but Supabase JS client doesn't support filtering on joined tables easily in one go for 1:N without !inner
-                // Workaround: Filter by speaker_party if it exists on speeches, or use !inner on join
-                // Assuming we don't have party on speeches, we use the !inner join trick
-                queryBuilder = supabase
-                    .from('speeches')
-                    .select(`
-                        *,
-                        mp:mps!inner(id, name, party, photo_url)
-                    `)
-                    .eq('mp.party', selectedParty);
-
-                if (query.trim()) queryBuilder = queryBuilder.ilike('content', `%${query}%`);
-                if (selectedMp) queryBuilder = queryBuilder.eq('mp_id', selectedMp);
-            }
-
-            if (dateFrom) {
-                queryBuilder = queryBuilder.gte('date', dateFrom);
-            }
-            if (dateTo) {
-                queryBuilder = queryBuilder.lte('date', dateTo);
-            }
-
-            const { data, error } = await queryBuilder
-                .order('date', { ascending: false })
-                .limit(50);
-
-            if (error) throw error;
-            setSpeeches(data || []);
-        } catch (err) {
-            console.error('Error searching speeches:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const clearFilters = () => {
-        setQuery('');
-        setSelectedMp('');
-        setSelectedParty('');
-        setDateFrom('');
-        setDateTo('');
-        setHasSearched(false);
-        setSpeeches([]);
-    };
 
     const highlightText = (text: string, highlight: string) => {
         if (!highlight.trim()) return text.slice(0, 300) + '...';
@@ -271,7 +140,7 @@ export default function SpeechesList() {
                                         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '16px' }}
                                     >
                                         <option value="">Wszystkie kluby</option>
-                                        {parties.map(party => (
+                                        {PARTIES.map(party => (
                                             <option key={party} value={party}>{party}</option>
                                         ))}
                                     </select>

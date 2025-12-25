@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import { ArrowLeft, Users, Calendar, Video, MapPin, ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
 
@@ -56,7 +56,7 @@ export default function KomisjaDetails() {
 
             try {
                 // Fetch committee
-                const { data: commData, error: commError } = await supabase
+                const { data: commData, error: commError } = await db
                     .from('committees')
                     .select('*')
                     .eq('code', code)
@@ -66,7 +66,7 @@ export default function KomisjaDetails() {
                 setCommittee(commData);
 
                 // Fetch members
-                const { data: memberData } = await supabase
+                const { data: memberData } = await db
                     .from('committee_members')
                     .select('mp_id, function')
                     .eq('committee_code', code);
@@ -74,7 +74,7 @@ export default function KomisjaDetails() {
                 if (memberData && memberData.length > 0) {
                     // Fetch MP details separately
                     const mpIds = memberData.map(m => m.mp_id);
-                    const { data: mpsData } = await supabase
+                    const { data: mpsData } = await db
                         .from('mps')
                         .select('id, name, party, photo_url, slug')
                         .in('id', mpIds);
@@ -89,7 +89,7 @@ export default function KomisjaDetails() {
                 }
 
                 // Fetch sittings
-                const { data: sittingData, count } = await supabase
+                const { data: sittingData, count } = await db
                     .from('committee_sittings')
                     .select('*', { count: 'exact' })
                     .eq('committee_code', code)

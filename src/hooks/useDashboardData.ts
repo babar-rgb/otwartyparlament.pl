@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import { useTerm } from '../context/TermContext';
 
 export interface DashboardStats {
@@ -38,10 +38,10 @@ export function useDashboardData() {
         const fetchData = async () => {
             // Use Promise.allSettled to prevent one failed request from killing the whole dashboard
             const results = await Promise.allSettled([
-                supabase.from('votes').select('id', { count: 'exact', head: true }).eq('term', term),
-                supabase.from('sejm_prints').select('id', { count: 'exact', head: true }),
-                supabase.from('votes').select('date, ux_category').eq('term', term).order('date', { ascending: false }).limit(20),
-                supabase.from('votes').select(`id, title_clean, date, ux_category, details_json, importance_score`)
+                db.from('votes').select('id', { count: 'exact', head: true }).eq('term', term),
+                db.from('sejm_prints').select('number', { count: 'exact', head: true }),
+                db.from('votes').select('date, ux_category').eq('term', term).order('date', { ascending: false }).limit(20),
+                db.from('votes').select(`id, title_clean, date, ux_category, details_json, importance_score`)
                     .eq('term', term)
                     .order('importance_score', { ascending: false })
                     .limit(1)
@@ -77,15 +77,15 @@ export function useDashboardData() {
                     // Optimized: Fetch minimal fields for Hemicycle
                     const [resDataReq, analysisReq] = await Promise.all([
                         // Limit to 460 to enable fast client-side rendering
-                        supabase.from('vote_results').select('vote, mp_id').eq('vote_id', topV.id).limit(460),
-                        supabase.from('vote_analyses').select('summary').eq('vote_id', topV.id).maybeSingle()
+                        db.from('vote_results').select('vote, mp_id').eq('vote_id', topV.id).limit(460),
+                        db.from('vote_analyses').select('summary').eq('vote_id', topV.id).maybeSingle()
                     ]);
 
                     let enrichedResults: any[] = [];
                     if (resDataReq.data) {
                         const mpIds = resDataReq.data.map(r => r.mp_id);
                         // Optimized: Only fetch what Hemicycle needs (color + name + photo)
-                        const { data: mpsData } = await supabase.from('mps').select('id, name, party, seat_number, photo_url').in('id', mpIds);
+                        const { data: mpsData } = await db.from('mps').select('id, name, party, seat_number, photo_url').in('id', mpIds);
                         const mpsMap = new Map(mpsData?.map(mp => [mp.id, mp]) || []);
 
                         enrichedResults = resDataReq.data.map(r => ({

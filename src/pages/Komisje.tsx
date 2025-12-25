@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import { Users, Calendar, Building2, ArrowRight, Video, Search } from 'lucide-react';
 import SEO from '../components/SEO';
 
@@ -25,7 +25,7 @@ export default function Komisje() {
         const loadCommittees = async () => {
             try {
                 // Fetch committees
-                const { data: commData, error: commError } = await supabase
+                const { data: commData, error: commError } = await db
                     .from('committees')
                     .select('*')
                     .order('name');
@@ -33,12 +33,12 @@ export default function Komisje() {
                 if (commError) throw commError;
 
                 // Fetch member counts
-                const { data: memberCounts } = await supabase
+                const { data: memberCounts } = await db
                     .from('committee_members')
                     .select('committee_code');
 
                 // Fetch sitting counts and latest date
-                const { data: sittingData } = await supabase
+                const { data: sittingData } = await db
                     .from('committee_sittings')
                     .select('committee_code, date')
                     .order('date', { ascending: false });

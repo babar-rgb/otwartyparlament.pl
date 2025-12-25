@@ -19,6 +19,11 @@ Wersja live:https://open-parliament-sejm-nikn.bolt.host/               LATER[otw
 ## Technologia
 
 - **Frontend**: React 18 + TypeScript + TailwindCSS
+- 🏗️ **Architektura**: [Audyt Architektury](docs/ARCHITECTURE_AUDIT.md)
+- 🔄 **Przepływ Danych**: [Data Flow](docs/DATA_FLOW.md)
+- ⚙️ **Skrypty**: [Przewodnik po Skryptach](docs/SCRIPTS_GUIDE.md)
+- 🚀 **Wdrożenie**: [Deployment Guide](DEPLOYMENT.md)
+- 🗺️ **Plany**: [Roadmapa](docs/ROADMAP.md)
 - **Build tool**: Vite
 - **Routing**: React Router v7
 - **Wykresy**: Recharts

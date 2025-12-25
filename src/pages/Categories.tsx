@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, BarChart3, Grid3X3, TrendingUp, Filter, ChevronRight } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import TermSwitcher from '../components/TermSwitcher';
 
 interface Category {
@@ -46,7 +46,7 @@ export default function Categories() {
         setLoading(true);
         try {
             // Fetch categories
-            const { data: cats, error: catError } = await supabase
+            const { data: cats, error: catError } = await db
                 .from('categories')
                 .select('*')
                 .order('level')
@@ -55,18 +55,18 @@ export default function Categories() {
             if (catError) throw catError;
 
             // Fetch vote counts
-            const { data: countData } = await supabase.rpc('get_category_vote_counts', {
+            const { data: countData } = await db.rpc('get_category_vote_counts', {
                 term_id: termParam
             });
 
             // Get total votes
-            const { count: totalCount } = await supabase
+            const { count: totalCount } = await db
                 .from('votes')
                 .select('*', { count: 'exact', head: true })
                 .eq('term', termParam);
 
             // Get classified votes
-            const { data: classifiedData } = await supabase
+            const { data: classifiedData } = await db
                 .from('vote_categories')
                 .select('vote_id', { count: 'exact' })
                 .limit(1);
@@ -96,7 +96,7 @@ export default function Categories() {
             setTotalVotes(totalCount || 0);
 
             // Get unique classified votes
-            const { count: uniqueClassified } = await supabase
+            const { count: uniqueClassified } = await db
                 .from('vote_categories')
                 .select('vote_id', { count: 'exact', head: true });
             setClassifiedVotes(uniqueClassified || 0);

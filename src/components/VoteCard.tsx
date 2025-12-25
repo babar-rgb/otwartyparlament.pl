@@ -9,9 +9,12 @@ interface VoteCardProps {
 }
 
 export default function VoteCard({ vote }: VoteCardProps) {
-  const IconComponent = vote.categoryIcon ? (Icons[vote.categoryIcon as keyof typeof Icons] as any) : Icons.FileText;
+  const IconComponent = (vote.categoryIcon && Icons[vote.categoryIcon as keyof typeof Icons])
+    ? Icons[vote.categoryIcon as keyof typeof Icons] as React.ComponentType<{ size?: number; className?: string }>
+    : Icons.FileText;
   const resultColor = vote.result === 'przyjęto' ? 'text-vote-yes bg-vote-yesBg' : 'text-vote-no bg-vote-noBg';
-  const importanceColor = vote.importance >= 8 ? 'bg-red-100 text-red-800' : vote.importance >= 5 ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800';
+  const importance = vote.importance ?? 0;
+  const importanceColor = importance >= 8 ? 'bg-red-100 text-red-800' : importance >= 5 ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800';
 
   return (
     <Link to={`/glosowania/${vote.id}`}>

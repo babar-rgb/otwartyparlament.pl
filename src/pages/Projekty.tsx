@@ -2,18 +2,20 @@ import { useState } from 'react';
 import { Search, FileText, Loader2, ScrollText, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTerm } from '../context/TermContext';
 import { useSejmPrints } from '../hooks/useSejmPrints';
+import { PRINT_CATEGORIES, DEFAULT_PRINT_STYLE, PRINT_SOURCE_FILTERS } from '../constants';
 
 export default function Projekty() {
     const { term } = useTerm();
     const {
-        filteredPrints,
+        prints, // Now contains only the current page's items
         loading,
         searchTerm,
         setSearchTerm,
         filterSource,
         setFilterSource,
-        startIndex,
-        setStartIndex,
+        page,
+        setPage,
+        totalCount,
         ITEMS_PER_PAGE
     } = useSejmPrints();
 
@@ -29,33 +31,25 @@ export default function Projekty() {
 
     const getDocumentTypeBadge = (type?: string) => {
         if (!type) return null;
-        const colorMap: Record<string, string> = {
-            'projekt ustawy': 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
-            'sprawozdanie': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-            'informacja / raport': 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
-            'projekt uchwały': 'bg-pink-500/10 text-pink-400 border-pink-500/20',
-            'ustawa budżetowa': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-            'dokument / inny': 'bg-slate-500/10 text-slate-400 border-slate-500/20',
-        };
+        const style = PRINT_CATEGORIES[type as keyof typeof PRINT_CATEGORIES] || DEFAULT_PRINT_STYLE;
         return {
-            label: type.toUpperCase(),
-            color: colorMap[type] || 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+            label: style.label,
+            color: style.color
         };
     };
 
     const cleanText = (text?: string) => {
         if (!text) return '';
         return text
-            .replace(/\*/g, '') // Remove all asterisks
-            .replace(/\[\d+\]/g, '') // Remove citation artifacts like [1], [2]
-            .replace(/ġ/g, 'ł') // Fix encoding issue
-            .replace(/^Oto .*?:/i, '') // Remove "Oto opracowanie:", "Oto streszczenie:"
-            .replace(/^Poniżej .*?:/i, '') // Remove "Poniżej znajduje się..."
-            .replace(/---/g, '') // Remove horizontal lines
-            .replace(/::/g, ':') // Remove double colons
+            .replace(/\*/g, '')
+            .replace(/\[\d+\]/g, '')
+            .replace(/ġ/g, 'ł')
+            .replace(/^Oto .*?:/i, '')
+            .replace(/^Poniżej .*?:/i, '')
+            .replace(/---/g, '')
+            .replace(/::/g, ':')
             .trim();
     };
-
 
     return (
         <div className="min-h-screen bg-[#06060c] dashboard-mesh text-white pt-24 pb-12 px-4 md:px-8 font-sans transition-all duration-500">
@@ -86,14 +80,7 @@ export default function Projekty() {
                         </div>
 
                         <div className="flex gap-3 overflow-x-auto pb-2 md:pb-0">
-                            {/* Source Filters */}
-                            {[
-                                { label: 'Wszystkie', value: null },
-                                { label: 'Rządowe', value: 'rządowy' },
-                                { label: 'Poselskie', value: 'poselski' },
-                                { label: 'Obywatelskie', value: 'obywatelski' },
-                                { label: 'Senackie', value: 'senacki' },
-                            ].map((f) => (
+                            {PRINT_SOURCE_FILTERS.map((f) => (
                                 <button
                                     key={f.label}
                                     onClick={() => setFilterSource(f.value)}
@@ -112,15 +99,9 @@ export default function Projekty() {
                     <div className="mt-8 pt-6 border-t border-white/5">
                         <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
                             <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">LEGENDA TYPÓW:</span>
-                            {[
-                                { label: 'Projekt Ustawy', color: 'bg-indigo-500' },
-                                { label: 'Sprawozdanie', color: 'bg-amber-500' },
-                                { label: 'Raport / Info', color: 'bg-cyan-500' },
-                                { label: 'Projekt Uchwały', color: 'bg-pink-500' },
-                                { label: 'Ustawa Budżetowa', color: 'bg-emerald-500' },
-                            ].map((item) => (
-                                <div key={item.label} className="flex items-center gap-2.5">
-                                    <div className={`w-2 h-2 rounded-full ring-2 ring-white/5 ${item.color}`}></div>
+                            {Object.entries(PRINT_CATEGORIES).slice(0, 5).map(([key, item]) => (
+                                <div key={key} className="flex items-center gap-2.5">
+                                    <div className={`w-2 h-2 rounded-full ring-2 ring-white/5 ${item.color.split(' ')[0].replace('/10', '')}`}></div>
                                     <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">{item.label}</span>
                                 </div>
                             ))}
@@ -138,7 +119,7 @@ export default function Projekty() {
                             <span className="text-white/20 font-black uppercase tracking-[0.3em] text-xs">Wczytywanie dokumentów</span>
                         </div>
                     </div>
-                ) : filteredPrints.length === 0 ? (
+                ) : prints.length === 0 ? (
                     <div className="text-center py-32 bg-[#111126] rounded-[2.5rem] border border-white/5 border-dashed">
                         <FileText size={64} className="mx-auto text-white/10 mb-6" />
                         <h3 className="text-2xl font-black text-white mb-2">Brak wyników</h3>
@@ -146,9 +127,10 @@ export default function Projekty() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 gap-6">
-                        {filteredPrints.slice(startIndex, startIndex + ITEMS_PER_PAGE).map((print) => {
+                        {prints.map((print) => {
                             const isExpanded = expandedPrint === print.number;
                             const hasInsight = !!print.ai_summary;
+                            const badge = getDocumentTypeBadge(print.document_type);
 
                             return (
                                 <div
@@ -168,9 +150,9 @@ export default function Projekty() {
                                                 <span className="md:hidden text-xs font-black bg-white/5 text-white/40 px-3 py-1 rounded-full">
                                                     DRUK {print.number}
                                                 </span>
-                                                {print.document_type && (
-                                                    <span className={`text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest border border-white/5 ${getDocumentTypeBadge(print.document_type)?.color.replace('bg-', 'bg-').replace('text-', 'text-')}`}>
-                                                        {getDocumentTypeBadge(print.document_type)?.label}
+                                                {badge && (
+                                                    <span className={`text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest border border-white/5 ${badge.color}`}>
+                                                        {badge.label}
                                                     </span>
                                                 )}
                                             </div>
@@ -265,60 +247,45 @@ export default function Projekty() {
                     </div>
                 )}
 
-                {!loading && filteredPrints.length === 0 && (
-                    <div className="text-center py-20 bg-slate-50 dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
-                        <FileText size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-                        <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">Brak wyników</h3>
-                        <p className="text-slate-500">Spróbuj zmienić filtry lub wyszukać inną frazę.</p>
-                    </div>
-                )}
-
-                {!loading && filteredPrints.length > ITEMS_PER_PAGE && (
+                {/* Pagination Controls */}
+                {!loading && totalCount > ITEMS_PER_PAGE && (
                     <div className="mt-16 p-10 bg-[#111126] text-white rounded-[3rem] shadow-2xl border border-white/5 animate-fade-in-up">
                         <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
-                            <div className="flex-1 w-full">
-                                <div className="flex justify-between mb-6 px-2">
-                                    <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Najnowsze druki</span>
-                                    <div className="text-[10px] font-black text-blue-400 bg-blue-500/10 px-4 py-2 rounded-full border border-blue-500/20 uppercase tracking-widest">
-                                        Przedział: <span className="text-white">{filteredPrints[startIndex]?.number}</span> — <span className="text-white">{filteredPrints[Math.min(startIndex + ITEMS_PER_PAGE - 1, filteredPrints.length - 1)]?.number}</span>
-                                    </div>
-                                    <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Starsze druki</span>
-                                </div>
-                                <div className="relative h-12 flex items-center">
-                                    <input
-                                        type="range"
-                                        min="0"
-                                        max={Math.max(0, filteredPrints.length - ITEMS_PER_PAGE)}
-                                        step={ITEMS_PER_PAGE}
-                                        value={startIndex}
-                                        onChange={(e) => {
-                                            setStartIndex(parseInt(e.target.value));
-                                            window.scrollTo({ top: 400, behavior: 'smooth' });
-                                        }}
-                                        className="w-full h-2 bg-white/5 rounded-lg appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400 transition-all"
-                                    />
-                                </div>
-                                <div className="flex justify-between mt-4 text-[10px] font-black text-white/20 uppercase tracking-[0.3em] px-2">
-                                    <span>Początek {term} kadencji</span>
-                                    <span>Przesuń, aby cofnąć się w czasie</span>
-                                </div>
+                            <div className="flex-1 w-full flex items-center gap-8 justify-center lg:justify-start">
+                                <button
+                                    onClick={() => {
+                                        setPage(p => Math.max(0, p - 1));
+                                        window.scrollTo({ top: 400, behavior: 'smooth' });
+                                    }}
+                                    disabled={page === 0}
+                                    className="px-6 py-3 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-white/5 rounded-xl font-bold uppercase tracking-wider transition-all"
+                                >
+                                    Poprzednia
+                                </button>
+
+                                <span className="text-sm font-black uppercase tracking-widest text-white/40">
+                                    Strona <span className="text-white text-lg mx-2">{page + 1}</span> z {Math.ceil(totalCount / ITEMS_PER_PAGE)}
+                                </span>
+
+                                <button
+                                    onClick={() => {
+                                        setPage(p => Math.min(Math.ceil(totalCount / ITEMS_PER_PAGE) - 1, p + 1));
+                                        window.scrollTo({ top: 400, behavior: 'smooth' });
+                                    }}
+                                    disabled={page >= Math.ceil(totalCount / ITEMS_PER_PAGE) - 1}
+                                    className="px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-30 disabled:bg-blue-600 rounded-xl font-bold uppercase tracking-wider transition-all"
+                                >
+                                    Następna
+                                </button>
                             </div>
 
                             <div className="bg-black/20 px-10 py-8 rounded-[2rem] border border-white/5 text-center shrink-0 shadow-inner min-w-[240px]">
-                                <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] mb-2">Strona katalogu</div>
+                                <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] mb-2">Łącznie dokumentów</div>
                                 <div className="text-4xl font-black text-white flex items-center justify-center gap-3">
-                                    {Math.floor(startIndex / ITEMS_PER_PAGE) + 1}
-                                    <span className="text-white/10 font-medium text-2xl">/</span>
-                                    <span className="text-white/40 font-medium text-2xl">{Math.ceil(filteredPrints.length / ITEMS_PER_PAGE)}</span>
+                                    {totalCount}
                                 </div>
                             </div>
                         </div>
-                    </div>
-                )}
-
-                {!loading && filteredPrints.length > 0 && (
-                    <div className="text-center mt-8 text-slate-500 text-sm font-medium">
-                        Pokazano {Math.min(ITEMS_PER_PAGE, filteredPrints.length - startIndex)} z {filteredPrints.length} dostępnych druków.
                     </div>
                 )}
             </div>

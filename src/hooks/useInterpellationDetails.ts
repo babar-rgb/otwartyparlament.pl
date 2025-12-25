@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 
 export interface Interpellation {
     id: number;
@@ -34,7 +34,7 @@ export function useInterpellationDetails(id?: string) {
 
             try {
                 // Fetch interpellation
-                const { data: interpData, error: interpError } = await supabase
+                const { data: interpData, error: interpError } = await db
                     .from('interpellations')
                     .select('*')
                     .eq('id', id)
@@ -44,7 +44,7 @@ export function useInterpellationDetails(id?: string) {
                 setInterpellation(interpData);
 
                 // Fetch authors
-                const { data: authorsData, error: authorsError } = await supabase
+                const { data: authorsData, error: authorsError } = await db
                     .from('interpellation_authors')
                     .select('mp_id, mps(id, name, party, photo_url, slug)')
                     .eq('interpellation_id', id);

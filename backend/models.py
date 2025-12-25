@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Date, ForeignKey, Boolean, Text
 from sqlalchemy.orm import relationship
-from .database import Base
+from .core.orm_db import Base
 
 class MP(Base):
     __tablename__ = "mps"
@@ -12,6 +12,8 @@ class MP(Base):
     district = Column(String)
     photo_url = Column(String, nullable=True)
     active = Column(Boolean, default=True)
+    stats_attendance = Column(Float, default=0.0)
+    stats_rebellion = Column(Integer, default=0)
 
     votes = relationship("VoteResult", back_populates="mp")
     bills = relationship("Bill", back_populates="mp")
@@ -45,10 +47,15 @@ class Bill(Base):
     __tablename__ = "bills"
 
     id = Column(Integer, primary_key=True, index=True)
-    mp_id = Column(Integer, ForeignKey("mps.id"))
-    title = Column(String)
+    process_id = Column(String, unique=True, index=True) # e.g. RPS-123
+    number = Column(String, index=True) # print number
+    title = Column(Text)
+    description = Column(Text, nullable=True)
     date = Column(Date)
     status = Column(String)
+    type = Column(String, index=True) # poselski, rzadowy
+    url = Column(String, nullable=True)
+    mp_id = Column(Integer, ForeignKey("mps.id"), nullable=True)
 
     mp = relationship("MP", back_populates="bills")
 

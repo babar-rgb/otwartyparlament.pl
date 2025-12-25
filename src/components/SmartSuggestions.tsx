@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { User, FileText, Vote, MessageSquare, ArrowRight } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 
 interface Suggestion {
     type: 'mp' | 'vote' | 'process' | 'speech';
@@ -39,7 +39,7 @@ export default function SmartSuggestions({ query, onSelect }: SmartSuggestionsPr
             const results: Suggestion[] = [];
 
             // 1. Search MPs
-            const { data: mps } = await supabase
+            const { data: mps } = await db
                 .from('mps')
                 .select('id, name, party')
                 .ilike('name', `%${q}%`)
@@ -56,7 +56,7 @@ export default function SmartSuggestions({ query, onSelect }: SmartSuggestionsPr
             });
 
             // 2. Search Processes (Laws)
-            const { data: processes } = await supabase
+            const { data: processes } = await db
                 .from('processes')
                 .select('id, title')
                 .ilike('title', `%${q}%`)
@@ -73,7 +73,7 @@ export default function SmartSuggestions({ query, onSelect }: SmartSuggestionsPr
             });
 
             // 3. Search Votes
-            const { data: votes } = await supabase
+            const { data: votes } = await db
                 .from('votes')
                 .select('id, title_clean, verdict')
                 .ilike('title_clean', `%${q}%`)

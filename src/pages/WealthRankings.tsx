@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import { Link } from 'react-router-dom';
 import { TrendingUp, Home, DollarSign, ArrowRight } from 'lucide-react';
 
@@ -22,7 +22,7 @@ export default function WealthRankings() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const { data: mps, error } = await supabase
+                const { data: mps, error } = await db
                     .from('mps')
                     .select(`
                         id,

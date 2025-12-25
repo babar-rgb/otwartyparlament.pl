@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import { Search } from 'lucide-react';
 import { EuroLogoGold } from '../components/EuroLogoGold';
 import { useTerm } from '../context/TermContext';
@@ -32,7 +32,7 @@ const Europarlament: React.FC = () => {
 
     const fetchMeps = async () => {
         setLoading(true);
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('euro_meps')
             .select('*')
             .eq('term', term)
@@ -273,7 +273,7 @@ const EuroVotesList = () => {
 
     useEffect(() => {
         const fetchVotes = async () => {
-            const { data } = await supabase
+            const { data } = await db
                 .from('euro_votes')
                 .select('*')
                 .eq('term', term)

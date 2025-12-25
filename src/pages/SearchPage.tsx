@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import { Search, User, FileText, ArrowRight, MessageSquare, BookOpen, Zap } from 'lucide-react';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import MpCard from '../components/MpCard';
@@ -37,7 +37,7 @@ const SearchPage: React.FC = () => {
 
         try {
             // 1. Search MPs (Always separate, keep simple fuzzy)
-            const { data: mpsData } = await supabase
+            const { data: mpsData } = await db
                 .from('mps')
                 .select('*')
                 .ilike('name', `%${searchQuery}%`)
@@ -59,7 +59,7 @@ const SearchPage: React.FC = () => {
             }
 
             // 2. Unified Semantic Search
-            let queryBuilder = supabase
+            let queryBuilder = db
                 .from('view_search_all')
                 .select('*');
 

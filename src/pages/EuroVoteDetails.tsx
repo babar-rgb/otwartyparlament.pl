@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import { ArrowLeft, Calendar } from 'lucide-react';
 
 interface EuroVote {
@@ -28,7 +28,7 @@ const EuroVoteDetails: React.FC = () => {
     }, [id]);
 
     const fetchVote = async () => {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('euro_votes')
             .select('*')
             .eq('id', id)
@@ -40,7 +40,7 @@ const EuroVoteDetails: React.FC = () => {
     };
 
     const fetchResults = async () => {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('euro_vote_results')
             .select('*, mep:euro_meps(full_name, national_party, photo_url)')
             .eq('vote_id', id);
@@ -96,9 +96,9 @@ const EuroVoteDetails: React.FC = () => {
                         <span className="text-neutral-300">|</span>
                         <span>ID: {vote.id}</span>
                         {/* Tag */}
-                        {(vote as any).topic_tag && (
+                        {vote.topic_tag && (
                             <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-bold uppercase">
-                                {(vote as any).topic_tag}
+                                {vote.topic_tag}
                             </span>
                         )}
                     </div>

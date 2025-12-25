@@ -3,7 +3,7 @@ import { ArrowLeft, FileText, Calendar, User, Tag, CheckCircle2, XCircle, ArrowR
 import BillTimeline, { TimelineStage } from '../components/BillTimeline';
 import ProcessTLDR from '../components/ProcessTLDR';
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 
 interface BillData {
     id: string;
@@ -43,7 +43,7 @@ export default function BillDetails() {
                 // Fetch basic info from Local DB
                 // Assuming ID in URL is the Print Number or Process ID
                 // My ETL used Print Number as ID
-                const { data, error } = await supabase
+                const { data, error } = await db
                     .from('processes')
                     .select('*')
                     .eq('id', id)
@@ -71,7 +71,7 @@ export default function BillDetails() {
 
                 // Fetch related votes
                 if (data.print_number) {
-                    const { data: votesData, error: votesError } = await supabase
+                    const { data: votesData, error: votesError } = await db
                         .from('votes')
                         .select('*')
                         .eq('print_number', data.print_number)

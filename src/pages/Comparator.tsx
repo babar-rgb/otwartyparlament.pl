@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import { MP } from '../api';
 import { Search, Swords, Trophy, TrendingUp, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
 
@@ -16,7 +16,7 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
         const fetchMPs = async () => {
             try {
                 // Try to fetch from Supabase first
-                const { data, error } = await supabase.from('mps').select('*');
+                const { data, error } = await db.from('mps').select('*');
                 if (error) throw error;
 
                 // Map to MP interface
@@ -100,7 +100,7 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
             setLoadingVotes(true);
             try {
                 // 1. Get Key Votes from DB (Fetch slightly more to handle deduplication)
-                const { data: votesData } = await supabase
+                const { data: votesData } = await db
                     .from('votes')
                     .select('*')
                     .eq('is_key_vote', true)
@@ -130,7 +130,7 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
 
                 const votesWithDecisions = await Promise.all(uniqueVotes.map(async (vote) => {
                     try {
-                        const { data: results, error } = await supabase
+                        const { data: results, error } = await db
                             .from('vote_results')
                             .select('mp_id, vote')
                             .eq('vote_id', vote.id)
@@ -175,8 +175,8 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
         const fetchExtraStats = async () => {
             // Function to get count for an MP
             const getStats = async (mpId: number) => {
-                const { count: sCount } = await supabase.from('speeches').select('id', { count: 'exact', head: true }).eq('mp_id', mpId);
-                const { count: iCount } = await supabase.from('interpellations').select('id', { count: 'exact', head: true }).eq('mp_id', mpId);
+                const { count: sCount } = await db.from('speeches').select('id', { count: 'exact', head: true }).eq('mp_id', mpId);
+                const { count: iCount } = await db.from('interpellations').select('id', { count: 'exact', head: true }).eq('mp_id', mpId);
                 return { speeches: sCount || 0, interpellations: iCount || 0 };
             };
 

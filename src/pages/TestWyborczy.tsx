@@ -42,7 +42,7 @@ export default function TestWyborczy() {
   useEffect(() => {
     // Load data (in a real app, this might be an API call, but importing JSON is fine here)
     // Filter out votes where parties are mostly mixed or absent to ensure quality
-    const validVotes = (realVotesData as any[]).filter(v =>
+    const validVotes = (realVotesData as TestVote[]).filter(v =>
       Object.values(v.party_stances).some(s => s !== 'MIXED' && s !== 'ABSENT')
     ).slice(0, 10); // Limit to 10 questions
 

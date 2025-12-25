@@ -5,3 +5,4 @@ requests
 schedule
 beautifulsoup4
 python-multipart
+psycopg2-binary

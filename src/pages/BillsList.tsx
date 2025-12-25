@@ -13,7 +13,7 @@ interface Process {
 import { useTerm } from '../context/TermContext';
 import TermSwitcher from '../components/TermSwitcher';
 import SEO from '../components/SEO';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 
 export default function BillsList() {
     const { term } = useTerm(); // Use global term
@@ -29,7 +29,7 @@ export default function BillsList() {
             setLoading(true);
             try {
                 // Get Count
-                const { count, error: countError } = await supabase
+                const { count, error: countError } = await db
                     .from('processes')
                     // .select('*', { count: 'exact', head: true }) // HEAD not always supported via JS client simply
                     .select('id', { count: 'exact', head: true });
@@ -39,7 +39,7 @@ export default function BillsList() {
 
                 // Get Data
                 // Order by date desc
-                const { data, error } = await supabase
+                const { data, error } = await db
                     .from('processes')
                     .select('id, title, description, print_number, process_start_date')
                     .order('process_start_date', { ascending: false })

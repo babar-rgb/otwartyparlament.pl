@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 // Force HMR update 10
 import { useSearchParams } from 'react-router-dom';
 import { MP } from '../api';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import { useTerm } from '../context/TermContext';
 import TermSwitcher from '../components/TermSwitcher';
 import MpCard from '../components/MpCard';
@@ -61,7 +61,7 @@ export default function Poslowie() {
       try {
         // Build query - for historical terms (9), don't filter by active
         // since all MPs from completed terms are inactive
-        let query = supabase
+        let query = db
           .from('mps')
           .select('*')
           .eq('term', term);

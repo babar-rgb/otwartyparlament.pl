@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import { Calendar, ArrowRight, Clock } from 'lucide-react';
 
 interface UpcomingSession {
@@ -19,7 +19,7 @@ export default function UpcomingVotesWidget() {
                 // Get future sessions from sitting_agendas
                 const today = new Date().toISOString().split('T')[0];
 
-                const { data, error } = await supabase
+                const { data, error } = await db
                     .from('sitting_agendas')
                     .select('sitting_number, date')
                     .gte('date', today)

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 import { ArrowLeft, Calendar, User } from 'lucide-react';
 
 interface Speech {
@@ -29,7 +29,7 @@ export default function SpeechDetails() {
         const fetchSpeech = async () => {
             if (!id) return;
             try {
-                const { data, error } = await supabase
+                const { data, error } = await db
                     .from('speeches')
                     .select(`
             *,
