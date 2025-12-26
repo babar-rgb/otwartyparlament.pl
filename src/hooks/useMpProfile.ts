@@ -16,6 +16,7 @@ export interface VoteHistoryItem {
         category?: string;
         term: number;
     };
+    isFinal?: boolean;
 }
 
 export interface AssetDeclaration {
@@ -85,7 +86,8 @@ export function useMpProfile(idOrSlug?: string) {
                 const { data: declData } = await db
                     .from('asset_declarations')
                     .select('*')
-                    .eq('mp_id', mpData.id);
+                    .eq('mp_id', mpData.id)
+                    .order('year', { ascending: false });
                 if (declData) setDigitizedDeclarations(declData);
 
                 // Fetch recent speeches

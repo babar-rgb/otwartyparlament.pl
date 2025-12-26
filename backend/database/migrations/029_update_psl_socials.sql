@@ -1,0 +1,35 @@
+-- Migration: Update Social accounts for PSL
+-- Date: 2025-12-26
+-- Stats: Found 35 accounts out of 38 declared.
+
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/_Adam_Dziedzic"}'::jsonb WHERE name = 'Adam Dziedzic' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/Aga_Klopotek", "facebook": "https://www.facebook.com/agnieszka.klopotek.official"}'::jsonb WHERE name = 'Agnieszka Kłopotek' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/Bozenazelazowsk"}'::jsonb WHERE name = 'Bożena Żelazowska' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/CzSiekierski", "facebook": "https://www.facebook.com/czeslawsiekierski"}'::jsonb WHERE name = 'Czesław Siekierski' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/DariuszKlimczak", "facebook": "https://www.facebook.com/klimczakdariusz"}'::jsonb WHERE name = 'Dariusz Klimczak' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/Henryk55957871", "facebook": "https://www.facebook.com/HenrykKiepuraPoselRP"}'::jsonb WHERE name = 'Henryk Kiepura' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/HenrykSmolarz", "facebook": "https://www.facebook.com/henryk.smolarz"}'::jsonb WHERE name = 'Henryk Smolarz' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/IrekRas", "facebook": "https://www.facebook.com/Posel.IreneuszRas"}'::jsonb WHERE name = 'Ireneusz Raś' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/Jacek_Tomczak", "facebook": "https://www.facebook.com/poselTomczak"}'::jsonb WHERE name = 'Jacek Tomczak' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/RzepaJarek", "facebook": "https://www.facebook.com/RzepaJaroslaw"}'::jsonb WHERE name = 'Jarosław Rzepa' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/jolantazieba", "facebook": "https://www.facebook.com/j.zieba.gzik"}'::jsonb WHERE name = 'Jolanta Zięba-Gzik' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/Hetman_K", "facebook": "https://www.facebook.com/hetmankrzysztof"}'::jsonb WHERE name = 'Krzysztof Hetman' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/KrzysztofPaszyk", "facebook": "https://www.facebook.com/krzysztof.paszyk"}'::jsonb WHERE name = 'Krzysztof Paszyk' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/MagdalenaSroka", "facebook": "https://www.facebook.com/MagdalenaSrokaKrakow"}'::jsonb WHERE name = 'Magdalena Sroka' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/marekbiernacki_", "facebook": "https://www.facebook.com/biernackimarek"}'::jsonb WHERE name = 'Marek Biernacki' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/SawickiMarek", "facebook": "https://www.facebook.com/MarekSawickiPsl"}'::jsonb WHERE name = 'Marek Sawicki' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/michalpyrzyk", "facebook": "https://www.facebook.com/MichalPyrzykSlupca"}'::jsonb WHERE name = 'Michał Pyrzyk' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/Maliszewski_mm", "facebook": "https://www.facebook.com/100057664286398"}'::jsonb WHERE name = 'Mirosław Maliszewski' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/pawelbejda", "facebook": "https://www.facebook.com/bejdapawel"}'::jsonb WHERE name = 'Paweł Bejda' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/PZgorzelskiP", "facebook": "https://www.facebook.com/wicemarszalekPiotrZgorzelski"}'::jsonb WHERE name = 'Piotr Zgorzelski' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/lubczyk_radek", "facebook": "https://www.facebook.com/lubczyk.radoslaw"}'::jsonb WHERE name = 'Radosław Lubczyk' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/STomczyszyn", "facebook": "https://www.facebook.com/stanislaw.tomczyszyn.posel.na.sejm.rp"}'::jsonb WHERE name = 'Stanisław Tomczyszyn' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/StefanKrajewski", "facebook": "https://www.facebook.com/KrajewskiStefan"}'::jsonb WHERE name = 'Stefan Krajewski' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/t_samborski", "facebook": "https://www.facebook.com/samborskitadeusz"}'::jsonb WHERE name = 'Tadeusz Samborski' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/UNowogorska", "facebook": "https://www.facebook.com/UlaNowogorska"}'::jsonb WHERE name = 'Urszula Nowogórska' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/Paslawska", "facebook": "https://www.facebook.com/ula.paslawska"}'::jsonb WHERE name = 'Urszula Pasławska' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/WTBartoszewski"}'::jsonb WHERE name = 'Władysław T. Bartoszewski' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/KosiniakKamysz", "facebook": "https://www.facebook.com/kosiniakkamysz"}'::jsonb WHERE name = 'Władysław Kosiniak-Kamysz' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://www.facebook.com/100057659635861"}'::jsonb WHERE name = 'Mirosław Orliński' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://www.facebook.com/p/Zbigniew-Sosnowski-Poseł-na-Sejm-RP"}'::jsonb WHERE name = 'Zbigniew Sosnowski' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://www.facebook.com/ZZiejewskiPSL"}'::jsonb WHERE name = 'Zbigniew Ziejewski' AND term = 10;

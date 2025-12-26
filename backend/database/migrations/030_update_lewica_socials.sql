@@ -1,0 +1,25 @@
+-- Migration: Update Social accounts for Lewica
+-- Date: 2025-12-26
+-- Includes full coverage for all 23 MPs.
+
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/AgaBak", "facebook": "https://facebook.com/dziemianowiczbak/"}'::jsonb WHERE name LIKE 'Agnieszka Dziemianowicz-Bąk%' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/AndrzejSzejna", "facebook": "https://facebook.com/andrzej.szejna/"}'::jsonb WHERE name LIKE 'Andrzej Szejna%' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/AnitaKDZG", "facebook": "https://facebook.com/KucharskaDziedzic/"}'::jsonb WHERE name LIKE 'Anita Kucharska-Dziedzic%' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/AM_Zukowska", "facebook": "https://facebook.com/AMZukowska/"}'::jsonb WHERE name LIKE 'Anna Maria Żukowska%' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/Arek_Sikora_SLD", "facebook": "https://facebook.com/ArkadiuszSikoraSLD/"}'::jsonb WHERE name LIKE 'Arkadiusz Sikora%' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/dgpopiolek", "facebook": "https://facebook.com/dariapopiolek/"}'::jsonb WHERE name LIKE 'Daria Gosek-Popiołek%' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/wieczorekdarek", "facebook": "https://facebook.com/PoselDariuszWieczorek/"}'::jsonb WHERE name LIKE 'Dariusz Wieczorek%' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/dorota_olko", "facebook": "https://facebook.com/dorota.olko.razem/"}'::jsonb WHERE name LIKE 'Dorota Olko%' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/czerniak_jacek", "facebook": "https://facebook.com/CzerniakJacek/"}'::jsonb WHERE name LIKE 'Jacek Czerniak%' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/JoankaSW", "facebook": "https://facebook.com/j.scheuringwielgus/"}'::jsonb WHERE name LIKE 'Joanna Scheuring-Wielgus%' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/JoannaWicha", "facebook": "https://facebook.com/joannawicha2023/"}'::jsonb WHERE name LIKE 'Joanna Wicha%' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/KotulaKat", "facebook": "https://facebook.com/KotulaKatarzyna/"}'::jsonb WHERE name LIKE 'Katarzyna Kotula%' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/KUeberhan", "facebook": "https://facebook.com/KUeberhan/"}'::jsonb WHERE name LIKE 'Katarzyna Ueberhan%' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/KGawkowski", "facebook": "https://facebook.com/krzysztof.gawkowski/"}'::jsonb WHERE name LIKE 'Krzysztof Gawkowski%' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/MarcinKulasek", "facebook": "https://facebook.com/MarcinKulasek/"}'::jsonb WHERE name LIKE 'Marcin Kulasek%' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/poselTTrela", "facebook": "https://facebook.com/poselTTrela/"}'::jsonb WHERE name LIKE 'Tomasz Trela%' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/WandaNowicka", "facebook": "https://facebook.com/WandaNowickaPoslanka/"}'::jsonb WHERE name LIKE 'Wanda Nowicka%' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/Szczepanski2019", "facebook": "https://facebook.com/wieslaw.szczepanski.poselnasejmRP/"}'::jsonb WHERE name LIKE 'Wiesław Szczepański%' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/wlodekczarzasty", "facebook": "https://facebook.com/WlodzimierzCzarzasty/"}'::jsonb WHERE name LIKE 'Włodzimierz Czarzasty%' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"twitter": "https://x.com/llitewkaa", "facebook": "https://facebook.com/llitewka/"}'::jsonb WHERE name LIKE 'Łukasz Litewka%' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://facebook.com/piotrkowalwloclawek/"}'::jsonb WHERE name LIKE 'Piotr Kowal%' AND term = 10;

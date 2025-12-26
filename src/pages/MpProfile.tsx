@@ -336,7 +336,7 @@ const MpProfile = () => {
                   {digitizedDeclarations.map((decl) => (
                     <div key={decl.id} className="p-3 bg-border-base rounded-xl">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-primary">{decl.year}</span>
+                        <span className="font-bold text-primary">{decl.year.substring(0, 4)}</span>
                         {decl.file_path && (
                           <a
                             href={decl.file_path}
@@ -392,15 +392,20 @@ const MpProfile = () => {
 
               <div className="space-y-3">
                 {/* Social Media Grid */}
+                {/* Social Media Grid */}
                 <div className="grid grid-cols-2 gap-2">
-                  <a href={mp.contact_info?.twitter || `https://twitter.com/search?q=${mp.first_name}%20${mp.last_name}`} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center p-3 bg-border-base rounded-xl hover:bg-white/10 dark:hover:bg-white/5 transition-all group">
-                    <span className="text-secondary group-hover:text-sky-500 transition-colors font-bold text-lg">𝕏</span>
-                    <span className="text-[9px] mt-1 text-secondary font-bold uppercase tracking-widest">Twitter</span>
-                  </a>
-                  <a href={mp.contact_info?.facebook || `https://www.facebook.com/search/top?q=${mp.first_name}%20${mp.last_name}`} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center p-3 bg-border-base rounded-xl hover:bg-white/10 dark:hover:bg-white/5 transition-all group">
-                    <span className="text-secondary group-hover:text-blue-600 transition-colors font-bold text-lg">fb</span>
-                    <span className="text-[9px] mt-1 text-secondary font-bold uppercase tracking-widest">Facebook</span>
-                  </a>
+                  {mp.contact_info?.twitter && (
+                    <a href={mp.contact_info.twitter} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center p-3 bg-border-base rounded-xl hover:bg-white/10 dark:hover:bg-white/5 transition-all group">
+                      <span className="text-secondary group-hover:text-sky-500 transition-colors font-bold text-lg">𝕏</span>
+                      <span className="text-[9px] mt-1 text-secondary font-bold uppercase tracking-widest">Twitter</span>
+                    </a>
+                  )}
+                  {mp.contact_info?.facebook && (
+                    <a href={mp.contact_info.facebook} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center p-3 bg-border-base rounded-xl hover:bg-white/10 dark:hover:bg-white/5 transition-all group">
+                      <span className="text-secondary group-hover:text-blue-600 transition-colors font-bold text-lg">fb</span>
+                      <span className="text-[9px] mt-1 text-secondary font-bold uppercase tracking-widest">Facebook</span>
+                    </a>
+                  )}
                 </div>
 
                 {/* Email */}

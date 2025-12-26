@@ -1,0 +1,21 @@
+-- Migration: Update Social accounts for Konfederacja (Full)
+-- Date: 2025-12-26
+-- Includes manual fix for Michał Połuboczek Twitter
+
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://www.facebook.com/p/Andrzej-Zapa%C5%82owski-100063811793152/", "twitter": "https://x.com/A_Zapalowski"}'::jsonb WHERE name = 'Andrzej Zapałowski' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://www.facebook.com/bartlomiejpejo/?locale=pl_PL", "twitter": "https://x.com/bartlomiejpejo?lang=en"}'::jsonb WHERE name = 'Bartłomiej Pejo' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://www.facebook.com/grzegorz.michal.braun/", "twitter": "https://x.com/GrzegorzBraun_"}'::jsonb WHERE name = 'Grzegorz Braun' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://www.facebook.com/grzegorzplaczek/", "twitter": "https://x.com/placzekgrzegorz?lang=en"}'::jsonb WHERE name = 'Grzegorz Płaczek' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://www.facebook.com/karina.bosak.posel/", "twitter": "https://x.com/KarinaBosak"}'::jsonb WHERE name = 'Karina Bosak' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://www.facebook.com/KonradBerkowiczPL/", "twitter": "https://x.com/KonradBerkowicz"}'::jsonb WHERE name = 'Konrad Berkowicz' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://www.facebook.com/krzysztofbosak.fb/", "twitter": "https://x.com/krzysztofbosak"}'::jsonb WHERE name = 'Krzysztof Bosak' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://www.facebook.com/KrzysztofMulawa/", "twitter": "https://x.com/krzysztofmulawa"}'::jsonb WHERE name = 'Krzysztof Mulawa' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://www.facebook.com/KSzymanskiKonfederacja/", "twitter": "https://x.com/KSzymanskiKonf"}'::jsonb WHERE name = 'Krzysztof Szymański' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://www.facebook.com/michalpoluboczek1/?locale=pl_PL", "twitter": "https://x.com/MPoluboczek"}'::jsonb WHERE name = 'Michał Połuboczek' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://www.facebook.com/MichalWawerRN/", "twitter": "https://x.com/MichalWawer"}'::jsonb WHERE name = 'Michał Wawer' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://www.facebook.com/wipler/?locale=pl_PL", "twitter": "https://x.com/Wipler1978"}'::jsonb WHERE name = 'Przemysław Wipler' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://www.facebook.com/RyszardWilkKONFEDERACJA/", "twitter": "https://x.com/ryszard_wilk?lang=en"}'::jsonb WHERE name = 'Ryszard Wilk' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://www.facebook.com/slawomirmentzen/?locale=pl_PL", "twitter": "https://x.com/SlawomirMentzen"}'::jsonb WHERE name = 'Sławomir Mentzen' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://www.facebook.com/stanislaw.tyszka/", "twitter": "https://x.com/styszka?lang=en"}'::jsonb WHERE name = 'Stanisław Tyszka' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://www.facebook.com/witold.tumanowicz/", "twitter": "https://x.com/WTumanowicz"}'::jsonb WHERE name = 'Witold Tumanowicz' AND term = 10;
+UPDATE mps SET contact_info = COALESCE(contact_info, '{}'::jsonb) || '{"facebook": "https://www.facebook.com/WlodzimierzSkalik/", "twitter": "https://x.com/Wlodek_Skalik"}'::jsonb WHERE name = 'Włodzimierz Skalik' AND term = 10;

@@ -3,6 +3,7 @@ import { Suspense, lazy } from 'react';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
 import LoadingSpinner from './components/ui/LoadingSpinner';
+import ScrollToTop from './components/ScrollToTop';
 
 // Lazy Load Pages
 const Home = lazy(() => import('./pages/Home'));
@@ -44,6 +45,7 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <div className="min-h-screen bg-paper dark:bg-slate-900 flex flex-col transition-colors duration-300">
         <Navigation />
         <main className="flex-grow pt-0">
