@@ -23,8 +23,7 @@ export default defineConfig({
         manualChunks: {
           'react-core': ['react', 'react-dom', 'react-router-dom'],
           'visualization': ['recharts', 'reactflow', '@tremor/react'],
-          'ui-libs': ['framer-motion', 'lucide-react', 'date-fns'],
-          'postgrest-client': ['postgrest-client'] // PostgREST-compatible client
+          'ui-libs': ['framer-motion', 'lucide-react', 'date-fns']
         }
       }
     }
