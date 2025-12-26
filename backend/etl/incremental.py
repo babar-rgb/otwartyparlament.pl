@@ -4,16 +4,31 @@ Standardized version using backend.core modules.
 """
 import json
 import os
+import sys
 from datetime import datetime
-from backend.core.db import db
-from backend.core.logger import get_logger
-from backend.core.config import config
-from backend.utils.http import http_session
+
+# Hack to allow running this script directly from /app/etl/ inside Docker
+# Adds /app/ (parent directory) to sys.path so 'core' and 'utils' can be imported.
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Adjusted imports for Docker environment (where 'backend' package name might be missing)
+try:
+    from backend.core.db import db
+    from backend.core.logger import get_logger
+    from backend.core.config import config
+    from backend.utils.http import http_session
+except ImportError:
+    # Fallback for Docker /app structure
+    from core.db import db
+    from core.logger import get_logger
+    from core.config import config
+    from utils.http import http_session
 
 logger = get_logger("etl.incremental")
 
 BASE_API = "https://api.sejm.gov.pl/sejm"
-STATE_FILE = os.path.join(os.path.dirname(__file__), ".etl_state.json")
+# Ensure state file is in the same directory as this script
+STATE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".etl_state.json")
 
 
 def load_state():
@@ -181,6 +196,7 @@ class IncrementalETL:
         for sitting in new_sittings:
             votes = sync_sitting_votes(self.term, sitting)
             total_votes += votes
+            # Sleep a bit to be nice to API?
         
         # Update state
         self.state["last_sync"][str(self.term)] = api_latest

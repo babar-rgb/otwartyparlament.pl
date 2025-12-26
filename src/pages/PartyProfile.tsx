@@ -1,17 +1,45 @@
+
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { parties, mps } from '../data/mockData';
+import { db } from '../lib/db';
+import { getPartyData } from '../constants/parties';
+import SEO from '../components/SEO';
 import { ArrowLeft, Users, TrendingUp } from 'lucide-react';
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 
 export default function PartyProfile() {
   const { id } = useParams();
-  const party = parties.find((p) => p.id === id);
-  const partyMps = mps.filter((mp) => mp.party === party?.shortName);
+  const [mps, setMps] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  if (!party) {
+  // ID from URL is the party key e.g. "KO", "PiS"
+  const partyMetadata = id ? getPartyData(id) : null;
+
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchPartyMps = async () => {
+      try {
+        const { data, error } = await db
+          .from('mps')
+          .select('*')
+          .eq('party', id)
+          .eq('active', true);
+
+        if (error) throw error;
+        setMps(data || []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPartyMps();
+  }, [id]);
+
+  if (!partyMetadata) {
     return (
       <div className="text-center py-12">
-        <p className="text-slate-600">Partia nie znaleziona.</p>
+        <p className="text-slate-600">Nieprawidłowy identyfikator partii.</p>
         <Link to="/partie" className="text-blue-600 hover:text-blue-700 font-semibold mt-4 inline-block">
           Wróć do listy partii
         </Link>
@@ -19,19 +47,27 @@ export default function PartyProfile() {
     );
   }
 
-  const activityData = [
-    { month: 'Sty', votes: 145 },
-    { month: 'Lut', votes: 128 },
-    { month: 'Mar', votes: 152 },
-    { month: 'Kwi', votes: 168 },
-    { month: 'Maj', votes: 175 },
-    { month: 'Cze', votes: 182 },
-  ];
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-24">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
-  const topMps = partyMps.sort((a, b) => b.aktywnosc - a.aktywnosc).slice(0, 5);
+  // Placeholder stats until we have backend aggregations
+  const mpCount = mps.length;
+  // Sort by 'name' as a proxy for now, or just list them. 
+  // Ideally active MPs.
+  const topMps = mps.slice(0, 5);
 
   return (
-    <div className="container mx-auto px-4 pt-24 pb-12 space-y-8">
+    <div className="container mx-auto px-4 pt-24 pb-12 space-y-8 animate-fade-in">
+      <SEO
+        title={partyMetadata.name}
+        description={`Profil klubu parlamantarnego ${partyMetadata.name} (${partyMetadata.shortName}). Liczba posłów: ${mpCount}. Zobacz listę członków i statystyki.`}
+        url={`/partie/${id}`}
+      />
       <Link to="/partie" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold mb-4">
         <ArrowLeft size={20} />
         Wróć do listy
@@ -39,76 +75,35 @@ export default function PartyProfile() {
 
       <div className="bg-gradient-to-r from-slate-100 to-slate-50 rounded-lg border border-slate-200 overflow-hidden">
         <div className="flex flex-col md:flex-row gap-6 p-8">
-          <div className="w-24 h-24 rounded-lg flex items-center justify-center text-white font-bold text-4xl" style={{ backgroundColor: party.color }}>
-            {party.shortName}
+          <div
+            className="w-24 h-24 rounded-lg flex items-center justify-center text-white font-bold text-4xl shadow-md"
+            style={{ backgroundColor: partyMetadata.color }}
+          >
+            {partyMetadata.shortName}
           </div>
 
           <div className="flex-1">
-            <h1 className="text-4xl font-bold text-slate-900 mb-2">{party.name}</h1>
-            <p className="text-slate-600 mb-4">{party.shortName} • {partyMps.length} posłów</p>
+            <h1 className="text-4xl font-bold text-slate-900 mb-2">{partyMetadata.name}</h1>
+            <p className="text-slate-600 mb-4">{partyMetadata.shortName} • {mpCount} posłów</p>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
                 <p className="text-sm text-slate-600">Posłów</p>
-                <p className="text-2xl font-bold flex items-center gap-2">
+                <p className="text-2xl font-bold flex items-center gap-2 text-slate-900">
                   <Users size={20} />
-                  {party.mpCount}
+                  {mpCount}
                 </p>
               </div>
-              <div>
+              <div className="opacity-50" title="Dane niedostępne">
                 <p className="text-sm text-slate-600">Spójność</p>
-                <p className="text-2xl font-bold text-blue-600">{party.cohesion}%</p>
+                <p className="text-2xl font-bold text-slate-400">-</p>
               </div>
-              <div>
+              <div className="opacity-50" title="Dane niedostępne">
                 <p className="text-sm text-slate-600">Aktywność</p>
-                <p className="text-2xl font-bold text-green-600 flex items-center gap-2">
+                <p className="text-2xl font-bold text-slate-400 flex items-center gap-2">
                   <TrendingUp size={20} />
-                  {party.activity}%
+                  -
                 </p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-600">Średnia aktywność</p>
-                <p className="text-2xl font-bold">{Math.round((party.cohesion + party.activity) / 2)}%</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-lg border border-slate-200 p-6">
-          <h3 className="text-lg font-bold text-slate-900 mb-6">Aktywność w czasie</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={activityData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="month" stroke="#94a3b8" />
-              <YAxis stroke="#94a3b8" />
-              <Tooltip />
-              <Line type="monotone" dataKey="votes" stroke={party.color} strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="bg-white rounded-lg border border-slate-200 p-6">
-          <h3 className="text-lg font-bold text-slate-900 mb-4">Wskaźniki</h3>
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between mb-2">
-                <span className="text-sm font-medium text-slate-700">Spójność</span>
-                <span className="text-sm font-bold">{party.cohesion}%</span>
-              </div>
-              <div className="w-full bg-slate-200 rounded-full h-2">
-                <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${party.cohesion}%` }}></div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between mb-2">
-                <span className="text-sm font-medium text-slate-700">Aktywność</span>
-                <span className="text-sm font-bold">{party.activity}%</span>
-              </div>
-              <div className="w-full bg-slate-200 rounded-full h-2">
-                <div className="bg-green-600 h-2 rounded-full" style={{ width: `${party.activity}%` }}></div>
               </div>
             </div>
           </div>
@@ -116,57 +111,45 @@ export default function PartyProfile() {
       </div>
 
       <div className="bg-white rounded-lg border border-slate-200 p-6">
-        <h3 className="text-lg font-bold text-slate-900 mb-6">Najaktywniejszy posłowie</h3>
+        <h3 className="text-lg font-bold text-slate-900 mb-6">Przykładowi posłowie</h3>
         <div className="space-y-3">
           {topMps.map((mp, idx) => (
             <Link key={mp.id} to={`/poslowie/${mp.id}`} className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition cursor-pointer">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-slate-300 font-bold text-white flex items-center justify-center text-sm">
+                <div className="w-8 h-8 rounded-full bg-slate-200 font-bold text-slate-500 flex items-center justify-center text-sm">
                   {idx + 1}
                 </div>
                 <div className="flex items-center gap-3">
-                  <img src={mp.photoUrl} alt={mp.imie} className="w-10 h-10 rounded-full object-cover" />
+                  {/* Placeholder for photo if missing logic not imported */}
+                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xs overflow-hidden">
+                    {(mp.photo_url) ? <img src={mp.photo_url} className="w-full h-full object-cover" /> : mp.name[0]}
+                  </div>
                   <div>
                     <p className="font-semibold text-slate-900 text-sm">
-                      {mp.imie} {mp.nazwisko}
+                      {mp.name}
                     </p>
-                    <p className="text-xs text-slate-500">{mp.district}</p>
+                    <p className="text-xs text-slate-500">{mp.district || "Okręg nieznany"}</p>
                   </div>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-bold text-slate-900">{mp.aktywnosc}%</p>
-                <p className="text-xs text-slate-500">Aktywność</p>
-              </div>
             </Link>
           ))}
+          <div className="pt-4 text-center">
+            <Link to={`/poslowie?club=${partyMetadata.id}`} className="text-blue-600 hover:underline text-sm font-semibold">
+              Zobacz wszystkich posłów z tego klubu ({mpCount}) →
+            </Link>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h4 className="font-bold text-slate-900 mb-2">Głosowania partii</h4>
-          <p className="text-sm text-slate-700 mb-4">
-            {partyMps.length > 0
-              ? `Przejrzyj wszystkie głosowania członków tej partii i zobacz wzorce głosowania.`
-              : 'Brak danych'}
-          </p>
-          <Link to="/glosowania" className="inline-block text-blue-600 hover:text-blue-700 font-semibold text-sm">
-            Przejrzyj głosowania →
-          </Link>
-        </div>
-
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-          <h4 className="font-bold text-slate-900 mb-2">Projekty ustaw</h4>
-          <p className="text-sm text-slate-700 mb-4">
-            {partyMps.length > 0
-              ? `${partyMps.reduce((acc, mp) => acc + mp.billsCount, 0)} projektów ustaw złożonych przez członków tej partii.`
-              : 'Brak danych'}
-          </p>
-          <Link to="/poslowie" className="inline-block text-green-600 hover:text-green-700 font-semibold text-sm">
-            Przejrzyj posłów →
-          </Link>
-        </div>
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <h4 className="font-bold text-slate-900 mb-2">Głosowania partii</h4>
+        <p className="text-sm text-slate-700 mb-4">
+          Analiza grupowa głosowań (Spójność) jest w trakcie przygotowania na podstawie danych rzeczywistych.
+        </p>
+        <Link to="/glosowania" className="inline-block text-blue-600 hover:text-blue-700 font-semibold text-sm">
+          Przejrzyj ostatnie głosowania Sejmu →
+        </Link>
       </div>
     </div>
   );

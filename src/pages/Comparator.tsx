@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { db } from '../lib/db';
+import SEO from '../components/SEO';
 import { MP } from '../api';
 import { Search, Swords, Trophy, TrendingUp, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
 
@@ -74,20 +75,78 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
         ).slice(0, 5);
     }, [mps, searchB, mpA]);
 
-    // Calculate Similarity (Mocked for Demo if no real vote history available in frontend)
-    const similarity = useMemo(() => {
-        if (!mpA || !mpB) return 0;
+    // Real Similarity Calculation
+    const [similarity, setSimilarity] = useState<number | null>(null);
+    const [calculatingSim, setCalculatingSim] = useState(false);
 
-        // Simple mock logic based on party
-        if (mpA.club === mpB.club) return Math.floor(Math.random() * 15) + 85; // 85-100%
+    useEffect(() => {
+        if (!mpA || !mpB) {
+            setSimilarity(null);
+            return;
+        }
 
-        // Coalition logic (KO + PL2050 + Lewica + PSL)
-        const coalition = ['KO', 'Polska2050', 'Lewica', 'PSL-TD'];
-        if (coalition.includes(mpA.club) && coalition.includes(mpB.club)) return Math.floor(Math.random() * 20) + 70; // 70-90%
+        const calculateSimilarity = async () => {
+            setCalculatingSim(true);
+            try {
+                // Fetch shared votes where both participated
+                // We need to route this via a custom join or helper, 
+                // but utilizing Supabase select with filters is easiest.
 
-        // Opposition vs Coalition
-        return Math.floor(Math.random() * 30) + 10; // 10-40%
-    }, [mpA, mpB]);
+                // Strategy: Get last 100 results for MP A and MP B
+                // This is slightly inefficient but safest without custom backend function.
+                // Better: Get vote_results for both MPs in one go.
+
+                const { data, error } = await db
+                    .from('vote_results')
+                    .select('vote_id, result, mp_id')
+                    .in('mp_id', [mpA.id, mpB.id])
+                    .order('vote_id', { ascending: false })
+                    .limit(500); // Analyze last ~250 votes (2 * 250 rows)
+
+                if (error) throw error;
+                if (!data || data.length === 0) {
+                    setSimilarity(0);
+                    return;
+                }
+
+                // Group by vote_id
+                const votesMap: Record<string, Record<string, string>> = {};
+                data.forEach((row: any) => {
+                    if (!votesMap[row.vote_id]) votesMap[row.vote_id] = {};
+                    votesMap[row.vote_id][row.mp_id] = row.result;
+                });
+
+                // Calculate agreement
+                let sharedParam = 0;
+                let agreement = 0;
+
+                Object.values(votesMap).forEach(vote => {
+                    const resA = vote[mpA.id];
+                    const resB = vote[mpB.id];
+
+                    if (resA && resB) {
+                        // Check if active vote (exclude absence if strict? user didn't specify, but usually absence matches absence is neutral)
+                        // Simplified: Compare strings
+                        sharedParam++;
+                        if (resA === resB) agreement++;
+                    }
+                });
+
+                if (sharedParam < 5) {
+                    setSimilarity(null); // Not enough overlap
+                } else {
+                    setSimilarity(Math.round((agreement / sharedParam) * 100));
+                }
+
+            } catch (err) {
+                console.error("Error calculating similarity:", err);
+            } finally {
+                setCalculatingSim(false);
+            }
+        };
+
+        calculateSimilarity();
+    }, [mpA?.id, mpB?.id]);
 
     // Fetch Key Votes and Individual Decisions
     const [keyVotes, setKeyVotes] = useState<any[]>([]);
@@ -204,6 +263,13 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
 
     return (
         <div className={embedded ? 'animate-fade-in' : 'container mx-auto px-4 pt-24 pb-12 max-w-6xl animate-fade-in'}>
+            {!embedded && (
+                <SEO
+                    title={mpA && mpB ? `${mpA.last_name} vs ${mpB.last_name} | Porównanie` : "Porównywarka Posłów"}
+                    description={mpA && mpB ? `Sprawdź jak głosowali ${mpA.first_name} ${mpA.last_name} i ${mpB.first_name} ${mpB.last_name}. Porównaj ich statystyki i zgodność.` : "Porównaj poglądy i głosowania dwóch dowolnych posłów Sejmu RP."}
+                    url="/porownywarka"
+                />
+            )}
             {/* Header - Only show if not embedded */}
             {!embedded && (
                 <div className="text-center mb-12">
@@ -278,26 +344,42 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
                     {mpA && mpB ? (
                         <div className="text-center animate-in fade-in zoom-in duration-500">
                             <div className="relative w-40 h-40 mx-auto mb-4 flex items-center justify-center">
-                                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                                    <circle cx="50" cy="50" r="45" fill="none" stroke="#f1f5f9" strokeWidth="8" />
-                                    <circle
-                                        cx="50" cy="50" r="45" fill="none" stroke="url(#gradient)" strokeWidth="8"
-                                        strokeDasharray="283"
-                                        strokeDashoffset={283 - (283 * similarity / 100)}
-                                        strokeLinecap="round"
-                                        className="transition-all duration-1000 ease-out"
-                                    />
-                                    <defs>
-                                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                            <stop offset="0%" stopColor="#9333ea" />
-                                            <stop offset="100%" stopColor="#ec4899" />
-                                        </linearGradient>
-                                    </defs>
-                                </svg>
-                                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span className="text-4xl font-black text-slate-900">{similarity}%</span>
-                                    <span className="text-xs font-bold text-slate-500 uppercase">Zgodności</span>
-                                </div>
+                                {calculatingSim ? (
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                            <circle cx="50" cy="50" r="45" fill="none" stroke="#f1f5f9" strokeWidth="8" />
+                                            {similarity !== null && (
+                                                <circle
+                                                    cx="50" cy="50" r="45" fill="none" stroke="url(#gradient)" strokeWidth="8"
+                                                    strokeDasharray="283"
+                                                    strokeDashoffset={283 - (283 * similarity / 100)}
+                                                    strokeLinecap="round"
+                                                    className="transition-all duration-1000 ease-out"
+                                                />
+                                            )}
+                                            <defs>
+                                                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                    <stop offset="0%" stopColor="#9333ea" />
+                                                    <stop offset="100%" stopColor="#ec4899" />
+                                                </linearGradient>
+                                            </defs>
+                                        </svg>
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                            {similarity !== null ? (
+                                                <>
+                                                    <span className="text-4xl font-black text-slate-900">{similarity}%</span>
+                                                    <span className="text-xs font-bold text-slate-500 uppercase">Zgodności</span>
+                                                </>
+                                            ) : (
+                                                <span className="text-xs font-bold text-slate-400 text-center px-4">Brak wspólnych głosowań</span>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
                     ) : (

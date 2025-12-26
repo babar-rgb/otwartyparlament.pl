@@ -4,6 +4,7 @@ import Navigation from './components/Navigation';
 import Footer from './components/Footer';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 import ScrollToTop from './components/ScrollToTop';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy Load Pages
 const Home = lazy(() => import('./pages/Home'));
@@ -47,56 +48,58 @@ export default function App() {
     <BrowserRouter>
       <ScrollToTop />
       <div className="min-h-screen bg-paper dark:bg-slate-900 flex flex-col transition-colors duration-300">
-        <Navigation />
-        <main className="flex-grow pt-0">
-          <Suspense fallback={<LoadingSpinner />}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/poslowie" element={<Poslowie />} />
-              <Route path="/poslowie/:idOrSlug" element={<MpProfile />} />
-              {/* Europarlament Routes */}
-              <Route path="/europarlament" element={<Europarlament />} />
-              <Route path="/europarlament/glosowania" element={<EuroVotes />} />
-              <Route path="/europarlament/:id" element={<EuroMPProfile />} />
-              <Route path="/europarlament/glosowanie/:id" element={<EuroVoteDetails />} />
-              {/* Komisje Routes */}
-              <Route path="/komisje" element={<Komisje />} />
-              <Route path="/komisje/:code" element={<KomisjaDetails />} />
-              <Route path="/komisje/:committeeCode/posiedzenie/:sittingId" element={<CommitteeSittingDetails />} />
-              <Route path="/partie" element={<Partie />} />
-              <Route path="/partie/:id" element={<PartyProfile />} />
-              <Route path="/rankingi" element={<Rankingi />} />
-              <Route path="/majatek" element={<WealthRankings />} />
-              <Route path="/wypowiedzi" element={<SpeechesList />} />
-              <Route path="/wypowiedzi/:id" element={<SpeechDetails />} />
-              <Route path="/interpelacje" element={<InterpellationsList />} />
-              <Route path="/interpelacje/:id" element={<InterpellationDetails />} />
-              <Route path="/test" element={<TestWyborczy />} />
-              <Route path="/o-projekcie" element={<OProjekcie />} />
-              <Route path="/ustawy/:id" element={<BillDetails />} />
-              <Route path="/mapa/:processId" element={<LawMap />} />
-              <Route path="/projekty" element={<Projekty />} />
-              <Route path="/projekty/:id" element={<BillDetails />} />
-              <Route path="/glosowania" element={<VotesList />} />
-              <Route path="/glosowania/:term/:sitting/:votingNumber" element={<VoteDetails />} />
-              <Route path="/glosowania/:sitting/:votingNumber" element={<VoteDetails />} />
-              <Route path="/glosowanie/:id" element={<VoteDetails />} />
-              <Route path="/tematy/:slug" element={<CategoryDetails />} />
-              <Route path="/kategoria/:slug" element={<CategoryDetails />} />
-              <Route path="/kategorie" element={<Categories />} />
-              <Route path="/metodologia" element={<DataSources />} />
-              <Route path="/open-source" element={<OpenSource />} />
-              <Route path="/newsletter" element={<Newsletter />} />
-              <Route path="/kontakt" element={<Contact />} />
-              <Route path="/porownywarka" element={<Comparator />} />
-              <Route path="/szukaj" element={<SearchPage />} />
-              <Route path="/live" element={<LiveAnalysis />} />
-              {/* Catch-all MUST be last */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </main>
-        <Footer />
+        <ErrorBoundary>
+          <Navigation />
+          <main className="flex-grow pt-0">
+            <Suspense fallback={<LoadingSpinner />}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/poslowie" element={<Poslowie />} />
+                <Route path="/poslowie/:idOrSlug" element={<MpProfile />} />
+                {/* Europarlament Routes */}
+                <Route path="/europarlament" element={<Europarlament />} />
+                <Route path="/europarlament/glosowania" element={<EuroVotes />} />
+                <Route path="/europarlament/:id" element={<EuroMPProfile />} />
+                <Route path="/europarlament/glosowanie/:id" element={<EuroVoteDetails />} />
+                {/* Komisje Routes */}
+                <Route path="/komisje" element={<Komisje />} />
+                <Route path="/komisje/:code" element={<KomisjaDetails />} />
+                <Route path="/komisje/:committeeCode/posiedzenie/:sittingId" element={<CommitteeSittingDetails />} />
+                <Route path="/partie" element={<Partie />} />
+                <Route path="/partie/:id" element={<PartyProfile />} />
+                <Route path="/rankingi" element={<Rankingi />} />
+                <Route path="/majatek" element={<WealthRankings />} />
+                <Route path="/wypowiedzi" element={<SpeechesList />} />
+                <Route path="/wypowiedzi/:id" element={<SpeechDetails />} />
+                <Route path="/interpelacje" element={<InterpellationsList />} />
+                <Route path="/interpelacje/:id" element={<InterpellationDetails />} />
+                <Route path="/test" element={<TestWyborczy />} />
+                <Route path="/o-projekcie" element={<OProjekcie />} />
+                <Route path="/ustawy/:id" element={<BillDetails />} />
+                <Route path="/mapa/:processId" element={<LawMap />} />
+                <Route path="/projekty" element={<Projekty />} />
+                <Route path="/projekty/:id" element={<BillDetails />} />
+                <Route path="/glosowania" element={<VotesList />} />
+                <Route path="/glosowania/:term/:sitting/:votingNumber" element={<VoteDetails />} />
+                <Route path="/glosowania/:sitting/:votingNumber" element={<VoteDetails />} />
+                <Route path="/glosowanie/:id" element={<VoteDetails />} />
+                <Route path="/tematy/:slug" element={<CategoryDetails />} />
+                <Route path="/kategoria/:slug" element={<CategoryDetails />} />
+                <Route path="/kategorie" element={<Categories />} />
+                <Route path="/metodologia" element={<DataSources />} />
+                <Route path="/open-source" element={<OpenSource />} />
+                <Route path="/newsletter" element={<Newsletter />} />
+                <Route path="/kontakt" element={<Contact />} />
+                <Route path="/porownywarka" element={<Comparator />} />
+                <Route path="/szukaj" element={<SearchPage />} />
+                <Route path="/live" element={<LiveAnalysis />} />
+                {/* Catch-all MUST be last */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </main>
+          <Footer />
+        </ErrorBoundary>
       </div>
     </BrowserRouter>
   );

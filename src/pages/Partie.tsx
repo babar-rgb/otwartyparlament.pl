@@ -1,34 +1,103 @@
+
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { parties } from '../data/mockData';
+import SEO from '../components/SEO';
+import { db } from '../lib/db';
+import { PARTY_METADATA, getPartyData } from '../constants/parties';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Users, TrendingUp } from 'lucide-react';
 
+interface PartyStats {
+  id: string; // Matches DB 'party' column
+  mpCount: number;
+}
+
 export default function Partie() {
-  const partyData = parties.map((p) => ({
-    name: p.shortName,
-    cohesion: p.cohesion,
-    activity: p.activity,
+  const [parties, setParties] = useState<(PartyStats & { metadata: any })[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchParties = async () => {
+      try {
+        // Fetch all active MPs
+        const { data: mps, error } = await db
+          .from('mps')
+          .select('party')
+          .eq('active', true);
+
+        if (error) throw error;
+
+        // Count by party
+        const counts: Record<string, number> = {};
+        (mps || []).forEach((mp: any) => {
+          const p = mp.party || 'Niezrzeszeni';
+          counts[p] = (counts[p] || 0) + 1;
+        });
+
+        // Map to array
+        const result = Object.entries(counts).map(([partyKey, count]) => {
+          const metadata = getPartyData(partyKey);
+          return {
+            id: partyKey,
+            mpCount: count,
+            metadata
+          };
+        }).sort((a, b) => b.mpCount - a.mpCount); // Sort by size
+
+        setParties(result);
+      } catch (err) {
+        console.error("Error fetching parties:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchParties();
+  }, []);
+
+  // Prepare chart data (Top 6 only to avoid clutter)
+  const chartData = parties.slice(0, 7).map(p => ({
+    name: p.metadata.shortName,
+    count: p.mpCount,
+    fill: p.metadata.color
   }));
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in">
+      <SEO
+        title="Kluby i Koła Poselskie"
+        description="Lista wszystkich partii, klubów i kół poselskich w Sejmie X kadencji. Sprawdź liczbę posłów i statystyki."
+        url="/partie"
+      />
       <div>
         <h1 className="text-4xl font-bold text-slate-900 mb-2">Partie parlamentarne</h1>
         <p className="text-slate-600">
-          Przegląd {parties.length} klubów poselskich z aktualnej kadencji Sejmu.
+          Przegląd {parties.length} klubów i kół poselskich X kadencji Sejmu.
+          <br />
+          <span className="text-xs text-slate-400">*Dane aktualne, pobierane z bazy danych.</span>
         </p>
       </div>
 
       <div className="bg-white rounded-lg border border-slate-200 p-6 mb-8">
-        <h3 className="text-lg font-bold text-slate-900 mb-6">Porównanie partii</h3>
+        <h3 className="text-lg font-bold text-slate-900 mb-6">Liczebność klubów</h3>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={partyData}>
+          <BarChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
             <XAxis dataKey="name" stroke="#94a3b8" />
             <YAxis stroke="#94a3b8" />
-            <Tooltip />
-            <Bar dataKey="cohesion" fill="#3b82f6" name="Spójność" />
-            <Bar dataKey="activity" fill="#10b981" name="Aktywność" />
+            <Tooltip
+              contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+              cursor={{ fill: '#f1f5f9' }}
+            />
+            <Bar dataKey="count" name="Liczba posłów" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -36,66 +105,47 @@ export default function Partie() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {parties.map((party) => (
           <Link key={party.id} to={`/partie/${party.id}`}>
-            <div className="bg-white rounded-lg border border-slate-200 hover: hover:border-slate-300 transition overflow-hidden cursor-pointer h-full flex flex-col">
-              <div className="h-24 bg-gradient-to-br from-slate-200 to-slate-100 flex items-center justify-center border-b border-slate-200">
+            <div className="bg-white rounded-lg border border-slate-200 hover:border-slate-300 transition overflow-hidden cursor-pointer h-full flex flex-col hover:shadow-md transform hover:-translate-y-1 duration-200">
+              <div className="h-24 bg-gradient-to-br from-slate-100 to-slate-50 flex items-center justify-center border-b border-slate-100 relative overflow-hidden">
                 <div
-                  className="w-16 h-16 rounded-lg flex items-center justify-center text-white font-bold text-2xl"
-                  style={{ backgroundColor: party.color }}
+                  className="absolute inset-0 opacity-10"
+                  style={{ backgroundColor: party.metadata.color }}
+                />
+                <div
+                  className="w-16 h-16 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg relative z-10"
+                  style={{ backgroundColor: party.metadata.color }}
                 >
-                  {party.shortName}
+                  {party.metadata.shortName}
                 </div>
               </div>
 
               <div className="p-4 flex-1 flex flex-col">
-                <h3 className="font-bold text-slate-900 text-sm mb-1">{party.name}</h3>
-                <p className="text-xs text-slate-500 mb-4 flex-grow">{party.shortName}</p>
+                <h3 className="font-bold text-slate-900 text-sm mb-1">{party.metadata.name}</h3>
 
-                <div className="space-y-2 pt-4 border-t border-slate-200">
+                <div className="space-y-2 pt-4 mt-auto border-t border-slate-100">
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-600">Posłów:</span>
-                    <span className="font-semibold flex items-center gap-1">
+                    <span className="font-semibold flex items-center gap-1 text-slate-900">
                       <Users size={14} />
                       {party.mpCount}
                     </span>
                   </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-600">Spójność:</span>
-                    <span className="font-semibold text-blue-600">{party.cohesion}%</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
+                  <div className="flex justify-between text-xs opacity-50" title="Dane w przygotowaniu">
                     <span className="text-slate-600">Aktywność:</span>
-                    <span className="font-semibold text-green-600 flex items-center gap-1">
+                    <span className="font-semibold text-slate-400 flex items-center gap-1">
                       <TrendingUp size={14} />
-                      {party.activity}%
+                      -
                     </span>
                   </div>
                 </div>
 
-                <button className="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition text-sm">
+                <div className="mt-4 w-full bg-slate-50 text-slate-600 py-2 rounded-lg font-semibold hover:bg-slate-100 transition text-sm text-center">
                   Profil
-                </button>
+                </div>
               </div>
             </div>
           </Link>
         ))}
-      </div>
-
-      <div className="bg-gradient-to-r from-slate-100 to-slate-50 rounded-lg border border-slate-200 p-8">
-        <h3 className="text-xl font-bold text-slate-900 mb-4">Jak czytać wskaźniki?</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h4 className="font-semibold text-slate-900 mb-2">Spójność partii</h4>
-            <p className="text-sm text-slate-700">
-              Procent głosowań, w których posłowie z danej partii głosowali jednolicie. Wyższy procent = bardziej dyscyplinowana partia.
-            </p>
-          </div>
-          <div>
-            <h4 className="font-semibold text-slate-900 mb-2">Aktywność</h4>
-            <p className="text-sm text-slate-700">
-              Średnia liczba projektów ustaw, interpelacji i innych aktywności legislacyjnych na posła w danej partii.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

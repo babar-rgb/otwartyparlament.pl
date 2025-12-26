@@ -3,7 +3,9 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Search, Filter, Sparkles, CheckCircle2, XCircle, MinusCircle, HelpCircle, ArrowLeft } from 'lucide-react';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import { useVotesList } from '../hooks/useVotesList';
+import SEO from '../components/SEO';
 import { db } from '../lib/db';
+import Skeleton from '../components/ui/Skeleton';
 
 const VotesList = () => {
     const [searchParams] = useSearchParams();
@@ -29,6 +31,11 @@ const VotesList = () => {
 
     return (
         <div className="min-h-screen bg-[#06060c] pt-24 pb-12 px-4 md:px-8">
+            <SEO
+                title="Archiwum Głosowań"
+                description="Pełna baza głosowań Sejmu X kadencji. Wyszukuj, filtruj i sprawdzaj jak głosowali posłowie."
+                url="/glosowania"
+            />
             <div className="max-w-6xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
                     <div>
@@ -75,8 +82,20 @@ const VotesList = () => {
                 </div>
 
                 {loading ? (
-                    <div className="text-center py-20 text-white/40 tracking-widest uppercase font-bold text-sm animate-pulse">
-                        Ładowanie danych...
+                    <div className="grid gap-4">
+                        {[...Array(5)].map((_, i) => (
+                            <div key={i} className="bg-[#111126] border border-white/5 p-6 rounded-3xl flex flex-col md:flex-row gap-6 items-center">
+                                <Skeleton className="w-16 h-16 rounded-2xl bg-white/5" />
+                                <div className="flex-1 w-full space-y-3">
+                                    <div className="flex gap-2">
+                                        <Skeleton className="h-6 w-24 bg-white/5 rounded-lg" />
+                                        <Skeleton className="h-6 w-24 bg-white/5 rounded-lg" />
+                                    </div>
+                                    <Skeleton className="h-8 w-3/4 bg-white/5 rounded-xl" />
+                                    <Skeleton className="h-4 w-1/2 bg-white/5" />
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 ) : (
                     <div className="grid gap-4">
