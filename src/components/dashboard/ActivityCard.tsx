@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, BarChart3 } from 'lucide-react';
-import { Skeleton } from '../ui/Skeleton';
+import Skeleton from '../ui/Skeleton';
 
 interface ActivityCardProps {
     loading: boolean;

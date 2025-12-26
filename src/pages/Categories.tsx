@@ -81,16 +81,19 @@ export default function Categories() {
                 });
             }
 
-            const domains = (cats?.filter(c => c.level === 1) || []).map(d => ({
-                ...d,
-                vote_count: countMap.get(d.id) || 0,
-                children: (cats?.filter(c => c.level === 2 && c.parent_id === d.id) || [])
-                    .map(a => ({
-                        ...a,
-                        vote_count: countMap.get(a.id) || 0
+            const domains = (cats?.filter((c: any) => c.level === 1) || []).map((d: any) => ({
+                id: d.id,
+                name: d.name,
+                ux_category: d.ux_category,
+                // Find children (level 2)
+                children: (cats?.filter((c: any) => c.level === 2 && c.parent_id === d.id) || [])
+                    .map((a: any) => ({
+                        id: a.id,
+                        name: a.name,
+                        vote_count: a.vote_count
                     }))
-                    .sort((a, b) => b.vote_count - a.vote_count)
-            })).sort((a, b) => b.vote_count - a.vote_count);
+                    .sort((a: any, b: any) => b.vote_count - a.vote_count)
+            })).sort((a: any, b: any) => b.vote_count - a.vote_count);
 
             setCategories(domains);
             setTotalVotes(totalCount || 0);

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Menu, X, Search, Users, Briefcase, CheckSquare, BarChart3, FileText, Heart } from 'lucide-react';
+import { Menu, X, Search } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import SearchOverlay from './SearchOverlay';
@@ -54,29 +54,28 @@ export default function Navigation() {
             </Link>
 
             {/* Center: Main Links (Desktop) */}
-            <div className="hidden xl:flex items-center gap-6">
-              <Link to="/poslowie" className="flex items-center gap-2 text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors group">
-                <Users size={18} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
+            {/* Center: Main Links (Desktop) */}
+            {/* Center: Main Links (Desktop) */}
+            <div className="hidden lg:flex items-center gap-8">
+              <Link to="/poslowie" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 Posłowie
               </Link>
-              <Link to="/komisje" className="flex items-center gap-2 text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors group">
-                <Briefcase size={18} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
+              <Link to="/komisje" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 Komisje
               </Link>
-              <Link to="/glosowania" className="flex items-center gap-2 text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors group">
-                <CheckSquare size={18} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
+              <Link to="/glosowania" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 Głosowania
               </Link>
-              <Link to="/rankingi" className="flex items-center gap-2 text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors group">
-                <BarChart3 size={18} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
+              <Link to="/rankingi" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 Rankingi
               </Link>
-              <Link to="/projekty" className="flex items-center gap-2 text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors group">
-                <FileText size={18} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
+              <Link to="/projekty" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 Projekty
               </Link>
-              <Link to="/o-projekcie" className="flex items-center gap-2 text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors group">
-                <Heart size={18} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
+              <Link to="/europarlament" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                Europarlament
+              </Link>
+              <Link to="/o-projekcie" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 O Projekcie
               </Link>
             </div>

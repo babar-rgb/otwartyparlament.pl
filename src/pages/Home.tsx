@@ -12,7 +12,7 @@ import { expandSearchQuery, handleSearchNavigation } from '../utils/searchContex
 import { useTerm } from '../context/TermContext';
 import { useNavigate } from 'react-router-dom';
 import SejmHemicycle from '../components/SejmHemicycle';
-import { Skeleton, ChartSkeleton } from '../components/ui/Skeleton';
+import Skeleton from '../components/ui/Skeleton';
 import SEO from '../components/SEO';
 import { useDashboardData } from '../hooks/useDashboardData';
 import TopVoteCard from '../components/dashboard/TopVoteCard';
@@ -151,7 +151,7 @@ export default function Home() {
         {/* Main Grid: Hemicycle + Activity + QuickStats */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
           {/* Left Large Card: Plenary Hall */}
-          {loading ? <ChartSkeleton /> : (
+          {loading ? <Skeleton className="h-64 w-full" /> : (
             <div className="lg:col-span-3 bg-surface border border-border-base rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden group shadow-sm">
               {/* Background Blur decoration */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-accent-blue/10 dark:bg-accent-blue/20 blur-[100px] rounded-full pointer-events-none" />

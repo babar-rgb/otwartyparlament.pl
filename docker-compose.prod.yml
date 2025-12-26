@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # 1. DATABASE
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?error}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
+      POSTGRES_DB: ${POSTGRES_DB:?error}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  # 2. API (PostgREST)
+  api:
+    image: postgrest/postgrest
+    restart: always
+    environment:
+      PGRST_DB_URI: postgres://${POSTGRES_USER:?error}:${POSTGRES_PASSWORD:?error}@db:5432/${POSTGRES_DB:?error}
+      PGRST_DB_SCHEMA: public
+      PGRST_DB_ANON_ROLE: ${POSTGRES_USER:?error}
+      PGRST_JWT_SECRET: ${VITE_API_ANON_KEY:?error}
+    networks:
+      - app-network
+    depends_on:
+      - db
+
+  # 3. WORKER (ETL & Scheduler)
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: always
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_USER: ${POSTGRES_USER:?error}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
+      POSTGRES_DB: ${POSTGRES_DB:?error}
+      # API URL for internal calls if needed
+      API_URL: http://api:3000
+    networks:
+      - app-network
+    depends_on:
+      - db
+
+  # 4. FRONTEND (Nginx)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Public URL where the API will be accessible from the browser
+        VITE_POSTGREST_URL: ${VITE_POSTGREST_URL}
+        VITE_API_ANON_KEY: ${VITE_API_ANON_KEY}
+    restart: always
+    ports:
+      - "80:80"
+    networks:
+      - app-network
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+
+
+networks:
+  app-network:
+    driver: bridge

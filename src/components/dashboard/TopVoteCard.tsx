@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { CardSkeleton } from '../ui/Skeleton';
+import Skeleton from '../ui/Skeleton';
 import { TopVote } from '../../hooks/useDashboardData';
 
 interface TopVoteCardProps {
@@ -9,7 +9,7 @@ interface TopVoteCardProps {
 }
 
 export default function TopVoteCard({ loading, topVote }: TopVoteCardProps) {
-    if (loading) return <CardSkeleton />;
+    if (loading) return <Skeleton className="h-[300px] w-full rounded-[2rem]" />;
 
     return (
         <div className="md:col-span-2 bg-white dark:bg-[#111126] border border-slate-200 dark:border-white/5 rounded-[2rem] p-8 relative overflow-hidden group shadow-sm flex flex-col justify-between">
