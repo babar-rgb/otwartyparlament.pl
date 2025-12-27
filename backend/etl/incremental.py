@@ -160,15 +160,16 @@ def sync_new_mps(term: int):
             new_count = 0
             for mp in mps:
                 if mp['id'] not in existing_ids:
-                    name = f"{mp.get('firstName', '')} {mp.get('lastName', '')}"
+                    first_name = mp.get('firstName', '')
+                    last_name = mp.get('lastName', '')
                     party = mp.get('club', 'Niezrzeszony')
                     
                     sql = """
-                        INSERT INTO mps (id, name, party, term, active, created_at)
-                        VALUES (%s, %s, %s, %s, true, NOW())
+                        INSERT INTO mps (id, first_name, last_name, party, term, active, created_at)
+                        VALUES (%s, %s, %s, %s, %s, true, NOW())
                         ON CONFLICT (id) DO NOTHING;
                     """
-                    cur.execute(sql, (mp['id'], name, party, term))
+                    cur.execute(sql, (mp['id'], first_name, last_name, party, term))
                     new_count += 1
             
             if new_count > 0:
