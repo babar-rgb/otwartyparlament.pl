@@ -19,10 +19,12 @@ services:
     image: postgrest/postgrest
     restart: always
     environment:
-      PGRST_DB_URI: postgres://${POSTGRES_USER:?error}:${POSTGRES_PASSWORD:?error}@db:5432/${POSTGRES_DB:?error}
+      PGRST_DB_URI: postgres://${POSTGRES_USER:?error}:${POSTGRES_PASSWORD:?error}@${POSTGRES_HOST:-db}:5432/${POSTGRES_DB:?error}
       PGRST_DB_SCHEMA: public
       PGRST_DB_ANON_ROLE: ${POSTGRES_USER:?error}
       PGRST_JWT_SECRET: ${VITE_API_ANON_KEY:?error}
+    ports:
+      - "3001:3000"
     networks:
       - app-network
     depends_on:
@@ -35,7 +37,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     environment:
-      POSTGRES_HOST: db
+      POSTGRES_HOST: ${POSTGRES_HOST:-db}
       POSTGRES_USER: ${POSTGRES_USER:?error}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
       POSTGRES_DB: ${POSTGRES_DB:?error}
@@ -53,7 +55,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     environment:
-      POSTGRES_HOST: db
+      POSTGRES_HOST: ${POSTGRES_HOST:-db}
       POSTGRES_USER: ${POSTGRES_USER:?error}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
       POSTGRES_DB: ${POSTGRES_DB:?error}
