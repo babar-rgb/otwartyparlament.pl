@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Date, ForeignKey, Boolean, Text,
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from .core.orm_db import Base
+from backend.core.orm_db import Base
 
 class MP(Base):
     __tablename__ = "mps"

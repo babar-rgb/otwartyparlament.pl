@@ -3,8 +3,8 @@ import psycopg2
 from psycopg2 import pool
 from psycopg2.extras import RealDictCursor
 from contextlib import contextmanager
-from .config import config
-from .logger import get_logger
+from backend.core.config import config
+from backend.core.logger import get_logger
 
 logger = get_logger("db")
 
