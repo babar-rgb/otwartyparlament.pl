@@ -14,3 +14,15 @@ dist-ssr
 
 # Allow .env.example
 !.env.example
+
+# OS Custom
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+backend/etl/.etl_state.json
