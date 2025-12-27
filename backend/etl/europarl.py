@@ -62,20 +62,70 @@ class EuroparlETL:
         logger.info(f"ETL Complete. Total {self.total_votes} votes processed.")
 
     def _load_polish_meps(self):
-        """Load Polish MEP IDs from database."""
+        """Load Polish MEP IDs from database. If empty, sync from source."""
         logger.info("Loading Polish MEPs...")
         try:
-            with db.get_cursor() as cur:
+            with db.get_cursor(commit=True) as cur:
+                # Check if we have any MEPs
                 cur.execute("SELECT api_id FROM euro_meps WHERE api_id IS NOT NULL")
                 rows = cur.fetchall()
+                
+                if not rows:
+                    logger.info("No Polish MEPs found in DB. Syncing from Europarl XML...")
+                    self._sync_meps(cur)
+                    # Re-fetch after sync
+                    cur.execute("SELECT api_id FROM euro_meps WHERE api_id IS NOT NULL")
+                    rows = cur.fetchall()
+
                 for row in rows:
                     try:
                         self.polish_mep_ids.add(int(row['api_id']))
                     except:
                         pass
+                        
             logger.info(f"Loaded {len(self.polish_mep_ids)} Polish MEP IDs")
         except Exception as e:
             logger.error(f"Failed to load MEPs: {e}")
+
+    def _sync_meps(self, cur):
+        """Fetch and populate Polish MEPs from Europarl XML."""
+        # URL for full list of MEPs in XML
+        xml_url = "https://www.europarl.europa.eu/meps/en/full-list/xml"
+        try:
+            resp = http_session.get(xml_url, timeout=30)
+            if resp.status_code != 200:
+                logger.error("Failed to fetch MEP list XML")
+                return
+
+            root = ET.fromstring(resp.content)
+            meps_to_insert = []
+            
+            # XML Structure: <meps><mep><id>...</id><fullName>...</fullName><country>Poland</country>...</mep></meps>
+            for mep in root.findall("mep"):
+                country = mep.find("country")
+                if country is not None and country.text == "Poland":
+                    m_id = mep.find("id").text
+                    m_name = mep.find("fullName").text
+                    # Political group is cleaner in <politicalGroup>
+                    m_group = mep.find("politicalGroup").text if mep.find("politicalGroup") is not None else "Unknown"
+                    
+                    if m_id and m_name:
+                        meps_to_insert.append((int(m_id), m_name, m_group))
+
+            if meps_to_insert:
+                from psycopg2.extras import execute_values
+                sql = """
+                    INSERT INTO euro_meps (api_id, name, party)
+                    VALUES %s
+                    ON CONFLICT (api_id) DO NOTHING
+                """
+                execute_values(cur, sql, meps_to_insert)
+                logger.info(f"Synced {len(meps_to_insert)} Polish MEPs.")
+            else:
+                logger.warning("No Polish MEPs found in XML feed.")
+                
+        except Exception as e:
+            logger.error(f"Error syncing MEPs: {e}")
 
     def _generate_date_range(self, start, end):
         delta = end - start

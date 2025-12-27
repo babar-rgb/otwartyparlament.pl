@@ -32,8 +32,11 @@ class DeclarationsETL:
 
     def _get_mps(self):
         with db.get_cursor() as cur:
-            cur.execute("SELECT id, api_id, name FROM mps WHERE term = 10 AND active = true")
-            return cur.fetchall()
+            # MP table uses 'id' as the API ID from Sejm
+            cur.execute("SELECT id, id as api_id, first_name, last_name FROM mps WHERE term = 10 AND active = true")
+            rows = cur.fetchall()
+            # Convert to list of dicts with 'name' constructed
+            return [{'id': r['id'], 'api_id': r['api_id'], 'name': f"{r['first_name']} {r['last_name']}"} for r in rows]
 
     def _process_mp(self, mp):
         mp_id = mp['id']
