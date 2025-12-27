@@ -69,9 +69,6 @@ def ensure_schema_integrity():
                     logger.info(f"✅ Added '{col_name}'.")
                 except Exception as e:
                     logger.error(f"❌ Failed to add '{col_name}': {e}")
-    
-                except Exception as e:
-                    logger.error(f"❌ Failed to add '{col_name}': {e}")
 
         # 4. Fix missing 'interpellation_authors' table
         try:
@@ -89,11 +86,10 @@ def ensure_schema_integrity():
                 """
                 cur.execute(sql)
                 logger.info("✅ Created 'interpellation_authors' table.")
-                except Exception as e:
-                    logger.error(f"❌ Failed to create 'interpellation_authors': {e}")
+            except Exception as e:
+                logger.error(f"❌ Failed to create 'interpellation_authors': {e}")
         
         # 5. Fix remaining tables (Committees, Declarations, Europarl)
-        # We define a map of table_name -> create_sql
         missing_tables = {
             "committees": """
                 CREATE TABLE IF NOT EXISTS committees (
