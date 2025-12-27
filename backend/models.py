@@ -29,6 +29,7 @@ class Vote(Base):
     id = Column(Integer, primary_key=True, index=True)
     sitting = Column(Integer, index=True)
     term = Column(Integer, index=True)
+    voting_number = Column(Integer)
     date = Column(Date, index=True)
     title = Column(String)
     description = Column(Text, nullable=True)

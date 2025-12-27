@@ -26,6 +26,18 @@ def ensure_schema_integrity():
                 except Exception as e:
                     logger.error(f"❌ Failed to fix {table}: {e}")
 
+        # 1.5 Ensure 'voting_number' exists in votes
+        try:
+            cur.execute("SELECT voting_number FROM votes LIMIT 1")
+        except Exception:
+            cur.connection.rollback()
+            logger.warning("⚠️ Missing 'voting_number' in votes. Fixing...")
+            try:
+                cur.execute("ALTER TABLE votes ADD COLUMN IF NOT EXISTS voting_number INTEGER")
+                logger.info("✅ Fixed votes (added voting_number).")
+            except Exception as e:
+                logger.error(f"❌ Failed to fix votes: {e}")
+
         # 2. Fix 'sent_date' in interpellations
         try:
             cur.execute("SELECT sent_date FROM interpellations LIMIT 1")
