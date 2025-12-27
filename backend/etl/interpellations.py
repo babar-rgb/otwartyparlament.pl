@@ -114,17 +114,17 @@ class InterpellationsETL:
                 mp = resp.json()
                 first_name = mp.get('firstName', '')
                 last_name = mp.get('lastName', '')
-                party = mp.get('club', 'Niezrzeszony')
+                club = mp.get('club', 'Niezrzeszony')
                 active = mp.get('active', False)
                 
                 sql = """
-                    INSERT INTO mps (id, first_name, last_name, party, term, active, created_at)
+                    INSERT INTO mps (id, first_name, last_name, club, term, active, created_at)
                     VALUES (%s, %s, %s, %s, 10, %s, NOW())
                     ON CONFLICT (id) DO UPDATE SET
                         active = EXCLUDED.active,
-                        party = EXCLUDED.party;
+                        club = EXCLUDED.club;
                 """
-                cur.execute(sql, (mp['id'], first_name, last_name, party, active))
+                cur.execute(sql, (mp['id'], first_name, last_name, club, active))
                 return True
         except Exception as e:
             logger.error(f"JIT MP fetch error: {e}")
