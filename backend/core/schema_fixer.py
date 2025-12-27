@@ -89,7 +89,87 @@ def ensure_schema_integrity():
                 """
                 cur.execute(sql)
                 logger.info("✅ Created 'interpellation_authors' table.")
-            except Exception as e:
-                logger.error(f"❌ Failed to create 'interpellation_authors': {e}")
-                
+                except Exception as e:
+                    logger.error(f"❌ Failed to create 'interpellation_authors': {e}")
+        
+        # 5. Fix remaining tables (Committees, Declarations, Europarl)
+        # We define a map of table_name -> create_sql
+        missing_tables = {
+            "committees": """
+                CREATE TABLE IF NOT EXISTS committees (
+                    code VARCHAR PRIMARY KEY,
+                    name VARCHAR,
+                    name_genitive VARCHAR,
+                    committee_type VARCHAR,
+                    phone VARCHAR,
+                    term INTEGER,
+                    created_at TIMESTAMP DEFAULT NOW()
+                );
+            """,
+            "committee_members": """
+                CREATE TABLE IF NOT EXISTS committee_members (
+                    id SERIAL PRIMARY KEY,
+                    committee_code VARCHAR REFERENCES committees(code),
+                    mp_id INTEGER REFERENCES mps(id),
+                    function VARCHAR,
+                    from_date DATE,
+                    to_date DATE,
+                    term INTEGER
+                );
+            """,
+            "asset_declarations": """
+                CREATE TABLE IF NOT EXISTS asset_declarations (
+                    id SERIAL PRIMARY KEY,
+                    mp_id INTEGER REFERENCES mps(id),
+                    year VARCHAR,
+                    type VARCHAR,
+                    pdf_url VARCHAR,
+                    raw_data JSONB,
+                    created_at TIMESTAMP DEFAULT NOW()
+                );
+            """,
+            "euro_meps": """
+                CREATE TABLE IF NOT EXISTS euro_meps (
+                    id SERIAL PRIMARY KEY,
+                    api_id INTEGER UNIQUE,
+                    name VARCHAR,
+                    party VARCHAR
+                );
+            """,
+            "euro_votes": """
+                CREATE TABLE IF NOT EXISTS euro_votes (
+                    id VARCHAR PRIMARY KEY,
+                    title TEXT,
+                    date DATE,
+                    votes_for INTEGER,
+                    votes_against INTEGER,
+                    votes_abstain INTEGER,
+                    importance_score INTEGER,
+                    is_key_vote BOOLEAN,
+                    term INTEGER,
+                    created_at TIMESTAMP DEFAULT NOW()
+                );
+            """,
+            "euro_vote_results": """
+                CREATE TABLE IF NOT EXISTS euro_vote_results (
+                    id SERIAL PRIMARY KEY,
+                    vote_id VARCHAR REFERENCES euro_votes(id),
+                    mep_id INTEGER,
+                    vote VARCHAR
+                );
+            """
+        }
+
+        for tbl, sql in missing_tables.items():
+            try:
+                cur.execute(f"SELECT 1 FROM {tbl} LIMIT 1")
+            except Exception:
+                cur.connection.rollback()
+                logger.warning(f"⚠️ Missing '{tbl}' table. Creating...")
+                try:
+                    cur.execute(sql)
+                    logger.info(f"✅ Created '{tbl}' table.")
+                except Exception as e:
+                    logger.error(f"❌ Failed to create '{tbl}': {e}")
+
     logger.info("🔧 Schema check complete.")

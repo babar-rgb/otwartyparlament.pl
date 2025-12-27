@@ -86,3 +86,66 @@ class InterpellationAuthor(Base):
 
     interpellation_id = Column(Integer, ForeignKey("interpellations.id"), primary_key=True)
     mp_id = Column(Integer, ForeignKey("mps.id"), primary_key=True)
+
+class Committee(Base):
+    __tablename__ = "committees"
+
+    code = Column(String, primary_key=True)
+    name = Column(String)
+    name_genitive = Column(String)
+    committee_type = Column(String)
+    phone = Column(String)
+    term = Column(Integer)
+    created_at = Column(DateTime, server_default=func.now())
+
+class CommitteeMember(Base):
+    __tablename__ = "committee_members"
+
+    id = Column(Integer, primary_key=True, index=True) # Auto-increment
+    committee_code = Column(String, ForeignKey("committees.code"))
+    mp_id = Column(Integer, ForeignKey("mps.id"))
+    function = Column(String, nullable=True)
+    from_date = Column(Date, nullable=True)
+    to_date = Column(Date, nullable=True)
+    term = Column(Integer)
+
+class AssetDeclaration(Base):
+    __tablename__ = "asset_declarations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    mp_id = Column(Integer, ForeignKey("mps.id"))
+    year = Column(String)
+    type = Column(String)
+    pdf_url = Column(String)
+    raw_data = Column(JSONB)
+    created_at = Column(DateTime, server_default=func.now())
+
+class EuroMEP(Base):
+    __tablename__ = "euro_meps"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    api_id = Column(Integer, unique=True)
+    name = Column(String)
+    party = Column(String)
+
+class EuroVote(Base):
+    __tablename__ = "euro_votes"
+
+    id = Column(String, primary_key=True) # XML Identifier
+    title = Column(Text)
+    date = Column(Date)
+    votes_for = Column(Integer)
+    votes_against = Column(Integer)
+    votes_abstain = Column(Integer)
+    importance_score = Column(Integer)
+    is_key_vote = Column(Boolean)
+    term = Column(Integer)
+    created_at = Column(DateTime, server_default=func.now())
+
+class EuroVoteResult(Base):
+    __tablename__ = "euro_vote_results"
+
+    id = Column(Integer, primary_key=True, index=True)
+    vote_id = Column(String, ForeignKey("euro_votes.id"))
+    mep_id = Column(Integer) # Linked to EuroMEP.api_id technically, but strict FK might fail if not synced
+    vote = Column(String)
