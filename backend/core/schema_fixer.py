@@ -13,25 +13,72 @@ def ensure_schema_integrity():
     """
     logger.info("🔧 Checking database schema integrity...")
 
-    # 1. Automatic Table Creation via SQLAlchemy
-    # This uses models.py as the Source of Truth for all tables.
-    try:
-        logger.info("1. Running Base.metadata.create_all() to ensure all tables exist...")
-        Base.metadata.create_all(bind=engine)
-        logger.info("✅ Tables checked/created successfully.")
-    except Exception as e:
-        logger.error(f"❌ Failed to run create_all: {e}")
+    from sqlalchemy import inspect
+    inspector = inspect(engine)
+    
+    # 1. Surgical Table Creation
+    # Only create tables that are absolutely missing.
+    existing_tables = inspector.get_table_names()
+    logger.info(f"Existing tables: {existing_tables}")
+    
+    for table_name in Base.metadata.tables:
+        if table_name not in existing_tables:
+            logger.info(f"Table '{table_name}' is missing. Attempting creation...")
+            try:
+                # Create only this specific table
+                Base.metadata.tables[table_name].create(bind=engine)
+                logger.info(f"✅ Created table '{table_name}'.")
+            except Exception as e:
+                logger.error(f"❌ Failed to create table '{table_name}': {e}")
 
     # 2. Migration Checks (Column Updates on Existing Tables)
-    # create_all() does NOT update existing tables (e.g. adding missing columns).
-    # so we keep the specific column migrations below.
-    
     with db.get_cursor(commit=True) as cur:
-        # A. Ensure 'created_at' exists on all core tables
+        # A. MP Table Migrations (name -> first_name, last_name; party -> club)
+        try:
+            cur.execute("SELECT first_name FROM mps LIMIT 1")
+        except Exception:
+            cur.connection.rollback()
+            logger.warning("⚠️ Missing 'first_name' in mps. Checking for old 'name' column...")
+            try:
+                cur.execute("SELECT name FROM mps LIMIT 1")
+                logger.info("Renaming 'name' to 'first_name'...")
+                cur.execute("ALTER TABLE mps RENAME COLUMN name TO first_name")
+                cur.execute("ALTER TABLE mps ALTER COLUMN first_name DROP NOT NULL")
+                logger.info("✅ Renamed 'name' to 'first_name'.")
+            except Exception:
+                cur.connection.rollback()
+                logger.info("Adding 'first_name' column...")
+                cur.execute("ALTER TABLE mps ADD COLUMN IF NOT EXISTS first_name VARCHAR")
+
+        # Ensure last_name exists
+        try:
+            cur.execute("SELECT last_name FROM mps LIMIT 1")
+        except Exception:
+            cur.connection.rollback()
+            logger.info("Adding 'last_name' column to mps...")
+            cur.execute("ALTER TABLE mps ADD COLUMN IF NOT EXISTS last_name VARCHAR")
+
+        # club migration
+        try:
+            cur.execute("SELECT club FROM mps LIMIT 1")
+        except Exception:
+            cur.connection.rollback()
+            logger.warning("⚠️ Missing 'club' in mps. Checking for old 'party' column...")
+            try:
+                cur.execute("SELECT party FROM mps LIMIT 1")
+                logger.info("Renaming 'party' to 'club'...")
+                cur.execute("ALTER TABLE mps RENAME COLUMN party TO club")
+                logger.info("✅ Renamed 'party' to 'club'.")
+            except Exception:
+                cur.connection.rollback()
+                logger.info("Adding 'club' column...")
+                cur.execute("ALTER TABLE mps ADD COLUMN IF NOT EXISTS club VARCHAR")
+
+        # B. Ensure 'created_at' exists on all core tables
         tables = ['mps', 'votes', 'bills', 'interpellations', 'committees', 'asset_declarations', 'euro_votes']
         for table in tables:
+            if table not in existing_tables: continue
             try:
-                # Probing checks
                 cur.execute(f"SELECT created_at FROM {table} LIMIT 1")
             except Exception:
                 cur.connection.rollback()
@@ -42,7 +89,7 @@ def ensure_schema_integrity():
                 except Exception as e:
                     logger.error(f"❌ Failed to fix {table}: {e}")
 
-        # B. Ensure 'voting_number' exists in votes
+        # C. Ensure 'voting_number' exists in votes
         try:
             cur.execute("SELECT voting_number FROM votes LIMIT 1")
         except Exception:
@@ -54,8 +101,7 @@ def ensure_schema_integrity():
             except Exception as e:
                 logger.error(f"❌ Failed to fix votes: {e}")
 
-        # C. Ensure 'title_raw', 'title_clean', 'verdict', 'details_json' in votes
-        # First check if we need to rename 'title' -> 'title_raw'
+        # D. Ensure 'title_raw', 'title_clean', 'verdict', 'details_json' in votes
         try:
             cur.execute("SELECT title_raw FROM votes LIMIT 1")
         except Exception:
@@ -63,20 +109,18 @@ def ensure_schema_integrity():
             logger.warning("⚠️ Missing 'title_raw' in votes. Checking for 'title'...")
             try:
                 cur.execute("SELECT title FROM votes LIMIT 1")
-                # If title exists, rename it
                 logger.info("Found old 'title' column. Renaming to 'title_raw'...")
                 cur.execute("ALTER TABLE votes RENAME COLUMN title TO title_raw")
                 logger.info("✅ Renamed 'title' to 'title_raw'.")
             except Exception:
                 cur.connection.rollback()
-                # If title doesn't exist, create title_raw
                 try:
                     cur.execute("ALTER TABLE votes ADD COLUMN IF NOT EXISTS title_raw VARCHAR")
                     logger.info("✅ Added 'title_raw'.")
                 except Exception as e:
                     logger.error(f"❌ Failed to create 'title_raw': {e}")
 
-        # Now check the others
+        # Now check the others for votes
         vote_cols = [
             ("title_clean", "VARCHAR"),
             ("verdict", "VARCHAR"),
@@ -94,34 +138,26 @@ def ensure_schema_integrity():
                 except Exception as e:
                     logger.error(f"❌ Failed to fix votes ({v_col}): {e}")
 
-        # D. Fix 'sent_date' in interpellations
+        # E. Fix 'sent_date' in interpellations
         try:
             cur.execute("SELECT sent_date FROM interpellations LIMIT 1")
         except Exception:
             cur.connection.rollback()
             logger.warning("⚠️ Missing 'sent_date' in interpellations. Checking for old 'date' column...")
-            
-            # Check if 'date' exists to rename it
-            renamed = False
             try:
                 cur.execute("SELECT date FROM interpellations LIMIT 1")
-                # If we are here, 'date' exists
                 logger.info("Found old 'date' column. Renaming to 'sent_date'...")
                 cur.execute("ALTER TABLE interpellations RENAME COLUMN date TO sent_date")
-                renamed = True
                 logger.info("✅ Renamed 'date' to 'sent_date'.")
             except Exception:
                 cur.connection.rollback()
-            
-            if not renamed:
-                logger.info("Adding 'sent_date' column directly...")
                 try:
                     cur.execute("ALTER TABLE interpellations ADD COLUMN IF NOT EXISTS sent_date DATE")
                     logger.info("✅ Added 'sent_date'.")
                 except Exception as e:
                     logger.error(f"❌ Failed to add 'sent_date': {e}")
         
-        # E. Fix 'last_modified' and 'raw_data' in interpellations
+        # F. Ensure 'last_modified' and 'raw_data' in interpellations
         columns = [
             ("last_modified", "TIMESTAMP"),
             ("raw_data", "JSONB")
