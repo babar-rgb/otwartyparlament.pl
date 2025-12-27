@@ -80,3 +80,9 @@ class Interpellation(Base):
     created_at = Column(DateTime, server_default=func.now())
 
     mp = relationship("MP", back_populates="interpellations")
+
+class InterpellationAuthor(Base):
+    __tablename__ = "interpellation_authors"
+
+    interpellation_id = Column(Integer, ForeignKey("interpellations.id"), primary_key=True)
+    mp_id = Column(Integer, ForeignKey("mps.id"), primary_key=True)

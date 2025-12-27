@@ -70,4 +70,26 @@ def ensure_schema_integrity():
                 except Exception as e:
                     logger.error(f"❌ Failed to add '{col_name}': {e}")
     
+                except Exception as e:
+                    logger.error(f"❌ Failed to add '{col_name}': {e}")
+
+        # 4. Fix missing 'interpellation_authors' table
+        try:
+            cur.execute("SELECT 1 FROM interpellation_authors LIMIT 1")
+        except Exception:
+            cur.connection.rollback()
+            logger.warning("⚠️ Missing 'interpellation_authors' table. Creating...")
+            try:
+                sql = """
+                    CREATE TABLE IF NOT EXISTS interpellation_authors (
+                        interpellation_id INTEGER REFERENCES interpellations(id),
+                        mp_id INTEGER REFERENCES mps(id),
+                        PRIMARY KEY (interpellation_id, mp_id)
+                    );
+                """
+                cur.execute(sql)
+                logger.info("✅ Created 'interpellation_authors' table.")
+            except Exception as e:
+                logger.error(f"❌ Failed to create 'interpellation_authors': {e}")
+                
     logger.info("🔧 Schema check complete.")
