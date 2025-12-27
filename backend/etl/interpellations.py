@@ -78,6 +78,12 @@ class InterpellationsETL:
                         for mp_id in item['from']:
                             try:
                                 mp_id_int = int(mp_id)
+                                # Verify MP exists to prevent FK violation
+                                cur.execute("SELECT 1 FROM mps WHERE id = %s", (mp_id_int,))
+                                if not cur.fetchone():
+                                    logger.warning(f"⚠️ Skipping author {mp_id_int} for interpellation {item['num']}: MP not found in database")
+                                    continue
+                                
                                 sql_author = """
                                     INSERT INTO interpellation_authors (interpellation_id, mp_id)
                                     VALUES (%s, %s)
