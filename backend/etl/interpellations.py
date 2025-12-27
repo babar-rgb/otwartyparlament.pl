@@ -52,9 +52,9 @@ class InterpellationsETL:
 
     def _process_batch(self, items):
         """Process a batch of interpellations."""
-        with db.get_cursor(commit=True) as cur:
-            for item in items:
-                try:
+        for item in items:
+            try:
+                with db.get_cursor(commit=True) as cur:
                     # Upsert interpellation
                     sql = """
                         INSERT INTO interpellations (id, title, sent_date, last_modified, raw_data, created_at)
@@ -86,11 +86,11 @@ class InterpellationsETL:
                                 cur.execute(sql_author, (item['num'], mp_id_int))
                             except ValueError:
                                 pass
-                    
-                    self.total_imported += 1
-                    
-                except Exception as e:
-                    logger.error(f"Error processing interpellation {item.get('num')}: {e}")
+                
+                self.total_imported += 1
+                
+            except Exception as e:
+                logger.error(f"Error processing interpellation {item.get('num')}: {e}")
 
 
 if __name__ == "__main__":
