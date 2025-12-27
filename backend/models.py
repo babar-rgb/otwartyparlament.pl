@@ -31,7 +31,10 @@ class Vote(Base):
     term = Column(Integer, index=True)
     voting_number = Column(Integer)
     date = Column(Date, index=True)
-    title = Column(String)
+    title_raw = Column(String)
+    title_clean = Column(String)
+    verdict = Column(String)
+    details_json = Column(JSONB)
     description = Column(Text, nullable=True)
     topic = Column(String, index=True, nullable=True) # AI classified
     importance = Column(Integer, default=0) # AI calculated 1-10

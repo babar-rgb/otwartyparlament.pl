@@ -38,6 +38,46 @@ def ensure_schema_integrity():
             except Exception as e:
                 logger.error(f"❌ Failed to fix votes: {e}")
 
+        # 1.6 Ensure 'title_raw', 'title_clean', 'verdict', 'details_json' in votes
+        # First check if we need to rename 'title' -> 'title_raw'
+        try:
+            cur.execute("SELECT title_raw FROM votes LIMIT 1")
+        except Exception:
+            cur.connection.rollback()
+            logger.warning("⚠️ Missing 'title_raw' in votes. Checking for 'title'...")
+            try:
+                cur.execute("SELECT title FROM votes LIMIT 1")
+                # If title exists, rename it
+                logger.info("Found old 'title' column. Renaming to 'title_raw'...")
+                cur.execute("ALTER TABLE votes RENAME COLUMN title TO title_raw")
+                logger.info("✅ Renamed 'title' to 'title_raw'.")
+            except Exception:
+                cur.connection.rollback()
+                # If title doesn't exist, create title_raw
+                try:
+                    cur.execute("ALTER TABLE votes ADD COLUMN IF NOT EXISTS title_raw VARCHAR")
+                    logger.info("✅ Added 'title_raw'.")
+                except Exception:
+                    pass
+
+        # Now check the others
+        vote_cols = [
+            ("title_clean", "VARCHAR"),
+            ("verdict", "VARCHAR"),
+            ("details_json", "JSONB")
+        ]
+        for v_col, v_type in vote_cols:
+            try:
+                cur.execute(f"SELECT {v_col} FROM votes LIMIT 1")
+            except Exception:
+                cur.connection.rollback()
+                logger.warning(f"⚠️ Missing '{v_col}' in votes. Fixing...")
+                try:
+                    cur.execute(f"ALTER TABLE votes ADD COLUMN IF NOT EXISTS {v_col} {v_type}")
+                    logger.info(f"✅ Added '{v_col}' to votes.")
+                except Exception as e:
+                    logger.error(f"❌ Failed to fix votes ({v_col}): {e}")
+
         # 2. Fix 'sent_date' in interpellations
         try:
             cur.execute("SELECT sent_date FROM interpellations LIMIT 1")
