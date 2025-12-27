@@ -57,8 +57,8 @@ def ensure_schema_integrity():
                 try:
                     cur.execute("ALTER TABLE votes ADD COLUMN IF NOT EXISTS title_raw VARCHAR")
                     logger.info("✅ Added 'title_raw'.")
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.error(f"❌ Failed to create 'title_raw': {e}")
 
         # Now check the others
         vote_cols = [
