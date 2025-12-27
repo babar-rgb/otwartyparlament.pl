@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Date, ForeignKey, Boolean, Text, Float, DateTime
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from .core.orm_db import Base
@@ -73,6 +74,8 @@ class Interpellation(Base):
     mp_id = Column(Integer, ForeignKey("mps.id"))
     title = Column(String)
     sent_date = Column(Date)
+    last_modified = Column(DateTime)
+    raw_data = Column(JSONB)
     status = Column(String)
     created_at = Column(DateTime, server_default=func.now())
 

@@ -52,5 +52,22 @@ def ensure_schema_integrity():
                     logger.info("✅ Added 'sent_date'.")
                 except Exception as e:
                     logger.error(f"❌ Failed to add 'sent_date': {e}")
+        
+        # 3. Fix 'last_modified' and 'raw_data' in interpellations
+        columns = [
+            ("last_modified", "TIMESTAMP"),
+            ("raw_data", "JSONB")
+        ]
+        for col_name, col_type in columns:
+            try:
+                cur.execute(f"SELECT {col_name} FROM interpellations LIMIT 1")
+            except Exception:
+                cur.connection.rollback()
+                logger.warning(f"⚠️ Missing '{col_name}' in interpellations. Adding...")
+                try:
+                    cur.execute(f"ALTER TABLE interpellations ADD COLUMN IF NOT EXISTS {col_name} {col_type}")
+                    logger.info(f"✅ Added '{col_name}'.")
+                except Exception as e:
+                    logger.error(f"❌ Failed to add '{col_name}': {e}")
     
     logger.info("🔧 Schema check complete.")
