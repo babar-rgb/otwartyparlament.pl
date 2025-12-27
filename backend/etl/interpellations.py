@@ -121,6 +121,8 @@ class InterpellationsETL:
                     INSERT INTO mps (id, first_name, last_name, club, term, active, created_at)
                     VALUES (%s, %s, %s, %s, 10, %s, NOW())
                     ON CONFLICT (id) DO UPDATE SET
+                        first_name = EXCLUDED.first_name,
+                        last_name = EXCLUDED.last_name,
                         active = EXCLUDED.active,
                         club = EXCLUDED.club;
                 """

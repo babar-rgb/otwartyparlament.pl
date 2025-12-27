@@ -167,7 +167,10 @@ def sync_new_mps(term: int):
                     sql = """
                         INSERT INTO mps (id, first_name, last_name, club, term, active, created_at)
                         VALUES (%s, %s, %s, %s, %s, true, NOW())
-                        ON CONFLICT (id) DO NOTHING;
+                        ON CONFLICT (id) DO UPDATE SET
+                            first_name = EXCLUDED.first_name,
+                            last_name = EXCLUDED.last_name,
+                            club = EXCLUDED.club;
                     """
                     cur.execute(sql, (mp['id'], first_name, last_name, club, term))
                     new_count += 1
