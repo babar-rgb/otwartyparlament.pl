@@ -28,6 +28,24 @@ services:
     depends_on:
       - db
 
+  # 2.5 BACKEND API (Python FastAPI)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_USER: ${POSTGRES_USER:?error}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
+      POSTGRES_DB: ${POSTGRES_DB:?error}
+    # No ports mapping to host to avoid 8000 conflict. 
+    # Frontend/Nginx should proxy to http://backend:8000 if needed.
+    networks:
+      - app-network
+    depends_on:
+      - db
+
   # 3. WORKER (ETL & Scheduler)
   worker:
     build:
@@ -41,7 +59,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:?error}
       # API URL for internal calls if needed
       API_URL: http://api:3000
-    command: ["python3", "-m", "backend.scheduler"]
+    command: [ "python3", "-m", "backend.scheduler" ]
     networks:
       - app-network
     depends_on:
