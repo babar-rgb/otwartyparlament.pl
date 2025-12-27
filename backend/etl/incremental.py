@@ -223,13 +223,15 @@ class IncrementalETL:
         
         new_sittings = [s for s in api_sittings if s > db_latest]
         
+        # Sync MPs first (Always check for new MPs)
+        sync_new_mps(self.term)
+
         if not new_sittings:
             logger.info("Votes up to date. Checking other data...")
         else:
             logger.info(f"New sittings to sync: {new_sittings}")
             
-            # Sync MPs first
-            sync_new_mps(self.term)
+            # Sync new sittings
             
             # Sync new sittings
             total_votes = 0
