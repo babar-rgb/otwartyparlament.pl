@@ -1,3 +1,4 @@
+import time
 import psycopg2
 from psycopg2 import pool
 from psycopg2.extras import RealDictCursor
@@ -20,17 +21,25 @@ class Database:
         self._init_pool()
 
     def _init_pool(self):
-        """Initialize the connection pool."""
-        try:
-            self.pool = psycopg2.pool.ThreadedConnectionPool(
-                minconn=1,
-                maxconn=20,
-                **self.conn_params
-            )
-            logger.info("Database connection pool initialized")
-        except Exception as e:
-            logger.error(f"Failed to create connection pool: {e}")
-            raise e
+        """Initialize the connection pool with retries."""
+        max_retries = 15
+        
+        for i in range(max_retries):
+            try:
+                self.pool = psycopg2.pool.ThreadedConnectionPool(
+                    minconn=1,
+                    maxconn=20,
+                    **self.conn_params
+                )
+                logger.info("Database connection pool initialized")
+                return
+            except Exception as e:
+                wait_time = 2
+                logger.warning(f"⚠️ Access check failed (Attempt {i+1}/{max_retries}). Retrying in {wait_time}s... Error: {e}")
+                time.sleep(wait_time)
+
+        logger.error("❌ Critical: Could not connect to database after multiple retries.")
+        raise Exception("Database connection failed after retries")
 
     @contextmanager
     def get_cursor(self, commit=False):
