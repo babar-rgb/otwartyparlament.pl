@@ -76,27 +76,58 @@ class InterpellationsETL:
                     # Upsert authors
                     if 'from' in item:
                         for mp_id in item['from']:
-                            try:
-                                mp_id_int = int(mp_id)
-                                # Verify MP exists to prevent FK violation
-                                cur.execute("SELECT 1 FROM mps WHERE id = %s", (mp_id_int,))
-                                if not cur.fetchone():
-                                    logger.warning(f"⚠️ Skipping author {mp_id_int} for interpellation {item['num']}: MP not found in database")
-                                    continue
-                                
-                                sql_author = """
-                                    INSERT INTO interpellation_authors (interpellation_id, mp_id)
-                                    VALUES (%s, %s)
-                                    ON CONFLICT (interpellation_id, mp_id) DO NOTHING;
-                                """
-                                cur.execute(sql_author, (item['num'], mp_id_int))
-                            except ValueError:
-                                pass
+                                try:
+                                    mp_id_int = int(mp_id)
+                                    # Verify MP exists
+                                    cur.execute("SELECT 1 FROM mps WHERE id = %s", (mp_id_int,))
+                                    if not cur.fetchone():
+                                        # JIT Fetch: Try to get this MP from API
+                                        logger.info(f"⚠️ MP {mp_id_int} missing. Attempting JIT fetch...")
+                                        if self._fetch_and_insert_mp(cur, mp_id_int):
+                                            logger.info(f"✅ JIT Fetch successful for MP {mp_id_int}")
+                                        else:
+                                            logger.warning(f"❌ Failed to find MP {mp_id_int} even via JIT. Skipping author.")
+                                            continue
+                                    
+                                    sql_author = """
+                                        INSERT INTO interpellation_authors (interpellation_id, mp_id)
+                                        VALUES (%s, %s)
+                                        ON CONFLICT (interpellation_id, mp_id) DO NOTHING;
+                                    """
+                                    cur.execute(sql_author, (item['num'], mp_id_int))
+                                except ValueError:
+                                    pass
                 
                 self.total_imported += 1
                 
             except Exception as e:
                 logger.error(f"Error processing interpellation {item.get('num')}: {e}")
+
+
+
+    def _fetch_and_insert_mp(self, cur, mp_id):
+        """Fetch individual MP from API and insert into DB."""
+        try:
+            url = f"{SEJM_API_URL}/MP/{mp_id}"
+            resp = http_session.get(url, timeout=10)
+            if resp.status_code == 200:
+                mp = resp.json()
+                name = f"{mp.get('firstName', '')} {mp.get('lastName', '')}"
+                party = mp.get('club', 'Niezrzeszony')
+                active = mp.get('active', False)
+                
+                sql = """
+                    INSERT INTO mps (id, name, party, term, active, created_at)
+                    VALUES (%s, %s, %s, 10, %s, NOW())
+                    ON CONFLICT (id) DO UPDATE SET
+                        active = EXCLUDED.active,
+                        party = EXCLUDED.party;
+                """
+                cur.execute(sql, (mp['id'], name, party, active))
+                return True
+        except Exception as e:
+            logger.error(f"JIT MP fetch error: {e}")
+        return False
 
 
 if __name__ == "__main__":
