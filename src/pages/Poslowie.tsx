@@ -71,7 +71,7 @@ export default function Poslowie() {
           query = query.eq('active', true);
         }
 
-        const { data, error } = await query.order('name', { ascending: true });
+        const { data, error } = await query.order('last_name', { ascending: true });
 
         if (error) throw error;
 
@@ -80,9 +80,9 @@ export default function Poslowie() {
         // Map DB columns to MP interface
         const mappedMps: MP[] = (data || []).map(mp => ({
           id: mp.id,
-          first_name: mp.name.split(' ')[0],
-          last_name: mp.name.split(' ').slice(1).join(' '),
-          club: mp.party,
+          first_name: mp.first_name,
+          last_name: mp.last_name,
+          club: mp.club,
           district: mp.district,
           photo_url: mp.photo_url,
           attendanceRate: Math.round(mp.stats_attendance || 0),

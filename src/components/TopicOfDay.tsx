@@ -75,7 +75,7 @@ export default function TopicOfDay() {
                     const mpIds = resultsData.map(r => r.mp_id);
                     const { data: mpsData } = await db
                         .from('mps')
-                        .select('id, name, party, seat_number')
+                        .select('id, first_name, last_name, club, seat_number')
                         .in('id', mpIds);
 
                     // Join in code
@@ -153,8 +153,8 @@ export default function TopicOfDay() {
                         <div className="mb-6 p-4 bg-slate-900 rounded-2xl overflow-hidden">
                             <SejmHemicycle data={voteResults.map((r: any) => ({
                                 id: r.mps?.id || r.mp_id,
-                                name: r.mps?.name || 'Nieznany',
-                                party: r.mps?.party || 'Niezrzeszony',
+                                name: r.mps ? `${r.mps.first_name} ${r.mps.last_name}` : 'Nieznany',
+                                party: r.mps?.club || 'Niezrzeszony',
                                 photo_url: '',
                                 vote: r.vote,
                                 seat_number: r.mps?.seat_number

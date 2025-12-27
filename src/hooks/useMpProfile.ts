@@ -59,9 +59,9 @@ export function useMpProfile(idOrSlug?: string) {
 
                 const mappedMp: MP = {
                     id: mpData.id,
-                    first_name: mpData.name.split(' ')[0],
-                    last_name: mpData.name.split(' ').slice(1).join(' '),
-                    club: mpData.party,
+                    first_name: mpData.first_name,
+                    last_name: mpData.last_name,
+                    club: mpData.club,
                     district: mpData.district,
                     photo_url: mpData.photo_url,
                     attendanceRate: Math.round(mpData.stats_attendance || 0),

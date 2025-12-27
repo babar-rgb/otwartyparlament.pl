@@ -22,7 +22,7 @@ export default function Partie() {
         // Fetch all active MPs
         const { data: mps, error } = await db
           .from('mps')
-          .select('party')
+          .select('club')
           .eq('active', true);
 
         if (error) throw error;
@@ -30,7 +30,7 @@ export default function Partie() {
         // Count by party
         const counts: Record<string, number> = {};
         (mps || []).forEach((mp: any) => {
-          const p = mp.party || 'Niezrzeszeni';
+          const p = mp.club || 'Niezrzeszeni';
           counts[p] = (counts[p] || 0) + 1;
         });
 

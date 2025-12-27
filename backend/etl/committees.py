@@ -102,8 +102,8 @@ class CommitteesETL:
                     sql_mem = """
                         INSERT INTO committee_members (committee_code, mp_id, function, from_date, to_date, term)
                         SELECT %s, id, %s, %s, %s, 10
-                        FROM mps WHERE id = %s
-                        ON CONFLICT (committee_code, mp_id, from_date) DO NOTHING;
+                        FROM mps WHERE id = %s;
+
                     """
                     cur.execute(sql_mem, (
                         mv['code'], 

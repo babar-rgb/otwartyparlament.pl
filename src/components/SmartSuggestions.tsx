@@ -41,17 +41,17 @@ export default function SmartSuggestions({ query, onSelect }: SmartSuggestionsPr
             // 1. Search MPs
             const { data: mps } = await db
                 .from('mps')
-                .select('id, name, party')
-                .ilike('name', `%${q}%`)
+                .select('id, first_name, last_name, club')
+                .or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%`)
                 .limit(3);
 
             mps?.forEach(mp => {
                 results.push({
                     type: 'mp',
                     id: mp.id.toString(),
-                    title: mp.name,
-                    subtitle: mp.party,
-                    url: `/posel/${mp.id}`
+                    title: `${mp.first_name} ${mp.last_name}`,
+                    subtitle: mp.club,
+                    url: `/poslowie/${mp.id}` // Corrected URL to match route
                 });
             });
 

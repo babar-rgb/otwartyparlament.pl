@@ -92,7 +92,7 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
             const mpIds = resultsDataRaw.map((r: any) => r.mp_id);
             const { data: mpsData, error: mpsError } = await db
                 .from('mps')
-                .select('id, name, party, photo_url, seat_number, slug')
+                .select('id, first_name, last_name, club, photo_url, seat_number, slug')
                 .in('id', mpIds);
 
             if (mpsError) throw mpsError;
@@ -121,7 +121,7 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
             const stats: Record<string, { yes: number; no: number; abstain: number; absent: number }> = {};
 
             typedResults.forEach(r => {
-                const party = r.mps?.party || 'Niezrzeszeni';
+                const party = r.mps?.club || 'Niezrzeszeni';
                 if (!stats[party]) {
                     stats[party] = { yes: 0, no: 0, abstain: 0, absent: 0 };
                 }

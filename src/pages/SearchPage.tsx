@@ -40,15 +40,15 @@ const SearchPage: React.FC = () => {
 
         try {
             // 1. Search MPs
-            let mpQuery = db.from('mps').select('*').ilike('name', `%${searchQuery}%`);
+            let mpQuery = db.from('mps').select('*').or(`first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%`);
             const { data: mpsData } = await mpQuery.limit(6);
 
             if (mpsData) {
                 const mappedMps: MP[] = mpsData.map(mp => ({
                     id: mp.id,
-                    first_name: mp.name.split(' ')[0],
-                    last_name: mp.name.split(' ').slice(1).join(' '),
-                    club: mp.party,
+                    first_name: mp.first_name,
+                    last_name: mp.last_name,
+                    club: mp.club,
                     district: mp.district,
                     photo_url: mp.photo_url,
                     attendanceRate: Math.round(mp.stats_attendance || 0),

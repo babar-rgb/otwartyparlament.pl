@@ -122,11 +122,11 @@ export default function PartyProfile() {
                 <div className="flex items-center gap-3">
                   {/* Placeholder for photo if missing logic not imported */}
                   <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xs overflow-hidden">
-                    {(mp.photo_url) ? <img src={mp.photo_url} className="w-full h-full object-cover" /> : mp.name[0]}
+                    {(mp.photo_url) ? <img src={mp.photo_url} className="w-full h-full object-cover" /> : mp.first_name[0]}
                   </div>
                   <div>
                     <p className="font-semibold text-slate-900 text-sm">
-                      {mp.name}
+                      {mp.first_name} {mp.last_name}
                     </p>
                     <p className="text-xs text-slate-500">{mp.district || "Okręg nieznany"}</p>
                   </div>

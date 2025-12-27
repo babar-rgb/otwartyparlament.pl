@@ -23,8 +23,8 @@ const VotesList = () => {
 
     useEffect(() => {
         if (mpId) {
-            db.from('mps').select('name').eq('id', mpId).single().then(({ data }) => {
-                if (data) setMpName(data.name);
+            db.from('mps').select('first_name, last_name').eq('id', mpId).single().then(({ data }) => {
+                if (data) setMpName(`${data.first_name} ${data.last_name}`);
             });
         }
     }, [mpId]);

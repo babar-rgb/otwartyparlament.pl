@@ -26,8 +26,9 @@ export default function WealthRankings() {
                     .from('mps')
                     .select(`
                         id,
-                        name,
-                        party,
+                        first_name,
+                        last_name,
+                        club,
                         photo_url,
                         asset_declarations (
                             parsed_content,
@@ -63,8 +64,8 @@ export default function WealthRankings() {
 
                         return {
                             mp_id: mp.id,
-                            name: mp.name,
-                            party: mp.party,
+                            name: `${mp.first_name} ${mp.last_name}`,
+                            party: mp.club,
                             photo_url: mp.photo_url,
                             savings: parseAmount(decl.parsed_content.savings),
                             income: parseAmount(decl.parsed_content.income),

@@ -29,16 +29,16 @@ export function useRankings() {
             try {
                 const { data, error } = await db
                     .from('mps')
-                    .select('id, name, party, district, photo_url, stats_attendance, stats_rebellion')
+                    .select('id, first_name, last_name, club, district, photo_url, stats_attendance, stats_rebellion')
                     .eq('active', true);
 
                 if (error) throw error;
 
                 const mappedMps = data.map((mp: any) => ({
                     id: mp.id,
-                    first_name: mp.name.split(' ')[0],
-                    last_name: mp.name.split(' ').slice(1).join(' '),
-                    club: mp.party,
+                    first_name: mp.first_name,
+                    last_name: mp.last_name,
+                    club: mp.club,
                     district: mp.district,
                     photo_url: mp.photo_url,
                     stats_attendance: mp.stats_attendance || 0,

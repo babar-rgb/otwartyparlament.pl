@@ -18,8 +18,9 @@ interface CommitteeMember {
     function: string;
     mps: {
         id: number;
-        name: string;
-        party: string;
+        first_name: string;
+        last_name: string;
+        club: string;
         photo_url: string;
         slug: string;
     };
@@ -76,7 +77,7 @@ export default function KomisjaDetails() {
                     const mpIds = memberData.map(m => m.mp_id);
                     const { data: mpsData } = await db
                         .from('mps')
-                        .select('id, name, party, photo_url, slug')
+                        .select('id, first_name, last_name, club, photo_url, slug')
                         .in('id', mpIds);
 
                     // Join the data
@@ -209,7 +210,7 @@ export default function KomisjaDetails() {
                         >
                             <img
                                 src={member.mps?.photo_url || `https://api.sejm.gov.pl/sejm/term10/MP/${member.mp_id}/photo`}
-                                alt={member.mps?.name || 'MP'}
+                                alt={member.mps ? `${member.mps.first_name} ${member.mps.last_name}` : 'MP'}
                                 className="w-10 h-10 rounded-full object-cover"
                                 onError={(e) => {
                                     e.currentTarget.src = 'https://via.placeholder.com/40';
@@ -217,10 +218,10 @@ export default function KomisjaDetails() {
                             />
                             <div className="flex-1 min-w-0">
                                 <div className="font-medium text-slate-900 dark:text-white group-hover:text-blue-600 truncate text-sm">
-                                    {member.mps?.name || 'Nieznany'}
+                                    {member.mps ? `${member.mps.first_name} ${member.mps.last_name}` : 'Nieznany'}
                                 </div>
                                 <div className="text-xs text-slate-500 truncate">
-                                    {member.function || member.mps?.party || ''}
+                                    {member.function || member.mps?.club || ''}
                                 </div>
                             </div>
                         </Link>

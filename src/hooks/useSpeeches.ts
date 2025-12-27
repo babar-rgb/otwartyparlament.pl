@@ -33,8 +33,12 @@ export function useSpeeches() {
     }, []);
 
     const fetchMps = async () => {
-        const { data } = await db.from('mps').select('id, name, party').order('name');
-        if (data) setMps(data);
+        const { data } = await db.from('mps').select('id, first_name, last_name, club').order('last_name');
+        if (data) setMps(data.map((m: any) => ({
+            id: m.id,
+            name: `${m.first_name} ${m.last_name}`,
+            party: m.club
+        })));
     };
 
     const fetchTotalCount = async () => {
@@ -54,7 +58,7 @@ export function useSpeeches() {
                 .from('speeches')
                 .select(`
           *,
-          mp:mps(id, name, party, photo_url)
+          mp:mps(id, first_name, last_name, club, photo_url)
         `)
                 .order('date', { ascending: false })
                 .order('id', { ascending: false })
@@ -62,7 +66,7 @@ export function useSpeeches() {
 
             if (error) throw error;
             // Type assertion: Join returns array structure, cast via unknown
-            setRecentSpeeches((data ?? []) as Speech[]);
+            setRecentSpeeches((data ?? []) as any[]);
         } catch (err) {
             console.error('Error fetching speeches:', err);
         } finally {
@@ -80,7 +84,7 @@ export function useSpeeches() {
                 .from('speeches')
                 .select(`
           *,
-          mp:mps(id, name, party, photo_url)
+          mp:mps(id, first_name, last_name, club, photo_url)
         `);
 
             // Text Search
@@ -98,9 +102,9 @@ export function useSpeeches() {
                     .from('speeches')
                     .select(`
                      *,
-                     mp:mps!inner(id, name, party, photo_url)
+                     mp:mps!inner(id, first_name, last_name, club, photo_url)
                  `)
-                    .eq('mp.party', selectedParty);
+                    .eq('mp.club', selectedParty);
 
                 if (query.trim()) queryBuilder = queryBuilder.ilike('content', `%${query}%`);
                 if (selectedMp) queryBuilder = queryBuilder.eq('mp_id', selectedMp);

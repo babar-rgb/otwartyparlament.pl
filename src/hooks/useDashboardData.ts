@@ -85,7 +85,7 @@ export function useDashboardData() {
                     if (resDataReq.data) {
                         const mpIds = resDataReq.data.map(r => r.mp_id);
                         // Optimized: Only fetch what Hemicycle needs (color + name + photo)
-                        const { data: mpsData } = await db.from('mps').select('id, name, party, seat_number, photo_url').in('id', mpIds);
+                        const { data: mpsData } = await db.from('mps').select('id, first_name, last_name, club, seat_number, photo_url').in('id', mpIds);
                         const mpsMap = new Map(mpsData?.map(mp => [mp.id, mp]) || []);
 
                         enrichedResults = resDataReq.data.map(r => ({

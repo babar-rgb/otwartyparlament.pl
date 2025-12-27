@@ -50,12 +50,12 @@ export default function InterpellationsList() {
             // 1. Fetch MP Name separately
             const { data: mpData } = await db
                 .from('mps')
-                .select('name')
+                .select('first_name, last_name')
                 .eq('id', mpId)
                 .single();
 
             console.log('[DEBUG] MP Data:', mpData);
-            if (mpData) setFilterMpName(mpData.name);
+            if (mpData) setFilterMpName(`${mpData.first_name} ${mpData.last_name}`);
 
             // 2. Get interpellation IDs for this MP
             const { data: authorData, error: authorError } = await db

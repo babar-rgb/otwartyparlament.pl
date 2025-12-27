@@ -24,19 +24,14 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
                 const mappedMPs: MP[] = (data || [])
                     .filter((mp: any) => mp && mp.id) // Filter out invalid records
                     .map((mp: any) => {
-                        // Split name into first and last name if needed, or just use name
-                        const nameParts = (mp.name || '').split(' ');
-                        const lastName = nameParts.pop() || '';
-                        const firstName = nameParts.join(' ');
-
                         return {
                             id: mp.id,
-                            first_name: firstName,
-                            last_name: lastName,
-                            email: mp.email || `${firstName.toLowerCase()}.${lastName.toLowerCase()}@sejm.pl`,
+                            first_name: mp.first_name,
+                            last_name: mp.last_name,
+                            email: mp.email || `${mp.first_name?.toLowerCase()}.${mp.last_name?.toLowerCase()}@sejm.pl`,
                             district: mp.district || 'Warszawa',
-                            party: mp.party || 'Niezrzeszeni',
-                            club: mp.party || 'Niezrzeszeni',
+                            party: mp.club || 'Niezrzeszeni',
+                            club: mp.club || 'Niezrzeszeni',
                             active: mp.active,
                             photo_url: mp.photo_url || `https://ui-avatars.com/api/?name=${mp.name || 'Posel'}&background=random`,
                             attendanceRate: mp.stats_attendance ? Math.round(mp.stats_attendance) : Math.floor(Math.random() * 20) + 80,
