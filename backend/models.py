@@ -68,7 +68,7 @@ class Interpellation(Base):
     id = Column(Integer, primary_key=True, index=True)
     mp_id = Column(Integer, ForeignKey("mps.id"))
     title = Column(String)
-    date = Column(Date)
+    sent_date = Column(Date)
     status = Column(String)
 
     mp = relationship("MP", back_populates="interpellations")
