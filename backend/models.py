@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Date, ForeignKey, Boolean, Text, Float
+from sqlalchemy import Column, Integer, String, Date, ForeignKey, Boolean, Text, Float, DateTime
+from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from .core.orm_db import Base
 
@@ -15,6 +16,7 @@ class MP(Base):
     stats_attendance = Column(Float, default=0.0)
     stats_rebellion = Column(Integer, default=0)
     term = Column(Integer, index=True)
+    created_at = Column(DateTime, server_default=func.now())
 
     votes = relationship("VoteResult", back_populates="mp")
     bills = relationship("Bill", back_populates="mp")
@@ -32,6 +34,7 @@ class Vote(Base):
     topic = Column(String, index=True, nullable=True) # AI classified
     importance = Column(Integer, default=0) # AI calculated 1-10
     kind = Column(String, nullable=True) # e.g., 'ustawa', 'uchwała'
+    created_at = Column(DateTime, server_default=func.now())
 
     results = relationship("VoteResult", back_populates="vote")
 
@@ -59,6 +62,7 @@ class Bill(Base):
     type = Column(String, index=True) # poselski, rzadowy
     url = Column(String, nullable=True)
     mp_id = Column(Integer, ForeignKey("mps.id"), nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
 
     mp = relationship("MP", back_populates="bills")
 
@@ -70,5 +74,6 @@ class Interpellation(Base):
     title = Column(String)
     sent_date = Column(Date)
     status = Column(String)
+    created_at = Column(DateTime, server_default=func.now())
 
     mp = relationship("MP", back_populates="interpellations")
