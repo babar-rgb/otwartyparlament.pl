@@ -9,6 +9,8 @@ from backend.etl.incremental import IncrementalETL
 from backend.etl.committees import CommitteesETL
 from backend.etl.declarations import DeclarationsETL
 from backend.etl.bills import BillsETL
+from backend.etl.interpellations import InterpellationsETL
+from backend.etl.europarl import EuroparlETL
 from backend.core.orm_db import engine
 from backend.models import Base
 
@@ -41,6 +43,14 @@ def main():
     logger.info("\n--- STEP 4: Legislative Processes (Bills) ---")
     bills = BillsETL()
     bills.run()
+
+    logger.info("\n--- STEP 5: Interpellations ---")
+    inter = InterpellationsETL()
+    inter.run()
+
+    logger.info("\n--- STEP 6: Europarl Votes ---")
+    euro = EuroparlETL()
+    euro.run()
     
     logger.info("\n✅ SEEDING COMPLETE. Database should be populated.")
 

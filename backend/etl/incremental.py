@@ -6,6 +6,7 @@ import json
 import os
 import sys
 from datetime import datetime
+import time
 
 # Hack to allow running this script directly from /app/etl/ inside Docker
 # Adds /app/ (parent directory) to sys.path so 'core' and 'utils' can be imported.
@@ -23,6 +24,28 @@ except ImportError:
     from core.logger import get_logger
     from core.config import config
     from utils.http import http_session
+
+try:
+    from backend.etl.bills import BillsETL
+    from backend.etl.committees import CommitteesETL
+    from backend.etl.declarations import DeclarationsETL
+    from backend.etl.interpellations import InterpellationsETL
+    from backend.etl.europarl import EuroparlETL
+except ImportError:
+    # Fallback if running from within etl dir/package issues
+    try:
+        from .bills import BillsETL
+        from .committees import CommitteesETL
+        from .declarations import DeclarationsETL
+        from .interpellations import InterpellationsETL
+        from .europarl import EuroparlETL
+    except ImportError:
+        # Last resort for docker pathing if needed, though the sys.path hack should cover backend.etl
+        from bills import BillsETL
+        from committees import CommitteesETL
+        from declarations import DeclarationsETL
+        from interpellations import InterpellationsETL
+        from europarl import EuroparlETL
 
 logger = get_logger("etl.incremental")
 
@@ -158,7 +181,26 @@ def sync_new_mps(term: int):
 class IncrementalETL:
     def __init__(self, term: int = 10):
         self.term = term
+        self.term = term
         self.state = load_state()
+        self.summary = []
+
+    def run_with_retries(self, func, name, retries=2):
+        """Run a function with retries."""
+        for attempt in range(1, retries + 2):
+            try:
+                logger.info(f"[{name}] Attempt {attempt}/{retries + 1}...")
+                count = func()
+                logger.info(f"[{name}] Success!")
+                self.summary.append(f"✅ {name}: Success ({count if isinstance(count, int) else 'OK'})")
+                return True
+            except Exception as e:
+                logger.error(f"[{name}] Failed attempt {attempt}: {e}")
+                if attempt <= retries:
+                    time.sleep(5) # Wait before retry
+                else:
+                    self.summary.append(f"❌ {name}: Failed after {retries + 1} attempts. Error: {e}")
+        return False
 
     def run(self):
         """Run incremental update."""
@@ -182,30 +224,54 @@ class IncrementalETL:
         new_sittings = [s for s in api_sittings if s > db_latest]
         
         if not new_sittings:
-            logger.info("Already up to date! No new sittings.")
+            logger.info("Votes up to date. Checking other data...")
+        else:
+            logger.info(f"New sittings to sync: {new_sittings}")
+            
+            # Sync MPs first
+            sync_new_mps(self.term)
+            
+            # Sync new sittings
+            total_votes = 0
+            for sitting in new_sittings:
+                votes = sync_sitting_votes(self.term, sitting)
+                total_votes += votes
+            
+            # Update state
+            self.state["last_sync"][str(self.term)] = api_latest
             save_state(self.state)
-            return
+            
+            logger.info("=" * 60)
+            logger.info(f"New sittings: {len(new_sittings)}, New votes: {total_votes}")
         
-        logger.info(f"New sittings to sync: {new_sittings}")
-        
-        # Sync MPs first
-        sync_new_mps(self.term)
-        
-        # Sync new sittings
-        total_votes = 0
-        for sitting in new_sittings:
-            votes = sync_sitting_votes(self.term, sitting)
-            total_votes += votes
-            # Sleep a bit to be nice to API?
-        
-        # Update state
-        self.state["last_sync"][str(self.term)] = api_latest
-        save_state(self.state)
+        # Always run other ETLs
+        self.run_other_etls()
         
         logger.info("=" * 60)
-        logger.info("SYNC COMPLETE")
-        logger.info(f"New sittings: {len(new_sittings)}, New votes: {total_votes}")
+        logger.info("INCREMENTAL SYNC SUMMARY")
+        for line in self.summary:
+            logger.info(line)
         logger.info("=" * 60)
+
+    def run_other_etls(self):
+        """Run all other ETL processes sequentially."""
+        logger.info("--- Starting Additional Data Sync ---")
+        
+        etls = [
+            (BillsETL, "Bills"),
+            (InterpellationsETL, "Interpellations"),
+            (CommitteesETL, "Committees"),
+            (DeclarationsETL, "Asset Declarations"),
+            (EuroparlETL, "Europarl Votes")
+        ]
+        
+        for etl_cls, name in etls:
+            def _run_wrapper():
+                etl = etl_cls()
+                etl.run()
+                return "Done"
+            
+            self.run_with_retries(_run_wrapper, name)
 
     def status(self):
         """Show current sync status."""

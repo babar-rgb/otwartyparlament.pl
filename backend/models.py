@@ -14,6 +14,7 @@ class MP(Base):
     active = Column(Boolean, default=True)
     stats_attendance = Column(Float, default=0.0)
     stats_rebellion = Column(Integer, default=0)
+    term = Column(Integer, index=True)
 
     votes = relationship("VoteResult", back_populates="mp")
     bills = relationship("Bill", back_populates="mp")
@@ -23,6 +24,8 @@ class Vote(Base):
     __tablename__ = "votes"
 
     id = Column(Integer, primary_key=True, index=True)
+    sitting = Column(Integer, index=True)
+    term = Column(Integer, index=True)
     date = Column(Date, index=True)
     title = Column(String)
     description = Column(Text, nullable=True)
