@@ -1,3 +1,14 @@
+/* 
+ * CRITICAL CONFIGURATION - DO NOT MODIFY WITHOUT EXPLICIT USER INSTRUCTION
+ * 
+ * VITAL:
+ * 1. Konfederacja color MUST be Navy (#142544) - NOT orange, NOT slate.
+ * 2. Polska2050 color MUST be Yellow (#eab308).
+ * 3. Party matching logic in getPartyColor MUST prioritize Konfederacja over KO.
+ * 
+ * This file is locked for "vibe coding" regressions.
+ */
+
 export const PARTIES = [
     'KO',
     'PiS',
@@ -9,6 +20,7 @@ export const PARTIES = [
     'Kukiz15'
 ];
 
+// Comprehensive party configuration
 // Comprehensive party configuration
 export const PARTY_CONFIG: Record<string, {
     color: string;
@@ -22,7 +34,7 @@ export const PARTY_CONFIG: Record<string, {
     'Polska2050': { color: '#eab308', bgColor: 'bg-yellow-500', name: 'Polska 2050', shortName: 'PL2050', order: 3 },
     'PSL-TD': { color: '#22c55e', bgColor: 'bg-green-500', name: 'Polskie Stronnictwo Ludowe - Trzecia Droga', shortName: 'PSL', order: 3 },
     'Lewica': { color: '#dc2626', bgColor: 'bg-red-600', name: 'Lewica', shortName: 'Lewica', order: 1 },
-    'Konfederacja': { color: '#1e293b', bgColor: 'bg-slate-800', name: 'Konfederacja', shortName: 'Konf.', order: 5 },
+    'Konfederacja': { color: '#142544', bgColor: 'bg-slate-900', name: 'Konfederacja', shortName: 'Konf.', order: 5 },
     'Razem': { color: '#7c3aed', bgColor: 'bg-violet-600', name: 'Razem', shortName: 'Razem', order: 1 },
     'Kukiz15': { color: '#4b5563', bgColor: 'bg-gray-600', name: "Kukiz'15", shortName: 'K15', order: 4 },
     'Niezrzeszeni': { color: '#9ca3af', bgColor: 'bg-gray-400', name: 'Niezrzeszeni', shortName: 'Niezrz.', order: 6 },
@@ -33,12 +45,13 @@ export function getPartyColor(party: string): string {
     if (!party) return '#9ca3af';
     const p = party.toLowerCase();
 
+    // Specific checks FIRST to avoid partial matches on shorter aliases
+    if (p.includes('konfederacja')) return PARTY_CONFIG['Konfederacja'].color;
     if (p.includes('pis') || p.includes('prawo i sprawiedliwość')) return PARTY_CONFIG['PiS'].color;
     if (p.includes('ko') || p.includes('koalicja obywatelska') || p.includes('platforma')) return PARTY_CONFIG['KO'].color;
-    if (p.includes('polska 2050') || p.includes('trzecia droga')) return PARTY_CONFIG['Polska2050'].color;
+    if (p.includes('polska') || p.includes('trzecia droga')) return PARTY_CONFIG['Polska2050'].color;
     if (p.includes('psl')) return PARTY_CONFIG['PSL-TD'].color;
     if (p.includes('lewica')) return PARTY_CONFIG['Lewica'].color;
-    if (p.includes('konfederacja')) return PARTY_CONFIG['Konfederacja'].color;
     if (p.includes('razem')) return PARTY_CONFIG['Razem'].color;
     if (p.includes('kukiz')) return PARTY_CONFIG['Kukiz15'].color;
 

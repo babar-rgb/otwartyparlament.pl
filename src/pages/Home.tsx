@@ -183,10 +183,10 @@ export default function Home() {
                     mode={viewMode}
                     data={topVote.results.map((r: any) => ({
                       id: r.mps?.id || r.mp_id,
-                      name: r.mps?.name || 'Nieznany',
-                      party: r.mps?.party || 'Niezrzeszony',
+                      name: r.mps?.first_name || 'Nieznany',
+                      party: r.mps?.club || 'Niezrzeszony',
                       photo_url: r.mps?.photo_url || '',
-                      vote: r.vote,
+                      vote: r.result,
                       seat_number: r.mps?.seat_number
                     }))}
                   />
@@ -202,7 +202,7 @@ export default function Home() {
                   { label: 'KO', color: '#3b82f6' },
                   { label: 'PL2050', color: '#eab308' },
                   { label: 'PiS', color: '#1d4ed8' },
-                  { label: 'Konfederacja', color: '#0f172a' }
+                  { label: 'Konfederacja', color: '#142544' }
                 ].map(party => (
                   <div key={party.label} className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: party.color }} />

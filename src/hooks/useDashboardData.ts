@@ -77,7 +77,7 @@ export function useDashboardData() {
                     // Optimized: Fetch minimal fields for Hemicycle
                     const [resDataReq, analysisReq] = await Promise.all([
                         // Limit to 460 to enable fast client-side rendering
-                        db.from('vote_results').select('vote, mp_id').eq('vote_id', topV.id).limit(460),
+                        db.from('vote_results').select('result, mp_id').eq('vote_id', topV.id).limit(460),
                         db.from('vote_analyses').select('summary').eq('vote_id', topV.id).maybeSingle()
                     ]);
 

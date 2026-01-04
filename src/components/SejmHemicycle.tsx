@@ -1,3 +1,14 @@
+/* 
+ * CRITICAL COMPONENT - DO NOT MODIFY WITHOUT EXPLICIT USER INSTRUCTION
+ * 
+ * VITAL RULES:
+ * 1. Mode 'party': Tooltip MUST NOT show vote result (ZA/PRZECIW).
+ * 2. Mode 'vote': Tooltip MUST show vote result.
+ * 3. Data Mapping: Uses 'club' from DB as 'party'.
+ * 
+ * This file is locked for "vibe coding" regressions.
+ */
+
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPartyColor } from '../constants';
@@ -223,15 +234,17 @@ const SejmHemicycle: React.FC<SejmHemicycleProps> = ({ data, mode = 'vote' }) =>
                             <div className="font-bold text-lg leading-tight text-neutral-900 dark:text-neutral-100">{hoveredMP.name}</div>
                             <div className="text-sm text-neutral-500 dark:text-neutral-400">{hoveredMP.party}</div>
                         </div>
-                        <div className={`ml-auto font-bold px-3 py-1 rounded-lg text-sm
-                            ${hoveredMP.vote === 'YES' ? 'bg-green-100 text-green-700' :
-                                hoveredMP.vote === 'NO' ? 'bg-red-100 text-red-700' :
-                                    hoveredMP.vote === 'ABSTAIN' ? 'bg-amber-100 text-amber-700' :
-                                        'bg-gray-100 text-gray-500'
-                            }
-                        `}>
-                            {hoveredMP.vote === 'YES' ? 'ZA' : hoveredMP.vote === 'NO' ? 'PRZECIW' : hoveredMP.vote === 'ABSTAIN' ? 'WSTRZ.' : 'NIEOB.'}
-                        </div>
+                        {mode === 'vote' && (
+                            <div className={`ml-auto font-bold px-3 py-1 rounded-lg text-sm
+                                ${hoveredMP.vote === 'YES' ? 'bg-green-100 text-green-700' :
+                                    hoveredMP.vote === 'NO' ? 'bg-red-100 text-red-700' :
+                                        hoveredMP.vote === 'ABSTAIN' ? 'bg-amber-100 text-amber-700' :
+                                            'bg-gray-100 text-gray-500'
+                                }
+                            `}>
+                                {hoveredMP.vote === 'YES' ? 'ZA' : hoveredMP.vote === 'NO' ? 'PRZECIW' : hoveredMP.vote === 'ABSTAIN' ? 'WSTRZ.' : 'NIEOB.'}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
