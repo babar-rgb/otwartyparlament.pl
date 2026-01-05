@@ -1,19 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, CheckCircle2, AlertTriangle, TrendingUp, Info } from 'lucide-react';
-import { useLatarnik } from '../hooks/useLatarnik';
+import { ChevronLeft, AlertTriangle, Scale, ArrowRight, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { db } from '../lib/db';
+import { useLatarnik } from '../hooks/useLatarnik';
+import { fetchParties } from '../api';
 
-// Minimal interface for dynamic party data
-interface PartyMetadata {
-  id: string;
-  name: string;
-  color: string;
-  logo_url: string;
-}
-
-// Default fallback config in case DB fetch fails or for initial render
 const FALLBACK_PARTY_CONFIG: Record<string, { color: string, name: string, logo: string }> = {
   'PiS': {
     color: '#0355BF',
@@ -30,10 +21,15 @@ const FALLBACK_PARTY_CONFIG: Record<string, { color: string, name: string, logo:
     name: 'Konfederacja',
     logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Konfederacja_Wolno%C5%9B%C4%87_i_Niepodleg%C5%82o%C5%9B%C4%87_logo.svg/512px-Konfederacja_Wolno%C5%9B%C4%87_i_Niepodleg%C5%82o%C5%9B%C4%87_logo.svg.png'
   },
-  'niez.': {
-    color: '#6B7280',
-    name: 'Niezrzeszeni',
-    logo: ''
+  'Trzecia Droga': {
+    color: '#F6B511',
+    name: 'Trzecia Droga',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Logo_Trzecia_Droga.svg/512px-Logo_Trzecia_Droga.svg.png'
+  },
+  'Lewica': {
+    color: '#C00000',
+    name: 'Lewica',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Nowa_Lewica_logo.svg/512px-Nowa_Lewica_logo.svg.png'
   },
 };
 
@@ -44,15 +40,15 @@ export default function TestWyborczy() {
   const [results, setResults] = useState<any>(null);
   const [calculating, setCalculating] = useState(false);
   const [partyConfig, setPartyConfig] = useState<Record<string, { color: string, name: string, logo: string }>>(FALLBACK_PARTY_CONFIG);
+  const [hasStarted, setHasStarted] = useState(false);
 
-  // Fetch party metadata from DB on mount
   useEffect(() => {
-    const fetchParties = async () => {
+    const loadParties = async () => {
       try {
-        const { data } = await db.from('parties').select('*');
+        const data = await fetchParties();
         if (data && data.length > 0) {
           const config: Record<string, any> = {};
-          data.forEach((p: PartyMetadata) => {
+          data.forEach((p: any) => {
             config[p.id] = {
               color: p.color,
               name: p.name,
@@ -62,11 +58,16 @@ export default function TestWyborczy() {
           setPartyConfig(config);
         }
       } catch (err) {
-        console.error("Failed to fetch party metadata from DB:", err);
+        console.error("Failed to fetch party metadata:", err);
       }
     };
-    fetchParties();
+    loadParties();
   }, []);
+
+  const handleStart = () => {
+    setHasStarted(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleAnswer = async (answer: string) => {
     const newAnswers = { ...userAnswers, [votes[currentQuestion].id]: answer };
@@ -74,6 +75,7 @@ export default function TestWyborczy() {
 
     if (currentQuestion < votes.length - 1) {
       setCurrentQuestion(prev => prev + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       setCalculating(true);
       try {
@@ -83,6 +85,7 @@ export default function TestWyborczy() {
         console.error("Calculation error:", err);
       }
       setCalculating(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -94,6 +97,7 @@ export default function TestWyborczy() {
     setCurrentQuestion(0);
     setUserAnswers({});
     setResults(null);
+    setHasStarted(false);
   };
 
   if (loading || calculating) {
@@ -114,132 +118,59 @@ export default function TestWyborczy() {
         <AlertTriangle size={48} className="text-rose-500 mb-4" />
         <h2 className="text-2xl font-bold text-primary">Coś poszło nie tak</h2>
         <p className="text-secondary mt-2 max-w-md">{error}</p>
-        <p className="text-xs text-secondary/50 mt-1">Upewnij się, że baza danych jest dostępna.</p>
         <button onClick={() => window.location.reload()} className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-xl font-bold">Spróbuj ponownie</button>
       </div>
     );
   }
 
-  if (results) {
-    if (!results.parties || results.parties.length === 0) {
-      return (
-        <div className="min-h-screen bg-page flex flex-col items-center justify-center p-4 text-center">
-          <AlertTriangle size={48} className="text-rose-500 mb-4" />
-          <h2 className="text-2xl font-bold text-primary">Brak danych do dopasowania</h2>
-          <p className="text-secondary mt-2 max-w-md">
-            Niestety nie udało się obliczyć Twojego dopasowania. Może to być spowodowane brakiem danych głosowań dla wybranych pytań.
-          </p>
-          <button onClick={handleReset} className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-xl font-bold">Spróbuj ponownie</button>
+  if (!hasStarted && !results) {
+    return (
+      <div className="min-h-screen bg-page pt-32 pb-24 px-4 overflow-x-hidden flex items-center justify-center">
+        <div className="max-w-4xl mx-auto text-center space-y-12">
+          <div className="space-y-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-500 font-bold text-sm tracking-widest uppercase mb-4">
+              <Scale size={16} />
+              Test Prawdy Sejmowej
+            </div>
+            <h1 className="text-5xl md:text-7xl font-black text-primary tracking-tight leading-none">
+              Sprawdź swój <br className="hidden md:block" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-400">polityczny DNA</span>
+            </h1>
+            <p className="text-xl text-secondary max-w-2xl mx-auto leading-relaxed">
+              Tradycyjne latarniki oparte są na deklaracjach. My sprawdzamy fakty z Sejmu.
+            </p>
+          </div>
+          <div className="pt-8">
+            <button onClick={handleStart} className="group inline-flex items-center px-8 py-4 bg-blue-600 text-white rounded-full font-black hover:bg-blue-700 transition">
+              ZACZNIJ TEST <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
         </div>
-      );
-    }
+      </div>
+    );
+  }
 
-    const bestMatch = results.parties[0];
+  if (results) {
+    const bestMatch = results.parties?.[0];
+    if (!bestMatch) return <div>Brak wyników.</div>;
 
     return (
-      <div className="min-h-screen bg-page pt-32 pb-24 px-4 overflow-x-hidden">
-        <div className="max-w-4xl mx-auto space-y-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-surface border border-border-base rounded-[2.5rem] p-8 md:p-12 text-center shadow-xl relative overflow-hidden"
-          >
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 to-cyan-400" />
-            <CheckCircle2 size={48} className="text-emerald-500 mx-auto mb-6" />
-            <h1 className="text-4xl md:text-5xl font-black text-primary mb-4">Twój Wynik</h1>
-            <p className="text-secondary text-lg mb-10">Najbliżej Ci do poglądów reprezentowanych przez:</p>
-
-            <div className="flex flex-col items-center">
-              <div className="bg-page/50 rounded-3xl p-10 border border-border-base w-full max-w-xl flex flex-col items-center justify-center">
-                <div className="w-32 h-32 rounded-3xl mx-auto mb-6 flex items-center justify-center bg-white shadow-lg p-4 overflow-hidden">
-                  {partyConfig[bestMatch.party]?.logo ? (
-                    <img
-                      src={partyConfig[bestMatch.party].logo}
-                      alt={bestMatch.party}
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const parent = target.parentElement;
-                        if (parent && !parent.querySelector('.img-fallback')) {
-                          const fallback = document.createElement('div');
-                          fallback.className = 'img-fallback w-full h-full flex items-center justify-center text-white font-black text-3xl';
-                          fallback.style.backgroundColor = partyConfig[bestMatch.party]?.color || '#444';
-                          fallback.innerText = bestMatch?.party?.substring(0, 3) || '???';
-                          parent.appendChild(fallback);
-                        }
-                      }}
-                    />
-                  ) : (
-                    <div
-                      className="w-full h-full flex items-center justify-center text-white font-black text-3xl"
-                      style={{ backgroundColor: (bestMatch && bestMatch.party && partyConfig[bestMatch.party]?.color) || '#444' }}
-                    >
-                      {bestMatch?.party?.substring(0, 3) || '???'}
-                    </div>
-                  )}
-                </div>
-                <h2 className="text-3xl font-bold text-primary mb-2 line-clamp-1">{(bestMatch && partyConfig[bestMatch.party]?.name) || bestMatch?.party || 'Nieznana Partia'}</h2>
-                <div className="flex items-center gap-3">
-                  <p className="text-5xl font-black text-emerald-500">{bestMatch?.alignment || 0}%</p>
-                  <div className="h-10 w-px bg-border-base" />
-                  <p className="text-xs font-bold text-secondary uppercase tracking-widest text-left leading-tight">Zgodności<br />programowej</p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* All Parties Ranking */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-3 mb-8 ml-2">
-              <TrendingUp className="text-blue-500" />
-              <h2 className="text-2xl font-black text-primary">Pełny Ranking Partii</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {results.parties.map((item: any, idx: number) => (
-                <div key={item.party} className="flex items-center justify-between p-5 bg-surface border border-border-base rounded-2xl hover:border-blue-500/20 transition-all group">
-                  <div className="flex items-center gap-4">
-                    <span className="text-secondary font-black opacity-20 text-xl w-6 text-center">{idx + 1}.</span>
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-white shadow-sm p-1.5 overflow-hidden relative">
-                      {partyConfig[item.party]?.logo ? (
-                        <img
-                          src={partyConfig[item.party].logo}
-                          alt={item.party}
-                          className="w-full h-full object-contain"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const parent = target.parentElement;
-                            if (parent && !parent.querySelector('.img-fallback')) {
-                              const fallback = document.createElement('div');
-                              fallback.className = 'img-fallback w-full h-full flex items-center justify-center text-white font-bold text-[8px]';
-                              fallback.style.backgroundColor = partyConfig[item.party]?.color || '#666';
-                              fallback.innerText = item.party.substring(0, 3);
-                              parent.appendChild(fallback);
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div
-                          className="w-full h-full flex items-center justify-center text-white font-bold text-[8px]"
-                          style={{ backgroundColor: partyConfig[item.party]?.color || '#666' }}
-                        >
-                          {item.party.substring(0, 3)}
-                        </div>
-                      )}
-                    </div>
-                    <span className="font-bold text-primary truncate max-w-[150px] md:max-w-[200px]">{partyConfig[item.party]?.name || item.party}</span>
-                  </div>
-                  <span className="font-black text-primary text-lg">{item.alignment}%</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <div className="text-center pt-12 space-x-4">
-            <button onClick={handleReset} className="px-8 py-3 bg-surface border border-border-base text-primary rounded-xl font-bold hover:bg-page transition">Rozwiąż ponownie</button>
-            <Link to="/" className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition shadow-lg inline-block">Wróć do pulpitu</Link>
+      <div className="min-h-screen bg-page pt-32 pb-24 px-4">
+        <div className="max-w-4xl mx-auto text-center space-y-12">
+          <h1 className="text-4xl font-black">Twój Wynik</h1>
+          <div className="bg-surface p-12 rounded-[2.5rem] border border-border-base shadow-xl">
+            <div className="text-6xl font-black text-emerald-500 mb-4">{bestMatch.alignment}%</div>
+            <div className="text-2xl font-bold">{partyConfig[bestMatch.party]?.name || bestMatch.party}</div>
           </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            {results.parties.map((p: any) => (
+              <div key={p.party} className="p-6 bg-surface border border-border-base rounded-2xl flex justify-between items-center">
+                <span className="font-bold">{partyConfig[p.party]?.name || p.party}</span>
+                <span className="font-black text-blue-500">{p.alignment}%</span>
+              </div>
+            ))}
+          </div>
+          <button onClick={handleReset} className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold">Zacznij od nowa</button>
         </div>
       </div>
     );
@@ -249,92 +180,41 @@ export default function TestWyborczy() {
   const progress = ((currentQuestion + 1) / votes.length) * 100;
 
   return (
-    <div className="min-h-screen bg-page pt-32 pb-24 px-4 overflow-x-hidden">
+    <div className="min-h-screen bg-page pt-32 pb-24 px-4">
       <div className="max-w-2xl mx-auto space-y-10">
-        <div className="space-y-4">
-          <div className="flex justify-between items-end">
-            <div className="max-w-[80%]">
-              <p className="text-xs font-black text-blue-500 uppercase tracking-[0.2em] mb-1">Głosowanie {currentQuestion + 1} z {votes.length}</p>
-              <h1 className="text-3xl font-black text-primary leading-tight">Sejmowy Kompas</h1>
-            </div>
-            <p className="text-2xl font-black text-primary opacity-20">{Math.round(progress)}%</p>
-          </div>
-          <div className="h-2 bg-border-base rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-gradient-to-r from-blue-600 to-cyan-400"
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ type: "spring", stiffness: 100, damping: 20 }}
-            />
-          </div>
+        <div className="w-full h-2 bg-border-base rounded-full overflow-hidden">
+          <div className="h-full bg-blue-600 transition-all duration-500" style={{ width: `${progress}%` }} />
         </div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentQuestion}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="bg-surface border border-border-base rounded-[2rem] p-8 md:p-10 shadow-xl relative"
-          >
-            <div className="flex items-center gap-2 mb-6 text-[10px] font-black uppercase tracking-widest text-blue-500/60 bg-blue-500/5 w-fit px-3 py-1 rounded-full border border-blue-500/10">
-              <Info size={12} />
-              TEMAT: {currentVote.topic}
-            </div>
+        <div className="bg-surface p-10 rounded-[2rem] border border-border-base shadow-xl">
+          <div className="text-xs font-black text-blue-500 uppercase mb-4 tracking-widest">Temat: {currentVote.topic}</div>
+          <h2 className="text-2xl font-bold mb-4">{currentVote.title}</h2>
 
-            <h2 className="text-2xl md:text-3xl font-bold text-primary mb-6 leading-tight">
-              {currentVote.title}
-            </h2>
-
-            <div className="p-6 bg-page/50 rounded-2xl border border-border-base mb-10 overflow-hidden">
-              <p className="text-secondary text-base leading-relaxed italic line-clamp-4 hover:line-clamp-none transition-all cursor-help" title={currentVote.description}>
-                "{currentVote.description}"
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4">
-              {[
-                { id: 'YES', label: 'Jestem ZA', color: 'emerald' },
-                { id: 'NO', label: 'Jestem PRZECIW', color: 'rose' },
-                { id: 'ABSTAIN', label: 'Nie mam zdania', color: 'amber' }
-              ].map((opt) => (
-                <button
-                  key={opt.id}
-                  onClick={() => handleAnswer(opt.id)}
-                  className={`group flex items-center justify-between p-6 bg-page/30 border-2 border-border-base rounded-2xl hover:border-blue-500/40 hover:bg-page transition-all text-left transform active:scale-[0.98]`}
-                >
-                  <span className={`text-xl font-bold text-primary group-hover:text-blue-600 transition-colors`}>
-                    {opt.label}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-8 pt-8 border-t border-border-base text-center">
-              <Link
-                to={`/glosowania/${currentVote.id}`}
-                target="_blank"
-                className="inline-flex items-center gap-2 text-xs font-bold text-secondary hover:text-blue-500 transition-colors uppercase tracking-widest"
-              >
-                <Info size={14} />
-                Zobacz szczegóły tego głosowania w archiwum
-              </Link>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-
-        <div className="flex justify-between items-center">
-          <button
-            onClick={handlePrevious}
-            disabled={currentQuestion === 0}
-            className="flex items-center gap-2 text-secondary font-bold hover:text-primary disabled:opacity-30 disabled:pointer-events-none transition-colors"
-          >
-            <ChevronLeft size={20} /> Wróć
-          </button>
-          <p className="text-[10px] text-secondary font-bold uppercase tracking-widest opacity-40 text-right max-w-[200px]">
-            Pytania dobrane pod kątem największych kontrowersji w Sejmie X Kadencji
+          <p className="text-secondary mb-6 leading-relaxed">
+            {currentVote.description}
           </p>
+
+          <Link
+            to={`/glosowania/${currentVote.term}/${currentVote.sitting}/${currentVote.voting_number}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-sm font-bold text-blue-500 hover:text-blue-600 mb-8 hover:underline"
+          >
+            Zobacz szczegóły i wyniki głosowania <ExternalLink size={14} />
+          </Link>
+
+          <div className="grid gap-4">
+            {['YES', 'NO', 'ABSTAIN'].map(val => (
+              <button key={val} onClick={() => handleAnswer(val)} className="p-6 bg-page/50 border-2 border-border-base rounded-2xl hover:border-blue-500/40 font-bold text-left transition-all">
+                {val === 'YES' ? 'Jestem ZA' : val === 'NO' ? 'Jestem PRZECIW' : 'Nie mam zdania'}
+              </button>
+            ))}
+          </div>
         </div>
+
+        <button onClick={handlePrevious} disabled={currentQuestion === 0} className="flex items-center gap-2 text-secondary font-bold hover:text-primary transition-colors disabled:opacity-30">
+          <ChevronLeft size={20} /> Wróć
+        </button>
       </div>
     </div>
   );

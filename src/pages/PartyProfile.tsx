@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { db } from '../lib/db';
+import { fetchMPs } from '../api';
 import { getPartyData } from '../constants/parties';
 import SEO from '../components/SEO';
 import { ArrowLeft, Users, TrendingUp } from 'lucide-react';
@@ -11,29 +10,24 @@ export default function PartyProfile() {
   const [mps, setMps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ID from URL is the party key e.g. "KO", "PiS"
   const partyMetadata = id ? getPartyData(id) : null;
 
   useEffect(() => {
     if (!id) return;
 
-    const fetchPartyMps = async () => {
+    const fetchPartyMpsAction = async () => {
       try {
-        const { data, error } = await db
-          .from('mps')
-          .select('*')
-          .eq('party', id)
-          .eq('active', true);
-
-        if (error) throw error;
-        setMps(data || []);
+        const data = await fetchMPs({ limit: 1000, active: true });
+        // Filter locally for now as fetchMPs doesn't have club/party filter yet
+        const filteredResult = data.filter((mp: any) => mp.club === id);
+        setMps(filteredResult);
       } catch (e) {
         console.error(e);
       } finally {
         setLoading(false);
       }
     };
-    fetchPartyMps();
+    fetchPartyMpsAction();
   }, [id]);
 
   if (!partyMetadata) {
@@ -55,10 +49,7 @@ export default function PartyProfile() {
     );
   }
 
-  // Placeholder stats until we have backend aggregations
   const mpCount = mps.length;
-  // Sort by 'name' as a proxy for now, or just list them. 
-  // Ideally active MPs.
   const topMps = mps.slice(0, 5);
 
   return (
@@ -90,8 +81,10 @@ export default function PartyProfile() {
               <div>
                 <p className="text-sm text-slate-600">Posłów</p>
                 <p className="text-2xl font-bold flex items-center gap-2 text-slate-900">
-                  <Users size={20} />
-                  {mpCount}
+                  <span className="flex items-center gap-2">
+                    <Users size={20} />
+                    {mpCount}
+                  </span>
                 </p>
               </div>
               <div className="opacity-50" title="Dane niedostępne">
@@ -120,7 +113,6 @@ export default function PartyProfile() {
                   {idx + 1}
                 </div>
                 <div className="flex items-center gap-3">
-                  {/* Placeholder for photo if missing logic not imported */}
                   <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xs overflow-hidden">
                     {(mp.photo_url) ? <img src={mp.photo_url} className="w-full h-full object-cover" /> : mp.first_name[0]}
                   </div>

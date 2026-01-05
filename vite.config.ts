@@ -8,14 +8,7 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   server: {
-    proxy: {
-      // Proxy /rest/v1 to local PostgREST (for development)
-      '/rest/v1': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/rest\/v1/, ''),
-      },
-    },
+
   },
   build: {
     rollupOptions: {

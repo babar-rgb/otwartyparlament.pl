@@ -153,3 +153,19 @@ export interface VoteAnalysis {
 
 // Party type for strict typing
 export type PartyCode = 'PiS' | 'KO' | 'Polska2050' | 'PSL-TD' | 'Lewica' | 'Konfederacja' | 'Razem' | 'Kukiz15' | 'Niezrzeszeni';
+
+export interface MPStat {
+    key: string;
+    value: any; // JSON parsed
+    label?: string;
+    description?: string;
+}
+
+export interface MPRelation {
+    id: number;
+    mp_id_a: number;
+    mp_id_b: number;
+    similarity_score: number;
+    relation_type: string;
+    mp_target?: MP;
+}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { db } from '../lib/db';
+import { fetchMPs, fetchSpeeches, fetchSpeechesCount } from '../api';
 import { Speech } from '../types/domain';
 import { PARTIES } from '../constants';
 
@@ -27,48 +27,42 @@ export function useSpeeches() {
     const [dateTo, setDateTo] = useState('');
 
     useEffect(() => {
-        fetchSpeeches(0);
-        fetchTotalCount();
-        fetchMps();
+        fetchInitialData();
     }, []);
 
-    const fetchMps = async () => {
-        const { data } = await db.from('mps').select('id, first_name, last_name, club').order('last_name');
-        if (data) setMps(data.map((m: any) => ({
-            id: m.id,
-            name: `${m.first_name} ${m.last_name}`,
-            party: m.club
-        })));
-    };
-
-    const fetchTotalCount = async () => {
-        const { count } = await db
-            .from('speeches')
-            .select('*', { count: 'exact', head: true });
-        if (count) setTotalCount(count);
-    };
-
-    const fetchSpeeches = async (page: number = 0) => {
+    const fetchInitialData = async () => {
         setLoading(true);
         try {
-            const rangeStart = page * ITEMS_PER_PAGE;
-            const rangeEnd = rangeStart + ITEMS_PER_PAGE - 1;
+            const count = await fetchSpeechesCount();
+            setTotalCount(count);
 
-            const { data, error } = await db
-                .from('speeches')
-                .select(`
-          *,
-          mp:mps(id, first_name, last_name, club, photo_url)
-        `)
-                .order('date', { ascending: false })
-                .order('id', { ascending: false })
-                .range(rangeStart, rangeEnd);
+            const mpsData = await fetchMPs({ limit: 500 }); // Get most MPs for filters
+            setMps(mpsData.map(m => ({
+                id: m.id,
+                name: `${m.first_name} ${m.last_name}`,
+                party: m.club
+            })));
 
-            if (error) throw error;
-            // Type assertion: Join returns array structure, cast via unknown
-            setRecentSpeeches((data ?? []) as any[]);
+            // Fetch first page of recent speeches
+            const data = await fetchSpeeches({ skip: 0, limit: ITEMS_PER_PAGE });
+            setRecentSpeeches(data.items);
         } catch (err) {
-            console.error('Error fetching speeches:', err);
+            console.error('Error fetching initial speeches data:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchSpeechesPage = async (page: number = 0) => {
+        setLoading(true);
+        try {
+            const data = await fetchSpeeches({
+                skip: page * ITEMS_PER_PAGE,
+                limit: ITEMS_PER_PAGE
+            });
+            setRecentSpeeches(data.items);
+        } catch (err) {
+            console.error('Error fetching speeches page:', err);
         } finally {
             setLoading(false);
         }
@@ -80,50 +74,15 @@ export function useSpeeches() {
         setLoading(true);
         setHasSearched(true);
         try {
-            let queryBuilder = db
-                .from('speeches')
-                .select(`
-          *,
-          mp:mps(id, first_name, last_name, club, photo_url)
-        `);
-
-            // Text Search
-            if (query.trim()) {
-                queryBuilder = queryBuilder.ilike('content', `%${query}%`);
-            }
-
-            // Filters
-            if (selectedMp) {
-                queryBuilder = queryBuilder.eq('mp_id', selectedMp);
-            }
-            if (selectedParty) {
-                // Use !inner to filter by joined generic relationship
-                queryBuilder = db
-                    .from('speeches')
-                    .select(`
-                     *,
-                     mp:mps!inner(id, first_name, last_name, club, photo_url)
-                 `)
-                    .eq('mp.club', selectedParty);
-
-                if (query.trim()) queryBuilder = queryBuilder.ilike('content', `%${query}%`);
-                if (selectedMp) queryBuilder = queryBuilder.eq('mp_id', selectedMp);
-            }
-
-            if (dateFrom) {
-                queryBuilder = queryBuilder.gte('date', dateFrom);
-            }
-            if (dateTo) {
-                queryBuilder = queryBuilder.lte('date', dateTo);
-            }
-
-            const { data, error } = await queryBuilder
-                .order('date', { ascending: false })
-                .limit(50);
-
-            if (error) throw error;
-            // Type assertion: Join returns data matching our schema
-            setSpeeches((data ?? []) as Speech[]);
+            const data = await fetchSpeeches({
+                q: query,
+                mp_id: selectedMp,
+                party: selectedParty,
+                date_from: dateFrom,
+                date_to: dateTo,
+                limit: 50
+            });
+            setSpeeches(data.items);
         } catch (err) {
             console.error('Error searching speeches:', err);
         } finally {
@@ -157,7 +116,7 @@ export function useSpeeches() {
         dateTo, setDateTo,
         handleSearch,
         clearFilters,
-        fetchSpeeches,
-        PARTIES // Exposed to component
+        fetchSpeeches: fetchSpeechesPage,
+        PARTIES
     };
 }

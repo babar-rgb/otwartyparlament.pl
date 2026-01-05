@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
-import { db } from '../lib/db';
-import { PARTY_METADATA, getPartyData } from '../constants/parties';
+import { fetchMPs } from '../api';
+import { getPartyData } from '../constants/parties';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Users, TrendingUp } from 'lucide-react';
 
@@ -17,24 +16,16 @@ export default function Partie() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchParties = async () => {
+    const fetchPartiesAction = async () => {
       try {
-        // Fetch all active MPs
-        const { data: mps, error } = await db
-          .from('mps')
-          .select('club')
-          .eq('active', true);
+        const mps = await fetchMPs({ active: true, limit: 1000 });
 
-        if (error) throw error;
-
-        // Count by party
         const counts: Record<string, number> = {};
         (mps || []).forEach((mp: any) => {
           const p = mp.club || 'Niezrzeszeni';
           counts[p] = (counts[p] || 0) + 1;
         });
 
-        // Map to array
         const result = Object.entries(counts).map(([partyKey, count]) => {
           const metadata = getPartyData(partyKey);
           return {
@@ -42,7 +33,7 @@ export default function Partie() {
             mpCount: count,
             metadata
           };
-        }).sort((a, b) => b.mpCount - a.mpCount); // Sort by size
+        }).sort((a, b) => b.mpCount - a.mpCount);
 
         setParties(result);
       } catch (err) {
@@ -52,10 +43,9 @@ export default function Partie() {
       }
     };
 
-    fetchParties();
+    fetchPartiesAction();
   }, []);
 
-  // Prepare chart data (Top 6 only to avoid clutter)
   const chartData = parties.slice(0, 7).map(p => ({
     name: p.metadata.shortName,
     count: p.mpCount,

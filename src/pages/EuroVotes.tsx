@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { db } from '../lib/db';
-import { Search, Filter, Calendar, ArrowLeft, Loader2 } from 'lucide-react';
+import { fetchEuroVotes } from '../api';
+import { Search, ArrowLeft, Loader2 } from 'lucide-react';
 import { useTerm } from '../context/TermContext';
 
 const EuroVotes = () => {
@@ -26,34 +26,20 @@ const EuroVotes = () => {
         setVotes([]);
         setPage(0);
         setHasMore(true);
-        fetchVotes(0, true);
+        fetchVotesList(0, true);
     }, [searchTerm, selectedTag, term, showKeyOnly]);
 
-    const fetchVotes = async (pageIndex: number, listsReset = false) => {
+    const fetchVotesList = async (pageIndex: number, listsReset = false) => {
         setLoading(true);
         try {
-            let query = db
-                .from('euro_votes')
-                .select('*')
-                .eq('term', term)
-                .order('date', { ascending: false })
-                .range(pageIndex * LIMIT, (pageIndex + 1) * LIMIT - 1);
-
-            if (searchTerm) {
-                query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
-            }
-
-            if (selectedTag !== 'Wszystkie') {
-                query = query.eq('topic_tag', selectedTag);
-            }
-
-            if (showKeyOnly) {
-                query = query.eq('is_key_vote', true);
-            }
-
-            const { data, error } = await query;
-
-            if (error) throw error;
+            const data = await fetchEuroVotes({
+                term,
+                tag: selectedTag,
+                keyOnly: showKeyOnly,
+                search: searchTerm,
+                skip: pageIndex * LIMIT,
+                limit: LIMIT
+            });
 
             if (data) {
                 if (data.length < LIMIT) setHasMore(false);
@@ -69,7 +55,7 @@ const EuroVotes = () => {
     const loadMore = () => {
         const nextPage = page + 1;
         setPage(nextPage);
-        fetchVotes(nextPage, false);
+        fetchVotesList(nextPage, false);
     };
 
     return (

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { User, FileText, Vote, MessageSquare, ArrowRight } from 'lucide-react';
-import { db } from '../lib/db';
+import { unifiedSearch } from '../../../api';
 
 interface Suggestion {
     type: 'mp' | 'vote' | 'process' | 'speech';
@@ -36,58 +36,46 @@ export default function SmartSuggestions({ query, onSelect }: SmartSuggestionsPr
     async function fetchSuggestions(q: string) {
         setLoading(true);
         try {
+            const data = await unifiedSearch({ q, limit: 10 } as any); // Assuming limit is supported or default
+
             const results: Suggestion[] = [];
 
-            // 1. Search MPs
-            const { data: mps } = await db
-                .from('mps')
-                .select('id, first_name, last_name, club')
-                .or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%`)
-                .limit(3);
-
-            mps?.forEach(mp => {
-                results.push({
-                    type: 'mp',
-                    id: mp.id.toString(),
-                    title: `${mp.first_name} ${mp.last_name}`,
-                    subtitle: mp.club,
-                    url: `/poslowie/${mp.id}` // Corrected URL to match route
+            // Map backend results to Suggestion interface
+            if (data.mps) {
+                data.mps.slice(0, 3).forEach((mp: any) => {
+                    results.push({
+                        type: 'mp',
+                        id: mp.id.toString(),
+                        title: `${mp.first_name} ${mp.last_name}`,
+                        subtitle: mp.club,
+                        url: `/poslowie/${mp.id}`
+                    });
                 });
-            });
+            }
 
-            // 2. Search Processes (Laws)
-            const { data: processes } = await db
-                .from('processes')
-                .select('id, title')
-                .ilike('title', `%${q}%`)
-                .limit(2);
-
-            processes?.forEach(p => {
-                results.push({
-                    type: 'process',
-                    id: p.id.toString(),
-                    title: p.title.substring(0, 80) + (p.title.length > 80 ? '...' : ''),
-                    subtitle: 'Projekt ustawy',
-                    url: `/projekty/${p.id}`
+            if (data.processes) {
+                data.processes.slice(0, 2).forEach((p: any) => {
+                    results.push({
+                        type: 'process',
+                        id: p.id.toString(),
+                        title: p.title.substring(0, 80) + (p.title.length > 80 ? '...' : ''),
+                        subtitle: 'Projekt ustawy',
+                        url: `/projekty/${p.id}`
+                    });
                 });
-            });
+            }
 
-            // 3. Search Votes
-            const { data: votes } = await db
-                .from('votes')
-                .select('id, title_clean, verdict')
-                .ilike('title_clean', `%${q}%`)
-                .limit(3);
-
-            votes?.forEach(v => {
-                results.push({
-                    type: 'vote',
-                    id: v.id.toString(),
-                    title: v.title_clean.substring(0, 80) + (v.title_clean.length > 80 ? '...' : ''),
-                    subtitle: v.verdict,
-                    url: `/glosowanie/${v.id}`
+            if (data.votes) {
+                data.votes.slice(0, 3).forEach((v: any) => {
+                    results.push({
+                        type: 'vote',
+                        id: v.id.toString(),
+                        title: (v.title_clean || v.title_raw).substring(0, 80) + (v.title_clean?.length > 80 ? '...' : ''),
+                        subtitle: v.verdict,
+                        url: `/glosowanie/${v.id}`
+                    });
                 });
-            });
+            }
 
             setSuggestions(results);
         } catch (err) {
@@ -115,8 +103,6 @@ export default function SmartSuggestions({ query, onSelect }: SmartSuggestionsPr
         }
     };
 
-
-
     if (query.length < 2) return null;
 
     if (loading) {
@@ -135,7 +121,6 @@ export default function SmartSuggestions({ query, onSelect }: SmartSuggestionsPr
         );
     }
 
-    // Group by type
     const grouped = suggestions.reduce((acc, s) => {
         if (!acc[s.type]) acc[s.type] = [];
         acc[s.type].push(s);

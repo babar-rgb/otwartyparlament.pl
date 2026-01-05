@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { db } from '../lib/db';
+import { fetchEuroVote, fetchEuroVoteResults } from '../api';
 import { ArrowLeft, Calendar } from 'lucide-react';
 
 interface EuroVote {
@@ -21,33 +21,24 @@ const EuroVoteDetails: React.FC = () => {
     const [results, setResults] = useState<any[]>([]);
 
     useEffect(() => {
-        if (id) {
-            fetchVote();
-            fetchResults();
-        }
+        const loadVoteData = async () => {
+            if (!id) return;
+            setLoading(true);
+            try {
+                const voteData = await fetchEuroVote(id);
+                setVote(voteData);
+
+                const resultsData = await fetchEuroVoteResults(id);
+                setResults(resultsData || []);
+            } catch (error) {
+                console.error('Error loading vote details:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadVoteData();
     }, [id]);
-
-    const fetchVote = async () => {
-        const { data, error } = await db
-            .from('euro_votes')
-            .select('*')
-            .eq('id', id)
-            .single();
-
-        if (error) console.error(error);
-        else setVote(data);
-        setLoading(false);
-    };
-
-    const fetchResults = async () => {
-        const { data, error } = await db
-            .from('euro_vote_results')
-            .select('*, mep:euro_meps(full_name, national_party, photo_url)')
-            .eq('vote_id', id);
-
-        if (error) console.error(error);
-        else setResults(data || []);
-    };
 
     // Calculate stats
     const stats = {
@@ -77,49 +68,49 @@ const EuroVoteDetails: React.FC = () => {
         return Object.entries(acc).sort((a, b) => b[1].total - a[1].total);
     }, [results]);
 
-    if (loading) return <div className="p-12 text-center text-neutral-500">Ładowanie...</div>;
-    if (!vote) return <div className="p-12 text-center text-neutral-500">Nie znaleziono głosowania.</div>;
+    if (loading) return <div className="p-12 text-center text-secondary animate-pulse font-bold tracking-widest uppercase text-sm">Ładowanie...</div>;
+    if (!vote) return <div className="p-12 text-center text-secondary font-medium">Nie znaleziono głosowania.</div>;
 
 
     return (
-        <div className="min-h-screen bg-neutral-50 dark:bg-[#1a1f36] text-neutral-900 dark:text-white p-6 md:p-12 font-sans">
-            <div className="max-w-5xl mx-auto space-y-8">
-                <Link to="/europarlament" className="inline-flex items-center gap-2 text-neutral-500 hover:text-blue-600 transition-colors">
+        <div className="min-h-screen bg-page text-primary p-6 md:p-12 font-sans transition-colors duration-500">
+            <div className="max-w-5xl mx-auto space-y-8 animate-fade-in">
+                <Link to="/europarlament" className="inline-flex items-center gap-2 text-secondary hover:text-accent-blue transition-colors font-bold text-sm uppercase tracking-wide">
                     <ArrowLeft className="w-4 h-4" />
                     Wróć do Europarlamentu
                 </Link>
 
-                <div className="bg-white dark:bg-[#24243e] rounded-3xl p-8 shadow-sm border border-neutral-200 dark:border-indigo-900/50">
-                    <div className="flex items-center gap-2 text-sm text-neutral-500 mb-4">
+                <div className="bg-surface rounded-[2rem] p-8 shadow-xl border border-border-base relative overflow-hidden">
+                    <div className="flex items-center gap-2 text-xs font-black text-secondary uppercase tracking-widest mb-6">
                         <Calendar className="w-4 h-4" />
                         {new Date(vote.date).toLocaleDateString('pl-PL')}
-                        <span className="text-neutral-300">|</span>
+                        <span className="opacity-30">|</span>
                         <span>ID: {vote.id}</span>
                         {/* Tag */}
                         {vote.topic_tag && (
-                            <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-bold uppercase">
+                            <span className="ml-2 px-3 py-1 bg-accent-blue/10 text-accent-blue rounded-full border border-accent-blue/20">
                                 {vote.topic_tag}
                             </span>
                         )}
                     </div>
 
-                    <h1 className="text-3xl font-bold leading-tight mb-8">
+                    <h1 className="text-3xl md:text-4xl font-black leading-tight mb-8 text-primary tracking-tight">
                         {vote.title}
                     </h1>
 
                     {/* Description & AI Analysis */}
-                    <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 p-6 rounded-2xl border border-indigo-100 dark:border-indigo-800 mb-8">
-                        <h2 className="text-sm font-bold uppercase text-indigo-600 dark:text-indigo-400 mb-3 tracking-wider flex items-center gap-2">
+                    <div className="bg-black/5 dark:bg-white/5 p-8 rounded-3xl border border-border-base/50 mb-8 backdrop-blur-sm">
+                        <h2 className="text-xs font-black uppercase text-accent-blue mb-4 tracking-[0.2em] flex items-center gap-2">
                             🧠 Analiza (Kontekst)
                         </h2>
 
                         {/* Context Description */}
                         {vote.description ? (
-                            <p className="text-lg text-neutral-800 dark:text-neutral-200 leading-relaxed mb-4">
+                            <p className="text-lg text-primary leading-relaxed mb-6 font-medium opacity-90">
                                 {vote.description.replace(/ \| .*$/, '')}
                             </p>
                         ) : (
-                            <p className="text-neutral-500 italic mb-4">Brak dodatkowego opisu kontekstowego.</p>
+                            <p className="text-secondary italic mb-4">Brak dodatkowego opisu kontekstowego.</p>
                         )}
 
                         {/* Heuristic Stats Analysis */}
@@ -131,17 +122,17 @@ const EuroVoteDetails: React.FC = () => {
                                 const ratio = (vote.votes_for || 0) / total;
                                 const againstRatio = (vote.votes_against || 0) / total;
 
-                                if (ratio > 0.8) return <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold border border-green-200">✅ Szeroki Konsensus</span>;
-                                if (againstRatio > 0.4) return <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold border border-red-200">🔥 Wysoka Kontrowersja</span>;
-                                if (ratio > 0.5) return <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold border border-blue-200">⚖️ Przewaga Większości</span>;
-                                return <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold border border-orange-200">⚠️ Niejednoznaczny Wynik</span>;
+                                if (ratio > 0.8) return <span className="px-4 py-1.5 bg-green-500/10 text-green-600 dark:text-green-400 rounded-full text-[10px] font-black uppercase tracking-wider border border-green-500/20">✅ Szeroki Konsensus</span>;
+                                if (againstRatio > 0.4) return <span className="px-4 py-1.5 bg-red-500/10 text-red-600 dark:text-red-400 rounded-full text-[10px] font-black uppercase tracking-wider border border-red-500/20">🔥 Wysoka Kontrowersja</span>;
+                                if (ratio > 0.5) return <span className="px-4 py-1.5 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-[10px] font-black uppercase tracking-wider border border-blue-500/20">⚖️ Przewaga Większości</span>;
+                                return <span className="px-4 py-1.5 bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-full text-[10px] font-black uppercase tracking-wider border border-orange-500/20">⚠️ Niejednoznaczny Wynik</span>;
                             })()}
 
                             {/* Attendance Badge */}
                             {(() => {
                                 const total = (vote.votes_for || 0) + (vote.votes_against || 0) + (vote.votes_abstain || 0);
-                                if (total > 600) return <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-bold border border-slate-200">👥 Wysoka Frekwencja ({total})</span>;
-                                if (total > 0 && total < 300) return <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold border border-amber-200">📉 Niska Frekwencja</span>;
+                                if (total > 600) return <span className="px-4 py-1.5 bg-page text-secondary rounded-full text-[10px] font-black uppercase tracking-wider border border-border-base">👥 Wysoka Frekwencja ({total})</span>;
+                                if (total > 0 && total < 300) return <span className="px-4 py-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full text-[10px] font-black uppercase tracking-wider border border-amber-500/20">📉 Niska Frekwencja</span>;
                                 return null;
                             })()}
                         </div>
@@ -149,21 +140,21 @@ const EuroVoteDetails: React.FC = () => {
 
                     {/* Stats Bar */}
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-                        <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl text-center border border-green-200 dark:border-green-800">
-                            <div className="text-2xl font-bold text-green-700 dark:text-green-400">{stats.for}</div>
-                            <div className="text-xs font-semibold text-green-600 dark:text-green-500 uppercase">Za</div>
+                        <div className="bg-green-500/5 p-6 rounded-2xl text-center border border-green-500/10">
+                            <div className="text-3xl font-black text-green-600 dark:text-green-400 mb-1">{stats.for}</div>
+                            <div className="text-[10px] font-black text-green-600/60 dark:text-green-400/60 uppercase tracking-widest">Za</div>
                         </div>
-                        <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-xl text-center border border-red-200 dark:border-red-800">
-                            <div className="text-2xl font-bold text-red-700 dark:text-red-400">{stats.against}</div>
-                            <div className="text-xs font-semibold text-red-600 dark:text-red-500 uppercase">Przeciw</div>
+                        <div className="bg-red-500/5 p-6 rounded-2xl text-center border border-red-500/10">
+                            <div className="text-3xl font-black text-red-600 dark:text-red-400 mb-1">{stats.against}</div>
+                            <div className="text-[10px] font-black text-red-600/60 dark:text-red-400/60 uppercase tracking-widest">Przeciw</div>
                         </div>
-                        <div className="bg-neutral-50 dark:bg-white/5 p-4 rounded-xl text-center border border-neutral-200 dark:border-white/10">
-                            <div className="text-2xl font-bold text-neutral-700 dark:text-neutral-400">{stats.abstain}</div>
-                            <div className="text-xs font-semibold text-neutral-600 dark:text-neutral-500 uppercase">Wstrzymał się</div>
+                        <div className="bg-black/5 dark:bg-white/5 p-6 rounded-2xl text-center border border-border-base">
+                            <div className="text-3xl font-black text-secondary mb-1">{stats.abstain}</div>
+                            <div className="text-[10px] font-black text-secondary/60 uppercase tracking-widest">Wstrzymał się</div>
                         </div>
-                        <div className="bg-slate-50 dark:bg-slate-900/20 p-4 rounded-xl text-center border border-slate-200 dark:border-slate-800">
-                            <div className="text-2xl font-bold text-slate-700 dark:text-slate-400">{stats.absent}</div>
-                            <div className="text-xs font-semibold text-slate-600 dark:text-slate-500 uppercase">Nieobecny</div>
+                        <div className="bg-page p-6 rounded-2xl text-center border border-border-base">
+                            <div className="text-3xl font-black text-secondary mb-1 opacity-60">{stats.absent}</div>
+                            <div className="text-[10px] font-black text-secondary/40 uppercase tracking-widest">Nieobecny</div>
                         </div>
                     </div>
                     {/* Hemicycle & Summary */}
@@ -257,8 +248,8 @@ const EuroVoteDetails: React.FC = () => {
                         </div>
 
                         {/* Rebel Stats */}
-                        <div className="bg-slate-800/50 backdrop-blur rounded-2xl p-6 border border-slate-700/50 flex flex-col">
-                            <h3 className="text-slate-400 font-bold uppercase tracking-wider text-sm mb-4">Wyłamali się</h3>
+                        <div className="bg-black/20 backdrop-blur rounded-[2rem] p-6 border border-white/10 flex flex-col">
+                            <h3 className="text-secondary font-black uppercase tracking-widest text-xs mb-6">Wyłamali się</h3>
                             <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar max-h-[300px]">
                                 {(() => {
                                     // Calculate Rebels
@@ -319,7 +310,7 @@ const EuroVoteDetails: React.FC = () => {
                                     const total = stats.for + stats.against + stats.abstain + stats.absent;
                                     // Stacked Bar
                                     return (
-                                        <div key={party} className="bg-slate-800/30 rounded-xl p-4 border border-slate-700/30">
+                                        <div key={party} className="bg-black/5 dark:bg-white/5 rounded-2xl p-5 border border-border-base/50">
                                             <div className="flex justify-between items-center mb-2">
                                                 <div className="font-bold text-white w-24">{party}</div>
                                                 <div className="flex gap-4 text-xs font-mono text-slate-400">
@@ -353,7 +344,7 @@ const EuroVoteDetails: React.FC = () => {
                                 <h3 className="font-bold text-xl mb-6">Wyniki imienne (Polska delegacja)</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                     {results.map(r => (
-                                        <div key={r.id} className="flex items-center gap-3 p-3 rounded-xl bg-neutral-50 dark:bg-white/5 border border-neutral-100 dark:border-white/10 hover:bg-neutral-100 dark:hover:bg-white/10 transition-colors">
+                                        <div key={r.id} className="flex items-center gap-3 p-3 rounded-2xl bg-black/5 dark:bg-white/5 border border-border-base hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
                                             <div className={`w-2 h-2 rounded-full ${r.vote === 'For' ? 'bg-green-500' :
                                                 r.vote === 'Against' ? 'bg-red-500' :
                                                     r.vote === 'Abstain' ? 'bg-neutral-400' :

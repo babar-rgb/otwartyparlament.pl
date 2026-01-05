@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { db } from '../lib/db';
+import { fetchEuroMP, fetchEuroMPHistory } from '../api';
 import { MapPin, ArrowLeft, CheckCircle2, XCircle, MinusCircle, HelpCircle } from 'lucide-react';
 
 interface EuroMP {
@@ -41,30 +41,14 @@ const EuroMPProfile = () => {
             if (!id) return;
             try {
                 // 1. Fetch MP Details
-                const { data: mpData, error: mpError } = await db
-                    .from('euro_meps')
-                    .select('*')
-                    .eq('id', id)
-                    .single();
-
-                if (mpError) throw mpError;
+                const mpData = await fetchEuroMP(id);
                 setMp(mpData);
 
                 // 2. Fetch Voting History
                 // Link via api_id (which is in euro_vote_results.mep_id)
                 if (mpData && mpData.api_id) {
-                    const { data: historyData, error: historyError } = await db
-                        .from('euro_vote_results')
-                        .select('vote, euro_votes(id, title, date, votes_for, votes_against, votes_abstain, topic_tag)')
-                        .eq('mep_id', mpData.api_id)
-                        .order('created_at', { ascending: false }) // OR order by date in join?
-                        .limit(50); // Increased limit for better context (or keep 20)
-
-
-                    if (!historyError && historyData) {
-                        // Supabase join returns array structure, cast via unknown
-                        setVoteHistory(historyData as unknown as EuroVoteHistoryItem[]);
-                    }
+                    const historyData = await fetchEuroMPHistory(mpData.api_id);
+                    setVoteHistory(historyData);
                 }
 
             } catch (error) {
@@ -127,23 +111,23 @@ const EuroMPProfile = () => {
     };
 
     return (
-        <div className="max-w-5xl mx-auto space-y-6 pt-28 pb-12 px-4 animate-fade-in bg-paper dark:bg-slate-900 min-h-screen text-neutral-900 dark:text-white">
+        <div className="max-w-7xl mx-auto space-y-6 pt-28 pb-12 px-4 animate-fade-in min-h-screen bg-page text-primary transition-colors duration-500">
             {/* Back Button */}
-            <Link to="/europarlament" className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 font-semibold">
+            <Link to="/europarlament" className="inline-flex items-center gap-2 text-secondary hover:text-accent-blue transition-colors font-bold text-sm uppercase tracking-wide">
                 <ArrowLeft size={20} />
                 Wróć do listy
             </Link>
 
             {/* SECTION A: Identity Header */}
-            <div className="bg-white dark:bg-[#0f0c29] rounded-xl border border-neutral-200 dark:border-indigo-900/50 p-8 shadow-sm">
-                <div className="flex flex-col md:flex-row gap-8 items-start">
+            <div className="bg-surface rounded-2xl border border-border-base p-8 shadow-sm relative overflow-hidden">
+                <div className="flex flex-col md:flex-row gap-8 items-start relative z-10">
                     {/* Large Photo */}
                     <div className="relative">
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-2xl pointer-events-none" />
                         <img
                             src={mp.photo_url}
                             alt={mp.full_name}
-                            className="w-48 h-48 md:w-64 md:h-64 rounded-xl object-cover object-top border-4 border-white dark:border-[#24243e] shadow-lg"
+                            className="w-48 h-48 md:w-64 md:h-64 rounded-2xl object-cover object-top border-4 border-surface shadow-xl"
                             onError={(e) => {
                                 e.currentTarget.src = 'https://via.placeholder.com/256x256/E2E8F0/64748B?text=MP';
                             }}
@@ -152,7 +136,7 @@ const EuroMPProfile = () => {
 
                     {/* Identity Info */}
                     <div className="flex-1">
-                        <h1 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white mb-4">
+                        <h1 className="text-4xl md:text-5xl font-black text-primary mb-4 tracking-tight">
                             {mp.full_name}
                         </h1>
 
@@ -167,12 +151,12 @@ const EuroMPProfile = () => {
                             </span>
 
                             {/* EU Group Badge */}
-                            <span className="px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 text-sm font-bold uppercase tracking-wide">
+                            <span className="px-4 py-2 rounded-full bg-surface border border-border-base text-secondary text-[10px] font-black uppercase tracking-wider shadow-sm">
                                 <MapPin size={14} className="inline mr-1" />
                                 {mp.eu_group}
                             </span>
 
-                            <span className="px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 text-sm font-semibold">
+                            <span className="px-4 py-2 rounded-full bg-surface border border-border-base text-secondary text-[10px] font-black uppercase tracking-wider shadow-sm">
                                 Parlament Europejski (2024-2029)
                             </span>
                         </div>
@@ -183,73 +167,74 @@ const EuroMPProfile = () => {
             {/* SECTION B: Key Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Attendance */}
-                <div className="bg-white dark:bg-[#0f0c29] rounded-xl border border-neutral-200 dark:border-indigo-900/50 p-6 shadow-sm">
-                    <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Frekwencja</p>
-                    <div className="flex items-end gap-2">
-                        <span className={`text-4xl font-black ${(mp.attendance_score || 0) >= 90 ? 'text-green-600 dark:text-green-400' :
-                            (mp.attendance_score || 0) >= 75 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
+                <div className="bg-surface rounded-2xl border border-border-base p-6 shadow-sm group hover:-translate-y-1 transition-transform duration-300">
+                    <p className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] mb-4">Frekwencja</p>
+                    <div className="flex items-end gap-2 mb-4">
+                        <span className={`text-5xl font-black tracking-tighter ${(mp.attendance_score || 0) >= 90 ? 'text-green-600 dark:text-green-400' :
+                            (mp.attendance_score || 0) >= 75 ? 'text-amber-500' : 'text-red-500'
                             }`}>
                             {mp.attendance_score ? mp.attendance_score.toFixed(1) : "0"}%
                         </span>
                     </div>
-                    <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 mt-4 rounded-full overflow-hidden">
-                        <div className="h-full bg-current transition-all duration-1000" style={{ width: `${mp.attendance_score || 0}%`, color: (mp.attendance_score || 0) >= 90 ? '#16a34a' : '#ca8a04' }} />
+                    <div className="w-full bg-black/5 dark:bg-white/5 h-2 rounded-full overflow-hidden">
+                        <div className="h-full bg-current transition-all duration-1000" style={{ width: `${mp.attendance_score || 0}%`, color: (mp.attendance_score || 0) >= 90 ? '#16a34a' : '#f59e0b' }} />
                     </div>
                 </div>
 
                 {/* Rebellion */}
-                <div className="bg-white dark:bg-[#0f0c29] rounded-xl border border-neutral-200 dark:border-indigo-900/50 p-6 shadow-sm">
-                    <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Buntownik (Rebellion Rate)</p>
-                    <div className="flex items-end gap-2">
-                        <span className={`text-4xl font-black ${(mp.rebellion_rate || 0) <= 5 ? 'text-green-600 dark:text-green-400' :
-                            (mp.rebellion_rate || 0) <= 15 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
+                <div className="bg-surface rounded-2xl border border-border-base p-6 shadow-sm group hover:-translate-y-1 transition-transform duration-300">
+                    <p className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] mb-4">Buntownik (Rebellion Rate)</p>
+                    <div className="flex items-end gap-2 mb-2">
+                        <span className={`text-5xl font-black tracking-tighter ${(mp.rebellion_rate || 0) <= 5 ? 'text-green-600 dark:text-green-400' :
+                            (mp.rebellion_rate || 0) <= 15 ? 'text-amber-500' : 'text-red-500'
                             }`}>
                             {mp.rebellion_rate ? mp.rebellion_rate.toFixed(1) : "0"}%
                         </span>
                     </div>
-                    <p className="text-xs text-slate-400 mt-2">Głosów niezgodnych z linią frakcji (delegacji PL).</p>
+                    <p className="text-xs font-medium text-secondary opacity-60">Głosów niezgodnych z linią frakcji (delegacji PL).</p>
                 </div>
 
                 {/* Total Votes */}
-                <div className="bg-white dark:bg-[#0f0c29] rounded-xl border border-neutral-200 dark:border-indigo-900/50 p-6 shadow-sm">
-                    <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Wszystkich Głosów</p>
-                    <p className="text-4xl font-black text-slate-900 dark:text-white">
+                <div className="bg-surface rounded-2xl border border-border-base p-6 shadow-sm group hover:-translate-y-1 transition-transform duration-300">
+                    <p className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] mb-4">Wszystkich Głosów</p>
+                    <p className="text-5xl font-black text-primary tracking-tighter mb-2">
                         {mp.total_votes || 0}
                     </p>
-                    <p className="text-xs text-slate-400 mt-2">Wliczając nieobecności</p>
+                    <p className="text-xs font-medium text-secondary opacity-60">Wliczając nieobecności</p>
                 </div>
             </div>
 
             {/* SECTION D: Voting History Timeline */}
-            <div className="bg-white dark:bg-[#0f0c29] rounded-xl border border-neutral-200 dark:border-indigo-900/50 p-8 shadow-sm">
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
+            <div className="bg-surface rounded-2xl border border-border-base p-8 shadow-sm">
+                <h2 className="text-2xl font-black text-primary mb-6 flex items-center gap-3">
+                    <div className="w-1.5 h-8 bg-accent-blue rounded-full"></div>
                     Ostatnie głosowania w PE
                 </h2>
 
                 {voteHistory.length > 0 ? (
                     <div className="space-y-4">
                         {voteHistory.map((item, index) => (
-                            <div key={index} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 py-4 border-b border-slate-100 dark:border-indigo-900/30 last:border-0 hover:bg-slate-50 dark:hover:bg-indigo-900/10 transition-colors rounded-lg px-2">
+                            <div key={index} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 py-4 border-b border-border-base/50 last:border-0 hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-xl px-4 -mx-4">
                                 <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-xs text-slate-500 dark:text-slate-400">{item.euro_votes?.date || 'Data nieznana'}</span>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="text-[10px] font-black text-secondary uppercase tracking-widest">{item.euro_votes?.date || 'Data nieznana'}</span>
                                         {item.euro_votes?.topic_tag && (
-                                            <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-blue-100/50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                            <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-accent-blue/10 text-accent-blue border border-accent-blue/20">
                                                 {item.euro_votes.topic_tag}
                                             </span>
                                         )}
                                     </div>
-                                    <span className="text-slate-900 dark:text-white font-medium line-clamp-2">
+                                    <span className="text-primary font-bold line-clamp-2 leading-tight">
                                         {item.euro_votes?.title || 'Głosowanie bez tytułu'}
                                     </span>
                                 </div>
 
                                 <div className="flex items-center gap-4">
                                     {/* MP Vote */}
-                                    <div className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm uppercase tracking-wide w-fit border ${item.vote === 'For' ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800' :
-                                        item.vote === 'Against' ? 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800' :
-                                            item.vote === 'Abstain' ? 'bg-neutral-100 text-neutral-800 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700' :
-                                                'bg-slate-100 text-slate-500 border-slate-200'
+                                    <div className={`flex items-center gap-2 px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest w-fit border ${item.vote === 'For' ? 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20' :
+                                        item.vote === 'Against' ? 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20' :
+                                            item.vote === 'Abstain' ? 'bg-black/5 dark:bg-white/5 text-secondary border-border-base' :
+                                                'bg-black/5 dark:bg-white/5 text-secondary border-border-base'
                                         }`}>
                                         {item.vote === 'For' && <CheckCircle2 size={16} />}
                                         {item.vote === 'Against' && <XCircle size={16} />}
@@ -265,7 +250,7 @@ const EuroMPProfile = () => {
                         ))}
                     </div>
                 ) : (
-                    <p className="text-slate-500 dark:text-slate-400">Brak zarejestrowanych głosowań dla tego posła w naszej bazie.</p>
+                    <p className="text-secondary font-medium">Brak zarejestrowanych głosowań dla tego posła w naszej bazie.</p>
                 )}
             </div>
         </div>

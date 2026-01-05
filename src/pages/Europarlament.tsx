@@ -1,342 +1,122 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { db } from '../lib/db';
-import { Search } from 'lucide-react';
-import { EuroLogoGold } from '../components/EuroLogoGold';
-import { useTerm } from '../context/TermContext';
-import { getPartyStyle } from '../utils/theme';
+import { useState, useEffect } from 'react';
+import { fetchEuroMPs } from '../api';
+import { Search, Globe, Users, ExternalLink } from 'lucide-react';
+import SEO from '../components/SEO';
 
-interface EuroMP {
-    id: number;
-    api_id: number;
-    full_name: string;
-    country: string;
-    national_party: string;
-    eu_group: string;
-    photo_url: string;
-    active: boolean;
-    attendance_score?: number;
-    rebellion_rate?: number;
-}
-
-const Europarlament: React.FC = () => {
-    const { term } = useTerm();
-    const [meps, setMeps] = useState<EuroMP[]>([]);
+export default function Europarlament() {
+    const [meps, setMeps] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [groupFilter, setGroupFilter] = useState<string>('All');
+    const [selectedGroup, setSelectedGroup] = useState('All');
 
     useEffect(() => {
+        const fetchMeps = async () => {
+            try {
+                const data = await fetchEuroMPs({ term: 9, active: true });
+                setMeps(data);
+            } catch (err) {
+                console.error("Error fetching Euro MEPs:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
         fetchMeps();
-    }, [term]);
+    }, []);
 
-    const fetchMeps = async () => {
-        setLoading(true);
-        const { data, error } = await db
-            .from('euro_meps')
-            .select('*')
-            .eq('term', term)
-            .eq('active', true)
-            .order('full_name');
+    const groups = ['All', ...new Set(meps.map(m => m.eu_group).filter(Boolean))];
 
-        if (error) {
-            console.error('Error fetching MEPs:', error);
-            setMeps([]);
-        } else {
-            setMeps(data || []);
-        }
-        setLoading(false);
-    };
-
-    // Filter Logic
-    const filteredMeps = meps.filter(mep => {
-        const matchesSearch = mep.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            mep.national_party?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesGroup = groupFilter === 'All' || mep.national_party === groupFilter;
+    const filteredMeps = meps.filter(m => {
+        const matchesSearch = m.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            m.national_party?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesGroup = selectedGroup === 'All' || m.eu_group === selectedGroup;
         return matchesSearch && matchesGroup;
     });
 
-    const uniqueParties = Array.from(new Set(meps.map(m => m.national_party))).filter(p => p && p !== 'Brak danych').sort();
-
-    // Group Colors Helper
-    const getGroupColor = (group: string) => {
-        if (!group) return 'bg-gray-100 text-gray-800';
-        if (group.includes('EPP')) return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
-        if (group.includes('S&D')) return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
-        if (group.includes('Renew')) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
-        if (group.includes('ECR')) return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300';
-        if (group.includes('Greens')) return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
-        if (group.includes('Left')) return 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300';
-        if (group.includes('Patriots')) return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
-    };
-
-    // Rankings Logic
-    const topAttendance = [...meps].sort((a, b) => (b.attendance_score || 0) - (a.attendance_score || 0)).slice(0, 3);
-    const topRebels = [...meps].sort((a, b) => (b.rebellion_rate || 0) - (a.rebellion_rate || 0)).slice(0, 3);
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center min-h-[50vh]">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-paper dark:bg-slate-900 text-neutral-900 dark:text-white font-sans transition-colors duration-300">
-            {/* Hero Section */}
-            <div className="bg-white dark:bg-[#0f0c29] border-b border-neutral-200 dark:border-indigo-900/50 pt-28 pb-12 px-6 md:pt-32">
-                <div className="max-w-7xl mx-auto">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div>
-                            <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-                                <EuroLogoGold className="w-12 h-12" />
-                                <span className="bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-[#D6B55E] dark:to-[#F3E5AB]">
-                                    Reprezentacja w Europie
-                                </span>
-                            </h1>
-                            <p className="text-lg text-neutral-600 dark:text-neutral-400">
-                                Polscy posłowie w Parlamencie Europejskim (Kadencja {term === 10 ? '2024-2029' : '2019-2024'})
-                            </p>
-                        </div>
+        <div className="space-y-8 animate-fade-in">
+            <SEO
+                title="Europarlamentarzyści"
+                description="Lista polskich posłów do Parlamentu Europejskiego. Sprawdź ich przynależność partyjną i aktywność."
+                url="/europarlament"
+            />
 
-                        <div className="flex flex-col sm:flex-row gap-3 items-center">
-                            {/* Search */}
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Szukaj posła..."
-                                    className="pl-9 pr-4 py-2 rounded-xl border border-neutral-200 dark:border-indigo-800 bg-white dark:bg-[#24243e] outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64 transition-all"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Filters */}
-                    <div className="mt-8 flex flex-wrap gap-2 text-sm">
-                        <button
-                            onClick={() => setGroupFilter('All')}
-                            className={`px-4 py-1.5 rounded-full transition-all border ${groupFilter === 'All'
-                                ? 'bg-blue-600 text-white border-blue-600'
-                                : 'bg-white dark:bg-[#24243e] text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-indigo-800 hover:border-blue-300'}`}
-                        >
-                            Wszystkie Partie
-                        </button>
-                        {uniqueParties.map(party => (
-                            <button
-                                key={party}
-                                onClick={() => setGroupFilter(party)}
-                                className={`px-4 py-1.5 rounded-full transition-all border ${groupFilter === party
-                                    ? `${getPartyStyle(party)} text-white border-transparent shadow-md`
-                                    : 'bg-white dark:bg-[#24243e] text-neutral-600 dark:text-neutral-300 border-neutral-200 dark:border-indigo-800 hover:border-blue-300'}`}
-                            >
-                                {party}
-                            </button>
-                        ))}
-                    </div>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-4xl font-black text-slate-900 tracking-tight">Europarlament</h1>
+                    <p className="text-slate-600">Polscy reprezentanci w Parlamencie Europejskim (kadencja 2019-2024)</p>
                 </div>
-            </div>
 
-            {/* Rankings Section */}
-            {!loading && meps.length > 0 && (
-                <div className="max-w-7xl mx-auto px-6 py-12 border-b border-neutral-200 dark:border-indigo-900/30">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {/* Attendance */}
-                        <div className="bg-white dark:bg-[#24243e] rounded-2xl p-6 border border-green-100 dark:border-green-900/30 shadow-sm relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full -mr-16 -mt-16" />
-                            <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-green-700 dark:text-green-400">
-                                <div className="w-2 h-2 rounded-full bg-green-500" />
-                                Liderzy Frekwencji
-                            </h3>
-                            <div className="space-y-3">
-                                {topAttendance.map((m, i) => (
-                                    <Link to={`/europarlament/${m.id}`} key={m.id} className="flex items-center gap-3 group">
-                                        <span className="font-mono text-sm text-green-600/50 font-bold w-4">#{i + 1}</span>
-                                        <img src={m.photo_url} className="w-8 h-8 rounded-full bg-neutral-100 object-cover" alt="" />
-                                        <div className="flex-1">
-                                            <div className="font-bold text-sm group-hover:text-green-600 transition-colors">{m.full_name}</div>
-                                            <div className="text-xs text-neutral-500">{m.national_party}</div>
-                                        </div>
-                                        <div className="font-bold text-green-600 dark:text-green-400">{m.attendance_score?.toFixed(1)}%</div>
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Rebels */}
-                        <div className="bg-white dark:bg-[#24243e] rounded-2xl p-6 border border-orange-100 dark:border-orange-900/30 shadow-sm relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full -mr-16 -mt-16" />
-                            <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-orange-700 dark:text-orange-400">
-                                <div className="w-2 h-2 rounded-full bg-orange-500" />
-                                Wyłamali się
-                            </h3>
-                            <div className="space-y-3">
-                                {topRebels.map((m, i) => (
-                                    <Link to={`/europarlament/${m.id}`} key={m.id} className="flex items-center gap-3 group">
-                                        <span className="font-mono text-sm text-orange-600/50 font-bold w-4">#{i + 1}</span>
-                                        <img src={m.photo_url} className="w-8 h-8 rounded-full bg-neutral-100 object-cover" alt="" />
-                                        <div className="flex-1">
-                                            <div className="font-bold text-sm group-hover:text-orange-600 transition-colors">{m.full_name}</div>
-                                            <div className="text-xs text-neutral-500">{m.national_party}</div>
-                                        </div>
-                                        <div className="font-bold text-orange-600 dark:text-orange-400">{m.rebellion_rate?.toFixed(1)}%</div>
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
+                <div className="flex gap-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-3 text-slate-400" size={20} />
+                        <input
+                            type="text"
+                            placeholder="Szukaj posła lub partii..."
+                            className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all w-64"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
                     </div>
-                </div>
-            )}
-
-            {/* Key Votes Section */}
-            <EuroVotesList />
-
-            {/* Grid */}
-            <div className="max-w-7xl mx-auto px-6 pb-12">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                    <div className="w-1 h-8 bg-blue-600 rounded-full"></div>
-                    Polscy Deputowani
-                </h2>
-                {loading ? (
-                    <div className="text-center py-20 text-neutral-500">Ładowanie danych z Parlamentu Europejskiego...</div>
-                ) : (
-                    <>
-                        <div className="mb-6 text-neutral-500 dark:text-neutral-400 text-sm">
-                            Znaleziono {filteredMeps.length} posłów
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {filteredMeps.map(mep => (
-                                <Link
-                                    to={`/europarlament/${mep.id}`}
-                                    key={mep.id}
-                                    className="group bg-white dark:bg-[#24243e] border border-neutral-200 dark:border-indigo-900/50 rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col block"
-                                >
-                                    {/* Image Area */}
-                                    <div className="relative aspect-[4/5] overflow-hidden bg-neutral-100 dark:bg-[#1a1a2e]">
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 z-10" />
-                                        <img
-                                            src={mep.photo_url}
-                                            alt={mep.full_name}
-                                            className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
-                                            loading="lazy"
-                                            onError={(e) => {
-                                                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x500?text=Brak+Zdjęcia';
-                                            }}
-                                        />
-
-                                        {/* Badges on Image */}
-                                        <div className="absolute bottom-4 left-4 right-4 z-20 flex flex-col gap-2">
-                                            <h3 className="text-xl font-bold text-white drop-shadow-md leading-tight">
-                                                {mep.full_name}
-                                            </h3>
-                                            <div className="flex flex-wrap gap-2">
-                                                {/* National Party Badge */}
-                                                <span className={`px-2 py-0.5 rounded text-xs font-semibold backdrop-blur-sm shadow-sm border border-white/20 text-white ${getPartyStyle(mep.national_party)}`}>
-                                                    {mep.national_party !== 'Brak danych' ? mep.national_party : 'Polska'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Card Body */}
-                                    <div className="p-4 flex-grow flex flex-col justify-end bg-white dark:bg-[#24243e]">
-                                        <div className="space-y-3">
-                                            {/* EU Group Badge */}
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider">Frakcja UE</span>
-                                                <span className={`px-2 py-1 rounded-md text-xs font-bold ${getGroupColor(mep.eu_group)}`}>
-                                                    {mep.eu_group}
-                                                </span>
-                                            </div>
-                                            {/* Attendance Mini Badge */}
-                                            {mep.attendance_score !== undefined && (
-                                                <div className="flex items-center justify-between border-t border-neutral-100 dark:border-white/5 pt-2">
-                                                    <span className="text-xs font-medium text-neutral-400">Frekwencja</span>
-                                                    <span className={`text-xs font-bold ${mep.attendance_score >= 90 ? 'text-green-600' :
-                                                        mep.attendance_score >= 75 ? 'text-amber-500' : 'text-red-500'
-                                                        }`}>
-                                                        {mep.attendance_score.toFixed(0)}%
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                    </>
-                )}
-            </div>
-        </div>
-    );
-};
-
-const EuroVotesList = () => {
-    const [votes, setVotes] = useState<any[]>([]);
-    const { term } = useTerm();
-
-    useEffect(() => {
-        const fetchVotes = async () => {
-            const { data } = await db
-                .from('euro_votes')
-                .select('*')
-                .eq('term', term)
-                .eq('is_key_vote', true) // Only Key Votes
-                .order('date', { ascending: false })
-                .limit(6);
-            if (data) setVotes(data);
-        };
-        fetchVotes();
-    }, [term]);
-
-    if (votes.length === 0) return null;
-
-    return (
-        <div className="max-w-7xl mx-auto px-6 py-8">
-            <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold flex items-center gap-2">
-                    <div className="w-1 h-8 bg-amber-500 rounded-full"></div>
-                    Ostatnie Kluczowe Głosowania
-                </h2>
-                <Link to="/europarlament/glosowania" className="text-sm font-bold text-blue-600 hover:text-blue-500 transition-colors">
-                    Zobacz wszystkie →
-                </Link>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {votes.map(v => (
-                    <Link
-                        to={`/europarlament/glosowanie/${encodeURIComponent(v.id)}`}
-                        key={v.id}
-                        className="bg-white dark:bg-[#24243e] p-6 rounded-2xl border border-neutral-200 dark:border-indigo-900/50 shadow-sm hover:border-amber-400 dark:hover:border-amber-500/50 transition-all hover:shadow-md block group"
+                    <select
+                        className="px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                        value={selectedGroup}
+                        onChange={(e) => setSelectedGroup(e.target.value)}
                     >
-                        <div className="flex justify-between items-start mb-3">
-                            <span className="text-xs font-bold bg-neutral-100 dark:bg-white/5 px-2 py-1 rounded text-neutral-500 uppercase tracking-wide">
-                                {new Date(v.date).toLocaleDateString('pl-PL')}
-                            </span>
-                            <span className="text-xs text-neutral-400 group-hover:text-amber-500 transition-colors">ID: {v.id?.split('-').pop()}</span>
+                        {groups.map(g => (
+                            <option key={g as string} value={g as string}>{g as string === 'All' ? 'Wszystkie grupy' : g as string}</option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {filteredMeps.map((mep) => (
+                    <div key={mep.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all group">
+                        <div className="aspect-square relative overflow-hidden bg-slate-100">
+                            <img
+                                src={mep.photo_url || `https://ui-avatars.com/api/?name=${mep.full_name}&background=random`}
+                                alt={mep.full_name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                            <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-2 py-1 rounded-lg text-[10px] font-black border border-slate-200 shadow-sm">
+                                EURO MP
+                            </div>
                         </div>
-                        <h3 className="font-bold text-lg mb-2 line-clamp-2 leading-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                            {v.title}
-                        </h3>
-                        {/* Description / Context */}
-                        {v.description && (
-                            <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-3 line-clamp-3">
-                                {v.description.replace(/ \| .*$/, '')}
-                            </p>
-                        )}
-                        {/* Tags */}
-                        <div className="mt-3 flex gap-2">
-                            {v.topic_tag ? (
-                                <span className="text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded border border-blue-200 dark:border-blue-800 uppercase">
-                                    {v.topic_tag}
-                                </span>
-                            ) : (
-                                <span className="text-xs font-bold text-slate-500 bg-slate-50 dark:bg-slate-900/20 px-2 py-1 rounded border border-slate-200 dark:border-slate-800">
-                                    GŁOSOWANIE
-                                </span>
-                            )}
+
+                        <div className="p-5 space-y-3">
+                            <div>
+                                <h3 className="font-extrabold text-slate-900 leading-tight mb-1">{mep.full_name}</h3>
+                                <p className="text-sm font-bold text-blue-600">{mep.national_party}</p>
+                            </div>
+
+                            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500">
+                                <div className="flex items-center gap-1">
+                                    <Globe size={14} className="text-slate-400" />
+                                    {mep.eu_group}
+                                </div>
+                                <Users size={14} className="text-slate-400" />
+                            </div>
+
+                            <div className="pt-2">
+                                <a
+                                    href={`/europarlament/${mep.id}`}
+                                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl text-sm font-bold transition-colors"
+                                >
+                                    Profil <ExternalLink size={14} />
+                                </a>
+                            </div>
                         </div>
-                    </Link>
+                    </div>
                 ))}
             </div>
         </div>
     );
-};
-
-export default Europarlament;
+}

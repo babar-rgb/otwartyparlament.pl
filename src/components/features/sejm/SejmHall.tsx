@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { MP } from '../api';
+import { MP } from '../../../api';
 
 interface SejmHallProps {
     votes: {
@@ -147,8 +147,8 @@ export default function SejmHall({ votes }: SejmHallProps) {
                             <span className="font-semibold text-slate-600">{hoveredData.mp.club}</span>
                             <span className="text-slate-300">•</span>
                             <span className={`font-bold uppercase ${hoveredData.vote === 'za' ? 'text-green-600' :
-                                    hoveredData.vote === 'przeciw' ? 'text-red-600' :
-                                        hoveredData.vote === 'wstrzymal' ? 'text-yellow-600' : 'text-slate-500'
+                                hoveredData.vote === 'przeciw' ? 'text-red-600' :
+                                    hoveredData.vote === 'wstrzymal' ? 'text-yellow-600' : 'text-slate-500'
                                 }`}>
                                 {hoveredData.vote}
                             </span>

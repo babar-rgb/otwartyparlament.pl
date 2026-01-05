@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { db } from '../lib/db';
+import { fetchCommitteeSitting, fetchProcess, fetchVotes } from '../api';
 import { ArrowLeft, Calendar, MapPin, Video, Clock, FileText, Users, ExternalLink } from 'lucide-react';
 import SEO from '../components/SEO';
 
@@ -17,6 +17,7 @@ interface CommitteeSitting {
     is_closed: boolean;
     video_url: string;
     agenda: any;
+    committee?: Committee; // Add committee to sitting interface for enriched data
 }
 
 interface Committee {
@@ -33,23 +34,20 @@ export default function CommitteeSittingDetails() {
 
     useEffect(() => {
         const loadData = async () => {
-            if (!committeeCode || !sittingId) return;
+            if (!sittingId) return;
 
             try {
-                // Fetch sitting details
-                const { data: sittingData, error } = await db
-                    .from('committee_sittings')
-                    .select('*')
-                    .eq('id', sittingId)
-                    .single();
-
-                if (error) throw error;
+                // Fetch sitting details (enriched with committee)
+                const sittingData = await fetchCommitteeSitting(sittingId);
                 setSitting(sittingData);
+
+                if (sittingData.committee) {
+                    setCommittee(sittingData.committee);
+                }
 
                 // Parse video data if exists
                 if (sittingData.video_url) {
                     try {
-                        // video_url might be a JSON string with quotes issues
                         const cleanedJson = sittingData.video_url
                             .replace(/'/g, '"')
                             .replace(/True/g, 'true')
@@ -57,22 +55,10 @@ export default function CommitteeSittingDetails() {
                         const parsed = JSON.parse(cleanedJson);
                         setVideoData(parsed);
                     } catch {
-                        // Fallback: it might be a direct URL
                         if (sittingData.video_url.startsWith('http')) {
                             setVideoData({ playerLink: sittingData.video_url });
                         }
                     }
-                }
-
-                // Fetch committee info
-                const { data: commData } = await db
-                    .from('committees')
-                    .select('code, name')
-                    .eq('code', committeeCode)
-                    .single();
-
-                if (commData) {
-                    setCommittee(commData);
                 }
             } catch (error) {
                 console.error('Error loading sitting:', error);
@@ -82,7 +68,7 @@ export default function CommitteeSittingDetails() {
         };
 
         loadData();
-    }, [committeeCode, sittingId]);
+    }, [sittingId]);
 
     // Parse agenda - it might be HTML string, array, or other format
     const parseAgenda = (agenda: any): string[] => {
@@ -165,8 +151,8 @@ export default function CommitteeSittingDetails() {
                         </p>
                     </div>
                     <span className={`text-sm px-3 py-1 rounded-full font-medium ${sitting.status === 'FINISHED'
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                        : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                         }`}>
                         {sitting.status === 'FINISHED' ? 'Zakończone' : sitting.status}
                     </span>

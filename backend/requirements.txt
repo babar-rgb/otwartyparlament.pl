@@ -7,3 +7,5 @@ beautifulsoup4
 python-multipart
 psycopg2-binary
 python-dotenv
+openai
+numpy

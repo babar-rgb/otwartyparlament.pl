@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronRight, Filter, X } from 'lucide-react';
-import { db } from '../lib/db';
+import { fetchCategories, fetchCategoryVoteCounts } from '../api';
 
 interface Category {
     id: number;
@@ -21,7 +21,6 @@ interface CategorySelectorProps {
     termId?: number;
 }
 
-// Color mapping for categories
 const COLOR_MAP: Record<string, string> = {
     blue: 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200',
     green: 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200',
@@ -55,178 +54,111 @@ export default function CategorySelector({
     const [showMobile, setShowMobile] = useState(false);
 
     useEffect(() => {
-        fetchCategories();
-    }, [termId]);
+        const loadCategories = async () => {
+            try {
+                const cats = await fetchCategories();
+                const counts = await fetchCategoryVoteCounts(termId);
 
-    const fetchCategories = async () => {
-        try {
-            // Fetch categories with vote counts
-            const { data: cats, error: catError } = await db
-                .from('categories')
-                .select('*')
-                .order('level')
-                .order('display_order');
+                const countMap = new Map<number, number>();
+                if (counts) {
+                    counts.forEach((c: any) => countMap.set(c.category_id, c.vote_count));
+                }
 
-            if (catError) throw catError;
+                const domains = cats.filter((c: any) => c.level === 1) || [];
+                const areas = cats.filter((c: any) => c.level === 2) || [];
 
-            // Fetch vote counts per category
-            const { data: counts, error: countError } = await db
-                .rpc('get_category_vote_counts', { term_id: termId });
+                const tree = domains.map((domain: any) => ({
+                    ...domain,
+                    vote_count: countMap.get(domain.id) || 0,
+                    children: areas
+                        .filter((a: any) => a.parent_id === domain.id)
+                        .map((a: any) => ({
+                            ...a,
+                            vote_count: countMap.get(a.id) || 0
+                        }))
+                        .filter((a: any) => (a.vote_count || 0) > 0)
+                })).filter((d: any) => (d.children?.length || 0) > 0 || (d.vote_count || 0) > 0);
 
-            // Build hierarchy
-            const countMap = new Map<number, number>();
-            if (counts) {
-                counts.forEach((c: { category_id: number; vote_count: number }) => {
-                    countMap.set(c.category_id, c.vote_count);
-                });
+                setCategories(tree);
+            } catch (err) {
+                console.error('Error fetching categories:', err);
+            } finally {
+                setLoading(false);
             }
-
-            // Organize into tree structure
-            const domains = cats?.filter(c => c.level === 1) || [];
-            const areas = cats?.filter(c => c.level === 2) || [];
-
-            const tree = domains.map(domain => ({
-                ...domain,
-                vote_count: countMap.get(domain.id) || 0,
-                children: areas
-                    .filter(a => a.parent_id === domain.id)
-                    .map(a => ({
-                        ...a,
-                        vote_count: countMap.get(a.id) || 0
-                    }))
-                    .filter(a => (a.vote_count || 0) > 0) // Only show areas with votes
-            })).filter(d => (d.children?.length || 0) > 0 || (d.vote_count || 0) > 0);
-
-            setCategories(tree);
-        } catch (err) {
-            console.error('Error fetching categories:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
+        loadCategories();
+    }, [termId]);
 
     const toggleDomain = (domainId: number) => {
         setExpandedDomains(prev => {
             const next = new Set(prev);
-            if (next.has(domainId)) {
-                next.delete(domainId);
-            } else {
-                next.add(domainId);
-            }
+            if (next.has(domainId)) next.delete(domainId);
+            else next.add(domainId);
             return next;
         });
     };
 
     const handleSelect = (slug: string) => {
-        if (selectedCategory === slug) {
-            onCategoryChange(null);
-        } else {
-            onCategoryChange(slug);
-        }
+        onCategoryChange(selectedCategory === slug ? null : slug);
         setShowMobile(false);
     };
 
     if (loading) {
-        return (
-            <div className="animate-pulse bg-neutral-100 dark:bg-neutral-800 rounded-xl h-12" />
-        );
+        return <div className="animate-pulse bg-neutral-100 rounded-xl h-12" />;
     }
 
     const selectedCat = categories.flatMap(d => [d, ...(d.children || [])]).find(c => c.slug === selectedCategory);
 
     return (
         <div className="relative">
-            {/* Mobile Toggle Button */}
             <button
                 onClick={() => setShowMobile(!showMobile)}
-                className="md:hidden w-full flex items-center justify-between gap-2 px-4 py-3 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-sm"
+                className="md:hidden w-full flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-neutral-200"
             >
                 <div className="flex items-center gap-2">
                     <Filter size={18} className="text-neutral-500" />
-                    <span className="font-medium">
-                        {selectedCat ? selectedCat.name_citizen || selectedCat.name_pl : 'Filtruj kategorie'}
-                    </span>
+                    <span className="font-medium">{selectedCat ? selectedCat.name_citizen || selectedCat.name_pl : 'Filtruj kategorie'}</span>
                 </div>
-                <ChevronDown size={18} className={`transition-transform ${showMobile ? 'rotate-180' : ''}`} />
+                <ChevronDown size={18} />
             </button>
 
-            {/* Category Panel */}
-            <div className={`
-                ${showMobile ? 'block' : 'hidden'} md:block
-                absolute md:relative z-50 left-0 right-0 top-full mt-2 md:mt-0
-                bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700
-                shadow-lg md:shadow-none p-4
-            `}>
-                {/* Clear button */}
+            <div className={`${showMobile ? 'block' : 'hidden'} md:block bg-white rounded-xl border border-neutral-200 p-4`}>
                 {selectedCategory && (
-                    <button
-                        onClick={() => onCategoryChange(null)}
-                        className="flex items-center gap-1 text-sm text-neutral-500 hover:text-red-600 mb-3"
-                    >
-                        <X size={14} />
-                        Wyczyść filtr
+                    <button onClick={() => onCategoryChange(null)} className="flex items-center gap-1 text-sm text-neutral-500 hover:text-red-600 mb-3">
+                        <X size={14} /> Wyczyść filtr
                     </button>
                 )}
 
-                {/* Domain list */}
                 <div className="space-y-2">
                     {categories.map(domain => (
-                        <div key={domain.id} className="border-b border-neutral-100 dark:border-neutral-700 pb-2 last:border-0">
-                            {/* Domain header */}
+                        <div key={domain.id} className="border-b border-neutral-100 pb-2 last:border-0">
                             <button
                                 onClick={() => toggleDomain(domain.id)}
-                                className={`
-                                    w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg
-                                    text-left font-semibold text-sm
-                                    ${selectedCategory === domain.slug
-                                        ? SELECTED_COLOR_MAP[domain.color] || SELECTED_COLOR_MAP.gray
-                                        : `hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200`
-                                    }
-                                    transition-colors
-                                `}
+                                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-semibold ${selectedCategory === domain.slug ? SELECTED_COLOR_MAP[domain.color] || SELECTED_COLOR_MAP.gray : 'hover:bg-neutral-100'}`}
                             >
                                 <div className="flex items-center gap-2">
-                                    {expandedDomains.has(domain.id)
-                                        ? <ChevronDown size={16} />
-                                        : <ChevronRight size={16} />
-                                    }
+                                    {expandedDomains.has(domain.id) ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                                     <span>{domain.name_citizen || domain.name_pl}</span>
                                 </div>
                                 <span className="text-xs opacity-60">{domain.vote_count}</span>
                             </button>
 
-                            {/* Areas (children) */}
                             {expandedDomains.has(domain.id) && domain.children && (
                                 <div className="ml-6 mt-1 space-y-1">
                                     {domain.children.map(area => (
                                         <button
                                             key={area.id}
                                             onClick={() => handleSelect(area.slug)}
-                                            className={`
-                                                w-full flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg
-                                                text-left text-sm border
-                                                ${selectedCategory === area.slug
-                                                    ? SELECTED_COLOR_MAP[area.color || domain.color] || SELECTED_COLOR_MAP.gray
-                                                    : COLOR_MAP[area.color || domain.color] || COLOR_MAP.gray
-                                                }
-                                                transition-colors
-                                            `}
+                                            className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-sm border ${selectedCategory === area.slug ? SELECTED_COLOR_MAP[area.color || domain.color] : COLOR_MAP[area.color || domain.color]}`}
                                         >
                                             <span>{area.name_citizen || area.name_pl}</span>
-                                            <span className="text-xs opacity-60 font-medium">{area.vote_count}</span>
+                                            <span className="text-xs opacity-60">{area.vote_count}</span>
                                         </button>
                                     ))}
                                 </div>
                             )}
                         </div>
                     ))}
-                </div>
-
-                {/* Quick stats */}
-                <div className="mt-4 pt-3 border-t border-neutral-200 dark:border-neutral-700">
-                    <p className="text-xs text-neutral-500">
-                        {categories.reduce((sum, d) => sum + (d.vote_count || 0), 0).toLocaleString()} głosowań w {categories.length} kategoriach
-                    </p>
                 </div>
             </div>
         </div>

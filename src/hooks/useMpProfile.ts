@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { db } from '../lib/db';
-import { MP } from '../api';
+import { fetchMP, fetchSpeeches, fetchVotes, fetchInterpellations, fetchMPStats, fetchMPAlignment } from '../api';
+import { MP, MPRelation } from '../types/domain';
 
 export interface VoteHistoryItem {
     vote: string;
@@ -13,194 +13,76 @@ export interface VoteHistoryItem {
         title_raw?: string;
         date: string;
         verdict: string;
-        category?: string;
         term: number;
     };
     isFinal?: boolean;
-}
-
-export interface AssetDeclaration {
-    id: number;
-    pdf_url: string;
-    year: string;
-    summary: string;
-    file_path?: string;
-    parsed_content: {
-        savings: number;
-        real_estate: string[];
-        income: number;
-        car: string[];
-    };
 }
 
 export function useMpProfile(idOrSlug?: string) {
     const navigate = useNavigate();
     const [mp, setMp] = useState<MP | null>(null);
     const [voteHistory, setVoteHistory] = useState<VoteHistoryItem[]>([]);
-    const [digitizedDeclarations, setDigitizedDeclarations] = useState<AssetDeclaration[]>([]);
+
     const [recentSpeeches, setRecentSpeeches] = useState<any[]>([]);
     const [keyVotes, setKeyVotes] = useState<VoteHistoryItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [interpellationCount, setInterpellationCount] = useState<number>(0);
+    const [stats, setStats] = useState<Record<string, any>>({});
+    const [relations, setRelations] = useState<MPRelation[]>([]);
 
     useEffect(() => {
-        const loadMpData = async () => {
+        const load = async () => {
             if (!idOrSlug) return;
             try {
-                let query = db.from('mps').select('*');
-                if (/^\d+$/.test(idOrSlug)) {
-                    query = query.eq('id', idOrSlug);
-                } else {
-                    query = query.eq('slug', idOrSlug);
-                }
-
-                const { data: mpData, error: mpError } = await query.single();
-                if (mpError) throw mpError;
-
-                const mappedMp: MP = {
-                    id: mpData.id,
-                    first_name: mpData.first_name,
-                    last_name: mpData.last_name,
-                    club: mpData.club,
-                    district: mpData.district,
-                    photo_url: mpData.photo_url,
-                    attendanceRate: Math.round(mpData.stats_attendance || 0),
-                    active: mpData.active,
-                    rebelVotes: mpData.stats_rebellion || 0,
-                    email: mpData.email || '',
-                    contact_info: mpData.contact_info || {},
-                    voivodeship: '',
-                    declarations: mpData.declarations || [],
-                    term: mpData.term,
-                    slug: mpData.slug
-                };
+                const mpData = await fetchMP(idOrSlug);
+                setMp(mpData);
 
                 if (/^\d+$/.test(idOrSlug) && mpData.slug) {
                     navigate(`/poslowie/${mpData.slug}`, { replace: true });
                     return;
                 }
 
-                setMp(mappedMp);
+                const [speeches, votesData, interps, mpStats, mpRelations] = await Promise.all([
+                    fetchSpeeches({ mp_id: mpData.id, limit: 5 }),
+                    fetchVotes({ mp_id: mpData.id, limit: 20 }),
+                    fetchInterpellations({ mp_id: mpData.id, limit: 100 }),
+                    fetchMPStats(mpData.id),
+                    fetchMPAlignment(mpData.id)
+                ]);
 
-                // Fetch digitized declarations
-                const { data: declData } = await db
-                    .from('asset_declarations')
-                    .select('*')
-                    .eq('mp_id', mpData.id)
-                    .order('year', { ascending: false });
-                if (declData) setDigitizedDeclarations(declData);
+                setRecentSpeeches(speeches.items);
+                setInterpellationCount(interps.length);
+                setStats(mpStats);
+                setRelations(mpRelations);
 
-                // Fetch recent speeches
-                const { data: speechData } = await db
-                    .from('speeches')
-                    .select('*')
-                    .eq('mp_id', mpData.id)
-                    .order('date', { ascending: false })
-                    .limit(5);
-
-                if (speechData) {
-                    const cleanedSpeeches = speechData.map(s => {
-                        // Clean up speech content - remove metadata headers and whitespace
-                        let content = s.content || '';
-                        // Remove header noise: "X. kadencja, Y. posiedzenie..."
-                        content = content.replace(/\d+\. kadencja,.*?\r\n/g, '');
-                        content = content.replace(/.*?punkt porządku dziennego:.*?\r\n/g, '');
-                        content = content.replace(/Poseł .*?:.*?\r\n/g, '');
-                        // Remove multiple \r\n and trim
-                        content = content.replace(/\r\n/g, ' ').replace(/\s+/g, ' ').trim();
-
-                        return { ...s, content };
-                    });
-                    setRecentSpeeches(cleanedSpeeches);
-                }
-
-                // Fetch Voting History
-                const { data: historyData, error: historyError } = await db
-                    .from('vote_results')
-                    .select('result, votes!inner(id, sitting, voting_number, title_clean, title_raw, date, verdict, term, is_final_vote)')
-                    .eq('mp_id', mpData.id)
-                    .neq('result', 'Nieobecny')
-                    .neq('result', 'Absent')
-                    .neq('result', 'ABSENT')
-                    .order('vote_id', { ascending: false })
-                    .limit(10);
-
-                if (historyError) {
-                    console.error('[useMpProfile] History error:', historyError);
-                }
-
-                if (historyData) {
-                    const mappedHistory = (historyData as any[])
-                        .map(h => {
-                            let normalizedVote = 'ABSENT';
-                            const res = h.result?.toUpperCase();
-
-                            if (res === 'ZA' || res === 'YES') normalizedVote = 'YES';
-                            else if (res === 'PRZECIW' || res === 'NO') normalizedVote = 'NO';
-                            else if (res === 'WSTRZYMAŁ SIĘ' || res === 'ABSTAIN') normalizedVote = 'ABSTAIN';
-
-                            return {
-                                vote: normalizedVote,
-                                votes: h.votes,
-                                isFinal: h.votes.is_final_vote
-                            };
-                        })
-                        .filter(h => h.vote !== 'ABSENT');
-                    setVoteHistory(mappedHistory);
-                }
-
-                // Fetch Key Votes
-                const { data: keyData } = await db
-                    .from('vote_results')
-                    .select('result, votes!inner(*, is_final_vote)')
-                    .eq('mp_id', mpData.id)
-                    .neq('result', 'Nieobecny')
-                    .neq('result', 'Absent')
-                    .or('is_key_vote.eq.true,importance_score.gte.50', { foreignTable: 'votes' })
-                    .order('vote_id', { ascending: false })
-                    .limit(6);
-
-                if (keyData) {
-                    const mappedKey = (keyData as any[])
-                        .map(h => {
-                            let normalizedVote = 'ABSENT';
-                            const res = h.result?.toUpperCase();
-                            if (res === 'ZA' || res === 'YES') normalizedVote = 'YES';
-                            else if (res === 'PRZECIW' || res === 'NO') normalizedVote = 'NO';
-                            else if (res === 'WSTRZYMAŁ SIĘ' || res === 'ABSTAIN') normalizedVote = 'ABSTAIN';
-                            return {
-                                vote: normalizedVote,
-                                votes: h.votes,
-                                isFinal: h.votes.is_final_vote
-                            };
-                        })
-                        .filter(h => h.vote !== 'ABSENT');
-                    setKeyVotes(mappedKey);
-                }
-
-                // Fetch Interpellation Count
-                const { count: interpCount } = await db
-                    .from('interpellation_authors')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('mp_id', mpData.id);
-                setInterpellationCount(interpCount || 0);
-
-            } catch (error) {
-                console.error('Error fetching MP data:', error);
+                // Map standard Vote items to VoteHistoryItem structure
+                const mappedHistory = votesData.items.map((v: any) => ({
+                    vote: (v.mpVote === 'YES' || v.mpVote === 'Za') ? 'YES' :
+                        (v.mpVote === 'NO' || v.mpVote === 'Przeciw') ? 'NO' :
+                            (v.mpVote === 'ABSTAIN' || v.mpVote === 'Wstrzymał się') ? 'ABSTAIN' :
+                                'ABSENT',
+                    votes: {
+                        id: v.id,
+                        sitting: v.sitting,
+                        voting_number: v.voting_number,
+                        title_clean: v.title_clean || v.title,
+                        title_raw: v.title_raw,
+                        date: v.date,
+                        verdict: v.verdict,
+                        term: v.term
+                    },
+                    isFinal: true
+                }));
+                setVoteHistory(mappedHistory);
+                setKeyVotes(mappedHistory.slice(0, 5));
+            } catch (err) {
+                console.error('Error fetching MP profile:', err);
             } finally {
                 setLoading(false);
             }
         };
-        loadMpData();
+        load();
     }, [idOrSlug, navigate]);
 
-    return {
-        mp,
-        voteHistory,
-        keyVotes,
-        digitizedDeclarations,
-        recentSpeeches,
-        loading,
-        interpellationCount
-    };
+    return { mp, voteHistory, keyVotes, digitizedDeclarations: [], recentSpeeches, loading, interpellationCount, stats, relations };
 }

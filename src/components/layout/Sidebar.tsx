@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { X, Github, Mail, BookOpen, Database, Heart, Search, Users, Briefcase, CheckSquare, BarChart3, FileText, Globe, Radio } from 'lucide-react';
+import { X, Github, Mail, BookOpen, Database, Heart, Search, Users, Briefcase, CheckSquare, BarChart3, FileText, Globe, Radio, Wallet, Building2 } from 'lucide-react';
 
 interface SidebarProps {
     isOpen: boolean;
@@ -75,22 +75,40 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                     <CheckSquare size={20} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
                                     Głosowania
                                 </Link>
-                                <Link to="/rankingi" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900 group">
+                                <Link to="/rankingi" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 font-bold text-slate-900 dark:text-white group">
                                     <BarChart3 size={20} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
                                     Rankingi
                                 </Link>
-                                <Link to="/projekty" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900 group">
+                                <Link to="/test-wyborczy" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg bg-accent-blue/5 border border-accent-blue/10 hover:bg-accent-blue/10 font-black text-accent-blue group shadow-sm">
+                                    <CheckSquare size={20} className="text-accent-blue group-hover:scale-110 transition-transform" />
+                                    Test Wyborczy
+                                </Link>
+                                <Link to="/projekty" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 font-bold text-slate-900 dark:text-white group">
                                     <FileText size={20} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
                                     Projekty
                                 </Link>
-                                <Link to="/europarlament" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900 group">
+                                <Link to="/europarlament" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 font-bold text-slate-900 dark:text-white group">
                                     <Globe size={20} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
                                     Europarlament
                                 </Link>
-                                <div className="border-t border-slate-100 my-1 mx-3" />
-                                <Link to="/live" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 font-bold text-slate-900 group">
+                                <div className="border-t border-slate-100 dark:border-white/5 my-1 mx-3" />
+                                <Link to="/live" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 font-bold text-slate-900 dark:text-white group">
                                     <Radio size={20} className="text-red-500 animate-pulse" />
                                     Live
+                                </Link>
+                            </nav>
+
+                            <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-4">
+                                Nowe Funkcje <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full ml-2">BETA</span>
+                            </h3>
+                            <nav className="space-y-2 mb-8">
+                                <Link to="/transfery" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 font-bold text-slate-900 dark:text-white group">
+                                    <Wallet size={20} className="text-slate-400 group-hover:text-emerald-500 transition-colors" />
+                                    Mapa Transferów
+                                </Link>
+                                <Link to="/rzad" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 font-bold text-slate-900 dark:text-white group">
+                                    <Building2 size={20} className="text-slate-400 group-hover:text-blue-500 transition-colors" />
+                                    Efektywność Rządu
                                 </Link>
                             </nav>
 

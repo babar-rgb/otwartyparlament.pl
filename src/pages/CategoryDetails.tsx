@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { db } from '../lib/db';
+import { fetchVotes } from '../api';
 import { ArrowLeft, FileText, CheckCircle, XCircle } from 'lucide-react';
 import SEO from '../components/SEO';
 
@@ -19,21 +19,19 @@ interface Vote {
         abstain: number;
     };
     term: number;
+    is_key_vote?: boolean;
 }
 
 export default function CategoryDetails() {
     const { slug } = useParams<{ slug: string }>();
     const [votes, setVotes] = useState<Vote[]>([]);
     const [loading, setLoading] = useState(true);
+    const [showKeyOnly, setShowKeyOnly] = useState(true);
 
-    // Helper to format slug into title (e.g., "polityka-spoleczna" -> "Polityka Społeczna")
     const formatTitle = (s: string) => {
         return s.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     };
 
-    const title = slug ? mapSlugToTitle(slug) : 'Kategoria';
-
-    // Map slug to proper display title with Polish characters
     function mapSlugToTitle(s: string) {
         const mapping: Record<string, string> = {
             'rolnictwo': 'Rolnictwo',
@@ -53,8 +51,8 @@ export default function CategoryDetails() {
         return mapping[s.toLowerCase()] || formatTitle(s);
     }
 
-    // Map slug to DB category (simple mapping for now, can be improved)
-    // DB categories are uppercase, e.g., "ROLNICTWO", "EKONOMIA"
+    const title = slug ? mapSlugToTitle(slug) : 'Kategoria';
+
     const mapSlugToCategory = (s: string) => {
         const mapping: Record<string, string> = {
             'rolnictwo': 'ROLNICTWO',
@@ -74,50 +72,32 @@ export default function CategoryDetails() {
         return mapping[s.toLowerCase()] || s.toUpperCase();
     };
 
-    const [showKeyOnly, setShowKeyOnly] = useState(true);
-
     useEffect(() => {
         if (slug) {
-            fetchVotes();
+            const loadVotes = async () => {
+                setLoading(true);
+                try {
+                    const categoryName = mapSlugToCategory(slug);
+                    const { items } = await fetchVotes({ limit: 100 });
+                    // Filter by category in frontend for now as backend filter might be exact
+                    let filtered = items.filter((v: any) => v.topic?.toUpperCase() === categoryName || (v.tags && v.tags.map((t: string) => t.toUpperCase()).includes(categoryName)));
+
+                    if (showKeyOnly) {
+                        filtered = filtered.filter((v: any) => v.importance === 'High' || v.is_key_vote);
+                    }
+                    setVotes(filtered);
+                } catch (error) {
+                    console.error('Error fetching category votes:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            loadVotes();
         }
     }, [slug, showKeyOnly]);
 
-    const fetchVotes = async () => {
-        setLoading(true);
-        try {
-            const category = mapSlugToCategory(slug || '');
-
-            let query = db
-                .from('votes')
-                .select('*')
-                .ilike('category', `%${category}%`)
-                .order('date', { ascending: false })
-                .limit(50);
-
-            if (showKeyOnly) {
-                query = query.eq('is_key_vote', true);
-            }
-
-            const { data, error } = await query;
-
-            if (error) throw error;
-
-            // If we are in "Key Only" mode but found nothing, maybe we should auto-switch to "All"?
-            // For now, let's just show "No key votes" message or similar, 
-            // but the user might prefer to see *something*. 
-            // Let's stick to the toggle.
-
-            setVotes(data || []);
-        } catch (error) {
-            console.error('Error fetching category votes:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const stats = {
-        total: votes.length, // This is now just the fetched count, might need separate count for stats? 
-        // For simplicity, let's hide stats or keep them as "displayed votes" stats
+        total: votes.length,
         accepted: votes.filter(v => v.verdict === 'PRZYJĘTO').length,
         rejected: votes.filter(v => v.verdict !== 'PRZYJĘTO').length,
     };
@@ -130,13 +110,11 @@ export default function CategoryDetails() {
             />
             <div className="container mx-auto max-w-5xl">
 
-                {/* Breadcrumbs */}
                 <Link to="/" className="inline-flex items-center text-ink-light hover:text-brand transition mb-8 group">
                     <ArrowLeft size={16} className="mr-2 group-hover:-translate-x-1 transition-transform" />
                     Wróć do strony głównej
                 </Link>
 
-                {/* Hero Section */}
                 <div className="mb-16 animate-in slide-in-from-bottom-4 duration-700">
                     <h1 className="text-5xl md:text-6xl font-serif font-bold text-ink mb-4 tracking-tight">
                         {title}
@@ -145,7 +123,6 @@ export default function CategoryDetails() {
                         Przegląd legislacji, kluczowych głosowań i debat w obszarze: {title}.
                     </p>
 
-                    {/* Stats Row */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="bg-white border border-gray-200 p-6 rounded-xl flex items-center gap-4 shadow-sm">
                             <div className="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center text-brand">
@@ -177,7 +154,6 @@ export default function CategoryDetails() {
                     </div>
                 </div>
 
-                {/* Votes List */}
                 <div className="space-y-6">
                     <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-6">
                         <h2 className="text-2xl font-bold text-ink">
@@ -242,7 +218,6 @@ export default function CategoryDetails() {
                         ))
                     )}
                 </div>
-
             </div>
         </div>
     );

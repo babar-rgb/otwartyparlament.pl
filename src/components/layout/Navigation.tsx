@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom';
 import { Menu, X, Search } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
-import SearchOverlay from './SearchOverlay';
+import SearchOverlay from '../ui/SearchOverlay';
 
-import ThemeToggle from './ThemeToggle';
+import ThemeToggle from '../ui/ThemeToggle';
 // TermSwitcher removed
 
 export default function Navigation() {
@@ -56,26 +56,33 @@ export default function Navigation() {
             {/* Center: Main Links (Desktop) */}
             {/* Center: Main Links (Desktop) */}
             {/* Center: Main Links (Desktop) */}
-            <div className="hidden lg:flex items-center gap-8">
-              <Link to="/poslowie" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+            {/* Center: Main Links (Desktop) */}
+            <div className="hidden xl:flex items-center gap-6 2xl:gap-8">
+              <Link to="/poslowie" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
                 Posłowie
               </Link>
-              <Link to="/komisje" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              <Link to="/komisje" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
                 Komisje
               </Link>
-              <Link to="/glosowania" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              <Link to="/glosowania" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
                 Głosowania
               </Link>
-              <Link to="/rankingi" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              <Link to="/rankingi" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
                 Rankingi
               </Link>
-              <Link to="/projekty" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              <Link to="/projekty" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
                 Projekty
               </Link>
-              <Link to="/europarlament" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              <Link to="/transfery" className="text-sm font-bold text-emerald-600 hover:text-emerald-700 transition-colors hover:scale-105 transform duration-200">
+                Transfery
+              </Link>
+              <Link to="/rzad" className="text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors hover:scale-105 transform duration-200">
+                Rząd
+              </Link>
+              <Link to="/europarlament" className="text-sm font-bold text-secondary hover:text-accent-blue transition-colors hover:scale-105 transform duration-200">
                 Europarlament
               </Link>
-              <Link to="/o-projekcie" className="text-sm font-bold text-neutral-900 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              <Link to="/o-projekcie" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
                 O Projekcie
               </Link>
             </div>

@@ -1,0 +1,17 @@
+class CommitteeSitting(Base):
+    __tablename__ = "committee_sittings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    committee_code = Column(String, ForeignKey("committees.code"), index=True)
+    sitting_number = Column(Integer)
+    date = Column(Date, index=True)
+    start_time = Column(DateTime)
+    end_time = Column(DateTime)
+    room = Column(String)
+    status = Column(String, index=True)
+    is_remote = Column(Boolean, default=False)
+    is_closed = Column(Boolean, default=False)
+    video_url = Column(String)
+    agenda = Column(JSONB)
+    term = Column(Integer)
+    created_at = Column(DateTime, server_default=func.now())

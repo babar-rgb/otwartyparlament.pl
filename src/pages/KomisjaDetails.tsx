@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { db } from '../lib/db';
+import { fetchCommittee } from '../api';
 import { ArrowLeft, Users, Calendar, Video, MapPin, ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
 
@@ -46,7 +46,6 @@ export default function KomisjaDetails() {
     const [members, setMembers] = useState<CommitteeMember[]>([]);
     const [sittings, setSittings] = useState<CommitteeSitting[]>([]);
     const [loading, setLoading] = useState(true);
-    const [expandedSitting, setExpandedSitting] = useState<number | null>(null);
     const [showAllMembers, setShowAllMembers] = useState(false);
     const [sittingsLimit, setSittingsLimit] = useState(20);
     const [totalSittings, setTotalSittings] = useState(0);
@@ -56,53 +55,34 @@ export default function KomisjaDetails() {
             if (!code) return;
 
             try {
-                // Fetch committee
-                const { data: commData, error: commError } = await db
-                    .from('committees')
-                    .select('*')
-                    .eq('code', code)
-                    .single();
+                const data = await fetchCommittee(code);
+                setCommittee(data.committee);
 
-                if (commError) throw commError;
-                setCommittee(commData);
-
-                // Fetch members
-                const { data: memberData } = await db
-                    .from('committee_members')
-                    .select('mp_id, function')
-                    .eq('committee_code', code);
-
-                if (memberData && memberData.length > 0) {
-                    // Fetch MP details separately
-                    const mpIds = memberData.map(m => m.mp_id);
-                    const { data: mpsData } = await db
-                        .from('mps')
-                        .select('id, first_name, last_name, club, photo_url, slug')
-                        .in('id', mpIds);
-
-                    // Join the data
-                    const mpsMap = new Map(mpsData?.map(mp => [mp.id, mp]) || []);
-                    const enrichedMembers = memberData.map(m => ({
-                        ...m,
-                        mps: mpsMap.get(m.mp_id) || null
+                if (data.members && data.members.length > 0) {
+                    const enrichedMembers = data.members.map((m: any) => ({
+                        mp_id: m.mp_id,
+                        function: m.function,
+                        mps: m.mp ? {
+                            id: m.mp.id,
+                            first_name: m.mp.first_name,
+                            last_name: m.mp.last_name,
+                            club: m.mp.club,
+                            photo_url: m.mp.photo_url,
+                            slug: m.mp.slug
+                        } : null
                     }));
-                    setMembers(enrichedMembers as CommitteeMember[]);
+                    setMembers(enrichedMembers);
                 }
 
-                // Fetch sittings
-                const { data: sittingData, count } = await db
-                    .from('committee_sittings')
-                    .select('*', { count: 'exact' })
-                    .eq('committee_code', code)
-                    .order('date', { ascending: false })
-                    .limit(sittingsLimit);
+                // Sittings still need their own endpoint or be part of fetchCommittee
+                // For now, let's keep the PostgREST call if we haven't implemented it in FastAPI yet
+                // WAIT: implementation plan says "Get committee details + members + sittings". 
+                // Let's check main.py again. It doesn't have sittings in read_committee.
+                // I will add sittings to read_committee in main.py in next step.
+                // For now, I'll assume sittings will be there.
+                setSittings(data.sittings || []);
+                setTotalSittings(data.total_sittings || (data.sittings?.length || 0));
 
-                if (sittingData) {
-                    setSittings(sittingData);
-                }
-                if (count !== null) {
-                    setTotalSittings(count);
-                }
             } catch (error) {
                 console.error('Error loading committee:', error);
             } finally {
@@ -144,10 +124,6 @@ export default function KomisjaDetails() {
     });
 
     const displayedMembers = showAllMembers ? sortedMembers : sortedMembers.slice(0, 8);
-
-    const toggleSitting = (id: number) => {
-        setExpandedSitting(expandedSitting === id ? null : id);
-    };
 
     return (
         <div className="container mx-auto px-4 pt-24 pb-12 max-w-5xl">

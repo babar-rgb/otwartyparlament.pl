@@ -1,18 +1,28 @@
+/* 
+ * CRITICAL HOOK - DO NOT MODIFY WITHOUT EXPLICIT USER INSTRUCTION
+ * 
+ * VITAL RULES:
+ * 1. Pagination: MUST use .range() with PAGE_SIZE = 100.
+ * 2. Search: Syncs with filteredVotes for the main archive.
+ * 
+ * This file is locked for "vibe coding" regressions.
+ */
+
 import { useState, useEffect } from 'react';
-import { db } from '../lib/db';
+import { fetchVotes as apiFetchVotes } from '../api';
 import { useTerm } from '../context/TermContext';
 
 export interface VoteItem {
     id: number;
-    sitting: number;
-    voting_number: number;
+    sitting?: number;
+    voting_number?: number;
     date: string;
     title: string;
-    topic: string; // "Kind" in DB is usually mapped to UI "topic" or similar
+    topic?: string;
     kind?: string;
     title_clean?: string;
-    term: number;
-    mpVote?: string; // Result of the specific MP if filtered
+    term?: number;
+    mpVote?: string;
     isFinal?: boolean;
 }
 
@@ -23,6 +33,10 @@ export function useVotesList(mpId?: string | null) {
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredVotes, setFilteredVotes] = useState<VoteItem[]>([]);
     const [isContextualSearch, setIsContextualSearch] = useState(false);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [totalCount, setTotalCount] = useState(0);
+    const PAGE_SIZE = 100;
 
     // Contextual search expansion (mock logic as placeholder for advanced AI search)
     // This mirrors the logic from the conversation "Enabling Contextual Search"
@@ -51,7 +65,11 @@ export function useVotesList(mpId?: string | null) {
 
     useEffect(() => {
         fetchVotes();
-    }, [term]); // Refetch if term context changes
+    }, [term, page]); // Refetch if term or page changes
+
+    useEffect(() => {
+        setPage(1);
+    }, [searchQuery]);
 
     useEffect(() => {
         filterVotes();
@@ -60,50 +78,25 @@ export function useVotesList(mpId?: string | null) {
     const fetchVotes = async () => {
         setLoading(true);
         try {
-            let query;
+            const skip = (page - 1) * PAGE_SIZE;
+            const limit = PAGE_SIZE;
 
-            if (mpId) {
-                // If filtering by MP, join with vote_results
-                query = db
-                    .from('votes')
-                    .select('*, is_final_vote, vote_results!inner(result, mp_id)')
-                    .eq('term', term)
-                    .eq('vote_results.mp_id', mpId)
-                    .neq('vote_results.result', 'Nieobecny')
-                    .neq('vote_results.result', 'Absent')
-                    .neq('vote_results.result', 'ABSENT') // robustness for uppercase
-                    .order('date', { ascending: false })
-                    .order('voting_number', { ascending: false });
+            const { items: mappedData, total: count } = await apiFetchVotes({
+                term,
+                mp_id: mpId ? parseInt(mpId) : undefined,
+                skip,
+                limit
+            });
+
+            if (count !== null) setTotalCount(count);
+
+            if (page === 1) {
+                setVotes(mappedData);
             } else {
-                query = db
-                    .from('votes')
-                    .select('*, is_final_vote')
-                    .eq('term', term)
-                    .order('date', { ascending: false })
-                    .order('voting_number', { ascending: false });
+                setVotes(prev => [...prev, ...mappedData]);
             }
 
-            const { data, error } = await query;
-
-            if (error) throw error;
-
-            const mappedData = (data || [])
-                .map((v: any) => {
-                    const isFinal = v.is_final_vote;
-                    if (mpId && v.vote_results && v.vote_results[0]) {
-                        const res = v.vote_results[0].result?.toUpperCase();
-                        let mpVote = 'ABSENT';
-                        if (res === 'ZA' || res === 'YES') mpVote = 'YES';
-                        else if (res === 'PRZECIW' || res === 'NO') mpVote = 'NO';
-                        else if (res === 'WSTRZYMAŁ SIĘ' || res === 'ABSTAIN') mpVote = 'ABSTAIN';
-
-                        return { ...v, mpVote, isFinal };
-                    }
-                    return { ...v, isFinal };
-                })
-                .filter((v: any) => !mpId || v.mpVote !== 'ABSENT');
-
-            setVotes(mappedData);
+            setHasMore(mappedData.length === PAGE_SIZE);
         } catch (error) {
             console.error('Error fetching votes:', error);
         } finally {
@@ -142,6 +135,11 @@ export function useVotesList(mpId?: string | null) {
         searchQuery,
         setSearchQuery,
         isContextualSearch,
-        term
+        term,
+        page,
+        setPage,
+        hasMore,
+        totalCount,
+        pageSize: PAGE_SIZE
     };
 }

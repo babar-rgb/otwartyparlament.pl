@@ -52,9 +52,9 @@ export default function Rankingi() {
 
   const getPartyBadge = (party: string) => {
     const p = party?.toUpperCase() || '';
-    if (p.includes('KONFEDERACJA')) return 'bg-slate-900 border border-slate-700 text-white';
-    if (p.includes('KO')) return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20';
-    if (p.includes('PIS')) return 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white/60 border border-slate-200 dark:border-white/10';
+    if (p.includes('KONFEDERACJA')) return 'bg-[#1a2333] text-white border border-[#2d3748] dark:bg-white/5 dark:border-white/10 dark:text-white';
+    if (p.includes('KO')) return 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20';
+    if (p.includes('PIS')) return 'bg-blue-900/10 dark:bg-blue-100/10 text-blue-800 dark:text-blue-200 border border-blue-900/20 dark:border-blue-100/20';
     if (p.includes('PL2050') || p.includes('POLSKA2050')) return 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 border border-yellow-500/20';
     if (p.includes('LEWICA')) return 'bg-rose-500/10 text-rose-600 dark:text-rose-500 border border-rose-500/20';
     if (p.includes('PSL')) return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 border border-emerald-500/20';
@@ -80,7 +80,7 @@ export default function Rankingi() {
 
         {/* Action Grid - Glass Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-          <Link to="/majatek" className="group relative bg-surface p-10 rounded-[2.5rem] border border-border-base shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-[#16162d] hover:-translate-y-1 overflow-hidden">
+          <Link to="/majatek" className="group relative bg-surface p-10 rounded-[2.5rem] border border-border-base shadow-sm transition-all hover:bg-black/5 dark:hover:bg-white/5 hover:-translate-y-1 overflow-hidden">
             <div className="absolute top-0 right-0 p-12 text-primary/5 group-hover:text-emerald-500/10 group-hover:scale-125 transition-all duration-700">
               <HandCoins size={160} />
             </div>
@@ -95,7 +95,7 @@ export default function Rankingi() {
             </div>
           </Link>
 
-          <Link to="/wypowiedzi" className="group relative bg-surface p-10 rounded-[2.5rem] border border-border-base shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-[#16162d] hover:-translate-y-1 overflow-hidden">
+          <Link to="/wypowiedzi" className="group relative bg-surface p-10 rounded-[2.5rem] border border-border-base shadow-sm transition-all hover:bg-black/5 dark:hover:bg-white/5 hover:-translate-y-1 overflow-hidden">
             <div className="absolute top-0 right-0 p-12 text-primary/5 group-hover:text-accent-blue/10 group-hover:scale-125 transition-all duration-700">
               <Mic size={160} />
             </div>
@@ -195,7 +195,7 @@ export default function Rankingi() {
                       <Link
                         key={entry.id}
                         to={`/poslowie/${entry.id}`}
-                        className="grid grid-cols-12 items-center px-8 py-6 bg-page/[0.02] border border-border-base rounded-2xl hover:bg-page hover:shadow-md transition-all group"
+                        className="grid grid-cols-12 items-center px-8 py-6 bg-surface border border-border-base rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 hover:shadow-md transition-all group"
                       >
                         <div className="col-span-1">
                           <span className={`text-2xl font-black italic ${idx < 3 ? 'text-accent-blue' : 'text-secondary/20'}`}>

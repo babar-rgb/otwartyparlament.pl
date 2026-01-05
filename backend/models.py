@@ -21,7 +21,7 @@ class MP(Base):
 
     votes = relationship("VoteResult", back_populates="mp")
     bills = relationship("Bill", back_populates="mp")
-    interpellations = relationship("Interpellation", back_populates="mp")
+    interpellations = relationship("Interpellation", secondary="interpellation_authors", back_populates="authors")
 
 class Vote(Base):
     __tablename__ = "votes"
@@ -31,7 +31,7 @@ class Vote(Base):
     term = Column(Integer, index=True)
     voting_number = Column(Integer)
     date = Column(Date, index=True)
-    title_raw = Column(String)
+    name_citizen = Column(String)
     title_clean = Column(String)
     verdict = Column(String)
     details_json = Column(JSONB)
@@ -42,6 +42,7 @@ class Vote(Base):
     created_at = Column(DateTime, server_default=func.now())
 
     results = relationship("VoteResult", back_populates="vote")
+    analysis = relationship("VoteAnalysis", uselist=False, back_populates="vote")
 
 class VoteResult(Base):
     __tablename__ = "vote_results"
@@ -75,15 +76,15 @@ class Interpellation(Base):
     __tablename__ = "interpellations"
 
     id = Column(Integer, primary_key=True, index=True)
-    mp_id = Column(Integer, ForeignKey("mps.id"))
+    # mp_id removed as it doesn't exist in DB
     title = Column(String)
     sent_date = Column(Date)
     last_modified = Column(DateTime)
     raw_data = Column(JSONB)
-    status = Column(String)
-    created_at = Column(DateTime, server_default=func.now())
+    # status = Column(String) # Removed as missing in DB
+    # created_at = Column(DateTime, server_default=func.now()) # Removed as missing in DB
 
-    mp = relationship("MP", back_populates="interpellations")
+    authors = relationship("MP", secondary="interpellation_authors", back_populates="interpellations")
 
 class InterpellationAuthor(Base):
     __tablename__ = "interpellation_authors"
@@ -112,6 +113,24 @@ class CommitteeMember(Base):
     from_date = Column(Date, nullable=True)
     to_date = Column(Date, nullable=True)
     term = Column(Integer)
+
+class CommitteeSitting(Base):
+    __tablename__ = "committee_sittings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    committee_code = Column(String, ForeignKey("committees.code"), index=True)
+    sitting_number = Column(Integer)
+    date = Column(Date, index=True)
+    start_time = Column(DateTime)
+    end_time = Column(DateTime)
+    room = Column(String)
+    status = Column(String, index=True)
+    is_remote = Column(Boolean, default=False)
+    is_closed = Column(Boolean, default=False)
+    video_url = Column(String)
+    agenda = Column(JSONB)
+    term = Column(Integer)
+    created_at = Column(DateTime, server_default=func.now())
 
 class AssetDeclaration(Base):
     __tablename__ = "asset_declarations"
@@ -153,3 +172,64 @@ class EuroVoteResult(Base):
     vote_id = Column(String, ForeignKey("euro_votes.id"))
     mep_id = Column(Integer) # Linked to EuroMEP.api_id technically, but strict FK might fail if not synced
     vote = Column(String)
+
+class Category(Base):
+    __tablename__ = "categories"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String, unique=True, index=True)
+    name_pl = Column(String)
+    icon = Column(String, nullable=True)
+    color = Column(String, nullable=True)
+    level = Column(Integer, default=1)
+    created_at = Column(DateTime, server_default=func.now())
+
+
+class VoteAnalysis(Base):
+    __tablename__ = "vote_analyses"
+    
+    vote_id = Column(Integer, ForeignKey("votes.id"), primary_key=True)
+    summary = Column(Text)
+    pros = Column(JSONB)
+    cons = Column(JSONB)
+    mind_map = Column(Text, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    
+    vote = relationship("Vote", back_populates="analysis")
+
+
+class MPRelation(Base):
+    __tablename__ = "mp_relations"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    mp_id_a = Column(Integer, ForeignKey("mps.id"))
+    mp_id_b = Column(Integer, ForeignKey("mps.id"))
+    similarity_score = Column(Float)
+    relation_type = Column(String) # 'ideological_alignment'
+    created_at = Column(DateTime, server_default=func.now())
+
+class MPStat(Base):
+    __tablename__ = "mp_stats"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    mp_id = Column(Integer, ForeignKey("mps.id"))
+    stat_key = Column(String, index=True)
+    stat_value = Column(String)
+    updated_at = Column(DateTime, server_default=func.now())
+
+class Speech(Base):
+    __tablename__ = "speeches"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    mp_id = Column(Integer, ForeignKey("mps.id"))
+    sitting = Column(Integer)
+    date = Column(Date)
+    speaker_name = Column(String)
+    content = Column(Text)
+    topic = Column(String, nullable=True)
+    statement_num = Column(Integer)
+    term = Column(Integer)
+    created_at = Column(DateTime, server_default=func.now())
+    
+    mp = relationship("MP")
+

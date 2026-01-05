@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Calendar, User, Filter, X } from 'lucide-react';
+import { Search, Calendar, User, Filter, X, ArrowRight } from 'lucide-react';
 import { useSpeeches } from '../hooks/useSpeeches';
 
 export default function SpeechesList() {
@@ -68,35 +68,35 @@ export default function SpeechesList() {
     };
 
     return (
-        <div className="min-h-screen bg-[#060613] pt-24 pb-12 px-4">
+        <div className="min-h-screen bg-page pt-24 pb-12 px-4">
             <div className="max-w-5xl mx-auto space-y-8 animate-fade-in">
 
                 {/* Header & Search */}
                 <div className="text-center space-y-6">
-                    <h1 className="text-4xl md:text-5xl font-black text-white">
+                    <h1 className="text-4xl md:text-5xl font-black text-primary">
                         Wyszukiwarka Wypowiedzi
                     </h1>
-                    <p className="text-xl text-white/60 max-w-2xl mx-auto">
-                        Przeszukaj <strong className="text-white">{totalCount.toLocaleString()}</strong> stenogramów z posiedzeń Sejmu.
+                    <p className="text-xl text-secondary max-w-2xl mx-auto italic">
+                        Przeszukaj <strong className="text-primary">{totalCount.toLocaleString()}</strong> stenogramów z posiedzeń Sejmu.
                     </p>
 
                     {/* Search Card */}
-                    <div className="max-w-3xl mx-auto bg-[#111126] p-4 rounded-2xl border border-white/10">
+                    <div className="max-w-3xl mx-auto bg-surface p-6 rounded-3xl border border-border-base shadow-xl">
                         <form onSubmit={handleSearch} className="relative">
                             <input
                                 type="text"
                                 placeholder="Wpisz frazę (np. 'inflacja', 'CPK', 'aborcja')..."
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
-                                className="w-full pl-12 pr-32 py-4 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500/50 focus:ring-0 text-lg text-white placeholder:text-white/30 transition-colors"
+                                className="w-full pl-12 pr-32 py-4 rounded-xl bg-black/5 dark:bg-white/5 border border-border-base focus:border-accent-blue/50 focus:ring-0 text-lg text-primary placeholder:text-secondary/30 transition-colors"
                             />
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={24} />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary/30" size={24} />
 
                             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
                                 <button
                                     type="button"
                                     onClick={() => setShowFilters(!showFilters)}
-                                    className={`p-2.5 rounded-xl transition-colors ${showFilters ? 'bg-blue-600 text-white' : 'bg-white/5 text-white/50 hover:bg-white/10'}`}
+                                    className={`p-2.5 rounded-xl transition-colors ${showFilters ? 'bg-accent-blue text-white' : 'bg-black/10 dark:bg-white/5 text-secondary hover:bg-black/20 dark:hover:bg-white/10'}`}
                                     title="Filtry"
                                 >
                                     <Filter size={18} />
@@ -120,7 +120,7 @@ export default function SpeechesList() {
                                     <select
                                         value={selectedMp}
                                         onChange={(e) => setSelectedMp(e.target.value)}
-                                        className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:border-blue-500/50 focus:ring-0 appearance-none cursor-pointer hover:bg-white/10 transition-colors"
+                                        className="w-full p-3 bg-black/5 dark:bg-white/5 border border-border-base rounded-xl text-sm text-primary focus:border-accent-blue/50 focus:ring-0 appearance-none cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
                                         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '16px' }}
                                     >
                                         <option value="">Wszyscy posłowie</option>
@@ -136,7 +136,7 @@ export default function SpeechesList() {
                                     <select
                                         value={selectedParty}
                                         onChange={(e) => setSelectedParty(e.target.value)}
-                                        className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:border-blue-500/50 focus:ring-0 appearance-none cursor-pointer hover:bg-white/10 transition-colors"
+                                        className="w-full p-3 bg-black/5 dark:bg-white/5 border border-border-base rounded-xl text-sm text-primary focus:border-accent-blue/50 focus:ring-0 appearance-none cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
                                         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '16px' }}
                                     >
                                         <option value="">Wszystkie kluby</option>
@@ -154,13 +154,13 @@ export default function SpeechesList() {
                                             type="date"
                                             value={dateFrom}
                                             onChange={(e) => setDateFrom(e.target.value)}
-                                            className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:border-blue-500/50 focus:ring-0 hover:bg-white/10 transition-colors [color-scheme:dark]"
+                                            className="w-full p-3 bg-black/5 dark:bg-white/5 border border-border-base rounded-xl text-sm text-primary focus:border-accent-blue/50 focus:ring-0 hover:bg-black/10 dark:hover:bg-white/10 transition-colors [color-scheme:light] dark:[color-scheme:dark]"
                                         />
                                         <input
                                             type="date"
                                             value={dateTo}
                                             onChange={(e) => setDateTo(e.target.value)}
-                                            className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white focus:border-blue-500/50 focus:ring-0 hover:bg-white/10 transition-colors [color-scheme:dark]"
+                                            className="w-full p-3 bg-black/5 dark:bg-white/5 border border-border-base rounded-xl text-sm text-primary focus:border-accent-blue/50 focus:ring-0 hover:bg-black/10 dark:hover:bg-white/10 transition-colors [color-scheme:light] dark:[color-scheme:dark]"
                                         />
                                     </div>
                                 </div>
@@ -171,8 +171,8 @@ export default function SpeechesList() {
 
                 {/* Results or Recent */}
                 <div className="space-y-6">
-                    <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-4">
-                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <div className="flex items-center justify-between border-b border-border-base pb-4">
+                        <h2 className="text-2xl font-black text-primary flex items-center gap-3">
                             {hasSearched
                                 ? (speeches.length > 0 ? `Wyniki wyszukiwania (${speeches.length})` : `Brak wyników`)
                                 : 'Ostatnie wypowiedzi'
@@ -201,21 +201,21 @@ export default function SpeechesList() {
 
                         {/* Show Results OR Recent (if not searched) */}
                         {(!hasSearched ? recentSpeeches : speeches).map((speech) => (
-                            <div key={speech.id} className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
-                                <div className="flex justify-between items-start gap-4 mb-3">
+                            <div key={speech.id} className="bg-surface p-8 rounded-[2rem] border border-border-base shadow-sm hover:shadow-xl transition-all group">
+                                <div className="flex justify-between items-start gap-4 mb-4">
                                     <div className="flex items-center gap-3">
                                         {speech.mp ? (
-                                            <Link to={`/poslowie/${speech.mp.id}`} className="flex items-center gap-3 group">
+                                            <Link to={`/poslowie/${speech.mp.id}`} className="flex items-center gap-4 group/author">
                                                 <img
                                                     src={speech.mp.photo_url}
                                                     alt={speech.mp.name}
                                                     className="w-10 h-10 rounded-full object-cover border border-slate-100 group-hover:border-blue-200 transition-colors"
                                                 />
                                                 <div>
-                                                    <p className="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                                    <p className="font-black text-primary group-hover/author:text-accent-blue transition-colors text-lg">
                                                         {speech.mp.name}
                                                     </p>
-                                                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+                                                    <p className="text-[10px] font-black text-secondary uppercase tracking-widest opacity-60">
                                                         {speech.mp.party}
                                                     </p>
                                                 </div>
@@ -231,24 +231,24 @@ export default function SpeechesList() {
                                     </div>
 
                                     <div className="text-right">
-                                        <span className="text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
+                                        <span className="text-[10px] font-black text-secondary bg-black/5 dark:bg-white/5 px-3 py-1.5 rounded-full uppercase tracking-widest border border-border-base">
                                             {speech.date}
                                         </span>
-                                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Posiedzenie {speech.sitting}</p>
+                                        <p className="text-[10px] font-black text-secondary opacity-40 mt-1 uppercase tracking-widest">Posiedzenie {speech.sitting}</p>
                                     </div>
                                 </div>
 
-                                <div className="prose prose-slate max-w-none mb-4">
+                                <div className="prose prose-slate dark:prose-invert max-w-none mb-6">
                                     <p
-                                        className="text-slate-700 dark:text-slate-300 leading-relaxed line-clamp-4"
+                                        className="text-secondary leading-relaxed line-clamp-4 font-medium italic opacity-80"
                                         dangerouslySetInnerHTML={{
                                             __html: query ? highlightText(speech.content, query) : (speech.content.slice(0, 300) + (speech.content.length > 300 ? '...' : ''))
                                         }}
                                     />
                                 </div>
 
-                                <Link to={`/wypowiedzi/${speech.id}`} className="text-sm font-bold text-blue-600 hover:text-blue-700 hover:underline">
-                                    Czytaj całą wypowiedź &rarr;
+                                <Link to={`/wypowiedzi/${speech.id}`} className="inline-flex items-center gap-2 text-xs font-black text-accent-blue uppercase tracking-widest hover:translate-x-1 transition-transform">
+                                    Czytaj całą wypowiedź <ArrowRight size={14} />
                                 </Link>
                             </div>
                         ))}
@@ -263,15 +263,15 @@ export default function SpeechesList() {
 
                 {/* Modern Pagination Slider */}
                 {!hasSearched && recentSpeeches.length > 0 && totalCount > ITEMS_PER_PAGE && (
-                    <div className="mt-12 p-8 bg-slate-800 dark:bg-[#111126] rounded-3xl border border-slate-700 dark:border-white/5 animate-fade-in-up">
+                    <div className="mt-12 p-10 bg-surface rounded-[2.5rem] border border-border-base shadow-2xl animate-fade-in-up">
                         <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
                             <div className="flex-1 w-full">
-                                <div className="flex justify-between mb-4 px-2">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Najnowsze</span>
-                                    <div className="text-[10px] font-bold text-blue-400 bg-blue-500/10 px-3 py-1.5 rounded-full border border-blue-500/20 uppercase tracking-wider">
+                                <div className="flex justify-between mb-6 px-2">
+                                    <span className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] opacity-40">Najnowsze</span>
+                                    <div className="text-[10px] font-black text-accent-blue bg-accent-blue/10 px-4 py-2 rounded-full border border-accent-blue/20 uppercase tracking-[0.2em]">
                                         Strona {currentPage + 1} z {Math.ceil(totalCount / ITEMS_PER_PAGE).toLocaleString()}
                                     </div>
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Starsze</span>
+                                    <span className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] opacity-40">Starsze</span>
                                 </div>
                                 <div className="relative h-10 flex items-center">
                                     <input
@@ -286,18 +286,18 @@ export default function SpeechesList() {
                                             fetchSpeeches(newPage);
                                             window.scrollTo({ top: 400, behavior: 'smooth' });
                                         }}
-                                        className="w-full h-2 bg-white/5 rounded-lg appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400 transition-all"
+                                        className="w-full h-1.5 bg-black/5 dark:bg-white/10 rounded-full appearance-none cursor-pointer accent-accent-blue hover:scale-y-125 transition-all"
                                     />
                                 </div>
-                                <div className="flex justify-between mt-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest px-2">
+                                <div className="flex justify-between mt-4 text-[9px] font-black text-secondary uppercase tracking-[0.2em] px-2 opacity-50">
                                     <span>Początek {totalCount > 74000 ? 'X' : ''} kadencji</span>
                                     <span>Przesuń, aby cofnąć się w czasie</span>
                                 </div>
                             </div>
 
-                            <div className="bg-black/20 px-8 py-6 rounded-2xl border border-white/5 text-center shrink-0 min-w-[200px]">
-                                <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-2">Wypowiedzi w bazie</div>
-                                <div className="text-3xl font-black text-white">
+                            <div className="bg-black/5 dark:bg-white/5 px-10 py-8 rounded-3xl border border-border-base text-center shrink-0 min-w-[220px]">
+                                <div className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] mb-3 opacity-50">Wypowiedzi w bazie</div>
+                                <div className="text-4xl font-black text-primary">
                                     {totalCount.toLocaleString()}
                                 </div>
                             </div>

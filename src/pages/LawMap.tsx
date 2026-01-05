@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import ReactFlow, {
     Node,
@@ -29,7 +29,7 @@ import {
     X,
     ExternalLink
 } from 'lucide-react';
-import { db } from '../lib/db';
+import { fetchProcess } from '../api';
 
 // ============================================================================
 // TYPES
@@ -286,16 +286,10 @@ export default function LawMap() {
     useEffect(() => {
         if (!processId) return;
 
-        const fetchProcess = async () => {
+        const loadProcess = async () => {
             setLoading(true);
             try {
-                const { data, error } = await db
-                    .from('processes')
-                    .select('*')
-                    .eq('id', processId)
-                    .single();
-
-                if (error) throw error;
+                const data = await fetchProcess(processId);
                 setProcess(data);
             } catch (err) {
                 console.error('Error fetching process:', err);
@@ -304,7 +298,7 @@ export default function LawMap() {
             }
         };
 
-        fetchProcess();
+        loadProcess();
     }, [processId]);
 
     // Build graph from process data
@@ -313,10 +307,11 @@ export default function LawMap() {
 
         // Parse who_affected (handle both Array (Postgres) and String (CSV))
         let affectedGroups: string[] = ['Obywatele'];
-        if (Array.isArray(process.who_affected)) {
-            affectedGroups = process.who_affected;
-        } else if (typeof process.who_affected === 'string') {
-            affectedGroups = (process.who_affected as string).split(',').map((g: string) => g.trim()).filter(Boolean);
+        const whoAffected = (process as any).who_affected;
+        if (Array.isArray(whoAffected)) {
+            affectedGroups = whoAffected;
+        } else if (typeof whoAffected === 'string') {
+            affectedGroups = whoAffected.split(',').map((g: string) => g.trim()).filter(Boolean);
         }
 
         // Map category to topic_tag if missing
@@ -466,7 +461,7 @@ export default function LawMap() {
                     </div>
 
                     <Link
-                        to={`/projekty/${processId}`}
+                        to={`/ustawy/${processId}`}
                         className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
                     >
                         <span>Zobacz szczegóły</span>

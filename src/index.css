@@ -4,10 +4,10 @@
 
 @layer base {
   :root {
-    --bg-page: 255 255 255;
+    --bg-page: 248 250 252;
+    /* #F8FAFC (slate-50) */
+    --bg-surface: 255 255 255;
     /* #FFFFFF */
-    --bg-surface: 249 250 251;
-    /* #F9FAFB (slate-50 equivalent) */
     --text-primary: 15 23 42;
     /* #0F172A (slate-900) */
     --text-secondary: 71 85 105;
@@ -16,6 +16,7 @@
     /* #E2E8F0 (slate-200) */
     --accent-blue: 37 99 235;
     /* #2563EB */
+    --accent-gradient: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
   }
 
   .dark {

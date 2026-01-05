@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { db } from '../lib/db';
+import { fetchSpeech } from '../api';
 import { ArrowLeft, Calendar, User } from 'lucide-react';
 
 interface Speech {
@@ -14,8 +14,9 @@ interface Speech {
     ai_analysis: any; // JSONB
     mp?: {
         id: number;
-        name: string;
-        party: string;
+        first_name: string;
+        last_name: string;
+        club: string;
         photo_url: string;
     };
 }
@@ -26,20 +27,10 @@ export default function SpeechDetails() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchSpeech = async () => {
+        const loadSpeech = async () => {
             if (!id) return;
             try {
-                const { data, error } = await db
-                    .from('speeches')
-                    .select(`
-            *,
-            ai_analysis,
-            mp:mps(id, name, party, photo_url)
-          `)
-                    .eq('id', id)
-                    .single();
-
-                if (error) throw error;
+                const data = await fetchSpeech(id);
                 setSpeech(data);
             } catch (err) {
                 console.error('Error fetching speech:', err);
@@ -48,40 +39,47 @@ export default function SpeechDetails() {
             }
         };
 
-        fetchSpeech();
+        loadSpeech();
     }, [id]);
 
-    if (loading) return <div className="text-center py-12">Ładowanie wypowiedzi...</div>;
+    if (loading) return (
+        <div className="min-h-screen bg-page flex items-center justify-center">
+            <div className="text-secondary text-sm font-black tracking-[0.3em] uppercase animate-pulse">Establishing Semantic Connection...</div>
+        </div>
+    );
 
     if (!speech) {
         return (
-            <div className="text-center py-12">
-                <p className="text-slate-600">Nie znaleziono wypowiedzi.</p>
-                <Link to="/wypowiedzi" className="text-blue-600 hover:text-blue-700 font-semibold mt-4 inline-block">
-                    Wróć do listy
-                </Link>
+            <div className="min-h-screen bg-page flex items-center justify-center">
+                <div className="text-center p-8 bg-surface rounded-3xl border border-border-base shadow-xl">
+                    <p className="text-secondary text-lg font-black italic mb-6">Nie znaleziono wypowiedzi.</p>
+                    <Link to="/wypowiedzi" className="text-accent-blue hover:text-accent-blue/80 font-black uppercase tracking-widest text-xs">
+                        Wróć do listy
+                    </Link>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6 pt-24 pb-12 px-4 animate-fade-in">
+        <div className="min-h-screen bg-page max-w-4xl mx-auto space-y-8 pt-24 pb-12 px-4 animate-fade-in transition-all duration-500">
             {/* Back Button */}
-            <Link to="/wypowiedzi" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold">
-                <ArrowLeft size={20} />
+            <Link to="/wypowiedzi" className="inline-flex items-center gap-2 text-secondary hover:text-accent-blue font-black uppercase tracking-widest text-xs transition-all hover:-translate-x-1">
+                <ArrowLeft size={16} />
                 Wróć do wyszukiwarki
             </Link>
 
             {/* Header Card */}
-            <div className="bg-white rounded-xl border-2 border-slate-200 p-8 shadow-sm">
+            <div className="bg-surface rounded-3xl border border-border-base p-8 md:p-12 shadow-xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-accent-blue/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-accent-blue/10 transition-all duration-700" />
                 <div className="flex flex-col md:flex-row justify-between items-start gap-6">
                     <div className="flex items-center gap-4">
                         {speech.mp ? (
                             <Link to={`/poslowie/${speech.mp.id}`} className="group">
                                 <img
                                     src={speech.mp.photo_url}
-                                    alt={speech.mp.name}
-                                    className="w-16 h-16 rounded-full object-cover border-2 border-slate-100 group-hover:border-blue-200 transition-colors"
+                                    alt={`${speech.mp.first_name} ${speech.mp.last_name}`}
+                                    className="w-20 h-20 rounded-full object-cover border-4 border-border-base group-hover:border-accent-blue transition-colors shadow-lg"
                                 />
                             </Link>
                         ) : (
@@ -91,29 +89,29 @@ export default function SpeechDetails() {
                         )}
 
                         <div>
-                            <h1 className="text-2xl md:text-3xl font-black text-slate-900 mb-1">
+                            <h1 className="text-2xl md:text-4xl font-black text-primary mb-2 leading-tight italic font-serif group/title">
                                 {speech.mp ? (
-                                    <Link to={`/poslowie/${speech.mp.id}`} className="hover:text-blue-600 transition-colors">
-                                        {speech.mp.name}
+                                    <Link to={`/poslowie/${speech.mp.id}`} className="hover:text-accent-blue transition-colors decoration-accent-blue/30 decoration-4">
+                                        {speech.mp.first_name} {speech.mp.last_name}
                                     </Link>
                                 ) : (
                                     speech.speaker_name
                                 )}
                             </h1>
                             {speech.mp && (
-                                <span className="text-sm font-bold text-slate-500 uppercase tracking-wide">
-                                    {speech.mp.party}
+                                <span className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] bg-black/5 dark:bg-white/5 px-3 py-1 rounded-full border border-border-base">
+                                    {speech.mp.club}
                                 </span>
                             )}
                         </div>
                     </div>
 
-                    <div className="text-right">
-                        <div className="inline-flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg text-slate-600 font-medium text-sm mb-2">
-                            <Calendar size={16} />
+                    <div className="text-center md:text-right relative z-10">
+                        <div className="inline-flex items-center gap-2 bg-black/5 dark:bg-white/5 px-4 py-2 rounded-full border border-border-base text-secondary font-black text-[10px] uppercase tracking-widest mb-3">
+                            <Calendar size={14} className="text-accent-blue" />
                             {speech.date}
                         </div>
-                        <p className="text-slate-500 text-sm">
+                        <p className="text-secondary text-[10px] font-black uppercase tracking-widest opacity-40">
                             Posiedzenie {speech.sitting}
                         </p>
                     </div>
@@ -121,10 +119,11 @@ export default function SpeechDetails() {
             </div>
 
             {/* Content Card / AI Analysis */}
-            <div className={`rounded-xl border ${speech.ai_analysis ? 'bg-slate-950 border-indigo-900/50' : 'bg-white border-slate-200'} p-8 shadow-sm transition-all duration-500`}>
+            <div className={`rounded-[2rem] border transition-all duration-700 shadow-2xl ${speech.ai_analysis
+                ? 'bg-slate-950 border-indigo-500/30'
+                : 'bg-surface border-border-base'} p-8 md:p-12`}>
 
                 {speech.ai_analysis ? (
-                    /* AI GOD MODE VIEW */
                     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
                         <div className="flex items-center justify-between border-b border-indigo-900/50 pb-4">
                             <h2 className="text-xl font-bold flex items-center gap-2 text-indigo-400">
@@ -134,25 +133,24 @@ export default function SpeechDetails() {
                                 </span>
                                 AI SPEECH COMPOSER
                             </h2>
-                             <div className="text-xs font-mono text-indigo-300 bg-indigo-900/30 px-3 py-1 rounded-full border border-indigo-500/30">
+                            <div className="text-xs font-mono text-indigo-300 bg-indigo-900/30 px-3 py-1 rounded-full border border-indigo-500/30">
                                 EMOCJE: {speech.ai_analysis.summary?.emotion_level || "Analiza..."}
-                             </div>
+                            </div>
                         </div>
 
-                        {/* LEGEND */}
                         <div className="flex flex-wrap gap-4 text-[10px] md:text-xs font-mono uppercase tracking-wider text-slate-500 border-b border-indigo-900/30 pb-4">
-                             <div className="flex items-center gap-2 px-2 py-1 rounded bg-red-900/20 border border-red-900/30 text-red-400">
+                            <div className="flex items-center gap-2 px-2 py-1 rounded bg-red-900/20 border border-red-900/30 text-red-400">
                                 <div className="w-2 h-2 rounded-full bg-red-500"></div>Strach / Agresja
-                             </div>
-                             <div className="flex items-center gap-2 px-2 py-1 rounded bg-green-900/20 border border-green-900/30 text-green-400">
+                            </div>
+                            <div className="flex items-center gap-2 px-2 py-1 rounded bg-green-900/20 border border-green-900/30 text-green-400">
                                 <div className="w-2 h-2 rounded-full bg-green-500"></div>Nadzieja / Wizja
-                             </div>
-                             <div className="flex items-center gap-2 px-2 py-1 rounded bg-amber-900/20 border border-amber-900/30 text-amber-400">
+                            </div>
+                            <div className="flex items-center gap-2 px-2 py-1 rounded bg-amber-900/20 border border-amber-900/30 text-amber-400">
                                 <div className="w-2 h-2 rounded-full bg-amber-500"></div>Manipulacja
-                             </div>
-                             <div className="flex items-center gap-2 px-2 py-1 rounded bg-blue-900/20 border border-blue-900/30 text-blue-400">
+                            </div>
+                            <div className="flex items-center gap-2 px-2 py-1 rounded bg-blue-900/20 border border-blue-900/30 text-blue-400">
                                 <div className="w-2 h-2 rounded-full bg-blue-500"></div>Weryfikacja
-                             </div>
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -178,7 +176,6 @@ export default function SpeechDetails() {
                                 })}
                             </div>
 
-                            {/* Sidebar Insights */}
                             <div className="space-y-4">
                                 <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Wykryte Wątki</h3>
                                 {speech.ai_analysis.segments?.filter((s: any) => s.fact_check).map((s: any, idx: number) => (
@@ -204,27 +201,13 @@ export default function SpeechDetails() {
                         </div>
                     </div>
                 ) : (
-                    /* STANDARD VIEW */
-                    <div className="prose prose-lg prose-slate max-w-none">
-                        {speech.content.split('\n').map((paragraph, idx) => (
-                            paragraph.trim() && <p key={idx} className="text-slate-800 leading-relaxed mb-4">{paragraph}</p>
+                    <div className="prose prose-lg dark:prose-invert max-w-none">
+                        {speech.content?.split('\n').map((paragraph, idx) => (
+                            paragraph.trim() && <p key={idx} className="text-secondary leading-relaxed mb-6 italic font-medium opacity-90 text-lg">{paragraph}</p>
                         ))}
                     </div>
                 )}
             </div>
-
-            {/* Context/Topic (Placeholder) */}
-            {/* <div className="bg-blue-50 rounded-xl p-6 border border-blue-100 flex items-start gap-4">
-        <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
-          <MessageSquare size={24} />
-        </div>
-        <div>
-          <h3 className="font-bold text-blue-900 mb-1">Kontekst wypowiedzi</h3>
-          <p className="text-blue-800 text-sm">
-            Ta wypowiedź dotyczyła punktu porządku dziennego: "{speech.topic || 'Sprawozdanie Komisji...'}"
-          </p>
-        </div>
-      </div> */}
         </div>
     );
 }

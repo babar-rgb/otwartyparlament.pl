@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { db } from '../lib/db';
 import { Search, User, FileText, ArrowRight, MessageSquare, BookOpen, Zap } from 'lucide-react';
+import { unifiedSearch } from '../api';
 import { cleanSejmTitle } from '../utils/titleFormatter';
-import MpCard from '../components/MpCard';
+import MpCard from '../components/features/sejm/MpCard';
 import { MP } from '../api';
 
 interface SearchResult {
@@ -33,70 +33,26 @@ const SearchPage: React.FC = () => {
 
     const performSearch = async (searchQuery: string) => {
         setLoading(true);
-        const expanded = searchParams.get('expanded');
-        const period = searchParams.get('period');
-        const typeFilter = searchParams.get('type');
-        const controversial = searchParams.get('controversial');
+        const expanded = searchParams.get('expanded') || undefined;
+        const period = searchParams.get('period') || undefined;
+        const typeFilter = searchParams.get('type') || undefined;
+        const controversial = searchParams.get('controversial') === 'true';
 
         try {
-            // 1. Search MPs
-            let mpQuery = db.from('mps').select('*').or(`first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%`);
-            const { data: mpsData } = await mpQuery.limit(6);
+            const data = await unifiedSearch({
+                q: searchQuery,
+                type: typeFilter,
+                period,
+                controversial,
+                expanded
+            });
 
-            if (mpsData) {
-                const mappedMps: MP[] = mpsData.map(mp => ({
-                    id: mp.id,
-                    first_name: mp.first_name,
-                    last_name: mp.last_name,
-                    club: mp.club,
-                    district: mp.district,
-                    photo_url: mp.photo_url,
-                    attendanceRate: Math.round(mp.stats_attendance || 0),
-                    active: mp.active,
-                    rebelVotes: mp.stats_rebellion || 0,
-                    slug: mp.slug
-                }));
-                setMps(mappedMps);
-            }
+            // Separate MPs from other results
+            const mpResults = data.filter((r: any) => r.type === 'mp').map((r: any) => r.data);
+            const otherResults = data.filter((r: any) => r.type !== 'mp');
 
-            // 2. Unified Search
-            let queryBuilder = db.from('view_search_all').select('*');
-
-            // Apply Semantic/Text Search
-            if (expanded) {
-                const semanticQuery = expanded.split(',')
-                    .map(s => {
-                        const parts = s.trim().toLowerCase().split(/\s+/);
-                        const processedParts = parts.map(word => word.length > 4 ? word.slice(0, -1) + ':*' : word + ':*');
-                        return processedParts.length > 1 ? `(${processedParts.join(' <-> ')})` : processedParts[0];
-                    })
-                    .join(' | ');
-                queryBuilder = queryBuilder.textSearch('title', semanticQuery, { config: 'simple' });
-            } else {
-                queryBuilder = queryBuilder.textSearch('title', searchQuery, { type: 'websearch', config: 'simple' });
-            }
-
-            // Apply Roadmap Filters
-            if (period === 'week') {
-                const lastWeek = new Date();
-                lastWeek.setDate(lastWeek.getDate() - 7);
-                queryBuilder = queryBuilder.gte('date', lastWeek.toISOString());
-            }
-
-            if (typeFilter) {
-                queryBuilder = queryBuilder.eq('type', typeFilter);
-            }
-
-            if (controversial === 'true') {
-                queryBuilder = queryBuilder.eq('controversial', true);
-            }
-
-            const { data: searchData, error } = await queryBuilder
-                .order('relevance', { ascending: false })
-                .limit(40);
-
-            if (error) throw error;
-            setResults(searchData as SearchResult[] || []);
+            setMps(mpResults);
+            setResults(otherResults);
 
         } catch (error) {
             console.error('Search error:', error);

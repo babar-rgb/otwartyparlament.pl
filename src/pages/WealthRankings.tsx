@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { db } from '../lib/db';
+import { fetchWealthRankings } from '../api';
 import { Link } from 'react-router-dom';
 import { TrendingUp, Home, DollarSign, ArrowRight } from 'lucide-react';
 
@@ -12,7 +12,7 @@ interface WealthData {
     income: number;
     properties_count: number;
     summary: string;
-    year?: string; // Year of the declaration
+    year?: string;
 }
 
 export default function WealthRankings() {
@@ -22,32 +22,16 @@ export default function WealthRankings() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const { data: mps, error } = await db
-                    .from('mps')
-                    .select(`
-                        id,
-                        first_name,
-                        last_name,
-                        club,
-                        photo_url,
-                        asset_declarations (
-                            parsed_content,
-                            summary,
-                            year
-                        )
-                    `);
-
-                if (error) throw error;
+                const mps = await fetchWealthRankings();
 
                 const processed: WealthData[] = mps
                     .map((mp: any) => {
-                        // CRITICAL: Sort declarations by year DESCENDING to get newest first
                         const sortedDeclarations = (mp.asset_declarations || [])
                             .filter((d: any) => d && d.parsed_content)
                             .sort((a: any, b: any) => {
                                 const yearA = a.year || '0000';
                                 const yearB = b.year || '0000';
-                                return yearB.localeCompare(yearA); // Descending - newest first
+                                return yearB.localeCompare(yearA);
                             });
 
                         const decl = sortedDeclarations[0];
@@ -71,7 +55,7 @@ export default function WealthRankings() {
                             income: parseAmount(decl.parsed_content.income),
                             properties_count: decl.parsed_content.real_estate?.length || 0,
                             summary: decl.summary,
-                            year: decl.year // Add year to track which declaration is used
+                            year: decl.year
                         };
                     })
                     .filter(Boolean) as WealthData[];
@@ -93,7 +77,6 @@ export default function WealthRankings() {
 
     const getPartyColor = (party: string) => {
         const p = party?.toLowerCase() || '';
-        // Check Konfederacja first (contains 'ko')
         if (p.includes('konfederacja')) return 'bg-gradient-to-r from-[#0a1628] to-[#000000]';
         if (p.includes('ko') || p.includes('koalicja')) return 'bg-gradient-to-r from-orange-500 to-red-600';
         if (p.includes('pis')) return 'bg-blue-700';
@@ -118,7 +101,6 @@ export default function WealthRankings() {
         <div className="min-h-screen bg-[#060613] text-white pt-24 pb-12 px-4 md:px-8">
             <div className="max-w-6xl mx-auto space-y-12 animate-fade-in">
 
-                {/* Header */}
                 <div className="text-center space-y-4">
                     <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight">
                         Rankingi Majątkowe
@@ -131,9 +113,7 @@ export default function WealthRankings() {
                     </p>
                 </div>
 
-                {/* Top 3 Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Savings Leader */}
                     <div className="bg-gradient-to-br from-emerald-500/20 to-teal-500/10 p-6 rounded-[2rem] border border-emerald-500/20 backdrop-blur-sm">
                         <div className="flex items-center gap-4 mb-4">
                             <div className="p-3 bg-emerald-500/20 rounded-xl">
@@ -149,7 +129,6 @@ export default function WealthRankings() {
                         </p>
                     </div>
 
-                    {/* Income Leader */}
                     <div className="bg-gradient-to-br from-blue-500/20 to-indigo-500/10 p-6 rounded-[2rem] border border-blue-500/20 backdrop-blur-sm">
                         <div className="flex items-center gap-4 mb-4">
                             <div className="p-3 bg-blue-500/20 rounded-xl">
@@ -165,7 +144,6 @@ export default function WealthRankings() {
                         </p>
                     </div>
 
-                    {/* Properties Leader */}
                     <div className="bg-gradient-to-br from-amber-500/20 to-orange-500/10 p-6 rounded-[2rem] border border-amber-500/20 backdrop-blur-sm">
                         <div className="flex items-center gap-4 mb-4">
                             <div className="p-3 bg-amber-500/20 rounded-xl">
@@ -182,10 +160,8 @@ export default function WealthRankings() {
                     </div>
                 </div>
 
-                {/* Rankings Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-                    {/* Savings Ranking */}
                     <div className="bg-[#111126] rounded-[2rem] border border-white/5 overflow-hidden">
                         <div className="p-6 border-b border-white/5 flex items-center gap-3">
                             <DollarSign className="text-emerald-400" size={24} />
@@ -221,7 +197,6 @@ export default function WealthRankings() {
                         </div>
                     </div>
 
-                    {/* Real Estate Ranking */}
                     <div className="bg-[#111126] rounded-[2rem] border border-white/5 overflow-hidden">
                         <div className="p-6 border-b border-white/5 flex items-center gap-3">
                             <Home className="text-amber-400" size={24} />

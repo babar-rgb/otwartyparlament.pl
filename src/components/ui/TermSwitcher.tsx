@@ -1,4 +1,4 @@
-import { useTerm } from '../context/TermContext';
+import { useTerm } from '../../context/TermContext';
 import { motion } from 'framer-motion';
 
 export default function TermSwitcher() {

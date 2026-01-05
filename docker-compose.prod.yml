@@ -14,22 +14,6 @@ services:
     networks:
       - app-network
 
-  # 2. API (PostgREST)
-  api:
-    image: postgrest/postgrest
-    restart: always
-    environment:
-      PGRST_DB_URI: postgres://${POSTGRES_USER:?error}:${POSTGRES_PASSWORD:?error}@${POSTGRES_HOST:-db}:5432/${POSTGRES_DB:?error}
-      PGRST_DB_SCHEMA: public
-      PGRST_DB_ANON_ROLE: ${POSTGRES_USER:?error}
-      PGRST_JWT_SECRET: ${VITE_API_ANON_KEY:?error}
-    ports:
-      - "3001:3000"
-    networks:
-      - app-network
-    depends_on:
-      - db
-
   # 2.5 BACKEND API (Python FastAPI)
   backend:
     build:
@@ -60,7 +44,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
       POSTGRES_DB: ${POSTGRES_DB:?error}
       # API URL for internal calls if needed
-      API_URL: http://api:3000
+
     command: [ "python3", "-m", "backend.scheduler" ]
     networks:
       - app-network
@@ -74,15 +58,12 @@ services:
       dockerfile: Dockerfile
       args:
         # Public URL where the API will be accessible from the browser
-        VITE_POSTGREST_URL: ${VITE_POSTGREST_URL}
-        VITE_API_ANON_KEY: ${VITE_API_ANON_KEY}
+
     restart: always
     ports:
       - "${APP_PORT:-8080}:80"
     networks:
       - app-network
-    depends_on:
-      - api
 
 volumes:
   pgdata:

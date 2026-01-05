@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
-import Navigation from './components/Navigation';
-import Footer from './components/Footer';
+import Navigation from './components/layout/Navigation';
+import Footer from './components/layout/Footer';
 import LoadingSpinner from './components/ui/LoadingSpinner';
-import ScrollToTop from './components/ScrollToTop';
-import ErrorBoundary from './components/ErrorBoundary';
+import ScrollToTop from './components/ui/ScrollToTop';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 
 // Lazy Load Pages
 const Home = lazy(() => import('./pages/Home'));
@@ -42,6 +42,8 @@ const Comparator = lazy(() => import('./pages/Comparator'));
 const SearchPage = lazy(() => import('./pages/SearchPage'));
 const LiveAnalysis = lazy(() => import('./pages/LiveAnalysis'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const Transfery = lazy(() => import('./pages/Transfery'));
+const Rzad = lazy(() => import('./pages/Rzad'));
 
 export default function App() {
   return (
@@ -73,7 +75,7 @@ export default function App() {
                 <Route path="/wypowiedzi/:id" element={<SpeechDetails />} />
                 <Route path="/interpelacje" element={<InterpellationsList />} />
                 <Route path="/interpelacje/:id" element={<InterpellationDetails />} />
-                <Route path="/test" element={<TestWyborczy />} />
+                <Route path="/test-wyborczy" element={<TestWyborczy />} />
                 <Route path="/o-projekcie" element={<OProjekcie />} />
                 <Route path="/ustawy/:id" element={<BillDetails />} />
                 <Route path="/mapa/:processId" element={<LawMap />} />
@@ -81,7 +83,6 @@ export default function App() {
                 <Route path="/projekty/:id" element={<BillDetails />} />
                 <Route path="/glosowania" element={<VotesList />} />
                 <Route path="/glosowania/:term/:sitting/:votingNumber" element={<VoteDetails />} />
-                <Route path="/glosowania/:sitting/:votingNumber" element={<VoteDetails />} />
                 <Route path="/glosowanie/:id" element={<VoteDetails />} />
                 <Route path="/tematy/:slug" element={<CategoryDetails />} />
                 <Route path="/kategoria/:slug" element={<CategoryDetails />} />
@@ -92,7 +93,10 @@ export default function App() {
                 <Route path="/kontakt" element={<Contact />} />
                 <Route path="/porownywarka" element={<Comparator />} />
                 <Route path="/szukaj" element={<SearchPage />} />
+                <Route path="/szukaj" element={<SearchPage />} />
                 <Route path="/live" element={<LiveAnalysis />} />
+                <Route path="/transfery" element={<Transfery />} />
+                <Route path="/rzad" element={<Rzad />} />
                 {/* Catch-all MUST be last */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

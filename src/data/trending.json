@@ -1,0 +1,8 @@
+{
+    "manual_override": true,
+    "vote_id": 1337,
+    "title": "Przykładowe Głosowanie Manualne",
+    "description": "To jest ręcznie ustawiony temat dnia, który nadpisuje logikę automatyczną. Wpisz tutaj ID głosowania, które chcesz promować.",
+    "verdict_override": null,
+    "force_show": false
+}

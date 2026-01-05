@@ -8,6 +8,7 @@ import { useMpProfile } from '../hooks/useMpProfile';
 
 const MpProfile = () => {
   const { idOrSlug } = useParams();
+  // Destructure new data
   const {
     mp,
     voteHistory,
@@ -15,13 +16,15 @@ const MpProfile = () => {
     digitizedDeclarations,
     recentSpeeches,
     loading,
-    interpellationCount
+    interpellationCount,
+    stats,
+    relations
   } = useMpProfile(idOrSlug);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-page flex items-center justify-center">
-        <div className="text-secondary text-sm font-medium tracking-wider uppercase">Ładowanie profilu...</div>
+        <div className="text-secondary text-sm font-black tracking-[0.3em] uppercase animate-pulse">System Intelligence Loading...</div>
       </div>
     );
   }
@@ -41,6 +44,16 @@ const MpProfile = () => {
 
   const attendance = mp.attendanceRate || 0;
   const rebelVotes = mp.rebelVotes || 0;
+
+  // Extract Badges
+  const badges = stats?.badges ? stats.badges : [];
+
+  // Extract Priorities
+  const topPriorities = stats?.top_priorities ? stats.top_priorities : [];
+
+  // Extract Twins
+  const ideologicalTwin = relations?.find(r => r.relation_type === 'ideological_twin');
+  const oppositionTwin = relations?.find(r => r.relation_type === 'opposition_twin');
 
   return (
     <div className="min-h-screen bg-page pt-24 pb-16 px-4 md:px-8 text-primary">
@@ -73,7 +86,7 @@ const MpProfile = () => {
             />
 
             {/* Info */}
-            <div className="flex-1">
+            <div className="flex-1 w-full">
               <h1 className="text-3xl md:text-4xl font-black text-primary mb-4">
                 {mp.first_name} {mp.last_name}
               </h1>
@@ -85,14 +98,31 @@ const MpProfile = () => {
                 >
                   {mp.club}
                 </span>
-                <span className="px-3 py-1.5 rounded-full bg-border-base text-secondary text-xs font-semibold flex items-center gap-1">
+                <span className="px-3 py-1.5 rounded-full bg-black/5 dark:bg-white/10 text-secondary text-xs font-black uppercase tracking-widest flex items-center gap-1 border border-border-base">
                   <MapPin size={12} />
                   Okręg {mp.district}
                 </span>
-                <span className="px-3 py-1.5 rounded-full bg-border-base text-secondary text-xs font-semibold">
+                <span className="px-3 py-1.5 rounded-full bg-black/5 dark:bg-white/10 text-secondary text-xs font-black uppercase tracking-widest border border-border-base">
                   {mp.term === 9 ? 'IX' : 'X'} Kadencja
                 </span>
               </div>
+
+              {/* Badges Row (New!) */}
+              {badges.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-6 p-4 bg-black/5 dark:bg-white/5 rounded-xl border border-border-base/50">
+                  <span className="text-[10px] uppercase font-black tracking-widest text-secondary w-full mb-1">Odznaki:</span>
+                  {badges.map((badge: string) => (
+                    <span key={badge} className="inline-flex items-center px-2.5 py-1 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-bold border border-indigo-500/20 shadow-sm cursor-help transition-all hover:bg-indigo-500/20" title="Ta odznaka została przyznana automatycznie na podstawie analizy aktywności">
+                      {badge === 'Prymus Głosowań' && '🎓 Prymus'}
+                      {badge === 'Lokalny Patriota' && '🏡 Lokalny Patriota'}
+                      {badge === 'Specjalizacja Sektorowa' && '⚙️ Ekspert'}
+                      {badge === 'Niezależny' && '🤘 Niezależny'}
+                      {badge === 'Śledczy' && '🔍 Śledczy'}
+                      {!['Prymus Głosowań', 'Lokalny Patriota', 'Specjalizacja Sektorowa', 'Niezależny', 'Śledczy'].includes(badge) && badge}
+                    </span>
+                  ))}
+                </div>
+              )}
 
               {/* Quick Stats */}
               <div className="grid grid-cols-3 gap-4">
@@ -137,7 +167,7 @@ const MpProfile = () => {
                   <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest bg-indigo-500/10 px-2 py-0.5 rounded">Ważne decyzje</span>
                 </div>
 
-                <div className="divide-y divide-white/5">
+                <div className="divide-y divide-border-base">
                   {keyVotes.map((item, index) => (
                     <Link
                       key={index}
@@ -147,7 +177,7 @@ const MpProfile = () => {
                       <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${item.vote === 'YES' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' :
                         item.vote === 'NO' ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20' :
                           item.vote === 'ABSTAIN' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' :
-                            'bg-border-base text-secondary'
+                            'bg-black/5 dark:bg-white/5 text-secondary border border-border-base'
                         }`}>
                         {item.vote === 'YES' && <CheckCircle2 size={24} />}
                         {item.vote === 'NO' && <XCircle size={24} />}
@@ -168,7 +198,7 @@ const MpProfile = () => {
                           </span>
                           <span className="text-secondary opacity-30 text-xs">•</span>
                           {/* Vote Type Badge */}
-                          <span className={`text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${item.isFinal ? 'bg-indigo-500/10 text-indigo-400' : 'bg-white/5 text-secondary'}`}>
+                          <span className={`text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${item.isFinal ? 'bg-accent-blue/10 text-accent-blue' : 'bg-black/5 dark:bg-white/5 text-secondary'}`}>
                             {item.isFinal ? 'Głosowanie nad całością' : 'Wniosek / Poprawka'}
                           </span>
                           <span className="text-secondary opacity-30 text-xs">•</span>
@@ -177,7 +207,7 @@ const MpProfile = () => {
                           </span>
                         </div>
                       </div>
-                      <ArrowRight size={18} className="text-secondary opacity-30 group-hover:opacity-100 group-hover:text-indigo-500 shrink-0 transition-all" />
+                      <ArrowRight size={18} className="text-secondary opacity-30 group-hover:opacity-100 group-hover:text-accent-blue group-hover:translate-x-1 shrink-0 transition-all" />
                     </Link>
                   ))}
                 </div>
@@ -192,7 +222,7 @@ const MpProfile = () => {
               </div>
 
               {voteHistory.length > 0 ? (
-                <div className="divide-y divide-white/5">
+                <div className="divide-y divide-border-base">
                   {voteHistory.slice(0, 5).map((item, index) => (
                     <Link
                       key={index}
@@ -202,7 +232,7 @@ const MpProfile = () => {
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${item.vote === 'YES' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
                         item.vote === 'NO' ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400' :
                           item.vote === 'ABSTAIN' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' :
-                            'bg-border-base text-secondary'
+                            'bg-black/5 dark:bg-white/10 text-secondary'
                         }`}>
                         {item.vote === 'YES' && <CheckCircle2 size={18} />}
                         {item.vote === 'NO' && <XCircle size={18} />}
@@ -222,7 +252,7 @@ const MpProfile = () => {
                             Posiedzenie {item.votes.sitting}, Głosowanie {item.votes.voting_number}
                           </span>
                           {/* Vote Type Badge */}
-                          <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ml-auto sm:ml-0 ${item.isFinal ? 'bg-indigo-500/10 text-indigo-400' : 'bg-white/5 text-secondary'}`}>
+                          <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ml-auto sm:ml-0 ${item.isFinal ? 'bg-accent-blue/10 text-accent-blue' : 'bg-black/5 dark:bg-white/5 text-secondary'}`}>
                             {item.isFinal ? 'Całość' : 'Poprawka'}
                           </span>
                         </div>
@@ -253,12 +283,12 @@ const MpProfile = () => {
               </div>
 
               {recentSpeeches.length > 0 ? (
-                <div className="divide-y divide-white/5">
+                <div className="divide-y divide-border-base">
                   {recentSpeeches.slice(0, 3).map((speech) => (
                     <Link
                       key={speech.id}
                       to={`/wypowiedzi/${speech.id}`}
-                      className="block p-4 hover:bg-border-base transition-colors cursor-pointer group/speech"
+                      className="block p-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer group/speech"
                     >
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-[10px] font-bold text-secondary uppercase tracking-wider group-hover/speech:text-blue-500 transition-colors">
@@ -292,10 +322,63 @@ const MpProfile = () => {
             transition={{ delay: 0.2 }}
             className="space-y-6"
           >
+            {/* Top 3 Priorities (New!) */}
+            {topPriorities.length > 0 && (
+              <div className="bg-surface rounded-2xl border border-border-base p-5 shadow-sm">
+                <h3 className="text-sm font-bold text-primary mb-4 flex items-center gap-2">
+                  <TrendingUp size={16} className="text-pink-500" />
+                  Główne Priorytety
+                </h3>
+                <div className="space-y-2">
+                  {topPriorities.map((item: any, idx: number) => (
+                    <div key={idx} className="flex justify-between items-center p-2.5 bg-black/5 dark:bg-white/5 rounded-lg border border-border-base">
+                      <span className="text-xs font-bold text-primary">{item.topic}</span>
+                      <span className="text-[10px] font-black text-secondary bg-black/5 dark:bg-white/10 px-1.5 py-0.5 rounded">{item.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Ideological Twins (New!) */}
+            {(ideologicalTwin || oppositionTwin) && (
+              <div className="bg-surface rounded-2xl border border-border-base p-5 shadow-sm">
+                <h3 className="text-sm font-bold text-primary mb-4 flex items-center gap-2">
+                  <Users size={16} className="text-violet-500" />
+                  Powiązania
+                </h3>
+                <div className="space-y-3">
+                  {ideologicalTwin && ideologicalTwin.mp_target && (
+                    <div className="p-3 bg-violet-500/5 rounded-xl border border-violet-500/20">
+                      <div className="text-[10px] font-black text-violet-500 uppercase tracking-widest mb-2">Bliźniak Ideowy</div>
+                      <Link to={`/poslowie/${ideologicalTwin.mp_target.slug || ideologicalTwin.mp_target.id}`} className="flex items-center gap-3 group">
+                        <img src={ideologicalTwin.mp_target.photo_url} className="w-10 h-10 rounded-full object-cover border border-border-base" />
+                        <div>
+                          <div className="text-sm font-bold text-primary group-hover:text-violet-500 transition-colors">{ideologicalTwin.mp_target.first_name} {ideologicalTwin.mp_target.last_name}</div>
+                          <div className="text-[10px] font-bold" style={{ color: getPartyHexColor(ideologicalTwin.mp_target.club) }}>{ideologicalTwin.mp_target.club}</div>
+                        </div>
+                      </Link>
+                    </div>
+                  )}
+                  {oppositionTwin && oppositionTwin.mp_target && (
+                    <div className="p-3 bg-orange-500/5 rounded-xl border border-orange-500/20">
+                      <div className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-2">Bliźniak Opozycyjny</div>
+                      <Link to={`/poslowie/${oppositionTwin.mp_target.slug || oppositionTwin.mp_target.id}`} className="flex items-center gap-3 group">
+                        <img src={oppositionTwin.mp_target.photo_url} className="w-10 h-10 rounded-full object-cover border border-border-base" />
+                        <div>
+                          <div className="text-sm font-bold text-primary group-hover:text-orange-500 transition-colors">{oppositionTwin.mp_target.first_name} {oppositionTwin.mp_target.last_name}</div>
+                          <div className="text-[10px] font-bold" style={{ color: getPartyHexColor(oppositionTwin.mp_target.club) }}>{oppositionTwin.mp_target.club}</div>
+                        </div>
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Activity Stats */}
             <div className="bg-surface rounded-2xl border border-border-base p-5 shadow-sm">
-              <h3 className="text-sm font-bold text-primary mb-4 flex items-center gap-2">
+              {/* ... Rest of stats ... */}              <h3 className="text-sm font-bold text-primary mb-4 flex items-center gap-2">
                 <TrendingUp size={16} className="text-emerald-500" />
                 Statystyki Aktywności
               </h3>
@@ -305,7 +388,7 @@ const MpProfile = () => {
                     <span className="text-xs text-secondary">Frekwencja</span>
                     <span className="text-xs font-bold text-primary">{attendance}%</span>
                   </div>
-                  <div className="h-2 bg-border-base rounded-full overflow-hidden">
+                  <div className="h-2 bg-black/5 dark:bg-white/10 rounded-full overflow-hidden border border-border-base">
                     <div
                       className={`h-full rounded-full ${attendance >= 90 ? 'bg-emerald-500' : attendance >= 70 ? 'bg-amber-500' : 'bg-rose-500'}`}
                       style={{ width: `${attendance}%` }}
@@ -313,13 +396,13 @@ const MpProfile = () => {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 pt-2">
-                  <div className="text-center p-3 bg-border-base rounded-xl">
-                    <div className="text-xl font-black text-blue-600">{rebelVotes}</div>
-                    <div className="text-[9px] text-secondary uppercase tracking-wider font-bold">Głosów wbrew partii</div>
+                  <div className="text-center p-3 bg-black/5 dark:bg-white/5 rounded-xl border border-border-base">
+                    <div className="text-xl font-black text-accent-blue">{rebelVotes}</div>
+                    <div className="text-[9px] text-secondary uppercase tracking-wider font-black">Głosów wbrew partii</div>
                   </div>
-                  <div className="text-center p-3 bg-border-base rounded-xl">
-                    <div className="text-xl font-black text-purple-600">{interpellationCount}</div>
-                    <div className="text-[9px] text-secondary uppercase tracking-wider font-bold">Interpelacji</div>
+                  <div className="text-center p-3 bg-black/5 dark:bg-white/5 rounded-xl border border-border-base">
+                    <div className="text-xl font-black text-purple-600 dark:text-purple-400">{interpellationCount}</div>
+                    <div className="text-[9px] text-secondary uppercase tracking-wider font-black">Interpelacji</div>
                   </div>
                 </div>
               </div>
@@ -334,28 +417,28 @@ const MpProfile = () => {
                 </h3>
                 <div className="space-y-3">
                   {digitizedDeclarations.map((decl) => (
-                    <div key={decl.id} className="p-3 bg-border-base rounded-xl">
+                    <div key={decl.id} className="p-3 bg-black/5 dark:bg-white/5 rounded-xl border border-border-base">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-primary">{decl.year.substring(0, 4)}</span>
+                        <span className="font-black text-primary">{decl.year.substring(0, 4)}</span>
                         {decl.file_path && (
                           <a
                             href={decl.file_path}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[10px] font-bold text-amber-500 hover:text-amber-600 uppercase"
+                            className="text-[10px] font-black text-amber-600 hover:text-amber-700 uppercase tracking-widest"
                           >
                             PDF →
                           </a>
                         )}
                       </div>
-                      <div className="space-y-1 text-xs">
+                      <div className="space-y-1 text-xs font-medium">
                         <div className="flex justify-between">
                           <span className="text-secondary">Oszczędności:</span>
-                          <span className="text-primary font-bold">{decl.parsed_content?.savings?.toLocaleString() || '—'} PLN</span>
+                          <span className="text-primary font-black">{decl.parsed_content?.savings?.toLocaleString() || '—'} PLN</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-secondary">Dochód:</span>
-                          <span className="text-primary font-bold">{decl.parsed_content?.income?.toLocaleString() || '—'} PLN</span>
+                          <span className="text-primary font-black">{decl.parsed_content?.income?.toLocaleString() || '—'} PLN</span>
                         </div>
                       </div>
                     </div>
@@ -395,25 +478,25 @@ const MpProfile = () => {
                 {/* Social Media Grid */}
                 <div className="grid grid-cols-2 gap-2">
                   {mp.contact_info?.twitter && (
-                    <a href={mp.contact_info.twitter} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center p-3 bg-border-base rounded-xl hover:bg-white/10 dark:hover:bg-white/5 transition-all group">
-                      <span className="text-secondary group-hover:text-sky-500 transition-colors font-bold text-lg">𝕏</span>
-                      <span className="text-[9px] mt-1 text-secondary font-bold uppercase tracking-widest">Twitter</span>
+                    <a href={mp.contact_info.twitter} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center p-3 bg-black/5 dark:bg-white/5 rounded-xl hover:bg-black/10 dark:hover:bg-white/10 transition-all group border border-border-base">
+                      <span className="text-primary font-black text-lg">𝕏</span>
+                      <span className="text-[9px] mt-1 text-secondary font-black uppercase tracking-widest">Twitter</span>
                     </a>
                   )}
                   {mp.contact_info?.facebook && (
-                    <a href={mp.contact_info.facebook} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center p-3 bg-border-base rounded-xl hover:bg-white/10 dark:hover:bg-white/5 transition-all group">
-                      <span className="text-secondary group-hover:text-blue-600 transition-colors font-bold text-lg">fb</span>
-                      <span className="text-[9px] mt-1 text-secondary font-bold uppercase tracking-widest">Facebook</span>
+                    <a href={mp.contact_info.facebook} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center p-3 bg-black/5 dark:bg-white/5 rounded-xl hover:bg-black/10 dark:hover:bg-white/10 transition-all group border border-border-base">
+                      <span className="text-primary font-bold text-lg">fb</span>
+                      <span className="text-[9px] mt-1 text-secondary font-black uppercase tracking-widest">Facebook</span>
                     </a>
                   )}
                 </div>
 
                 {/* Email */}
-                <a href={`mailto:${mp.email || 'biuro@sejm.pl'}`} className="flex items-center gap-3 p-3 bg-border-base rounded-xl hover:bg-blue-500/10 transition-colors group">
-                  <Mail size={16} className="text-secondary group-hover:text-blue-500 transition-colors" />
+                <a href={`mailto:${mp.email || 'biuro@sejm.pl'}`} className="flex items-center gap-3 p-3 bg-black/5 dark:bg-white/5 rounded-xl hover:bg-accent-blue/10 transition-colors group border border-border-base">
+                  <Mail size={16} className="text-secondary group-hover:text-accent-blue transition-colors" />
                   <div className="min-w-0">
-                    <div className="text-[10px] text-secondary uppercase font-bold leading-none mb-1">Email</div>
-                    <div className="text-sm text-primary font-bold truncate">{mp.email || 'biuro@sejm.pl'}</div>
+                    <div className="text-[10px] text-secondary uppercase font-black leading-none mb-1">Email</div>
+                    <div className="text-sm text-primary font-black truncate">{mp.email || 'biuro@sejm.pl'}</div>
                   </div>
                 </a>
 
@@ -423,8 +506,8 @@ const MpProfile = () => {
                     <div className="text-[10px] text-secondary uppercase font-bold mb-2">Biura Poselskie</div>
                     <div className="space-y-2">
                       {mp.contact_info.offices.map((office, idx) => (
-                        <div key={idx} className="p-3 bg-border-base rounded-xl text-xs">
-                          <div className="text-primary font-bold mb-1">{office.address}</div>
+                        <div key={idx} className="p-3 bg-black/5 dark:bg-white/5 rounded-xl border border-border-base text-xs font-medium">
+                          <div className="text-primary font-black mb-1">{office.address}</div>
                           {office.phone && <div className="text-secondary text-[10px]">{office.phone}</div>}
                         </div>
                       ))}

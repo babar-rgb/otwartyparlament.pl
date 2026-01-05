@@ -8,10 +8,10 @@ import {
   LayoutDashboard,
   ChevronDown
 } from 'lucide-react';
-import { expandSearchQuery, handleSearchNavigation } from '../utils/searchContext';
+import { handleSearchNavigation } from '../utils/searchContext';
 import { useTerm } from '../context/TermContext';
 import { useNavigate } from 'react-router-dom';
-import SejmHemicycle from '../components/SejmHemicycle';
+import SejmHemicycle from '../components/features/sejm/SejmHemicycle';
 import Skeleton from '../components/ui/Skeleton';
 import SEO from '../components/SEO';
 import { useDashboardData } from '../hooks/useDashboardData';
@@ -43,7 +43,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#060613] dashboard-mesh text-slate-900 dark:text-white pt-24 pb-12 px-4 md:px-8 font-sans transition-all duration-500">
+    <div className="min-h-screen bg-page dashboard-mesh text-primary pt-24 pb-12 px-4 md:px-8 font-sans transition-all duration-500">
       <SEO
         title="Dashboard | OtwartyParlament.pl"
         description="Monitoruj prace Sejmu na żywo. Analizy AI, wizualizacje głosowań i statystyki kadencji."
@@ -63,7 +63,7 @@ export default function Home() {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setTermDropdownOpen(!termDropdownOpen)}
-                className="flex items-center gap-2 px-4 py-2 bg-surface border border-border-base rounded-xl hover:bg-slate-50 dark:hover:bg-[#1c1c3a] transition-all shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-surface border border-border-base rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-all shadow-sm"
               >
                 <div className="w-2 h-2 bg-accent-blue rounded-full animate-pulse" />
                 <span className="font-bold text-sm tracking-wide text-primary">{term} Kadencja</span>
@@ -123,7 +123,7 @@ export default function Home() {
 
           {/* Session Date -> /glosowania */}
           {loading ? <Skeleton className="bg-surface border border-border-base rounded-[2rem] h-full min-h-[160px]" /> : (
-            <Link to="/glosowania" className="bg-surface border border-border-base rounded-[2rem] p-8 flex items-center gap-5 hover:bg-slate-50 dark:hover:bg-white/5 transition-all group shadow-sm">
+            <Link to="/glosowania" className="bg-surface border border-border-base rounded-[2rem] p-8 flex items-center gap-5 hover:bg-black/5 dark:hover:bg-white/5 transition-all group shadow-sm">
               <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                 <Calendar className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               </div>
@@ -136,7 +136,7 @@ export default function Home() {
 
           {/* Trending -> /kategorie */}
           {loading ? <Skeleton className="bg-surface border border-border-base rounded-[2rem] h-full min-h-[160px]" /> : (
-            <Link to="/kategorie" className="bg-surface border border-border-base rounded-[2rem] p-8 flex items-center gap-5 hover:bg-slate-50 dark:hover:bg-white/5 transition-all group shadow-sm">
+            <Link to="/kategorie" className="bg-surface border border-border-base rounded-[2rem] p-8 flex items-center gap-5 hover:bg-black/5 dark:hover:bg-white/5 transition-all group shadow-sm">
               <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                 <TrendingUp className="w-6 h-6 text-amber-600 dark:text-amber-400" />
               </div>
@@ -178,21 +178,17 @@ export default function Home() {
               </div>
 
               <div className="relative min-h-[400px] flex items-center justify-center">
-                {topVote?.results && topVote.results.length > 0 ? (
-                  <SejmHemicycle
-                    mode={viewMode}
-                    data={topVote.results.map((r: any) => ({
-                      id: r.mps?.id || r.mp_id,
-                      name: r.mps?.first_name || 'Nieznany',
-                      party: r.mps?.club || 'Niezrzeszony',
-                      photo_url: r.mps?.photo_url || '',
-                      vote: r.result,
-                      seat_number: r.mps?.seat_number
-                    }))}
-                  />
-                ) : (
-                  <div className="text-secondary opacity-30 font-black text-2xl uppercase tracking-tighter">Wczytywanie mapy...</div>
-                )}
+                <SejmHemicycle
+                  mode={viewMode}
+                  data={topVote?.results?.map((r: any) => ({
+                    id: r.mps?.id || r.mp_id,
+                    name: r.mps?.first_name || 'Nieznany',
+                    party: r.mps?.club || 'Niezrzeszony',
+                    photo_url: r.mps?.photo_url || '',
+                    vote: r.vote,
+                    seat_number: r.mps?.seat_number
+                  })) || []}
+                />
               </div>
 
               {/* Legend Component (Minimal) */}

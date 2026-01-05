@@ -11,7 +11,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getPartyColor } from '../constants';
+import { getPartyColor } from '../../../constants';
 
 interface MPData {
     name: string;
@@ -85,6 +85,8 @@ const SejmHemicycle: React.FC<SejmHemicycleProps> = ({ data, mode = 'vote' }) =>
 
     // 1. Sort MPs Logic (Needed for Fallback and Overflow ordering)
     const sortedMPs = useMemo(() => {
+        // ... (sorting logic kept same, simplified for brevity in this thinking block but will include in actual edit if I needed to change it. 
+        // Actually, I can just keep the sorting logic as is, it's fine)
         const partyConfiguration: Record<string, { order: number }> = {
             "Koalicyjny Klub Parlamentarny Lewicy (Nowa Lewica, PP, Unia Pracy, Inicjatywa Polska)": { order: 1 },
             "Lewica": { order: 1 },
@@ -159,19 +161,26 @@ const SejmHemicycle: React.FC<SejmHemicycleProps> = ({ data, mode = 'vote' }) =>
         return { occupiedSeats: assigned, overflowMPs: overflow };
     }, [sortedMPs, data]);
 
-    // getPartyColor is imported from constants.ts
-
     const getColor = (mp: MPData) => {
         if (mode === 'party') {
             return getPartyColor(mp.party);
         }
 
         // Vote mode
+        // Vote mode
         switch (mp.vote) {
-            case 'YES': return '#16a34a';
-            case 'NO': return '#dc2626';
-            case 'ABSTAIN': return '#f59e0b';
-            case 'ABSENT': return '#d4d4d8';
+            case 'YES':
+            case 'Za':
+                return '#16a34a';
+            case 'NO':
+            case 'Przeciw':
+                return '#dc2626';
+            case 'ABSTAIN':
+            case 'Wstrzymał się':
+                return '#f59e0b';
+            case 'ABSENT':
+            case 'Nieobecny':
+                return '#d4d4d8';
             default: return '#e5e7eb';
         }
     };
@@ -184,7 +193,7 @@ const SejmHemicycle: React.FC<SejmHemicycleProps> = ({ data, mode = 'vote' }) =>
     };
 
     return (
-        <div className="flex flex-col items-center w-full">
+        <div className="flex flex-col items-center w-full animate-fade-in">
             {/* Main Hemicycle */}
             <div className="relative flex justify-center w-full overflow-hidden">
                 <svg
@@ -204,15 +213,17 @@ const SejmHemicycle: React.FC<SejmHemicycleProps> = ({ data, mode = 'vote' }) =>
                                     cy={seat.y}
                                     r={6}
                                     fill={occupant ? getColor(occupant) : "#E5E7EB"}
-                                    stroke={occupant ? "#ffffff" : "none"} // High contrast stroke
+                                    stroke={occupant ? "#ffffff" : "none"}
                                     strokeWidth={1}
-                                    style={{ transition: 'fill 0.3s ease, stroke 0.3s ease' }} // CSS Transition
+                                    style={{
+                                        transition: 'fill 0.5s ease-out, stroke 0.3s ease',
+                                        fillOpacity: occupant ? 1 : 0.4
+                                    }}
                                     role={occupant ? "button" : "presentation"}
                                     tabIndex={occupant ? 0 : -1}
                                     aria-label={occupant ? `${occupant.name}, ${occupant.party}, Głos: ${occupant.vote}` : "Miejsce wolne"}
                                     onMouseEnter={() => occupant && setHoveredMP(occupant)}
                                     onMouseLeave={() => setHoveredMP(null)}
-                                    // Keyboard & Click support
                                     onClick={() => occupant?.id && navigate(`/poslowie/${occupant.id}`)}
                                     onKeyDown={(e) => handleKeyDown(e, occupant)}
                                     className={occupant ? "cursor-pointer hover:stroke-neutral-900 dark:hover:stroke-neutral-300 focus:outline-none focus:stroke-blue-500 focus:stroke-2" : ""}
@@ -249,7 +260,7 @@ const SejmHemicycle: React.FC<SejmHemicycleProps> = ({ data, mode = 'vote' }) =>
                 )}
             </div>
 
-            {/* Overflow Zone (The "Poczekalnia") */}
+            {/* Overflow Zone */}
             {overflowMPs.length > 0 && (
                 <div className="w-full max-w-4xl mt-8 px-4">
                     <div className="text-sm font-semibold text-neutral-500 mb-2 uppercase tracking-wider">

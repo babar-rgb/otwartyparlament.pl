@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FileText, Calendar, ChevronRight, ChevronLeft, ArrowRight, Network } from 'lucide-react';
+import { useTerm } from '../context/TermContext';
+import TermSwitcher from '../components/ui/TermSwitcher';
+import SEO from '../components/SEO';
+import { fetchProcesses, fetchProcessesCount } from '../api';
 
 interface Process {
     number: number;
@@ -10,11 +14,6 @@ interface Process {
     documentId: string;
 }
 
-import { useTerm } from '../context/TermContext';
-import TermSwitcher from '../components/TermSwitcher';
-import SEO from '../components/SEO';
-import { db } from '../lib/db';
-
 export default function BillsList() {
     const { term } = useTerm(); // Use global term
     const [processes, setProcesses] = useState<Process[]>([]);
@@ -23,32 +22,24 @@ export default function BillsList() {
     const [totalCount, setTotalCount] = useState<number | null>(null);
     const limit = 20;
 
-    // Fetch data locally
+    // Fetch data from local API
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
             try {
                 // Get Count
-                const { count, error: countError } = await db
-                    .from('processes')
-                    // .select('*', { count: 'exact', head: true }) // HEAD not always supported via JS client simply
-                    .select('id', { count: 'exact', head: true });
-
-                if (countError) throw countError;
+                const count = await fetchProcessesCount(term);
                 setTotalCount(count);
 
                 // Get Data
-                // Order by date desc
-                const { data, error } = await db
-                    .from('processes')
-                    .select('id, title, description, print_number, process_start_date')
-                    .order('process_start_date', { ascending: false })
-                    .range(page * limit, (page + 1) * limit - 1);
-
-                if (error) throw error;
+                const data = await fetchProcesses({
+                    skip: page * limit,
+                    limit: limit,
+                    term
+                });
 
                 // Map to Interface
-                const mapped = (data || []).map(p => ({
+                const mapped = (data || []).map((p: any) => ({
                     number: parseInt(p.print_number || '0'), // Fallback
                     title: p.title,
                     description: p.description,
@@ -58,7 +49,7 @@ export default function BillsList() {
                 setProcesses(mapped);
 
             } catch (err) {
-                console.error("Local fetch error:", err);
+                console.error("Fetch error:", err);
             } finally {
                 setLoading(false);
             }
@@ -77,98 +68,98 @@ export default function BillsList() {
     };
 
     return (
-        <div className="container mx-auto px-4 pt-24 pb-12 max-w-5xl animate-fade-in">
-            <SEO
-                title="Projekty Ustaw"
-                description="Monitoruj proces legislacyjny. Zobacz najnowsze projekty ustaw, druki sejmowe i postęp prac w Sejmie."
-            />
-            <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div>
-                    <h1 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">
-                        Projekty <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600">Ustaw</span>
-                    </h1>
-                    <p className="text-xl text-slate-600 max-w-2xl">
-                        Przeglądaj najnowsze procesy legislacyjne w Sejmie {term === 9 ? 'IX' : 'X'} kadencji.
-                    </p>
+        <div className="min-h-screen bg-page px-4 pt-24 pb-12 transition-all duration-500">
+            <div className="max-w-5xl mx-auto space-y-12 animate-fade-in">
+                <SEO
+                    title="Projekty Ustaw"
+                    description="Monitoruj proces legislacyjny. Zobacz najnowsze projekty ustaw, druki sejmowe i postęp prac w Sejmie."
+                />
+                <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div>
+                        <h1 className="text-4xl md:text-5xl font-black text-primary mb-4 tracking-tighter">
+                            Projekty <span className="text-accent-blue italic font-serif">Ustaw</span>
+                        </h1>
+                        <p className="text-xl text-secondary max-w-2xl font-medium opacity-60">
+                            Przeglądaj najnowsze procesy legislacyjne w Sejmie {term === 9 ? 'IX' : 'X'} kadencji.
+                        </p>
+                    </div>
+                    <TermSwitcher />
                 </div>
-                <TermSwitcher />
-            </div>
 
-            {loading ? (
-                <div className="flex items-center justify-center py-24">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                </div>
-            ) : (
-                <div className="space-y-4">
-                    {processes.map((process) => (
-                        <div
-                            key={process.documentId}
-                            className="block bg-white rounded-xl border border-slate-200 hover:shadow-md hover:border-blue-300 transition-all group overflow-hidden"
-                        >
-                            <Link to={`/ustawy/${process.documentId}`} className="block p-6 group/link">
-                                <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-3 text-sm text-slate-500 mb-2">
-                                            <span className="flex items-center gap-1 bg-slate-100 px-2 py-1 rounded text-xs font-bold uppercase tracking-wide">
-                                                <FileText size={12} />
-                                                {process.documentId ? `Druk ${process.documentId}` : 'Bez druku'}
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                <Calendar size={12} />
-                                                {process.processStartDate}
-                                            </span>
+                {loading ? (
+                    <div className="flex items-center justify-center py-24">
+                        <div className="text-secondary text-sm font-black tracking-[0.3em] uppercase animate-pulse">Scanning Legislative Database...</div>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {processes.map((process) => (
+                            <div
+                                key={process.documentId}
+                                className="block bg-surface rounded-3xl border border-border-base hover:shadow-2xl hover:border-accent-blue/30 transition-all group overflow-hidden"
+                            >
+                                <Link to={`/ustawy/${process.documentId}`} className="block p-8 group/link">
+                                    <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
+                                        <div className="flex-1 space-y-4">
+                                            <div className="flex items-center gap-4 text-[10px] font-black text-secondary uppercase tracking-widest">
+                                                <span className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-3 py-1.5 rounded-full border border-border-base">
+                                                    <FileText size={14} className="text-accent-blue" />
+                                                    {process.documentId ? `Druk ${process.documentId}` : 'Bez druku'}
+                                                </span>
+                                                <span className="flex items-center gap-2">
+                                                    <Calendar size={14} />
+                                                    {process.processStartDate}
+                                                </span>
+                                            </div>
+                                            <h3 className="text-xl md:text-2xl font-black text-primary group-hover/link:text-accent-blue transition-colors line-clamp-2 leading-tight">
+                                                {process.title}
+                                            </h3>
+                                            {process.description && (
+                                                <p className="text-secondary/60 mt-4 line-clamp-3 text-base font-medium leading-relaxed italic">
+                                                    {process.description}
+                                                </p>
+                                            )}
                                         </div>
-                                        <h3 className="text-lg font-bold text-slate-900 group-hover/link:text-blue-600 transition-colors line-clamp-2">
-                                            {process.title}
-                                        </h3>
-                                        {process.description && (
-                                            <p className="text-slate-600 mt-2 line-clamp-2 text-sm">
-                                                {process.description}
-                                            </p>
-                                        )}
+                                        <div className="flex items-center text-accent-blue font-black text-xs uppercase tracking-widest whitespace-nowrap group-hover/link:translate-x-1 transition-transform bg-accent-blue/5 px-4 py-2 rounded-full border border-accent-blue/10">
+                                            Szczegóły <ArrowRight size={14} className="ml-2" />
+                                        </div>
                                     </div>
-                                    <div className="flex items-center text-blue-600 font-bold text-sm whitespace-nowrap group-hover/link:translate-x-1 transition-transform">
-                                        Szczegóły <ArrowRight size={16} className="ml-1" />
-                                    </div>
-                                </div>
-                            </Link>
-
-                            {/* Actions Footer */}
-                            <div className="px-6 pb-4 pt-0 flex items-center justify-between">
-                                <Link
-                                    to={`/mapa/${process.documentId}`}
-                                    className="flex items-center gap-2 text-indigo-600 hover:text-indigo-800 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors z-10"
-                                >
-                                    <Network size={16} />
-                                    Mapa Myśli
                                 </Link>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
 
-            {/* Pagination */}
-            <div className="flex justify-between items-center mt-12 pt-8 border-t border-slate-200">
-                <button
-                    onClick={handlePrev}
-                    disabled={page === 0 || loading}
-                    className="flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                    <ChevronLeft size={20} />
-                    Poprzednie
-                </button>
-                <span className="text-slate-400 font-mono text-sm">
-                    Strona {page + 1}
-                </span>
-                <button
-                    onClick={handleNext}
-                    disabled={loading || (totalCount !== null && (page + 1) * limit >= totalCount)}
-                    className="flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                    Następne
-                    <ChevronRight size={20} />
-                </button>
+                                <div className="px-8 pb-6 pt-0 flex items-center justify-between border-t border-border-base/50 mt-4 pt-4">
+                                    <Link
+                                        to={`/mapa/${process.documentId}`}
+                                        className="flex items-center gap-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-all z-10 border border-transparent hover:border-purple-500/20"
+                                    >
+                                        <Network size={16} />
+                                        Mapa Myśli
+                                    </Link>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                <div className="flex justify-between items-center mt-12 pt-8 border-t border-border-base">
+                    <button
+                        onClick={handlePrev}
+                        disabled={page === 0 || loading}
+                        className="flex items-center gap-2 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-secondary hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    >
+                        <ChevronLeft size={20} />
+                        Poprzednie
+                    </button>
+                    <span className="text-accent-blue bg-accent-blue/10 px-4 py-2 rounded-full border border-accent-blue/20 font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-accent-blue/5">
+                        Strona {page + 1}
+                    </span>
+                    <button
+                        onClick={handleNext}
+                        disabled={loading || (totalCount !== null && (page + 1) * limit >= totalCount)}
+                        className="flex items-center gap-2 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest text-secondary hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    >
+                        Następne
+                        <ChevronRight size={20} />
+                    </button>
+                </div>
             </div>
         </div>
     );

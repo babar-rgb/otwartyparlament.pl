@@ -5,10 +5,10 @@ import { toPng } from 'html-to-image';
 import SocialShareCard from '../components/SocialShareCard';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import VoteTechnicalDetails from '../components/VoteTechnicalDetails';
-import SejmHemicycle from '../components/SejmHemicycle';
-import OutliersSection from '../components/OutliersSection';
+import SejmHemicycle from '../components/features/sejm/SejmHemicycle';
+import OutliersSection from '../components/features/analysis/OutliersSection';
 import SEO from '../components/SEO';
-import VoteMindMap from '../components/VoteMindMap';
+import VoteMindMap from '../components/features/analysis/VoteMindMap';
 import { useVoteDetails } from '../hooks/useVoteDetails';
 
 const VoteDetails: React.FC = () => {
@@ -54,31 +54,31 @@ const VoteDetails: React.FC = () => {
     };
 
     if (loading) return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sejm-gold"></div>
+        <div className="min-h-screen bg-page flex items-center justify-center">
+            <div className="w-12 h-12 border-4 border-accent-blue/20 border-t-accent-blue rounded-full animate-spin"></div>
         </div>
     );
 
     if (!vote) return (
         <div>
             <SEO title="Głosowanie nie znalezione" />
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500">
+            <div className="min-h-screen bg-page flex items-center justify-center text-secondary">
                 Głosowanie nie znalezione
             </div>
         </div>
     );
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+        <div className="min-h-screen bg-page text-primary">
             <SEO
                 title={cleanSejmTitle(vote.title_clean || vote.title_raw || "Szczegóły Głosowania")}
                 description={`Wynik głosowania: ${vote.verdict}. Data: ${new Date(vote.date).toLocaleDateString()}. Zobacz jak głosowali posłowie.`}
             />
 
             {/* Hero Section - Full Width Dark */}
-            <div className="relative bg-slate-50 dark:bg-slate-950 overflow-hidden">
+            <div className="relative bg-page overflow-hidden">
                 {/* Subtle gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-purple-900/20" />
+                <div className="absolute inset-0 bg-gradient-to-br from-accent-blue/5 via-transparent to-purple-500/5" />
 
                 {/* Decorative elements */}
                 <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
@@ -101,118 +101,110 @@ const VoteDetails: React.FC = () => {
                                 {(vote.importance_score ?? 0) > 60 && (
                                     <Sparkles className="w-3 h-3 text-fuchsia-400 opacity-60" />
                                 )}
-                                <span className="text-slate-700 dark:text-slate-700">|</span>
+                                <span className="text-secondary/30">|</span>
                             </div>
                         )}
-                        <span className="text-slate-400 text-sm flex items-center gap-2">
+                        <span className="text-secondary text-sm flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
                             {new Date(vote.date).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })}
                         </span>
-                        <span className="text-slate-500 text-sm">
+                        <span className="text-secondary opacity-60 text-sm">
                             Posiedzenie {vote.sitting} · Głosowanie nr {vote.voting_number}
                         </span>
                     </div>
 
                     {/* Main Title */}
-                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-snug mb-8 max-w-4xl">
+                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-primary leading-snug mb-8 max-w-4xl tracking-tight">
                         {cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
                     </h1>
 
-                    <div className="flex flex-wrap gap-4 mb-8">
-                        {/* Download Graphics Button */}
-                        <button
-                            onClick={handleDownloadImage}
-                            disabled={isGenerating}
-                            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-lg ${isGenerating
-                                ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
-                                : 'bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/20 hover:scale-[1.02] active:scale-95'
-                                }`}
-                        >
-                            {isGenerating ? (
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : (
-                                <Share2 className="w-4 h-4" />
-                            )}
-                            {isGenerating ? 'Generowanie...' : 'Pobierz Grafikę (Instagram/X)'}
-                        </button>
+                    {/* Smart Actions Grid */}
+                    <div className="grid sm:grid-cols-2 gap-4 mb-10">
+                        {/* 1. Share/Download Card */}
+                        <div className="bg-surface p-6 rounded-2xl border border-border-base hover:border-blue-500/30 transition-all group cursor-pointer shadow-sm relative overflow-hidden" onClick={handleDownloadImage}>
+                            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <Share2 size={64} />
+                            </div>
+                            <div className="flex items-center gap-4 relative z-10">
+                                <div className="p-3 bg-blue-500/10 text-blue-600 rounded-xl">
+                                    {isGenerating ? <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /> : <Share2 size={20} />}
+                                </div>
+                                <div>
+                                    <div className="font-bold text-primary">Udostępnij Grafikę</div>
+                                    <div className="text-xs text-secondary">Generuj obraz na Instagram/X</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 2. Mind Map Card */}
+                        <Link to={linkedProcessId ? `/mapa/${linkedProcessId}` : '#'} className={`bg-surface p-6 rounded-2xl border border-border-base  transition-all group shadow-sm relative overflow-hidden ${linkedProcessId ? 'hover:border-purple-500/30 cursor-pointer' : 'opacity-60 grayscale cursor-not-allowed'}`}>
+                            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <Network size={64} />
+                            </div>
+                            <div className="flex items-center gap-4 relative z-10">
+                                <div className="p-3 bg-purple-500/10 text-purple-600 rounded-xl">
+                                    <Network size={20} />
+                                </div>
+                                <div>
+                                    <div className="font-bold text-primary">Mapa Ustawy</div>
+                                    <div className="text-xs text-secondary">{linkedProcessId ? 'Zobacz wizualizację powiązań' : 'Niedostępne dla tego głosu'}</div>
+                                </div>
+                            </div>
+                        </Link>
                     </div>
 
-                    {/* Law Map CTA */}
-                    {linkedProcessId && (
-                        <Link
-                            to={`/mapa/${linkedProcessId}`}
-                            className="inline-flex items-center gap-3 px-6 py-4 mb-8 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-blue-900/40 hover:shadow-blue-500/40 hover:scale-[1.02] transition-all group border border-white/10"
-                        >
-                            <div className="p-2 bg-white/20 rounded-lg group-hover:rotate-12 transition-transform">
-                                <Network size={20} />
-                            </div>
-                            <div className="text-left">
-                                <div className="text-xs font-medium opacity-80 uppercase tracking-wider">Wizualizacja</div>
-                                <div className="text-lg leading-none">Zobacz Mapę Myśli Ustawy</div>
-                            </div>
-                            <ArrowRight className="ml-2 opacity-80 group-hover:translate-x-1 transition-transform" />
-                        </Link>
-                    )}
+                    {/* Source Links (De-emphasized) */}
+                    <div className="flex flex-wrap gap-6 mb-8 text-xs font-bold text-secondary uppercase tracking-wider">
+                        {linkedPrint && (
+                            <a href={`https://www.sejm.gov.pl/Sejm10.nsf/druk.xsp?nr=${linkedPrint.number}`} target="_blank" rel="noreferrer" className="hover:text-amber-600 transition-colors flex items-center gap-2">
+                                <ExternalLink size={12} /> Tekst Źródłowy RP
+                            </a>
+                        )}
+                        {projectContext?.pdf_url && (
+                            <a href={projectContext.pdf_url} target="_blank" rel="noreferrer" className="hover:text-emerald-600 transition-colors flex items-center gap-2">
+                                <FileText size={12} /> Pełny Dokument PDF
+                            </a>
+                        )}
+                    </div>
 
                     {/* Linked Print Card - Polished & Prominent */}
                     {linkedPrint && (
-                        <div className="mb-10 bg-white/5 dark:bg-white/5 backdrop-blur-xl border border-white/10 dark:border-white/10 p-6 md:p-8 rounded-[2rem] shadow-2xl relative overflow-hidden group">
+                        <div className="mb-10 bg-surface backdrop-blur-xl border border-border-base p-6 md:p-8 rounded-[2rem] shadow-2xl relative overflow-hidden group">
                             {/* Accent blur */}
                             <div className="absolute -top-10 -right-10 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl group-hover:bg-amber-500/20 transition-all" />
 
                             <div className="relative z-10 flex flex-col md:flex-row gap-6 items-start">
-                                <div className="p-4 bg-amber-500/20 text-amber-300 rounded-2xl shadow-inner shrink-0 group-hover:scale-110 transition-transform duration-500">
+                                <div className="p-4 bg-amber-500/20 text-amber-600 rounded-2xl shadow-inner shrink-0 group-hover:scale-110 transition-transform duration-500">
                                     <FileText size={40} strokeWidth={1.5} />
                                 </div>
                                 <div className="flex-grow space-y-3">
                                     <div className="flex items-center gap-3">
-                                        <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+                                        <span className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
                                             Druk Sejmowy {linkedPrint.number}
                                         </span>
-                                        <div className="h-px bg-white/10 flex-grow" />
+                                        <div className="h-px bg-border-base flex-grow" />
                                     </div>
-                                    <h3 className="text-xl md:text-2xl font-bold text-white leading-tight">
+                                    <h3 className="text-xl md:text-2xl font-black text-primary leading-tight">
                                         {linkedPrint.title}
                                     </h3>
 
-                                    <div className="flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-wider">
-                                        {linkedPrint.title.toLowerCase().includes('rządowy') && <span className="bg-blue-500/20 text-blue-300 px-3 py-1 rounded-md border border-blue-500/30">Projekt Rządowy</span>}
-                                        {linkedPrint.title.toLowerCase().includes('poselski') && <span className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-md border border-purple-500/30">Projekt Poselski</span>}
-                                        {linkedPrint.title.toLowerCase().includes('senacki') && <span className="bg-orange-500/20 text-orange-300 px-3 py-1 rounded-md border border-orange-500/30">Projekt Senacki</span>}
-                                        {linkedPrint.title.toLowerCase().includes('obywatelski') && <span className="bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-md border border-emerald-500/30">Projekt Obywatelski</span>}
-                                    </div>
-
-                                    <div className="pt-4 flex flex-wrap items-center gap-6">
-                                        <a
-                                            href={`https://www.sejm.gov.pl/Sejm10.nsf/druk.xsp?nr=${linkedPrint.number}`}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="inline-flex items-center gap-2 text-sm font-bold text-amber-400 hover:text-white transition-colors group/link"
-                                        >
-                                            Tekst źródłowy RP <ExternalLink size={14} className="group-hover/link:translate-x-1 group-hover/link:-translate-y-1 transition-transform" />
-                                        </a>
-                                        {projectContext?.pdf_url && (
-                                            <a
-                                                href={projectContext.pdf_url}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="inline-flex items-center gap-2 text-sm font-bold text-emerald-400 hover:text-white transition-colors group/link"
-                                            >
-                                                Pełny Dokument (PDF) <FileText size={14} className="group-hover/link:scale-110 transition-transform" />
-                                            </a>
-                                        )}
+                                    <div className="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-wider">
+                                        {linkedPrint.title.toLowerCase().includes('rządowy') && <span className="bg-blue-500/10 text-blue-600 px-3 py-1 rounded-md border border-blue-500/20">Projekt Rządowy</span>}
+                                        {linkedPrint.title.toLowerCase().includes('poselski') && <span className="bg-purple-500/10 text-purple-600 px-3 py-1 rounded-md border border-purple-500/20">Projekt Poselski</span>}
+                                        {linkedPrint.title.toLowerCase().includes('senacki') && <span className="bg-orange-500/10 text-orange-600 px-3 py-1 rounded-md border border-orange-500/20">Projekt Senacki</span>}
+                                        {linkedPrint.title.toLowerCase().includes('obywatelski') && <span className="bg-emerald-500/10 text-emerald-600 px-3 py-1 rounded-md border border-emerald-500/20">Projekt Obywatelski</span>}
                                     </div>
                                 </div>
                             </div>
 
                             {/* AI Context Snippet if available */}
                             {projectContext?.ai_summary && (
-                                <div className="mt-8 p-4 bg-white/5 rounded-2xl border border-white/5 italic">
-                                    <div className="flex items-center gap-2 mb-2 text-[10px] font-black text-emerald-500 uppercase tracking-widest">
+                                <div className="mt-8 p-4 bg-black/5 dark:bg-white/5 rounded-2xl border border-border-base italic">
+                                    <div className="flex items-center gap-2 mb-2 text-[10px] font-black text-emerald-600 uppercase tracking-widest">
                                         <Sparkles size={12} />
                                         Streszczenie AI
                                     </div>
-                                    <p className="text-slate-300 text-sm leading-relaxed">
+                                    <p className="text-secondary text-sm leading-relaxed">
                                         "{projectContext.ai_summary}"
                                     </p>
                                 </div>
@@ -221,13 +213,13 @@ const VoteDetails: React.FC = () => {
                     )}
 
                     {/* Vote Result Card */}
-                    <div className="bg-white dark:bg-[#111126] rounded-[2rem] p-8 border border-slate-200 dark:border-white/5 shadow-sm">
+                    <div className="bg-surface rounded-3xl p-8 border border-border-base shadow-sm">
                         {/* Verdict + Bar */}
                         <div className="flex flex-col lg:flex-row lg:items-center gap-6">
                             {/* Verdict Badge */}
-                            <div className={`shrink-0 inline-flex items-center gap-3 px-5 py-3 rounded-xl font-bold text-lg ${vote.verdict === 'PRZYJĘTO'
-                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                                : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                            <div className={`shrink-0 inline-flex items-center gap-3 px-5 py-3 rounded-xl font-black text-lg ${vote.verdict === 'PRZYJĘTO'
+                                ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                                : 'bg-rose-500/10 text-rose-600 border border-rose-500/20'
                                 }`}>
                                 {vote.verdict === 'PRZYJĘTO' ? <CheckCircle2 className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
                                 {vote.verdict}
@@ -235,17 +227,17 @@ const VoteDetails: React.FC = () => {
 
                             {/* Vote Progress Bar */}
                             <div className="flex-grow">
-                                <div className="flex items-center justify-between mb-2 text-sm">
-                                    <span className="font-bold text-emerald-400">ZA: {vote.details_json?.yes || 0}</span>
-                                    <span className="font-bold text-red-400">PRZECIW: {vote.details_json?.no || 0}</span>
+                                <div className="flex items-center justify-between mb-2 text-xs font-black uppercase tracking-widest">
+                                    <span className="text-emerald-600">ZA: {vote.details_json?.yes || 0}</span>
+                                    <span className="text-rose-600">PRZECIW: {vote.details_json?.no || 0}</span>
                                 </div>
-                                <div className="h-3 bg-slate-700 rounded-full overflow-hidden flex">
+                                <div className="h-4 bg-black/5 dark:bg-white/10 rounded-full overflow-hidden flex border border-border-base">
                                     <div
-                                        className="bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-1000 ease-out"
+                                        className="bg-emerald-500 transition-all duration-1000 ease-out"
                                         style={{ width: `${((vote.details_json?.yes || 0) / ((vote.details_json?.yes || 0) + (vote.details_json?.no || 1))) * 100}%` }}
                                     />
                                     <div
-                                        className="bg-gradient-to-r from-red-500 to-red-400"
+                                        className="bg-rose-500"
                                         style={{ width: `${((vote.details_json?.no || 0) / ((vote.details_json?.yes || 0) + (vote.details_json?.no || 1))) * 100}%` }}
                                     />
                                 </div>
@@ -253,22 +245,22 @@ const VoteDetails: React.FC = () => {
                         </div>
 
                         {/* Stats Row */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-slate-700/50">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-border-base">
                             <div className="text-center p-3 rounded-xl bg-emerald-500/10">
-                                <div className="text-2xl font-bold text-emerald-400">{vote.details_json?.yes || 0}</div>
-                                <div className="text-xs text-slate-400 uppercase tracking-wider mt-1">Za</div>
+                                <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{vote.details_json?.yes || 0}</div>
+                                <div className="text-[10px] text-secondary uppercase tracking-widest font-black mt-1">Za</div>
                             </div>
-                            <div className="text-center p-3 rounded-xl bg-red-500/10">
-                                <div className="text-2xl font-bold text-red-400">{vote.details_json?.no || 0}</div>
-                                <div className="text-xs text-slate-400 uppercase tracking-wider mt-1">Przeciw</div>
+                            <div className="text-center p-3 rounded-xl bg-rose-500/10">
+                                <div className="text-2xl font-black text-rose-600 dark:text-rose-400">{vote.details_json?.no || 0}</div>
+                                <div className="text-[10px] text-secondary uppercase tracking-widest font-black mt-1">Przeciw</div>
                             </div>
                             <div className="text-center p-3 rounded-xl bg-amber-500/10">
-                                <div className="text-2xl font-bold text-amber-400">{vote.details_json?.abstain || 0}</div>
-                                <div className="text-xs text-slate-400 uppercase tracking-wider mt-1">Wstrzymało się</div>
+                                <div className="text-2xl font-black text-amber-600 dark:text-amber-400">{vote.details_json?.abstain || 0}</div>
+                                <div className="text-[10px] text-secondary uppercase tracking-widest font-black mt-1">Wstrzymało się</div>
                             </div>
-                            <div className="text-center p-3 rounded-xl bg-slate-500/10">
-                                <div className="text-2xl font-bold text-slate-400">{460 - (vote.details_json?.yes || 0) - (vote.details_json?.no || 0) - (vote.details_json?.abstain || 0)}</div>
-                                <div className="text-xs text-slate-400 uppercase tracking-wider mt-1">Nieobecni</div>
+                            <div className="text-center p-3 rounded-xl bg-black/5 dark:bg-white/5 border border-border-base/50">
+                                <div className="text-2xl font-black text-secondary">{460 - (vote.details_json?.yes || 0) - (vote.details_json?.no || 0) - (vote.details_json?.abstain || 0)}</div>
+                                <div className="text-[10px] text-secondary uppercase tracking-widest font-black mt-1">Nieobecni</div>
                             </div>
                         </div>
                     </div>
@@ -300,10 +292,11 @@ const VoteDetails: React.FC = () => {
             {/* Sejm Hemicycle Visualization */}
             <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                    <Users className="w-6 h-6 text-blue-600" />
-                    <h2 className="text-2xl font-bold">Sala Sejmowa</h2>
+                    <Users className="w-6 h-6 text-accent-blue" />
+                    <h2 className="text-2xl font-black tracking-tight">Sala Sejmowa</h2>
                 </div>
-                <div className="bg-white dark:bg-[#1a1f36] rounded-3xl p-4 md:p-8 shadow-sm border border-neutral-200 dark:border-slate-800">
+                <div className="bg-surface rounded-3xl p-4 md:p-8 shadow-sm border border-border-base relative overflow-hidden">
+                    <div className="absolute inset-0 bg-accent-blue/5 pointer-events-none" />
                     <SejmHemicycle
                         data={results.map(r => ({
                             name: r.mps?.name || 'Nieznany',
@@ -315,40 +308,40 @@ const VoteDetails: React.FC = () => {
                             slug: r.mps?.slug
                         }))}
                     />
-                    <div className="flex flex-wrap justify-center gap-6 mt-6 text-sm font-medium text-neutral-600 dark:text-neutral-400">
-                        <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-green-600"></span> ZA</div>
-                        <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-red-600"></span> PRZECIW</div>
-                        <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-amber-500"></span> WSTRZYMAŁ SIĘ</div>
-                        <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-neutral-300"></span> NIEOBECNY</div>
+                    <div className="flex flex-wrap justify-center gap-6 mt-6 text-[10px] font-black uppercase tracking-widest text-secondary opacity-60">
+                        <div className="flex items-center gap-2 relative z-10"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> ZA</div>
+                        <div className="flex items-center gap-2 relative z-10"><span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> PRZECIW</div>
+                        <div className="flex items-center gap-2 relative z-10"><span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> WSTRZYMAŁ SIĘ</div>
+                        <div className="flex items-center gap-2 relative z-10"><span className="w-2.5 h-2.5 rounded-full bg-secondary"></span> NIEOBECNY</div>
                     </div>
                 </div>
             </div>
             <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                    <PieChart className="w-6 h-6 text-blue-600" />
-                    <h2 className="text-2xl font-bold">Głosowanie w Klubach</h2>
+                    <PieChart className="w-6 h-6 text-accent-blue" />
+                    <h2 className="text-2xl font-black tracking-tight">Głosowanie w Klubach</h2>
                 </div>
 
-                <div className="bg-slate-900/50 rounded-2xl overflow-hidden shadow-sm border border-slate-700">
+                <div className="bg-surface rounded-2xl overflow-hidden shadow-sm border border-border-base">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-slate-800/50 text-sm uppercase tracking-wider text-slate-400">
-                                    <th className="p-4 font-semibold">Klub / Koło</th>
-                                    <th className="p-4 font-semibold text-green-400">Za</th>
-                                    <th className="p-4 font-semibold text-red-400">Przeciw</th>
-                                    <th className="p-4 font-semibold text-slate-400">Wstrzymał się</th>
-                                    <th className="p-4 font-semibold text-slate-500">Nieobecny</th>
+                                <tr className="bg-black/5 dark:bg-black/20 text-[10px] font-black uppercase tracking-widest text-secondary opacity-60">
+                                    <th className="p-4">Klub / Koło</th>
+                                    <th className="p-4 text-emerald-600">Za</th>
+                                    <th className="p-4 text-rose-600">Przeciw</th>
+                                    <th className="p-4">Wstrzymał się</th>
+                                    <th className="p-4">Nieobecny</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-700/50">
+                            <tbody className="divide-y divide-border-base">
                                 {Object.entries(partyStats).map(([party, stats]) => (
-                                    <tr key={party} className="hover:bg-slate-800/30 transition-colors">
-                                        <td className="p-4 font-medium text-white">{party}</td>
-                                        <td className="p-4 font-bold text-green-400">{stats.yes}</td>
-                                        <td className="p-4 font-bold text-red-400">{stats.no}</td>
-                                        <td className="p-4 font-bold text-slate-400">{stats.abstain}</td>
-                                        <td className="p-4 text-slate-500">{stats.absent}</td>
+                                    <tr key={party} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                                        <td className="p-4 font-black text-primary">{party}</td>
+                                        <td className="p-4 font-black text-emerald-600">{stats.yes}</td>
+                                        <td className="p-4 font-black text-rose-600">{stats.no}</td>
+                                        <td className="p-4 font-black text-primary">{stats.abstain}</td>
+                                        <td className="p-4 text-secondary opacity-40 font-black">{stats.absent}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -364,17 +357,17 @@ const VoteDetails: React.FC = () => {
             <div className="space-y-4 pt-8">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                        <Users className="w-6 h-6 text-indigo-600" />
-                        <h2 className="text-2xl font-bold">Wyniki Indywidualne</h2>
+                        <Users className="w-6 h-6 text-accent-blue" />
+                        <h2 className="text-2xl font-black tracking-tight">Wyniki Indywidualne</h2>
                     </div>
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 w-4 h-4" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary opacity-30 w-4 h-4" />
                         <input
                             type="text"
                             placeholder="Szukaj posła..."
                             value={mpSearch}
                             onChange={(e) => setMpSearch(e.target.value)}
-                            className="pl-10 pr-4 py-2 border border-slate-600 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 w-full sm:w-64 bg-slate-800 text-white placeholder:text-slate-400"
+                            className="pl-10 pr-4 py-3 border border-border-base rounded-2xl text-sm focus:outline-none focus:border-accent-blue focus:ring-1 focus:ring-accent-blue w-full sm:w-64 bg-surface text-primary placeholder:text-secondary opacity-80"
                         />
                     </div>
                 </div>
@@ -383,10 +376,10 @@ const VoteDetails: React.FC = () => {
                     {results
                         .filter(r => !mpSearch || r.mps?.name?.toLowerCase().includes(mpSearch.toLowerCase()) || r.mps?.party?.toLowerCase().includes(mpSearch.toLowerCase()))
                         .map((r, idx) => (
-                            <div key={idx} className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-border-base transition-colors hover:border-indigo-500/50">
+                            <div key={idx} className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-border-base transition-colors hover:border-accent-blue shadow-sm">
                                 <div className={`w-2 h-10 rounded-full ${r.vote === 'YES' ? 'bg-emerald-500' :
-                                    r.vote === 'NO' ? 'bg-red-500' :
-                                        r.vote === 'ABSTAIN' ? 'bg-amber-500' : 'bg-slate-500'
+                                    r.vote === 'NO' ? 'bg-rose-500' :
+                                        r.vote === 'ABSTAIN' ? 'bg-amber-500' : 'bg-secondary opacity-20'
                                     }`} />
                                 <div>
                                     <div className="font-bold text-sm text-primary">{r.mps?.name}</div>

@@ -1,14 +1,15 @@
-from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy.orm import Session
-from typing import List
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from backend import models
 from backend.core import orm_db as database
-from fastapi.middleware.cors import CORSMiddleware
+from backend.routers import mps, votes, euro, general, processes
 
+# Create DB tables
 models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI(title="Sejm Open Parliament API")
 
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], # Allow all for dev
@@ -17,30 +18,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include Routers
+app.include_router(mps.router, prefix="/mps", tags=["mps"])
+app.include_router(votes.router, prefix="/votes", tags=["votes"])
+app.include_router(euro.router, prefix="/euro", tags=["euro"])
+app.include_router(processes.router, prefix="/processes", tags=["processes"])
+app.include_router(general.router, tags=["general"])
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to Sejm API"}
-
-@app.get("/mps")
-def read_mps(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):
-    mps = db.query(models.MP).offset(skip).limit(limit).all()
-    return mps
-
-@app.get("/mps/{mp_id}")
-def read_mp(mp_id: int, db: Session = Depends(database.get_db)):
-    mp = db.query(models.MP).filter(models.MP.id == mp_id).first()
-    if mp is None:
-        raise HTTPException(status_code=404, detail="MP not found")
-    return mp
-
-@app.get("/votes")
-def read_votes(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):
-    votes = db.query(models.Vote).offset(skip).limit(limit).all()
-    return votes
-
-@app.get("/votes/{vote_id}")
-def read_vote(vote_id: int, db: Session = Depends(database.get_db)):
-    vote = db.query(models.Vote).filter(models.Vote.id == vote_id).first()
-    if vote is None:
-        raise HTTPException(status_code=404, detail="Vote not found")
-    return vote

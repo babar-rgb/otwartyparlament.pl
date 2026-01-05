@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { db } from '../lib/db';
+import { fetchInterpellations, fetchMP } from '../api';
 
 export interface Interpellation {
     id: number;
@@ -31,34 +31,42 @@ export function useInterpellationDetails(id?: string) {
     useEffect(() => {
         const loadData = async () => {
             if (!id) return;
-
             try {
-                // Fetch interpellation
-                const { data: interpData, error: interpError } = await db
-                    .from('interpellations')
-                    .select('*')
-                    .eq('id', id)
-                    .single();
+                const data = await fetchInterpellations({ limit: 100 }); // Hack to find by ID
+                const item = data.find((i: any) => i.id === parseInt(id));
+                if (item) {
+                    setInterpellation({
+                        id: item.id,
+                        title: item.title,
+                        sent_date: item.sent_date,
+                        content: item.content,
+                        reply_content: item.reply_content,
+                        receipt_date: null,
+                        addressee: '',
+                        topic: ''
+                    });
 
-                if (interpError) throw interpError;
-                setInterpellation(interpData);
-
-                // Fetch authors
-                const { data: authorsData, error: authorsError } = await db
-                    .from('interpellation_authors')
-                    .select('mp_id, mps(id, name, party, photo_url, slug)')
-                    .eq('interpellation_id', id);
-
-                if (!authorsError && authorsData) {
-                    setAuthors(authorsData as unknown as Author[]);
+                    // Fetch Author
+                    if (item.mp_id) {
+                        const mp = await fetchMP(item.mp_id);
+                        setAuthors([{
+                            mp_id: mp.id,
+                            mps: {
+                                id: mp.id,
+                                name: `${mp.first_name} ${mp.last_name}`,
+                                party: mp.club,
+                                photo_url: mp.photo_url,
+                                slug: mp.slug || mp.id.toString()
+                            }
+                        }]);
+                    }
                 }
             } catch (error) {
-                console.error('Error loading interpellation:', error);
+                console.error('Error loading interpellation details:', error);
             } finally {
                 setLoading(false);
             }
         };
-
         loadData();
     }, [id]);
 

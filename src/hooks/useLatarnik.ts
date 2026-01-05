@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { db } from '../lib/db';
+import { fetchVotes, fetchVoteResults } from '../api';
+import { LATARNIK_VOTES } from '../data/latarnikConfig';
 
 export interface LatarnikVote {
     id: number;
@@ -7,20 +8,15 @@ export interface LatarnikVote {
     description: string;
     date: string;
     topic: string;
+    sitting: number;
+    voting_number: number;
+    term: number;
+    divide_comment?: string;
     partyStances: Record<string, string>; // 'YES', 'NO', 'ABSTAIN'
 }
 
 export interface PartyAlignment {
     party: string;
-    alignment: number;
-}
-
-export interface MpAlignment {
-    id: number;
-    name: string;
-    photo_url: string;
-    party: string;
-    slug: string;
     alignment: number;
 }
 
@@ -37,51 +33,47 @@ export const useLatarnik = () => {
         try {
             setLoading(true);
 
-            // 1. Fetch a pool of important votes
-            const { data: votesData, error: votesError } = await db
-                .from('votes')
-                .select('*')
-                .eq('term', 10)
-                .gte('importance', 7)
-                .order('importance', { ascending: false })
-                .limit(40);
+            // Fetch specific votes required for the test
+            const mappedVotes = await Promise.all(LATARNIK_VOTES.map(async (config) => {
+                // Fetch the specific vote by sitting and voting number
+                // We ask for term=10 explicitly, though it might be dynamic in future
+                const { items } = await fetchVotes({
+                    term: 10,
+                    sitting: config.sitting,
+                    voting_number: config.voting_number
+                });
 
-            if (votesError) throw votesError;
-            if (!votesData || votesData.length === 0) throw new Error('Nie znaleziono ważnych głosowań');
+                // Find the exact vote in the returned items (api returns a list)
+                const dbVote = items.find((v: any) =>
+                    v.sitting === config.sitting &&
+                    v.voting_number === config.voting_number
+                );
 
-            // Shuffle and pick 12 for variety
-            const shuffled = [...votesData].sort(() => 0.5 - Math.random()).slice(0, 12);
-            const voteIds = shuffled.map(v => v.id);
+                if (!dbVote) {
+                    console.warn(`Latarnik vote not found: Sitting ${config.sitting}, Voting ${config.voting_number}`);
+                    return null;
+                }
 
-            // 2. Fetch results for these votes to calculate party stances
-            const { data: resultsData, error: resultsError } = await db
-                .from('vote_results')
-                .select('vote_id, result, mps(party)')
-                .in('vote_id', voteIds);
-
-            if (resultsError) throw resultsError;
-
-            // 3. Aggregate stances per party per vote
-            const processedVotes: LatarnikVote[] = shuffled.map(vote => {
-                const voteResults = resultsData?.filter(r => r.vote_id === vote.id) || [];
+                const results = await fetchVoteResults({ vote_id: dbVote.id, limit: 1000 });
                 const partyAggregates: Record<string, Record<string, number>> = {};
 
-                voteResults.forEach(r => {
-                    // PostgREST might return mps as an object or an array depending on internal cache/types
-                    const mpData = Array.isArray(r.mps) ? r.mps[0] : r.mps;
-                    const party = mpData?.party;
-
+                results.forEach((r: any) => {
+                    const party = r.mp_club; // Standardize field name from API
                     if (!party) return;
                     if (!partyAggregates[party]) partyAggregates[party] = { 'YES': 0, 'NO': 0, 'ABSTAIN': 0 };
-                    if (partyAggregates[party][r.result] !== undefined) {
-                        partyAggregates[party][r.result]++;
-                    }
+
+                    let voteType = 'ABSTAIN';
+                    const rawVote = r.vote?.toUpperCase();
+                    if (rawVote === 'ZA' || rawVote === 'YES') voteType = 'YES';
+                    else if (rawVote === 'PRZECIW' || rawVote === 'NO') voteType = 'NO';
+
+                    partyAggregates[party][voteType]++;
                 });
 
                 const partyStances: Record<string, string> = {};
                 Object.entries(partyAggregates).forEach(([party, counts]) => {
                     const total = counts['YES'] + counts['NO'] + counts['ABSTAIN'];
-                    if (total < 3) return; // Skip parties with too few votes in this session
+                    if (total < 1) return;
 
                     if (counts['YES'] > counts['NO'] && counts['YES'] > counts['ABSTAIN']) {
                         partyStances[party] = 'YES';
@@ -93,16 +85,27 @@ export const useLatarnik = () => {
                 });
 
                 return {
-                    id: vote.id,
-                    title: vote.title_raw || vote.title,
-                    description: vote.description || vote.topic || 'Analiza głosowania w toku...',
-                    date: vote.date,
-                    topic: vote.topic || 'Ogólne',
+                    id: dbVote.id,
+                    title: config.title,
+                    description: config.description,
+                    date: dbVote.date,
+                    topic: config.topic,
+                    sitting: dbVote.sitting,
+                    voting_number: dbVote.voting_number,
+                    term: dbVote.term,
+                    divide_comment: config.divide_comment,
                     partyStances
-                };
-            });
+                } as LatarnikVote;
+            }));
 
-            setVotes(processedVotes);
+            const validVotes = mappedVotes.filter((v): v is LatarnikVote => v !== null);
+
+            if (validVotes.length === 0) {
+                // Only throw if we found NOTHING. Partial results are better than nothing.
+                throw new Error('Brak zmapowanych głosowań w bazie danych.');
+            }
+
+            setVotes(validVotes);
         } catch (err: any) {
             console.error('Latarnik Data Fetch Error:', err);
             setError(err.message);
@@ -112,81 +115,37 @@ export const useLatarnik = () => {
     };
 
     const calculateFullResults = async (userAnswers: Record<number, string>) => {
-        // Party results
-
-        // Define party groupings for consolidation (mostly technical sub-groups)
-        const groupMapping: Record<string, string> = {
-            'Polska2050-TD': 'Polska2050',
-            'PSL-TD': 'PSL',
-            'KP': 'PSL', // Koalicja Polska is mostly PSL
-            'LD': 'Lewica', // Lewica Demokratyczna
-        };
-
         const partyScores: Record<string, { score: number, total: number }> = {};
 
-        votes.forEach(vote => {
+        votes.forEach((vote) => {
             const userAction = userAnswers[vote.id];
             if (!userAction) return;
 
-            Object.entries(vote.partyStances).forEach(([rawParty, partyAction]) => {
-                const party = groupMapping[rawParty] || rawParty;
+            Object.entries(vote.partyStances).forEach(([party, partyAction]) => {
                 if (!partyScores[party]) partyScores[party] = { score: 0, total: 0 };
-
                 partyScores[party].total++;
-                if (userAction === partyAction) partyScores[party].score++;
-                else if (userAction === 'ABSTAIN' || partyAction === 'ABSTAIN') partyScores[party].score += 0.4;
+                if (userAction === partyAction) {
+                    partyScores[party].score += 2;
+                } else if (userAction === 'ABSTAIN' || partyAction === 'ABSTAIN') {
+                    partyScores[party].score += 0.5;
+                } else {
+                    partyScores[party].score -= 1;
+                }
             });
-        });
+        }); // This brace closes the `votes.forEach` callback
 
         const partyAlignments = Object.entries(partyScores)
-            .map(([party, stats]) => ({
-                party,
-                alignment: stats.total > 0 ? Math.round((stats.score / stats.total) * 100) : 0
-            }))
+            .map(([party, stats]) => {
+                const maxPossible = stats.total * 2;
+                const percentage = maxPossible > 0 ? (stats.score / maxPossible) * 100 : 0;
+                return {
+                    party,
+                    alignment: Math.max(0, Math.round(percentage))
+                };
+            })
             .sort((a, b) => b.alignment - a.alignment);
 
-        // Individual MP Twin
-        try {
-            const { data: mpVotesData, error: mpVotesError } = await db
-                .from('vote_results')
-                .select('mp_id, vote_id, result, mps(id, name, photo_url, party, slug)')
-                .in('vote_id', votes.map(v => v.id));
-
-            if (mpVotesError) throw mpVotesError;
-
-            const mpTally: Record<number, { score: number, total: number, mp: any }> = {};
-            mpVotesData.forEach(rv => {
-                const mpId = rv.mp_id;
-                if (!mpTally[mpId]) {
-                    const mpData = Array.isArray(rv.mps) ? rv.mps[0] : rv.mps;
-                    mpTally[mpId] = { score: 0, total: 0, mp: mpData };
-                }
-                const userAction = userAnswers[rv.vote_id];
-                const mpAction = rv.result === 'YES' ? 'YES' : rv.result === 'NO' ? 'NO' : 'ABSTAIN';
-                if (userAction) {
-                    mpTally[mpId].total++;
-                    if (userAction === mpAction) mpTally[mpId].score++;
-                    else if (userAction === 'ABSTAIN' || mpAction === 'ABSTAIN') mpTally[mpId].score += 0.4;
-                }
-            });
-
-            const sortedMps = Object.values(mpTally)
-                .filter(item => item.mp && item.mp.name) // Ensure we have valid MP data
-                .map(item => ({
-                    ...item.mp,
-                    alignment: item.total > 0 ? Math.round((item.score / item.total) * 100) : 0
-                }))
-                .sort((a, b) => b.alignment - a.alignment)
-                .slice(0, 5);
-
-            return {
-                parties: partyAlignments.filter(p => p.party),
-                mps: sortedMps
-            };
-        } catch (err) {
-            console.error('MP matching error:', err);
-            return { parties: partyAlignments, mps: [] };
-        }
+        return { parties: partyAlignments, mps: [] }; // MPs twins disabled for now to simplify
     };
 
     return { votes, loading, error, calculateFullResults };
