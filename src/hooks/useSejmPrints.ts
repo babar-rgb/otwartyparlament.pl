@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchProcesses, fetchProcessesCount } from '../api';
+import { fetchProcesses } from '../api';
 import { SejmPrint } from '../types/domain';
 
 const ITEMS_PER_PAGE = 20;
@@ -21,7 +21,11 @@ export function useSejmPrints() {
             setLoading(true);
             try {
                 const skip = page * ITEMS_PER_PAGE;
-                const { items, total } = await fetchProcesses({ skip, limit: ITEMS_PER_PAGE });
+                const { items, total } = await fetchProcesses({
+                    skip,
+                    limit: ITEMS_PER_PAGE,
+                    q: searchTerm
+                });
 
                 setPrints(items.map((p: any) => ({
                     id: p.id,

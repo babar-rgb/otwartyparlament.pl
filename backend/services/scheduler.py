@@ -112,6 +112,14 @@ def run_daily_maintenance():
     
     # 6. Declarations (Asset Statements)
     run_declarations_etl()
+
+    # 7. Semantic Embeddings (Data Grinder)
+    logger.info("Starting Semantic Embedding Grinder...")
+    try:
+        from backend.etl.analysis.embed_votes import grinder
+        grinder(batch_size=100) # Process initial batch
+    except Exception as e:
+        logger.error(f"Embedding grinder failed: {e}")
     
     elapsed = time.time() - start_time
     logger.info(f"Maintenance completed in {elapsed:.1f} seconds")

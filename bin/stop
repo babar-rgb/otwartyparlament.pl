@@ -3,11 +3,15 @@
 echo "🛑 Zatrzymuję Otwarty Parlament..."
 echo "-----------------------------------"
 
-# 1. Stop PostgREST
-echo "🔌 Zatrzymuję API..."
+# 1. Stop Uvicorn (FastAPI)
+echo "🔌 Zatrzymuję API (Uvicorn)..."
+pkill -f "uvicorn backend.main:app" || true
+pkill -f "python3 -m uvicorn" || true
+
+# 2. Stop PostgREST (Legacy cleanup)
 pkill -f postgrest || true
 
-# 2. Stop Docker Desktop
+# 3. Stop Docker Desktop
 echo "🐳 Zamykam Docker Desktop..."
 osascript -e 'quit app "Docker"' 2>/dev/null || true
 

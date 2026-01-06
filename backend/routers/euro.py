@@ -25,9 +25,9 @@ def read_euro_mps(
     active: Optional[bool] = None,
     db: Session = Depends(database.get_db)
 ):
-    query = db.query(models.EuroMP)
+    query = db.query(models.EuroMEP)
     if term:
-        query = query.filter(models.EuroMP.term == term)
+        query = query.filter(models.EuroMEP.term == term)
     if active is not None:
-        query = query.filter(models.EuroMP.active == active)
+        query = query.filter(models.EuroMEP.active == active)
     return query.all()

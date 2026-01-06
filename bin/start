@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Function to kill child processes on exit
+cleanup() {
+  echo "🛑 Zatrzymuję procesy..."
+  kill $(jobs -p) 2>/dev/null
+}
+trap cleanup EXIT
+
 echo "🚀 Otwarty Parlament - Start Systemu"
 echo "-----------------------------------"
 
@@ -12,12 +19,37 @@ if ! pg_isready -h localhost -p 5432 > /dev/null 2>&1; then
 fi
 echo "✅ PostgreSQL gotowy!"
 
-# 2. Start PostgREST (REST API)
-echo "� Startuję API (PostgREST)..."
-postgrest postgrest.conf &
+# 2. Start Backend (FastAPI with Uvicorn)
+echo "🐍 Startuję Backend (FastAPI)..."
+
+# Activate venv if exists
+if [ -d ".venv" ]; then
+    source .venv/bin/activate
+elif [ -d "venv" ]; then
+    source venv/bin/activate
+fi
+
+# Check if uvicorn is in path or use python -m
+if command -v uvicorn >/dev/null 2>&1; then
+    uvicorn backend.main:app --reload --port 8000 &
+else
+    # Fallback to python modules if uvicorn binary not directly found
+    python3 -m uvicorn backend.main:app --reload --port 8000 &
+fi
+BACKEND_PID=$!
 sleep 2
-echo "✅ API działa na porcie 3001"
+
+# Check if backend started
+if ps -p $BACKEND_PID > /dev/null; then
+  echo "✅ API działa na porcie 8000"
+else
+  echo "❌ Błąd startu API! Sprawdź logi."
+  exit 1
+fi
 
 # 3. Start Frontend
 echo "💻 Startuję stronę (Vite)..."
 npm run dev
+
+# Wait for all background processes
+wait

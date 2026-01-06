@@ -246,11 +246,12 @@ export const fetchProcess = async (id: string) => {
   return await response.json();
 };
 
-export const fetchProcesses = async (options?: { skip?: number; limit?: number; term?: number }) => {
+export const fetchProcesses = async (options?: { skip?: number; limit?: number; term?: number; q?: string }) => {
   const params = new URLSearchParams();
   if (options?.skip) params.append('skip', options.skip.toString());
   if (options?.limit) params.append('limit', options.limit.toString());
   if (options?.term) params.append('term', options.term.toString());
+  if (options?.q) params.append('q', options.q);
   const response = await fetch(`${API_URL}/processes?${params.toString()}`);
   if (!response.ok) throw new Error('Failed to fetch processes');
   return await response.json();
@@ -263,6 +264,22 @@ export const fetchProcessesCount = async (term?: number) => {
   if (!response.ok) throw new Error('Failed to fetch processes count');
   const data = await response.json();
   return data.count;
+};
+
+export const fetchRelatedProcesses = async (processId: string, limit: number = 5) => {
+  const response = await fetch(`${API_URL}/processes/${processId}/related?limit=${limit}`);
+  if (!response.ok) throw new Error('Failed to fetch related processes');
+  return await response.json();
+};
+
+export const matchPoliticalTwin = async (query: string) => {
+  const response = await fetch(`${API_URL}/alignment/match`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query })
+  });
+  if (!response.ok) throw new Error('Failed to calculate alignment');
+  return await response.json();
 };
 
 export const fetchSpeech = async (id: string) => {

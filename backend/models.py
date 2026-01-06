@@ -39,6 +39,7 @@ class Vote(Base):
     topic = Column(String, index=True, nullable=True) # AI classified
     importance = Column(Integer, default=0) # AI calculated 1-10
     kind = Column(String, nullable=True) # e.g., 'ustawa', 'uchwała'
+    vector_embedding = Column(JSONB, nullable=True) # 384-dim vector for semantic search
     created_at = Column(DateTime, server_default=func.now())
 
     results = relationship("VoteResult", back_populates="vote")
@@ -68,9 +69,24 @@ class Bill(Base):
     type = Column(String, index=True) # poselski, rzadowy
     url = Column(String, nullable=True)
     mp_id = Column(Integer, ForeignKey("mps.id"), nullable=True)
+    vector_embedding = Column(JSONB, nullable=True) # 384-dim vector
     created_at = Column(DateTime, server_default=func.now())
 
     mp = relationship("MP", back_populates="bills")
+    analysis = relationship("BillAnalysis", uselist=False, back_populates="bill")
+
+class BillAnalysis(Base):
+    __tablename__ = "bill_analyses"
+
+    bill_id = Column(Integer, ForeignKey("bills.id"), primary_key=True)
+    summary = Column(Text)
+    pros = Column(JSONB) # List of strings
+    cons = Column(JSONB) # List of strings
+    impact = Column(Text, nullable=True)
+    importance = Column(Integer, default=0)
+    created_at = Column(DateTime, server_default=func.now())
+
+    bill = relationship("Bill", back_populates="analysis")
 
 class Interpellation(Base):
     __tablename__ = "interpellations"
@@ -143,35 +159,6 @@ class AssetDeclaration(Base):
     raw_data = Column(JSONB)
     created_at = Column(DateTime, server_default=func.now())
 
-class EuroMEP(Base):
-    __tablename__ = "euro_meps"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    api_id = Column(Integer, unique=True)
-    name = Column(String)
-    party = Column(String)
-
-class EuroVote(Base):
-    __tablename__ = "euro_votes"
-
-    id = Column(String, primary_key=True) # XML Identifier
-    title = Column(Text)
-    date = Column(Date)
-    votes_for = Column(Integer)
-    votes_against = Column(Integer)
-    votes_abstain = Column(Integer)
-    importance_score = Column(Integer)
-    is_key_vote = Column(Boolean)
-    term = Column(Integer)
-    created_at = Column(DateTime, server_default=func.now())
-
-class EuroVoteResult(Base):
-    __tablename__ = "euro_vote_results"
-
-    id = Column(Integer, primary_key=True, index=True)
-    vote_id = Column(String, ForeignKey("euro_votes.id"))
-    mep_id = Column(Integer) # Linked to EuroMEP.api_id technically, but strict FK might fail if not synced
-    vote = Column(String)
 
 class Category(Base):
     __tablename__ = "categories"
@@ -232,4 +219,52 @@ class Speech(Base):
     created_at = Column(DateTime, server_default=func.now())
     
     mp = relationship("MP")
+
+
+
+
+
+class EuroMEP(Base):
+    __tablename__ = "euro_meps"
+    __table_args__ = {'extend_existing': True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    api_id = Column(Integer, unique=True)
+    full_name = Column(String)
+    country = Column(String)
+    national_party = Column(String)
+    eu_group = Column(String)
+    photo_url = Column(String)
+    email = Column(String)
+    active = Column(Boolean, default=True)
+    term = Column(Integer)
+    rebellion_rate = Column(Float, default=0.0)
+    attendance_score = Column(Float, default=0.0)
+
+class EuroVote(Base):
+    __tablename__ = "euro_votes"
+    __table_args__ = {'extend_existing': True}
+
+    id = Column(String, primary_key=True, index=True)
+    title = Column(String)
+    description = Column(Text, nullable=True)
+    date = Column(DateTime)
+    votes_for = Column(Integer)
+    votes_against = Column(Integer)
+    votes_abstain = Column(Integer)
+    importance_score = Column(Integer)
+    is_key_vote = Column(Boolean, default=False)
+    vector_embedding = Column(JSONB, nullable=True) # 384-dim vector
+    term = Column(Integer)
+    topic_tag = Column(String)
+
+class EuroVoteResult(Base):
+    __tablename__ = "euro_vote_results"
+    __table_args__ = {'extend_existing': True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    vote_id = Column(String, ForeignKey("euro_votes.id"))
+    mp_id = Column(Integer, ForeignKey("euro_meps.id"))
+    result = Column(String)
+
 

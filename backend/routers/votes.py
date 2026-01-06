@@ -105,7 +105,7 @@ def read_votes_results_v2(
 
 @router.get("/{vote_id}")
 def read_vote(vote_id: int, db: Session = Depends(database.get_db)):
-    vote = db.query(models.Vote).filter(models.Vote.id == vote_id).first()
+    vote = db.query(models.Vote).filter(models.Vote.id == vote_id).options(joinedload(models.Vote.analysis)).first()
     if vote is None:
         raise HTTPException(status_code=404, detail="Vote not found")
     return vote

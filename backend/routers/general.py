@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
 from typing import Optional
 from backend import models
@@ -19,7 +19,7 @@ def search_all(
     # This is a complex unified search. For now, we'll search basic entities.
     results = []
     
-    # Simple search across MPs
+    # 1. Search across MPs (Traditional)
     mps = db.query(models.MP).filter(
         or_(
             models.MP.first_name.ilike(f"%{q}%"),
@@ -27,10 +27,18 @@ def search_all(
         )
     ).limit(6).all()
     
-    # Simple search across Votes
-    votes = db.query(models.Vote).filter(
-        models.Vote.title_clean.ilike(f"%{q}%")
-    ).limit(20).all()
+    # 2. Search across Votes (Semantic)
+    from backend.services.embedding import embedding_service
+    
+    # Get recent/relevant votes to rank (loading all embeddings might be slow for a single request, but 12k is okay)
+    # We load IDs and embeddings only to optimize.
+    all_votes = db.query(models.Vote).filter(models.Vote.vector_embedding != None).all()
+    
+    if q and len(q) > 3:
+        votes = embedding_service.semantic_search(q, all_votes, limit=20)
+    else:
+        # Fallback to simple ILIKE if search query too short
+        votes = db.query(models.Vote).filter(models.Vote.title_clean.ilike(f"%{q}%")).limit(20).all()
     
     # Format results to match frontend SearchResult interface
     for mp in mps:
@@ -48,7 +56,8 @@ def search_all(
             "id": str(vote.id),
             "title": vote.title_clean,
             "date": str(vote.date),
-            "term": vote.term
+            "term": vote.term,
+            "topic": vote.topic
         })
         
     return results
@@ -178,6 +187,11 @@ def read_interpellations(
         
     return final_items
 
+@router.get("/speeches/count")
+def read_speeches_count(db: Session = Depends(database.get_db)):
+    count = db.query(models.Speech).count()
+    return {"count": count}
+
 @router.get("/speeches")
 def read_speeches(
     mp_id: Optional[int] = None,
@@ -185,22 +199,46 @@ def read_speeches(
     skip: int = 0,
     sitting: Optional[int] = None,
     term: Optional[int] = None,
+    q: Optional[str] = None,
+    party: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
     db: Session = Depends(database.get_db)
 ):
     query = db.query(models.Speech)
+    
     if mp_id:
         query = query.filter(models.Speech.mp_id == mp_id)
     if sitting:
         query = query.filter(models.Speech.sitting == sitting)
     if term:
         query = query.filter(models.Speech.term == term)
+    
+    # Advanced Filters
+    if q:
+        query = query.filter(models.Speech.content.ilike(f"%{q}%"))
+    
+    if date_from:
+        query = query.filter(models.Speech.date >= date_from)
+        
+    if date_to:
+        query = query.filter(models.Speech.date <= date_to)
+        
+    if party:
+        query = query.join(models.MP).filter(models.MP.club == party)
         
     total = query.count()
-    speeches = query.order_by(models.Speech.date.desc(), models.Speech.statement_num.asc()).offset(skip).limit(limit).all()
+    
+    # Eager load MP to prevent N+1 and allow frontend display
+    speeches = query.options(joinedload(models.Speech.mp))\
+        .order_by(models.Speech.date.desc(), models.Speech.statement_num.asc())\
+        .offset(skip).limit(limit).all()
     
     final_items = []
     for s in speeches:
         s_dict = {c.name: getattr(s, c.name) for c in s.__table__.columns}
+        if s.mp:
+            s_dict['mp'] = {c.name: getattr(s.mp, c.name) for c in s.mp.__table__.columns}
         final_items.append(s_dict)
         
     return {
