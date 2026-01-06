@@ -4,8 +4,7 @@ import { MP, fetchMPs } from '../api';
 import { useTerm } from '../context/TermContext';
 import TermSwitcher from '../components/ui/TermSwitcher';
 import MpCard from '../components/features/sejm/MpCard';
-import FeaturedMPs from '../components/FeaturedMPs';
-import { Search, Sparkles, Filter as FilterIcon, X } from 'lucide-react';
+import { Search, Sparkles, X } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const MAJOR_CLUBS = ['KO', 'PiS', 'Polska2050', 'PSL-TD', 'Lewica', 'Konfederacja'];
@@ -76,14 +75,7 @@ export default function Poslowie() {
     return result;
   }, [searchTerm, selectedParty, mps]);
 
-  const featuredMPs = useMemo(() => {
-    const sorted = [...mps];
-    return {
-      topAttendance: sorted.sort((a, b) => (b.attendanceRate || 0) - (a.attendanceRate || 0)).slice(0, 5),
-      topRebels: sorted.sort((a, b) => (b.rebelVotes || 0) - (a.rebelVotes || 0)).slice(0, 5),
-      lowAttendance: sorted.sort((a, b) => (a.attendanceRate || 0) - (b.attendanceRate || 0)).slice(0, 5),
-    };
-  }, [mps]);
+
 
   if (loading) return (
     <div className="min-h-screen bg-page flex items-center justify-center">
@@ -102,16 +94,16 @@ export default function Poslowie() {
       />
 
       {/* Hero Section */}
-      <div className="pt-32 pb-16 px-4 md:px-8 relative overflow-hidden dashboard-mesh border-b border-border-base">
+      <div className="pt-32 pb-16 px-4 md:px-8 relative overflow-hidden border-b border-border-base">
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full border border-blue-500/20 text-[10px] font-black uppercase tracking-widest mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent-blue/10 text-accent-blue rounded-full border border-accent-blue/20 text-[10px] font-black uppercase tracking-widest mb-4">
                 <Sparkles size={12} />
                 Legislative Database v1.0
               </div>
               <h1 className="text-4xl md:text-6xl font-black text-primary mb-4 tracking-tighter">
-                Nasi <span className="italic font-serif opacity-60">Reprezentanci</span>
+                Nasi <span className="italic font-serif text-accent-blue/80">Reprezentanci</span>
               </h1>
               <p className="text-secondary text-lg font-medium max-w-xl leading-relaxed">
                 Wykaz {mps.length} posłów sprawujących mandat w {term}. kadencji. Monitoruj ich aktywność i weryfikuj obietnice.
@@ -119,71 +111,62 @@ export default function Poslowie() {
             </div>
             <TermSwitcher />
           </div>
-
-          {/* Search Bar - Integrated in Hero */}
-          <div className="mt-12 relative max-w-2xl">
-            <div className="absolute inset-0 bg-accent-blue/5 blur-3xl rounded-full opacity-50"></div>
-            <div className="relative flex items-center bg-surface border border-border-base p-1.5 rounded-2xl shadow-xl backdrop-blur-xl group focus-within:border-accent-blue/50 transition-all">
-              <Search className="ml-4 text-secondary group-focus-within:text-accent-blue transition-colors" size={20} />
-              <input
-                type="text"
-                placeholder="Szukaj po nazwisku..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1 bg-transparent border-none py-3 px-4 text-primary placeholder:text-secondary/40 focus:ring-0 font-bold"
-              />
-              {searchTerm && (
-                <button onClick={() => setSearchTerm('')} className="p-2 text-secondary hover:text-primary">
-                  <X size={18} />
-                </button>
-              )}
-              <div className="h-8 w-px bg-border-base mx-2"></div>
-              <button className="flex items-center gap-2 px-4 py-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl text-xs font-black uppercase tracking-widest text-secondary transition-colors">
-                <FilterIcon size={16} />
-                <span className="hidden sm:inline">Filtry</span>
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-12 space-y-16">
-        {/* Party Filter Pills */}
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => setSelectedParty('')}
-            className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all border ${selectedParty === ''
-              ? 'bg-accent-blue text-white shadow-lg shadow-accent-blue/20 border-accent-blue'
-              : 'bg-surface text-secondary border-border-base hover:border-accent-blue/50 dark:hover:border-accent-blue/50 hover:text-primary'
-              }`}
-          >
-            Wszyscy ({mps.length})
-          </button>
+        {/* Filter & Search Section - Unified Style */}
+        <div className="bg-surface p-6 rounded-[2rem] border border-border-base shadow-2xl backdrop-blur-xl">
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="relative flex-1">
+                <div className="relative flex items-center gap-4">
+                  <Search className="text-secondary transition-colors" size={24} />
+                  <input
+                    type="text"
+                    placeholder="Szukaj posła (imię, nazwisko)..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-transparent text-xl font-bold text-primary placeholder:text-secondary/30 focus:outline-none"
+                  />
+                  {searchTerm && (
+                    <button onClick={() => setSearchTerm('')} className="p-2 text-secondary hover:text-primary transition-colors">
+                      <X size={20} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
 
-          {PARTIES.map((party) => (
-            <button
-              key={party.id}
-              onClick={() => setSelectedParty(party.id)}
-              className={`px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all border ${selectedParty === party.id
-                ? 'bg-accent-blue text-white shadow-lg shadow-accent-blue/20 border-accent-blue'
-                : 'bg-surface text-secondary border-border-base hover:border-accent-blue/50 dark:hover:border-accent-blue/50 hover:text-primary'
-                }`}
-            >
-              {party.name}
-            </button>
-          ))}
+            {/* Party Filters */}
+            <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 border-t border-border-base/10 pt-6">
+              <button
+                onClick={() => setSelectedParty('')}
+                className={`px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-wider whitespace-nowrap transition-all border ${selectedParty === ''
+                  ? 'bg-accent-blue text-white border-accent-blue shadow-lg shadow-accent-blue/20'
+                  : 'bg-page text-secondary border-border-base hover:bg-surface hover:text-primary'
+                  }`}
+              >
+                Wszyscy ({mps.length})
+              </button>
+
+              {PARTIES.map((party) => (
+                <button
+                  key={party.id}
+                  onClick={() => setSelectedParty(party.id)}
+                  className={`px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-wider whitespace-nowrap transition-all border ${selectedParty === party.id
+                    ? 'bg-accent-blue text-white border-accent-blue shadow-lg shadow-accent-blue/20'
+                    : 'bg-page text-secondary border-border-base hover:bg-surface hover:text-primary'
+                    }`}
+                >
+                  {party.name}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* Featured Dashboard */}
-        {!searchTerm && !selectedParty && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <FeaturedMPs
-              topAttendance={featuredMPs.topAttendance}
-              topRebels={featuredMPs.topRebels}
-              lowAttendance={featuredMPs.lowAttendance}
-            />
-          </div>
-        )}
+
 
         {/* Main Grid - Tiled aesthetic with smaller units */}
         <div className="space-y-8">

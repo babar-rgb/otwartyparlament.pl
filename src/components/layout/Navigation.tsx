@@ -42,14 +42,14 @@ export default function Navigation() {
       <nav
         className={`fixed top-0 w-full z-50 py-6 transition-all duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'
           } ${lastScrollY > 50
-            ? 'bg-page/95 backdrop-blur-md shadow-2xl py-4 border-b border-border-base'
+            ? 'bg-page/80 backdrop-blur-xl shadow-2xl py-4 border-b border-border-base'
             : 'bg-transparent'
           }`}
       >
         <div className="container mx-auto px-6 md:px-12">
           <div className="flex justify-between items-center">
             {/* Left: Logo */}
-            <Link to="/" className="font-extrabold text-2xl text-ink dark:text-white tracking-tight flex items-center gap-2">
+            <Link to="/" className="font-extrabold text-2xl text-primary tracking-tight flex items-center gap-2">
               <span>otwartyparlament.pl</span>
             </Link>
 
@@ -73,15 +73,7 @@ export default function Navigation() {
               <Link to="/projekty" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
                 Projekty
               </Link>
-              <Link to="/transfery" className="text-sm font-bold text-emerald-600 hover:text-emerald-700 transition-colors hover:scale-105 transform duration-200">
-                Transfery
-              </Link>
-              <Link to="/rzad" className="text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors hover:scale-105 transform duration-200">
-                Rząd
-              </Link>
-              <Link to="/europarlament" className="text-sm font-bold text-secondary hover:text-accent-blue transition-colors hover:scale-105 transform duration-200">
-                Europarlament
-              </Link>
+
               <Link to="/o-projekcie" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
                 O Projekcie
               </Link>
@@ -99,19 +91,19 @@ export default function Navigation() {
               {/* Search Button */}
               <button
                 onClick={() => setIsSearchOpen(true)}
-                className="p-2 text-ink dark:text-white hover:opacity-70 transition-opacity"
+                className="p-2 text-primary hover:text-accent-blue transition-colors"
                 aria-label="Szukaj"
               >
-                <Search size={24} strokeWidth={2} />
+                <Search size={22} strokeWidth={2} />
               </button>
 
               {/* Hamburger Menu Button */}
               <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="p-2 text-ink dark:text-white hover:opacity-70 transition-opacity"
+                className="p-2 text-primary hover:text-accent-blue transition-colors"
                 aria-label="Menu"
               >
-                {isSidebarOpen ? <X size={28} strokeWidth={2} /> : <Menu size={28} strokeWidth={2} />}
+                {isSidebarOpen ? <X size={26} strokeWidth={2} /> : <Menu size={26} strokeWidth={2} />}
               </button>
             </div>
           </div>

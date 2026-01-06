@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Calendar, CheckCircle2, XCircle, PieChart, Users, Sparkles, Network, ExternalLink, Search, FileText, Share2 } from 'lucide-react';
+import { ArrowLeft, Calendar, CheckCircle2, XCircle, PieChart, Users, Sparkles, Network, ExternalLink, Search, FileText, Share2 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import SocialShareCard from '../components/SocialShareCard';
 import { cleanSejmTitle } from '../utils/titleFormatter';
@@ -9,6 +9,7 @@ import SejmHemicycle from '../components/features/sejm/SejmHemicycle';
 import OutliersSection from '../components/features/analysis/OutliersSection';
 import SEO from '../components/SEO';
 import VoteMindMap from '../components/features/analysis/VoteMindMap';
+import ProcessTLDR from '../components/ProcessTLDR';
 import { useVoteDetails } from '../hooks/useVoteDetails';
 
 const VoteDetails: React.FC = () => {
@@ -265,27 +266,30 @@ const VoteDetails: React.FC = () => {
                         </div>
                     </div>
 
-                    <VoteTechnicalDetails rawTitle={vote.title_raw || vote.title_clean} />
-                </div>
-            </div>
-
-            {/* Content Section */}
-            <div className="max-w-6xl mx-auto px-6 py-10">
-                <div className="space-y-10">
-                    {/* AI Intelligence Badge */}
+                    <VoteTechnicalDetails rawTitle={(vote.title_raw || vote.title_clean || '') as string} />
                 </div>
             </div>
 
             {/* AI Analysis Section */}
             {analysis && (
-                <div className="space-y-8">
+                <div className="max-w-6xl mx-auto px-6 py-10">
+                    <ProcessTLDR data={{
+                        tldr: analysis.summary,
+                        what_changes: analysis.summary,
+                        who_affected: [],
+                        pros: analysis.pros,
+                        cons: analysis.cons
+                    }} />
+
                     {/* Mind Map Visualization */}
-                    <VoteMindMap
-                        title={cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
-                        summary={analysis.summary}
-                        pros={analysis.pros || []}
-                        cons={analysis.cons || []}
-                    />
+                    <div className="mt-8">
+                        <VoteMindMap
+                            title={cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
+                            summary={analysis.summary}
+                            pros={analysis.pros || []}
+                            cons={analysis.cons || []}
+                        />
+                    </div>
                 </div>
             )}
 

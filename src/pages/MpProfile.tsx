@@ -74,45 +74,51 @@ const MpProfile = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-surface rounded-3xl border border-border-base p-6 md:p-8 mb-6 shadow-sm"
+          className="bg-surface/80 backdrop-blur-xl rounded-3xl border border-border-base p-6 md:p-8 mb-6 shadow-2xl overflow-hidden relative"
         >
-          <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
+          {/* Subtle decorative glow */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-accent-blue/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+
+          <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start relative z-10">
             {/* Photo */}
-            <img
-              src={mp.photo_url}
-              alt={`${mp.first_name} ${mp.last_name}`}
-              className="w-32 h-32 md:w-40 md:h-40 rounded-2xl object-cover border-2 border-border-base shadow-sm"
-              loading="lazy"
-            />
+            <div className="relative group/photo">
+              <div className="absolute -inset-1 bg-gradient-to-br from-accent-blue/20 to-indigo-500/20 rounded-2xl blur opacity-0 group-hover/photo:opacity-100 transition-opacity duration-500" />
+              <img
+                src={mp.photo_url}
+                alt={`${mp.first_name} ${mp.last_name}`}
+                className="w-32 h-32 md:w-40 md:h-40 rounded-2xl object-cover border-2 border-border-base shadow-lg relative z-10 transition-transform hover:scale-[1.02] duration-500"
+                loading="lazy"
+              />
+            </div>
 
             {/* Info */}
             <div className="flex-1 w-full">
-              <h1 className="text-3xl md:text-4xl font-black text-primary mb-4">
+              <h1 className="text-3xl md:text-5xl font-black text-primary mb-4 tracking-tight">
                 {mp.first_name} {mp.last_name}
               </h1>
 
               <div className="flex flex-wrap gap-2 mb-6">
                 <span
-                  className="px-3 py-1.5 rounded-full text-white text-xs font-bold uppercase tracking-wide"
+                  className="px-3 py-1.5 rounded-full text-white text-[10px] font-black uppercase tracking-wider shadow-sm"
                   style={{ backgroundColor: getPartyHexColor(mp.club) }}
                 >
                   {mp.club}
                 </span>
-                <span className="px-3 py-1.5 rounded-full bg-black/5 dark:bg-white/10 text-secondary text-xs font-black uppercase tracking-widest flex items-center gap-1 border border-border-base">
+                <span className="px-3 py-1.5 rounded-full bg-page/50 text-secondary text-[10px] font-black uppercase tracking-widest flex items-center gap-1 border border-border-base transition-colors hover:bg-page">
                   <MapPin size={12} />
                   Okręg {mp.district}
                 </span>
-                <span className="px-3 py-1.5 rounded-full bg-black/5 dark:bg-white/10 text-secondary text-xs font-black uppercase tracking-widest border border-border-base">
+                <span className="px-3 py-1.5 rounded-full bg-page/50 text-secondary text-[10px] font-black uppercase tracking-widest border border-border-base transition-colors hover:bg-page">
                   {mp.term === 9 ? 'IX' : 'X'} Kadencja
                 </span>
               </div>
 
               {/* Badges Row (New!) */}
               {badges.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-6 p-4 bg-black/5 dark:bg-white/5 rounded-xl border border-border-base/50">
-                  <span className="text-[10px] uppercase font-black tracking-widest text-secondary w-full mb-1">Odznaki:</span>
+                <div className="flex flex-wrap gap-2 mb-6 p-4 bg-page/30 rounded-2xl border border-border-base/30 backdrop-blur-sm">
+                  <span className="text-[10px] uppercase font-black tracking-widest text-secondary/50 w-full mb-1">Odznaki Systemowe:</span>
                   {badges.map((badge: string) => (
-                    <span key={badge} className="inline-flex items-center px-2.5 py-1 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-bold border border-indigo-500/20 shadow-sm cursor-help transition-all hover:bg-indigo-500/20" title="Ta odznaka została przyznana automatycznie na podstawie analizy aktywności">
+                    <span key={badge} className="inline-flex items-center px-3 py-1 rounded-lg bg-accent-blue/5 text-accent-blue text-[10px] font-black uppercase tracking-widest border border-accent-blue/10 shadow-sm transition-all hover:bg-accent-blue/10" title="Ta odznaka została przyznana automatycznie na podstawie analizy aktywności">
                       {badge === 'Prymus Głosowań' && '🎓 Prymus'}
                       {badge === 'Lokalny Patriota' && '🏡 Lokalny Patriota'}
                       {badge === 'Specjalizacja Sektorowa' && '⚙️ Ekspert'}
@@ -125,20 +131,20 @@ const MpProfile = () => {
               )}
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center">
-                  <div className={`text-2xl md:text-3xl font-black ${attendance >= 90 ? 'text-emerald-500' : attendance >= 70 ? 'text-amber-500' : 'text-rose-500'}`}>
+              <div className="grid grid-cols-3 gap-4 border-t border-border-base/50 pt-6">
+                <div className="text-center group">
+                  <div className={`text-2xl md:text-4xl font-black transition-transform group-hover:scale-110 ${attendance >= 90 ? 'text-emerald-500' : attendance >= 70 ? 'text-amber-500' : 'text-rose-500'}`}>
                     {attendance}%
                   </div>
-                  <div className="text-[10px] text-secondary uppercase tracking-wider font-bold">Frekwencja</div>
+                  <div className="text-[10px] text-secondary uppercase tracking-[0.2em] font-black mt-1">Frekwencja</div>
                 </div>
-                <div className="text-center border-x border-border-base">
-                  <div className="text-2xl md:text-3xl font-black text-blue-500">{rebelVotes}</div>
-                  <div className="text-[10px] text-secondary uppercase tracking-wider font-bold">Buntów</div>
+                <div className="text-center border-x border-border-base/50 group">
+                  <div className="text-2xl md:text-4xl font-black text-accent-blue transition-transform group-hover:scale-110">{rebelVotes}</div>
+                  <div className="text-[10px] text-secondary uppercase tracking-[0.2em] font-black mt-1">Buntów</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl md:text-3xl font-black text-purple-500">{interpellationCount}</div>
-                  <div className="text-[10px] text-secondary uppercase tracking-wider font-bold">Interpelacji</div>
+                <div className="text-center group">
+                  <div className="text-2xl md:text-4xl font-black text-indigo-400 transition-transform group-hover:scale-110">{interpellationCount}</div>
+                  <div className="text-[10px] text-secondary uppercase tracking-[0.2em] font-black mt-1">Interpelacji</div>
                 </div>
               </div>
             </div>
@@ -409,34 +415,34 @@ const MpProfile = () => {
             </div>
 
             {/* Asset Declarations */}
-            {digitizedDeclarations.length > 0 && (
+            {digitizedDeclarations && digitizedDeclarations.length > 0 && (
               <div className="bg-surface rounded-2xl border border-border-base p-5 shadow-sm">
                 <h3 className="text-sm font-bold text-primary mb-4 flex items-center gap-2">
                   <FileText size={16} className="text-amber-500" />
                   Oświadczenia Majątkowe
                 </h3>
                 <div className="space-y-3">
-                  {digitizedDeclarations.map((decl) => (
-                    <div key={decl.id} className="p-3 bg-black/5 dark:bg-white/5 rounded-xl border border-border-base">
+                  {digitizedDeclarations.map((decl: any) => (
+                    <div key={decl.id} className="p-3 bg-page/50 rounded-xl border border-border-base transition-colors hover:bg-page">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-black text-primary">{decl.year.substring(0, 4)}</span>
+                        <span className="font-black text-primary">{decl.year?.substring(0, 4)}</span>
                         {decl.file_path && (
                           <a
                             href={decl.file_path}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[10px] font-black text-amber-600 hover:text-amber-700 uppercase tracking-widest"
+                            className="text-[10px] font-black text-amber-500 hover:text-amber-600 uppercase tracking-[0.2em] transition-colors"
                           >
                             PDF →
                           </a>
                         )}
                       </div>
-                      <div className="space-y-1 text-xs font-medium">
-                        <div className="flex justify-between">
+                      <div className="space-y-1.5 text-xs font-medium">
+                        <div className="flex justify-between items-center">
                           <span className="text-secondary">Oszczędności:</span>
                           <span className="text-primary font-black">{decl.parsed_content?.savings?.toLocaleString() || '—'} PLN</span>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between items-center">
                           <span className="text-secondary">Dochód:</span>
                           <span className="text-primary font-black">{decl.parsed_content?.income?.toLocaleString() || '—'} PLN</span>
                         </div>

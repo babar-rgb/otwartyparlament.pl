@@ -20,18 +20,18 @@
   }
 
   .dark {
-    --bg-page: 6 6 12;
-    /* #06060C */
-    --bg-surface: 17 17 38;
-    /* #111126 */
-    --text-primary: 241 245 249;
-    /* #F1F5F9 (slate-100) */
+    --bg-page: 6 6 14;
+    /* #06060E (Deep Midnight) */
+    --bg-surface: 15 15 35;
+    /* #0F0F23 (Midnight Surface) */
+    --text-primary: 248 250 252;
+    /* #F8FAFC (Slate 50) */
     --text-secondary: 148 163 184;
-    /* #94A7B8 (slate-400) */
+    /* #94A3B8 (Slate 400) */
     --border-base: 30 41 59;
-    /* #1E293B (slate-800) */
-    --accent-blue: 59 130 246;
-    /* #3B82F6 */
+    /* #1E293B (Slate 800) */
+    --accent-blue: 99 102 241;
+    /* #6366F1 (Indigo) */
   }
 
   body {
@@ -55,15 +55,15 @@
     color: rgb(var(--text-primary));
   }
 
-  /* Dashboard Mesh Gradient - keeping for decorative use */
+  /* Dashboard Mesh Gradient - theme aware */
   .dashboard-mesh {
-    background-color: #060613;
+    background-color: rgb(var(--bg-page));
     background-image:
-      radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
-      radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 0.1) 0, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 0.05) 0, transparent 50%),
-      radial-gradient(at 100% 100%, hsla(225, 39%, 30%, 0.05) 0, transparent 50%),
-      radial-gradient(at 0% 100%, hsla(253, 16%, 7%, 1) 0, transparent 50%);
+      radial-gradient(at 0% 0%, rgba(var(--accent-blue), 0.15) 0, transparent 50%),
+      radial-gradient(at 50% 0%, rgba(var(--accent-blue), 0.08) 0, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(var(--accent-blue), 0.15) 0, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(var(--accent-blue), 0.08) 0, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(var(--accent-blue), 0.15) 0, transparent 50%);
   }
 
   /* --- CLEAN THEMES --- */

@@ -44,12 +44,13 @@ const LiveAnalysis = lazy(() => import('./pages/LiveAnalysis'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const Transfery = lazy(() => import('./pages/Transfery'));
 const Rzad = lazy(() => import('./pages/Rzad'));
+const AITwin = lazy(() => import('./pages/AITwin'));
 
 export default function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
-      <div className="min-h-screen bg-paper dark:bg-slate-900 flex flex-col transition-colors duration-300">
+      <div className="min-h-screen bg-page flex flex-col transition-colors duration-300">
         <ErrorBoundary>
           <Navigation />
           <main className="flex-grow pt-0">
@@ -97,6 +98,7 @@ export default function App() {
                 <Route path="/live" element={<LiveAnalysis />} />
                 <Route path="/transfery" element={<Transfery />} />
                 <Route path="/rzad" element={<Rzad />} />
+                <Route path="/ai-twin" element={<AITwin />} />
                 {/* Catch-all MUST be last */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -43,7 +43,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-page dashboard-mesh text-primary pt-24 pb-12 px-4 md:px-8 font-sans transition-all duration-500">
+    <div className="min-h-screen bg-page text-primary pt-24 pb-12 px-4 md:px-8 font-sans transition-all duration-500">
       <SEO
         title="Dashboard | OtwartyParlament.pl"
         description="Monitoruj prace Sejmu na żywo. Analizy AI, wizualizacje głosowań i statystyki kadencji."
@@ -63,9 +63,9 @@ export default function Home() {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setTermDropdownOpen(!termDropdownOpen)}
-                className="flex items-center gap-2 px-4 py-2 bg-surface border border-border-base rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-all shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-surface border border-border-base rounded-xl hover:bg-page transition-all shadow-sm"
               >
-                <div className="w-2 h-2 bg-accent-blue rounded-full animate-pulse" />
+                <div className="w-2 h-2 bg-accent-blue rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
                 <span className="font-bold text-sm tracking-wide text-primary">{term} Kadencja</span>
                 <ChevronDown className={`w-4 h-4 text-secondary transition-transform duration-300 ${termDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -235,14 +235,14 @@ export default function Home() {
           width: 8px;
         }
         .dark ::-webkit-scrollbar-track {
-          background: #060613;
+          background: #06060e;
         }
         .dark ::-webkit-scrollbar-thumb {
-          background: #111126;
+          background: #1e293b;
           border-radius: 10px;
         }
         .dark ::-webkit-scrollbar-thumb:hover {
-          background: #1c1c3a;
+          background: #334155;
         }
       `}} />
     </div >

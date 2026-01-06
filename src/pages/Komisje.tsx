@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchCommittees } from '../api';
-import { Users, Calendar, Search } from 'lucide-react';
+import { Users, Calendar, Search, X } from 'lucide-react';
 import SEO from '../components/SEO';
+import CommitteeHero from '../components/features/sejm/CommitteeHero';
 
 interface Committee {
     id: number;
@@ -19,7 +20,7 @@ export default function Komisje() {
     const [committees, setCommittees] = useState<Committee[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [filterType] = useState<string>('all');
+    const [filterType, setFilterType] = useState<string>('all');
 
     useEffect(() => {
         const loadCommittees = async () => {
@@ -60,36 +61,58 @@ export default function Komisje() {
     }
 
     return (
-        <div className="min-h-screen bg-page pt-24 pb-16 px-4 md:px-8">
+        <div className="min-h-screen bg-page transition-colors duration-500 pb-16">
             <SEO
                 title="Komisje Sejmowe"
                 description="Lista wszystkich komisji sejmowych z informacjami o posiedzeniach, członkach i agendzie."
             />
 
-            <div className="max-w-7xl mx-auto">
-                <div className="mb-10">
-                    <h1 className="text-4xl md:text-5xl font-bold text-primary mb-3 tracking-tight">
-                        Komisje Sejmowe
-                    </h1>
-                </div>
+            <CommitteeHero committeeCount={committees.length} />
 
-                <div className="grid grid-cols-3 gap-4 mb-10">
-                    <div className="bg-surface border border-border-base rounded-2xl p-6 text-center shadow-sm">
-                        <div className="text-3xl font-bold text-blue-400">{committees.length}</div>
-                        <div className="text-xs font-bold text-secondary opacity-40 uppercase tracking-widest mt-1">Komisji</div>
-                    </div>
-                </div>
+            <div className="max-w-7xl mx-auto px-4 md:px-8">
+                {/* Filter & Search Section - Unified Style */}
+                <div className="bg-surface p-6 rounded-[2rem] border border-border-base shadow-2xl backdrop-blur-md -mt-8 mb-12 relative z-20">
+                    <div className="flex flex-col gap-6">
+                        <div className="flex flex-col md:flex-row gap-6">
+                            <div className="relative flex-1">
+                                <div className="relative flex items-center gap-4">
+                                    <Search className="text-secondary transition-colors" size={24} />
+                                    <input
+                                        type="text"
+                                        placeholder="Szukaj komisji..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full bg-transparent text-xl font-bold text-primary placeholder:text-secondary/20 focus:outline-none"
+                                    />
+                                    {searchQuery && (
+                                        <button onClick={() => setSearchQuery('')} className="p-2 text-secondary hover:text-primary transition-colors">
+                                            <X size={20} />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
 
-                <div className="flex flex-col gap-4 mb-8">
-                    <div className="relative">
-                        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary opacity-30" />
-                        <input
-                            type="text"
-                            placeholder="Szukaj komisji..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-12 pr-4 py-3 rounded-xl bg-surface border border-border-base text-primary placeholder:text-secondary focus:outline-none focus:border-blue-500/50 transition-all shadow-sm"
-                        />
+                        {/* Committee Type Filters */}
+                        <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 border-t border-border-base/50 pt-6">
+                            {[
+                                { label: 'WSZYSTKIE', value: 'all' },
+                                { label: 'STAŁE', value: 'stala' },
+                                { label: 'NADZWYCZAJNE', value: 'nadzwyczajna' },
+                                { label: 'ŚLEDCZE', value: 'sledcza' }
+                            ].map((f) => (
+                                <button
+                                    key={f.value}
+                                    onClick={() => setFilterType(f.value)}
+                                    className={`px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-wider whitespace-nowrap transition-all border ${filterType === f.value
+                                        ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/20'
+                                        : 'bg-surface text-secondary border-transparent hover:bg-white/5 hover:text-primary'
+                                        }`}
+                                >
+                                    {f.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 

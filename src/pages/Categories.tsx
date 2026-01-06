@@ -113,38 +113,38 @@ export default function Categories() {
             {/* Header Section */}
             <div className="pt-32 pb-16 px-4 md:px-8 border-b border-border-base relative overflow-hidden dashboard-mesh">
                 <div className="max-w-6xl mx-auto relative z-10">
-                    <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center justify-between mb-12">
                         <Link
-                            to="/"
-                            className="inline-flex items-center gap-2 text-secondary hover:text-accent-blue transition-colors text-xs font-black uppercase tracking-[0.2em]"
+                            to="/rankingi"
+                            className="inline-flex items-center gap-3 text-secondary hover:text-accent-blue transition-all text-[10px] font-black uppercase tracking-[0.3em] bg-surface/50 px-4 py-2 rounded-full border border-border-base backdrop-blur-md"
                         >
                             <ArrowLeft size={14} />
-                            Powrót do dashboardu
+                            Powrót do analityki
                         </Link>
                         <TermSwitcher />
                     </div>
 
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-                        <div>
-                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-full border border-purple-500/20 text-[10px] font-black uppercase tracking-widest mb-4">
-                                <Sparkles size={12} />
-                                Semantic Analysis Mode
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-12">
+                        <div className="flex-1">
+                            <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-full border border-purple-500/20 text-[10px] font-black uppercase tracking-[0.3em] mb-6 backdrop-blur-md">
+                                <Sparkles size={14} className="animate-pulse" />
+                                Semantic Analysis Engine
                             </div>
-                            <h1 className="text-4xl md:text-6xl font-black text-primary mb-4 tracking-tighter">
-                                Kategorie <span className="italic font-serif opacity-60">Głosowań</span>
+                            <h1 className="text-5xl md:text-8xl font-black text-primary mb-8 tracking-tighter">
+                                Kategorie <span className="italic font-serif text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-500">Głosowań</span>
                             </h1>
-                            <p className="text-secondary text-lg font-medium max-w-2xl leading-relaxed">
-                                System automatycznej kategoryzacji analizuje tytulaturę i treść projektów ustaw, przypisując je do 40+ obszarów tematycznych.
+                            <p className="text-secondary text-xl font-medium max-w-3xl leading-relaxed border-l-2 border-border-base pl-8">
+                                System automatycznej kategoryzacji analizuje tytulaturę i treść projektów ustaw, mapując je do ponad 40 obszarów tematycznych i dziedzin prawa.
                             </p>
                         </div>
 
                         {/* View toggle */}
-                        <div className="flex items-center gap-1 bg-black/5 dark:bg-white/5 rounded-2xl p-1.5 border border-border-base backdrop-blur-xl">
+                        <div className="flex items-center gap-1 bg-surface/50 rounded-2xl p-1.5 border border-border-base backdrop-blur-xl shadow-lg">
                             <button
                                 onClick={() => setView('chart')}
-                                className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all text-xs font-black uppercase tracking-widest ${view === 'chart'
+                                className={`flex items-center gap-3 px-8 py-4 rounded-xl transition-all text-[10px] font-black uppercase tracking-[0.2em] ${view === 'chart'
                                     ? 'bg-accent-blue text-white shadow-lg shadow-accent-blue/20'
-                                    : 'text-secondary hover:text-primary hover:bg-white/5'
+                                    : 'text-secondary hover:text-primary hover:bg-black/5 dark:hover:bg-white/5'
                                     }`}
                             >
                                 <BarChart3 size={16} />
@@ -152,9 +152,9 @@ export default function Categories() {
                             </button>
                             <button
                                 onClick={() => setView('grid')}
-                                className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all text-xs font-black uppercase tracking-widest ${view === 'grid'
+                                className={`flex items-center gap-3 px-8 py-4 rounded-xl transition-all text-[10px] font-black uppercase tracking-[0.2em] ${view === 'grid'
                                     ? 'bg-accent-blue text-white shadow-lg shadow-accent-blue/20'
-                                    : 'text-secondary hover:text-primary hover:bg-white/5'
+                                    : 'text-secondary hover:text-primary hover:bg-black/5 dark:hover:bg-white/5'
                                     }`}
                             >
                                 <Grid3X3 size={16} />
@@ -165,46 +165,46 @@ export default function Categories() {
                 </div>
             </div>
 
-            <div className="max-w-6xl mx-auto px-4 md:px-8 -mt-8 relative z-20">
+            <div className="max-w-6xl mx-auto px-4 md:px-8 -mt-12 relative z-20">
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-                    <div className="bg-surface rounded-3xl p-8 border border-border-base shadow-lg shadow-black/5 group hover:-translate-y-1 transition-all duration-300">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="p-3 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-2xl group-hover:scale-110 transition-transform">
-                                <BarChart3 size={24} />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
+                    <div className="bg-surface rounded-[2.5rem] p-10 border border-border-base shadow-2xl group hover:-translate-y-1 transition-all duration-500 backdrop-blur-3xl">
+                        <div className="flex items-center gap-5 mb-6">
+                            <div className="p-4 bg-accent-blue/10 text-accent-blue rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-accent-blue/5">
+                                <BarChart3 size={28} />
                             </div>
-                            <span className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">Total Records</span>
+                            <span className="text-[10px] font-black text-secondary uppercase tracking-[0.3em]">Total Records</span>
                         </div>
-                        <p className="text-4xl font-black text-primary tracking-tight">
+                        <p className="text-5xl font-black text-primary tracking-tighter">
                             {totalVotes.toLocaleString()}
                         </p>
                     </div>
 
-                    <div className="bg-surface rounded-3xl p-8 border border-border-base shadow-lg shadow-black/5 group hover:-translate-y-1 transition-all duration-300">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="p-3 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl group-hover:scale-110 transition-transform">
-                                <Filter size={24} />
+                    <div className="bg-surface rounded-[2.5rem] p-10 border border-border-base shadow-2xl group hover:-translate-y-1 transition-all duration-500 backdrop-blur-3xl">
+                        <div className="flex items-center gap-5 mb-6">
+                            <div className="p-4 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-emerald-500/5">
+                                <Filter size={28} />
                             </div>
-                            <span className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">Categorized</span>
+                            <span className="text-[10px] font-black text-secondary uppercase tracking-[0.3em]">Categorized</span>
                         </div>
-                        <div className="flex items-baseline gap-3">
-                            <p className="text-4xl font-black text-primary tracking-tight">
+                        <div className="flex items-baseline gap-4">
+                            <p className="text-5xl font-black text-primary tracking-tighter">
                                 {classifiedVotes.toLocaleString()}
                             </p>
-                            <span className="text-sm font-black text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
+                            <span className="text-sm font-black text-emerald-600 bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20">
                                 {coveragePercent}%
                             </span>
                         </div>
                     </div>
 
-                    <div className="bg-surface rounded-3xl p-8 border border-border-base shadow-lg shadow-black/5 group hover:-translate-y-1 transition-all duration-300">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="p-3 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-2xl group-hover:scale-110 transition-transform">
-                                <TrendingUp size={24} />
+                    <div className="bg-surface rounded-[2.5rem] p-10 border border-border-base shadow-2xl group hover:-translate-y-1 transition-all duration-500 backdrop-blur-3xl">
+                        <div className="flex items-center gap-5 mb-6">
+                            <div className="p-4 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-indigo-500/5">
+                                <TrendingUp size={28} />
                             </div>
-                            <span className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">Active Domains</span>
+                            <span className="text-[10px] font-black text-secondary uppercase tracking-[0.3em]">Active Domains</span>
                         </div>
-                        <p className="text-4xl font-black text-primary tracking-tight">
+                        <p className="text-5xl font-black text-primary tracking-tighter">
                             {categories.length}
                         </p>
                     </div>

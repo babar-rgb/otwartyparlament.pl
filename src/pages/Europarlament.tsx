@@ -3,6 +3,44 @@ import { fetchEuroMPs } from '../api';
 import { Search, Globe, Users, ExternalLink } from 'lucide-react';
 import SEO from '../components/SEO';
 
+// Helper for name formatting
+const formatName = (name: string) => {
+    return name
+        .toLowerCase()
+        .split(' ')
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+};
+
+// EU Group Colors
+const getGroupColor = (group: string) => {
+    const colors: Record<string, string> = {
+        'PPE': 'bg-blue-600 text-white',
+        'S&D': 'bg-red-600 text-white',
+        'Renew': 'bg-yellow-500 text-black',
+        'ECR': 'bg-indigo-900 text-white',
+        'Verts/ALE': 'bg-green-600 text-white',
+        'The Left': 'bg-red-800 text-white',
+        'ID': 'bg-slate-800 text-white',
+        'NI': 'bg-gray-500 text-white'
+    };
+    return colors[group] || 'bg-slate-600 text-white';
+};
+
+const getGroupGradient = (group: string) => {
+    const gradients: Record<string, string> = {
+        'PPE': 'from-blue-600/20 to-blue-600/5',
+        'S&D': 'from-red-600/20 to-red-600/5',
+        'Renew': 'from-yellow-500/20 to-yellow-500/5',
+        'ECR': 'from-indigo-900/20 to-indigo-900/5',
+        'Verts/ALE': 'from-green-600/20 to-green-600/5',
+        'The Left': 'from-red-800/20 to-red-800/5',
+        'ID': 'from-slate-800/20 to-slate-800/5',
+        'NI': 'from-gray-500/20 to-gray-500/5'
+    };
+    return gradients[group] || 'from-slate-600/20 to-slate-600/5';
+};
+
 export default function Europarlament() {
     const [meps, setMeps] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -12,7 +50,7 @@ export default function Europarlament() {
     useEffect(() => {
         const fetchMeps = async () => {
             try {
-                const data = await fetchEuroMPs({ term: 9, active: true });
+                const data = await fetchEuroMPs({ term: 10, active: true });
                 setMeps(data);
             } catch (err) {
                 console.error("Error fetching Euro MEPs:", err);
@@ -35,87 +73,137 @@ export default function Europarlament() {
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-[50vh]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-blue"></div>
             </div>
         );
     }
 
     return (
-        <div className="space-y-8 animate-fade-in">
+        <div className="min-h-screen bg-page text-primary animate-fade-in pb-20 transition-colors duration-300">
             <SEO
                 title="Europarlamentarzyści"
                 description="Lista polskich posłów do Parlamentu Europejskiego. Sprawdź ich przynależność partyjną i aktywność."
                 url="/europarlament"
             />
 
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-4xl font-black text-slate-900 tracking-tight">Europarlament</h1>
-                    <p className="text-slate-600">Polscy reprezentanci w Parlamencie Europejskim (kadencja 2019-2024)</p>
-                </div>
-
-                <div className="flex gap-4">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-3 text-slate-400" size={20} />
-                        <input
-                            type="text"
-                            placeholder="Szukaj posła lub partii..."
-                            className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all w-64"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+            {/* Hero Section */}
+            <div className="pt-32 pb-16 px-4 md:px-8 relative overflow-hidden border-b border-border-base -mx-4 md:-mx-8 mb-12 bg-page">
+                <div className="max-w-7xl mx-auto relative z-10">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+                        <div>
+                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent-blue/10 text-accent-blue rounded-full border border-accent-blue/20 text-[10px] font-black uppercase tracking-widest mb-4">
+                                <Globe size={12} />
+                                Europejska Baza Danych v1.0
+                            </div>
+                            <h1 className="text-4xl md:text-6xl font-black text-primary mb-4 tracking-tighter">
+                                Euro<span className="italic font-serif text-accent-blue/80">Parlament</span>
+                            </h1>
+                            <p className="text-secondary text-lg font-medium max-w-xl leading-relaxed">
+                                Polscy reprezentanci w Parlamencie Europejskim. Przejrzysta lista europosłów, ich przynależność do frakcji oraz aktywność legislacyjna.
+                            </p>
+                        </div>
                     </div>
-                    <select
-                        className="px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                        value={selectedGroup}
-                        onChange={(e) => setSelectedGroup(e.target.value)}
-                    >
-                        {groups.map(g => (
-                            <option key={g as string} value={g as string}>{g as string === 'All' ? 'Wszystkie grupy' : g as string}</option>
-                        ))}
-                    </select>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {filteredMeps.map((mep) => (
-                    <div key={mep.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all group">
-                        <div className="aspect-square relative overflow-hidden bg-slate-100">
-                            <img
-                                src={mep.photo_url || `https://ui-avatars.com/api/?name=${mep.full_name}&background=random`}
-                                alt={mep.full_name}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                            <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-2 py-1 rounded-lg text-[10px] font-black border border-slate-200 shadow-sm">
-                                EURO MP
+            <div className="max-w-7xl mx-auto px-4 md:px-8">
+                {/* Filter & Search Section - Unified Style */}
+                <div className="bg-surface p-6 rounded-[2rem] border border-border-base shadow-2xl backdrop-blur-md -mt-8 mb-12 relative z-20">
+                    <div className="flex flex-col gap-6">
+                        <div className="flex flex-col md:flex-row gap-6">
+                            <div className="relative flex-1">
+                                <div className="relative flex items-center gap-4">
+                                    <Search className="text-secondary transition-colors" size={24} />
+                                    <input
+                                        type="text"
+                                        placeholder="Szukaj europosła (nazwisko, partia)..."
+                                        className="w-full bg-transparent text-xl font-bold text-primary placeholder:text-secondary/30 focus:outline-none"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </div>
                             </div>
                         </div>
 
-                        <div className="p-5 space-y-3">
-                            <div>
-                                <h3 className="font-extrabold text-slate-900 leading-tight mb-1">{mep.full_name}</h3>
-                                <p className="text-sm font-bold text-blue-600">{mep.national_party}</p>
-                            </div>
+                        {/* Group Filters */}
+                        <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 border-t border-border-base/50 pt-6">
+                            {groups.map(g => (
+                                <button
+                                    key={g as string}
+                                    onClick={() => setSelectedGroup(g as string)}
+                                    className={`px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-wider whitespace-nowrap transition-all border ${selectedGroup === g
+                                        ? 'bg-accent-blue text-white border-accent-blue shadow-lg shadow-accent-blue/20'
+                                        : 'bg-page text-secondary border-border-base hover:bg-surface hover:text-primary'
+                                        }`}
+                                >
+                                    {g as string === 'All' ? 'WSZYSTKIE FRAKCJE' : g as string}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
 
-                            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500">
-                                <div className="flex items-center gap-1">
-                                    <Globe size={14} className="text-slate-400" />
-                                    {mep.eu_group}
+                {/* Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {filteredMeps.map((mep, index) => (
+                        <div
+                            key={mep.id}
+                            className="group bg-surface rounded-2xl border border-border-base overflow-hidden hover:shadow-xl hover:shadow-accent-blue/5 hover:-translate-y-1 transition-all duration-300 relative flex flex-col"
+                            style={{ animationDelay: `${index * 50}ms` }}
+                        >
+                            {/* Status Indicator */}
+                            <div className={`absolute top-0 inset-x-0 h-1 bg-gradient-to-r ${getGroupGradient(mep.eu_group).replace('/20', '').replace('/5', '')}`} />
+
+                            <div className="p-6 flex items-start gap-4">
+                                <div className="relative w-20 h-20 flex-shrink-0">
+                                    <div className="absolute inset-0 bg-page rounded-full animate-pulse" />
+                                    <img
+                                        src={mep.photo_url || `https://ui-avatars.com/api/?name=${mep.full_name}&background=random`}
+                                        alt={mep.full_name}
+                                        className="w-full h-full object-cover rounded-full border-2 border-border-base shadow-sm relative z-10 group-hover:border-accent-blue/50 transition-colors"
+                                        loading="lazy"
+                                    />
+                                    <div className="absolute -bottom-1 -right-1 z-20">
+                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm border border-surface ${getGroupColor(mep.eu_group)}`}>
+                                            <Globe size={10} />
+                                        </div>
+                                    </div>
                                 </div>
-                                <Users size={14} className="text-slate-400" />
+
+                                <div className="min-w-0">
+                                    <h3 className="font-bold text-lg text-primary leading-tight mb-1 group-hover:text-accent-blue transition-colors truncate">
+                                        {formatName(mep.full_name)}
+                                    </h3>
+                                    <p className="text-xs font-semibold text-secondary uppercase tracking-wide mb-2 truncate" title={mep.national_party}>
+                                        {mep.national_party}
+                                    </p>
+                                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-page border border-border-base text-[10px] font-medium text-secondary">
+                                        {mep.eu_group}
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="pt-2">
+                            {/* Actions / Footer */}
+                            <div className="mt-auto p-4 pt-0 border-t border-transparent group-hover:border-border-base/50 transition-colors">
                                 <a
                                     href={`/europarlament/${mep.id}`}
-                                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl text-sm font-bold transition-colors"
+                                    className="flex items-center justify-between w-full px-4 py-2.5 rounded-xl bg-page text-secondary text-xs font-bold hover:bg-accent-blue/10 hover:text-accent-blue transition-colors group/btn"
                                 >
-                                    Profil <ExternalLink size={14} />
+                                    <span>Zobacz Profil</span>
+                                    <ExternalLink size={14} className="group-hover/btn:translate-x-0.5 transition-transform" />
                                 </a>
                             </div>
                         </div>
+                    ))}
+                </div>
+
+                {filteredMeps.length === 0 && (
+                    <div className="text-center py-20 bg-surface rounded-3xl border border-dashed border-border-base">
+                        <Users className="mx-auto text-secondary/50 mb-4" size={48} />
+                        <h3 className="text-xl font-bold text-primary">Brak wyników</h3>
+                        <p className="text-secondary">Nie znaleziono europosłów spełniających kryteria.</p>
                     </div>
-                ))}
+                )}
             </div>
         </div>
     );

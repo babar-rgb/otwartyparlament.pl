@@ -3,7 +3,7 @@ import { ArrowLeft, FileText, Calendar, User, Tag, CheckCircle2, XCircle, ArrowR
 import BillTimeline, { TimelineStage } from '../components/BillTimeline';
 import ProcessTLDR from '../components/ProcessTLDR';
 import { useState, useEffect } from 'react';
-import { fetchProcess, fetchVotes } from '../api';
+import { fetchProcess, fetchVotes, fetchRelatedProcesses } from '../api';
 
 interface BillData {
     id: string;
@@ -14,7 +14,13 @@ interface BillData {
     proposer: string;
     currentStage: TimelineStage;
     status: 'processing' | 'passed' | 'rejected';
-    simple_summary?: any;
+    ai_analysis?: {
+        summary: string;
+        pros: string[];
+        cons: string[];
+        impact: string;
+        importance: number;
+    } | null;
 }
 
 interface RelatedVote {
@@ -35,6 +41,7 @@ export default function BillDetails() {
     const { id } = useParams();
     const [bill, setBill] = useState<BillData | null>(null);
     const [relatedVotes, setRelatedVotes] = useState<RelatedVote[]>([]);
+    const [relatedProcesses, setRelatedProcesses] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -57,7 +64,7 @@ export default function BillDetails() {
                     proposer: 'Sejm RP',
                     currentStage,
                     status,
-                    simple_summary: data.simple_summary
+                    ai_analysis: data.ai_analysis
                 });
 
                 // Fetch related votes
@@ -71,6 +78,10 @@ export default function BillDetails() {
                     // I will add it to main.py.
                     setRelatedVotes(votesData as unknown as RelatedVote[]);
                 }
+
+                // Fetch semantically related processes
+                const related = await fetchRelatedProcesses(id);
+                setRelatedProcesses(related);
 
             } catch (error) {
                 console.error('Error fetching bill:', error);
@@ -154,9 +165,15 @@ export default function BillDetails() {
                 </div>
 
                 {/* AI TL;DR Section */}
-                {bill.simple_summary && (
+                {bill.ai_analysis && (
                     <div className="px-8 pt-8 bg-white">
-                        <ProcessTLDR data={bill.simple_summary} />
+                        <ProcessTLDR data={{
+                            tldr: bill.ai_analysis.summary,
+                            what_changes: bill.ai_analysis.summary,
+                            who_affected: [bill.ai_analysis.impact],
+                            pros: bill.ai_analysis.pros,
+                            cons: bill.ai_analysis.cons
+                        }} />
                     </div>
                 )}
 
@@ -227,6 +244,40 @@ export default function BillDetails() {
                         )}
                     </div>
                 </div>
+
+                {/* Semantic Context Section */}
+                {relatedProcesses.length > 0 && (
+                    <div className="p-8 border-t border-slate-100 bg-slate-50/30">
+                        <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                            <Network className="text-purple-500" size={20} />
+                            Kontekst Semantyczny (Podobne Projekty)
+                        </h2>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {relatedProcesses.map((rel) => (
+                                <Link
+                                    key={rel.id}
+                                    to={`/projekty/${rel.id}`}
+                                    className="p-4 bg-white rounded-xl border border-slate-200 hover:border-purple-300 hover:shadow-md transition-all group flex flex-col h-full"
+                                >
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 bg-purple-50 text-purple-600 rounded-md border border-purple-100">
+                                            {rel.type || 'Projekt'}
+                                        </span>
+                                        <span className="text-[10px] font-bold text-slate-400">
+                                            Druk {rel.number || rel.print_number}
+                                        </span>
+                                    </div>
+                                    <h4 className="text-sm font-bold text-slate-900 mb-3 line-clamp-2 group-hover:text-purple-600 transition-colors flex-grow">
+                                        {rel.title}
+                                    </h4>
+                                    <div className="flex items-center text-xs font-bold text-purple-600">
+                                        Zobacz szczegóły <ArrowRight size={14} className="ml-1 group-hover:translate-x-1 transition-transform" />
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

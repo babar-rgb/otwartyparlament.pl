@@ -2,13 +2,13 @@ import { Heart, Github, Mail } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-slate-900 text-slate-100 mt-16">
+    <footer className="bg-surface text-primary mt-16 border-t border-border-base">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
             <h3 className="font-bold text-lg mb-4">Otwarty Parlament</h3>
-            <p className="text-sm text-slate-400">
-              Transparentna, niekomercyjna platforma dla demokratii i odpowiedzialności politycznej.
+            <p className="text-sm text-secondary leading-relaxed">
+              Transparentna, niekomercyjna platforma dla demokracji i odpowiedzialności politycznej.
             </p>
           </div>
 

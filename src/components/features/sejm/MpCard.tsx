@@ -24,16 +24,16 @@ export default function MpCard({ mp }: MpCardProps) {
   return (
     <Link to={`/poslowie/${mp.slug || mp.id}`}>
       <motion.div
-        className="group relative bg-surface p-4 rounded-2xl border border-border-base hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1 flex flex-col items-center text-center"
+        className="group relative bg-surface/50 backdrop-blur-sm p-4 rounded-2xl border border-border-base hover:border-accent-blue/50 transition-all duration-500 shadow-sm hover:shadow-2xl hover:shadow-accent-blue/5 hover:-translate-y-1 flex flex-col items-center text-center"
         whileTap={{ scale: 0.98 }}
       >
         {/* Compact circular photo to maintain quality */}
         <div className="relative mb-3">
           <div className="absolute -inset-1.5 bg-gradient-to-br from-slate-200 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity"></div>
           <img
-            src={mp.photo_url || `https://ui-avatars.com/api/?name=${mp.first_name}+${mp.last_name}&background=e2e8f0&color=475569`}
+            src={mp.photo_url || `https://ui-avatars.com/api/?name=${mp.first_name}+${mp.last_name}&background=1e293b&color=94a3b8`}
             alt=""
-            className="w-12 h-12 rounded-full object-cover object-top border-2 border-white dark:border-slate-800 relative z-10 transition-transform group-hover:scale-110"
+            className="w-12 h-12 rounded-full object-cover object-top border-2 border-border-base relative z-10 transition-transform group-hover:scale-110"
             loading="lazy"
           />
         </div>
