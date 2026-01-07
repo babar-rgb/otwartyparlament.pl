@@ -17,3 +17,18 @@ export const formatSejmTitle = (rawTitle: string): string => {
     // 4. Trim
     return cleanTitle.trim();
 };
+
+export const formatMPName = (firstName: string, lastName: string | null | undefined): string => {
+    return [firstName, lastName]
+        .filter(part => Boolean(part) && part !== 'null')
+        .join(' ')
+        .trim();
+};
+
+export const extractPrintNumber = (title: string): string | null => {
+    if (!title) return null;
+    // Matches "druk nr 24", "druki nr 24, 25", "Druku nr 30"
+    // We strictly want the FIRST number found after "druk nr"
+    const match = title.match(/duku\s*nr\s*(\d+)/i) || title.match(/druki?\s*nr\s*(\d+)/i);
+    return match ? match[1] : null;
+};

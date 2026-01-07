@@ -70,8 +70,14 @@ export default function Navigation() {
               <Link to="/rankingi" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
                 Rankingi
               </Link>
+              <Link to="/interpelacje" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
+                Interpelacje
+              </Link>
               <Link to="/projekty" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
                 Projekty
+              </Link>
+              <Link to="/europarlament" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
+                Europarlament
               </Link>
 
               <Link to="/o-projekcie" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">

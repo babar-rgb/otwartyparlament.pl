@@ -25,13 +25,40 @@ const PARTIES = [
   { id: 'INNE', name: 'INNE' },
 ];
 
+// Module-level cache to persist order during navigation without re-fetching/re-shuffling
+let mpsCache: MP[] = [];
+let lastTerm: number | null = null;
+let lastScrollY = 0;
+
 export default function Poslowie() {
   const [searchParams] = useSearchParams();
   const { term } = useTerm();
-  const [mps, setMps] = useState<MP[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [mps, setMps] = useState<MP[]>(mpsCache);
+  const [loading, setLoading] = useState(mpsCache.length === 0);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [selectedParty, setSelectedParty] = useState<string>('');
+
+  // Handle scroll restoration
+  useEffect(() => {
+    if (mpsCache.length > 0) {
+      // Small timeout to ensure the grid has rendered before scrolling
+      const timeout = setTimeout(() => {
+        window.scrollTo(0, lastScrollY);
+      }, 100);
+      return () => clearTimeout(timeout);
+    }
+  }, []);
+
+  // Save scroll position when leaving
+  useEffect(() => {
+    const handleScroll = () => {
+      lastScrollY = window.scrollY;
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   useEffect(() => {
     const query = searchParams.get('q');
@@ -40,6 +67,12 @@ export default function Poslowie() {
 
   useEffect(() => {
     const loadMps = async () => {
+      // If we have cache for the same term, don't re-fetch
+      if (mpsCache.length > 0 && lastTerm === term) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
         const data = await fetchMPs({
@@ -47,7 +80,17 @@ export default function Poslowie() {
           active: term === 10 ? true : undefined,
           limit: 1000
         });
-        setMps(data);
+
+        // Client-side shuffle (Fisher-Yates) 
+        const shuffled = [...data];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+
+        mpsCache = shuffled;
+        lastTerm = term;
+        setMps(shuffled);
       } catch (error: any) {
         console.error('Error fetching MPs:', error);
         setMps([]);
@@ -62,7 +105,7 @@ export default function Poslowie() {
     let result = mps;
     if (searchTerm) {
       result = result.filter((mp) =>
-        `${mp.first_name} ${mp.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())
+        [mp.first_name, mp.last_name].filter(Boolean).join(' ').toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     if (selectedParty) {
@@ -175,7 +218,7 @@ export default function Poslowie() {
             <div className="text-[10px] font-black uppercase text-secondary/40">{filtered.length} wyników</div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
             {filtered.map((mp) => (
               <MpCard key={mp.id} mp={mp} />
             ))}

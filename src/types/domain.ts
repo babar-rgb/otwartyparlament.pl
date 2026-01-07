@@ -29,6 +29,12 @@ export interface MP {
         website?: string;
         offices?: { address: string; phone?: string }[];
     };
+    // Biography
+    birth_date?: string;
+    birth_location?: string;
+    profession?: string;
+    education_level?: string;
+    education_history?: string[]; // JSON array of strings from API
     stats?: {
         speeches?: number;
         interpellations?: number;

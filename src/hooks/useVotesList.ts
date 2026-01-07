@@ -24,6 +24,10 @@ export interface VoteItem {
     term?: number;
     mpVote?: string;
     isFinal?: boolean;
+    verdict?: string;
+    for?: number;
+    against?: number;
+    abstained?: number;
 }
 
 export function useVotesList(mpId?: string | null) {

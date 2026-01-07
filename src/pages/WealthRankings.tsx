@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { fetchWealthRankings } from '../api';
 import { Link } from 'react-router-dom';
 import { TrendingUp, Home, DollarSign, ArrowRight } from 'lucide-react';
+import Badge from '../components/ui/Badge';
 
 interface WealthData {
     mp_id: number;
@@ -177,9 +178,9 @@ export default function WealthRankings() {
                                     <div className="flex-1 min-w-0">
                                         <p className="text-xl font-black text-primary group-hover:text-emerald-600 transition-colors truncate">{mp.name}</p>
                                         <div className="mt-1">
-                                            <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg uppercase tracking-wider ${getPartyBadge(mp.party)}`}>
+                                            <Badge variant="party" party={mp.party} size="xs">
                                                 {mp.party}
-                                            </span>
+                                            </Badge>
                                         </div>
                                     </div>
                                     <div className="text-right shrink-0">
@@ -205,7 +206,7 @@ export default function WealthRankings() {
                                 <Link
                                     to={`/poslowie/${mp.mp_id}`}
                                     key={mp.mp_id}
-                                    className="flex items-center gap-6 p-6 hover:bg-amber-500/[0.02] dark:hover:bg-amber-500/[0.05] transition-colors group"
+                                    className="flex items-center gap-6 p-6 hover:bg-white/[0.02] border-l-4 border-l-transparent hover:border-l-emerald-500 transition-all group"
                                 >
                                     <div className="font-black text-secondary/20 w-8 text-center text-2xl group-hover:text-amber-500 transition-colors italic">
                                         {(idx + 1).toString().padStart(2, '0')}
@@ -218,9 +219,9 @@ export default function WealthRankings() {
                                     <div className="flex-1 min-w-0">
                                         <p className="text-xl font-black text-primary group-hover:text-amber-600 transition-colors truncate">{mp.name}</p>
                                         <div className="mt-1">
-                                            <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg uppercase tracking-wider ${getPartyBadge(mp.party)}`}>
+                                            <Badge variant="party" party={mp.party} size="xs">
                                                 {mp.party}
-                                            </span>
+                                            </Badge>
                                         </div>
                                     </div>
                                     <div className="text-right shrink-0">
@@ -239,15 +240,3 @@ export default function WealthRankings() {
     );
 }
 
-// Add the missing getPartyBadge or use the one from Rankingi
-// For consistency I will add it here too if not imported
-const getPartyBadge = (party: string) => {
-    const p = party?.toUpperCase() || '';
-    if (p.includes('KONFEDERACJA')) return 'bg-slate-900 text-white border border-slate-700 dark:bg-white/5 dark:border-white/10 dark:text-white';
-    if (p.includes('KO')) return 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20';
-    if (p.includes('PIS')) return 'bg-blue-600/10 text-blue-700 dark:text-blue-300 border border-blue-600/20';
-    if (p.includes('PL2050') || p.includes('POLSKA2050')) return 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 border border-yellow-500/20';
-    if (p.includes('LEWICA')) return 'bg-rose-500/10 text-rose-600 dark:text-rose-500 border border-rose-500/20';
-    if (p.includes('PSL')) return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 border border-emerald-500/20';
-    return 'bg-secondary/10 text-secondary border border-border-base';
-};

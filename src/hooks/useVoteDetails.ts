@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { fetchVote, fetchVoteAnalysis, fetchVotes } from '../api';
+import { fetchVote, fetchVoteAnalysis, fetchVotes, fetchVoteResultsDetailed, fetchProcess, generateVoteAnalysis } from '../api';
 import { Vote } from '../types/domain';
+import { formatMPName, extractPrintNumber } from '../utils';
 
 interface VoteDetail extends Vote {
     details_json: {
@@ -87,6 +88,32 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
 
             setVote(fullVote);
 
+            // 1b. Fetch Linked Process / Bill (Goal B)
+            const printNum = extractPrintNumber(voteData.title_clean || voteData.title_raw || "");
+            if (printNum) {
+                try {
+                    const process = await fetchProcess(printNum);
+                    if (process) {
+                        _setLinkedPrint({ number: process.number, title: process.title });
+
+                        // If we have a description or AI analysis, use it
+                        const summary = process.ai_analysis?.summary || process.description || "";
+
+                        if (summary) {
+                            _setProjectContext({
+                                ai_summary: summary,
+                                justification_text: process.description || "",
+                                pdf_url: process.url || ""
+                            });
+                        }
+
+                        if (process.process_id) _setLinkedProcessId(process.process_id);
+                    }
+                } catch (err) {
+                    console.log("No linked process found for print", printNum);
+                }
+            }
+
             // 2. Fetch Analysis (The AI Part)
             const aiData = await fetchVoteAnalysis(voteData.id.toString());
             if (aiData) {
@@ -98,28 +125,30 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
             }
 
             // 3. Fetch Results from our new Backend endpoint
-            const res = await fetch(`http://localhost:8000/votes/${voteData.id}/results`);
-            if (res.ok) {
-                const resultsData = await res.json();
+            try {
+                const resultsData = await fetchVoteResultsDetailed(voteData.id);
 
-                const typedResults: VoteResult[] = resultsData.map((r: any) => {
-                    let normalizedVote = 'ABSENT';
-                    const voteStr = r.result?.toUpperCase();
-                    if (voteStr === 'ZA' || voteStr === 'YES') normalizedVote = 'YES';
-                    else if (voteStr === 'PRZECIW' || voteStr === 'NO') normalizedVote = 'NO';
-                    else if (voteStr === 'WSTRZYMAŁ SIĘ' || voteStr === 'ABSTAIN') normalizedVote = 'ABSTAIN';
+                const typedResults: VoteResult[] = resultsData
+                    .filter((r: any) => r && r.mp)
+                    .map((r: any) => {
+                        let normalizedVote = 'ABSENT';
+                        const voteStr = r.result?.toUpperCase();
+                        if (voteStr === 'ZA' || voteStr === 'YES') normalizedVote = 'YES';
+                        else if (voteStr === 'PRZECIW' || voteStr === 'NO') normalizedVote = 'NO';
+                        else if (voteStr === 'WSTRZYMAŁ SIĘ' || voteStr === 'ABSTAIN' || voteStr === 'ABSTAINED') normalizedVote = 'ABSTAIN';
+                        else if (voteStr === 'NIEOBECNY' || voteStr === 'ABSENT') normalizedVote = 'ABSENT';
 
-                    return {
-                        vote: normalizedVote,
-                        mps: {
-                            id: r.mp.id,
-                            name: `${r.mp.first_name} ${r.mp.last_name}`,
-                            party: r.mp.club,
-                            photo_url: r.mp.photo_url,
-                            slug: r.mp.slug || r.mp.id.toString()
-                        }
-                    };
-                });
+                        return {
+                            vote: normalizedVote,
+                            mps: {
+                                id: r.mp.id,
+                                name: formatMPName(r.mp.first_name, r.mp.last_name),
+                                party: r.mp.club || 'Niezrzeszeni',
+                                photo_url: r.mp.photo_url || '',
+                                slug: r.mp.slug || r.mp.id.toString()
+                            }
+                        };
+                    });
 
                 setResults(typedResults);
 
@@ -127,12 +156,16 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
                 typedResults.forEach(r => {
                     const party = r.mps.party || 'Niezrzeszeni';
                     if (!stats[party]) stats[party] = { yes: 0, no: 0, abstain: 0, absent: 0 };
+
                     if (r.vote === 'YES') stats[party].yes++;
                     else if (r.vote === 'NO') stats[party].no++;
                     else if (r.vote === 'ABSTAIN') stats[party].abstain++;
                     else stats[party].absent++;
                 });
                 setPartyStats(stats);
+            } catch (err) {
+                console.error("Failed to load detailed results:", err);
+                // Non-fatal, just no details
             }
 
         } catch (error) {
@@ -142,6 +175,25 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
         }
     };
 
+    const generateAnalysis = async () => {
+        if (!vote) return;
+        setLoading(true);
+        try {
+            const aiData = await generateVoteAnalysis(vote.id.toString());
+            if (aiData) {
+                setAnalysis({
+                    summary: aiData.summary,
+                    pros: aiData.pros,
+                    cons: aiData.cons
+                });
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    }
+
     return {
         vote,
         results,
@@ -150,6 +202,7 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
         analysis,
         linkedProcessId,
         linkedPrint,
-        projectContext
+        projectContext,
+        generateAnalysis
     };
 }

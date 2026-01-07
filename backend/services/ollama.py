@@ -73,13 +73,15 @@ class OllamaService:
         Zwróć wynik WYŁĄCZNIE w formacie JSON o następującej strukturze:
         {{
             "summary": "Krótkie wyjaśnienie o co chodziło w tym głosowaniu (2-3 zdania).",
+            "category": "JEDNA z kategorii: Gospodarka, Zdrowie, Obronność, Edukacja, Infrastruktura, Rolnictwo, Ustrój, Społeczeństwo, Proceduralne, Inne",
             "pros": ["argument za / skutek pozytywny 1", "argument za / skutek pozytywny 2"],
             "cons": ["argument przeciw / ryzyko 1", "argument przeciw / ryzyko 2"]
         }}
         
         Zasady:
         1. Bądź merytoryczny i neutralny.
-        2. Wyjaśnij prostym językiem znaczenie tego głosowania dla obywatela.
+        2. Kategoria "Proceduralne" jest dla głosowań technicznych (przerwy, odroczenia, zmiany w komisjach).
+        3. Wyjaśnij prostym językiem znaczenie tego głosowania dla obywatela.
         """
 
         try:

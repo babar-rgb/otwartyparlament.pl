@@ -22,7 +22,8 @@ const VoteDetails: React.FC = () => {
         analysis,
         linkedProcessId,
         linkedPrint,
-        projectContext
+        projectContext,
+        generateAnalysis
     } = useVoteDetails(id, sitting, votingNumber, term);
 
     const [mpSearch, setMpSearch] = useState('');
@@ -166,6 +167,14 @@ const VoteDetails: React.FC = () => {
                                 <FileText size={12} /> Pełny Dokument PDF
                             </a>
                         )}
+                        <a
+                            href={`https://www.sejm.gov.pl/Sejm${vote.term}.nsf/agent.xsp?symbol=glosowania&NrKadencji=${vote.term}&NrPosiedzenia=${vote.sitting}&NrGlosowania=${vote.voting_number}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="hover:text-blue-500 transition-colors flex items-center gap-2"
+                        >
+                            <ExternalLink size={12} /> Źródło (Sejm.gov.pl)
+                        </a>
                     </div>
 
                     {/* Linked Print Card - Polished & Prominent */}
@@ -271,7 +280,7 @@ const VoteDetails: React.FC = () => {
             </div>
 
             {/* AI Analysis Section */}
-            {analysis && (
+            {analysis ? (
                 <div className="max-w-6xl mx-auto px-6 py-10">
                     <ProcessTLDR data={{
                         tldr: analysis.summary,
@@ -291,6 +300,26 @@ const VoteDetails: React.FC = () => {
                         />
                     </div>
                 </div>
+            ) : (
+                <div className="max-w-6xl mx-auto px-6 py-10">
+                    <div className="bg-surface rounded-3xl p-8 border border-border-base shadow-sm text-center relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-10 opacity-5">
+                            <Sparkles size={120} />
+                        </div>
+                        <Sparkles className="w-12 h-12 text-accent-blue mx-auto mb-4 opacity-50" />
+                        <h3 className="text-xl font-bold text-primary mb-2">Analiza AI (Beta)</h3>
+                        <p className="text-secondary mb-6 max-w-lg mx-auto">
+                            Wygeneruj natychmiastowe podsumowanie i analizę tego głosowania przy użyciu lokalnego modelu językowego.
+                        </p>
+                        <button
+                            onClick={generateAnalysis}
+                            className="bg-accent-blue hover:bg-accent-blue/90 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 mx-auto relative z-10 shadow-lg shadow-blue-500/20 active:scale-95"
+                        >
+                            <Sparkles size={18} />
+                            Generuj Analizę
+                        </button>
+                    </div>
+                </div>
             )}
 
             {/* Sejm Hemicycle Visualization */}
@@ -301,23 +330,32 @@ const VoteDetails: React.FC = () => {
                 </div>
                 <div className="bg-surface rounded-3xl p-4 md:p-8 shadow-sm border border-border-base relative overflow-hidden">
                     <div className="absolute inset-0 bg-accent-blue/5 pointer-events-none" />
-                    <SejmHemicycle
-                        data={results.map(r => ({
-                            name: r.mps?.name || 'Nieznany',
-                            party: r.mps?.party || 'Niezrzeszeni',
-                            photo_url: r.mps?.photo_url || '',
-                            vote: r.vote,
-                            id: r.mps?.id,
-                            seat_number: undefined,
-                            slug: r.mps?.slug
-                        }))}
-                    />
-                    <div className="flex flex-wrap justify-center gap-6 mt-6 text-[10px] font-black uppercase tracking-widest text-secondary opacity-60">
-                        <div className="flex items-center gap-2 relative z-10"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> ZA</div>
-                        <div className="flex items-center gap-2 relative z-10"><span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> PRZECIW</div>
-                        <div className="flex items-center gap-2 relative z-10"><span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> WSTRZYMAŁ SIĘ</div>
-                        <div className="flex items-center gap-2 relative z-10"><span className="w-2.5 h-2.5 rounded-full bg-secondary"></span> NIEOBECNY</div>
-                    </div>
+                    {results.length > 0 ? (
+                        <>
+                            <SejmHemicycle
+                                data={results.map(r => ({
+                                    name: r.mps?.name || 'Nieznany',
+                                    party: r.mps?.party || 'Niezrzeszeni',
+                                    photo_url: r.mps?.photo_url || '',
+                                    vote: r.vote,
+                                    id: r.mps?.id,
+                                    seat_number: undefined,
+                                    slug: r.mps?.slug
+                                }))}
+                            />
+                            <div className="flex flex-wrap justify-center gap-6 mt-6 text-[10px] font-black uppercase tracking-widest text-secondary opacity-60">
+                                <div className="flex items-center gap-2 relative z-10"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> ZA</div>
+                                <div className="flex items-center gap-2 relative z-10"><span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> PRZECIW</div>
+                                <div className="flex items-center gap-2 relative z-10"><span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> WSTRZYMAŁ SIĘ</div>
+                                <div className="flex items-center gap-2 relative z-10"><span className="w-2.5 h-2.5 rounded-full bg-secondary"></span> NIEOBECNY</div>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="py-20 flex flex-col items-center justify-center text-secondary italic">
+                            <Users className="w-12 h-12 mb-4 opacity-20" />
+                            Brak szczegółowych danych o rozmieszczeniu głosów dla tego głosowania.
+                        </div>
+                    )}
                 </div>
             </div>
             <div className="space-y-4">
@@ -327,30 +365,36 @@ const VoteDetails: React.FC = () => {
                 </div>
 
                 <div className="bg-surface rounded-2xl overflow-hidden shadow-sm border border-border-base">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-black/5 dark:bg-black/20 text-[10px] font-black uppercase tracking-widest text-secondary opacity-60">
-                                    <th className="p-4">Klub / Koło</th>
-                                    <th className="p-4 text-emerald-600">Za</th>
-                                    <th className="p-4 text-rose-600">Przeciw</th>
-                                    <th className="p-4">Wstrzymał się</th>
-                                    <th className="p-4">Nieobecny</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border-base">
-                                {Object.entries(partyStats).map(([party, stats]) => (
-                                    <tr key={party} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
-                                        <td className="p-4 font-black text-primary">{party}</td>
-                                        <td className="p-4 font-black text-emerald-600">{stats.yes}</td>
-                                        <td className="p-4 font-black text-rose-600">{stats.no}</td>
-                                        <td className="p-4 font-black text-primary">{stats.abstain}</td>
-                                        <td className="p-4 text-secondary opacity-40 font-black">{stats.absent}</td>
+                    {Object.keys(partyStats).length > 0 ? (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-black/5 dark:bg-black/20 text-[10px] font-black uppercase tracking-widest text-secondary opacity-60">
+                                        <th className="p-4">Klub / Koło</th>
+                                        <th className="p-4 text-emerald-600">Za</th>
+                                        <th className="p-4 text-rose-600">Przeciw</th>
+                                        <th className="p-4">Wstrzymał się</th>
+                                        <th className="p-4">Nieobecny</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody className="divide-y divide-border-base">
+                                    {Object.entries(partyStats).map(([party, stats]) => (
+                                        <tr key={party} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                                            <td className="p-4 font-black text-primary">{party}</td>
+                                            <td className="p-4 font-black text-emerald-600">{stats.yes}</td>
+                                            <td className="p-4 font-black text-rose-600">{stats.no}</td>
+                                            <td className="p-4 font-black text-primary">{stats.abstain}</td>
+                                            <td className="p-4 text-secondary opacity-40 font-black">{stats.absent}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className="p-12 text-center text-secondary italic">
+                            Brak danych o głosowaniu w klubach.
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -377,8 +421,8 @@ const VoteDetails: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {results
-                        .filter(r => !mpSearch || r.mps?.name?.toLowerCase().includes(mpSearch.toLowerCase()) || r.mps?.party?.toLowerCase().includes(mpSearch.toLowerCase()))
+                    {results.length > 0 ? (results
+                        .filter(r => !mpSearch || r.mps.name.toLowerCase().includes(mpSearch.toLowerCase()) || r.mps.party.toLowerCase().includes(mpSearch.toLowerCase()))
                         .map((r, idx) => (
                             <div key={idx} className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-border-base transition-colors hover:border-accent-blue shadow-sm">
                                 <div className={`w-2 h-10 rounded-full ${r.vote === 'YES' ? 'bg-emerald-500' :
@@ -386,8 +430,8 @@ const VoteDetails: React.FC = () => {
                                         r.vote === 'ABSTAIN' ? 'bg-amber-500' : 'bg-secondary opacity-20'
                                     }`} />
                                 <div>
-                                    <div className="font-bold text-sm text-primary">{r.mps?.name}</div>
-                                    <div className="text-[10px] font-black uppercase tracking-wider text-secondary">{r.mps?.party}</div>
+                                    <div className="font-bold text-sm text-primary">{r.mps.name}</div>
+                                    <div className="text-[10px] font-black uppercase tracking-wider text-secondary">{r.mps.party}</div>
                                 </div>
                                 <div className="ml-auto text-xs font-black">
                                     {r.vote === 'YES' && <span className="text-emerald-500">ZA</span>}
@@ -396,7 +440,11 @@ const VoteDetails: React.FC = () => {
                                     {r.vote === 'ABSENT' && <span className="text-secondary opacity-50">NIEOB.</span>}
                                 </div>
                             </div>
-                        ))}
+                        ))) : (
+                        <div className="col-span-full py-12 text-center text-secondary italic">
+                            Brak szczegółowych wyników imiennych dla tego głosowania.
+                        </div>
+                    )}
                 </div>
             </div>
             {/* Hidden capture target for Social Media Graphics */}

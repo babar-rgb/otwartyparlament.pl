@@ -1,30 +1,20 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MP } from '../../../api';
+import Badge from '../../ui/Badge';
 
 interface MpCardProps {
   mp: MP;
 }
 
 export default function MpCard({ mp }: MpCardProps) {
-  const getPartyBadge = (party: string): string => {
-    const p = party?.toUpperCase() || '';
-    // Check Konfederacja FIRST (contains 'KO')
-    if (p.includes('KONFEDERACJA')) return 'bg-gradient-to-r from-[#0a1628] to-[#000000] text-white';
-    if (p.includes('KO')) return 'bg-gradient-to-r from-orange-500 to-red-600 text-white';
-    if (p.includes('PIS')) return 'bg-blue-700 text-white';
-    if (p.includes('2050') || p.includes('TD')) return 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900';
-    if (p.includes('PSL')) return 'bg-green-600 text-white';
-    if (p.includes('LEWICA')) return 'bg-gradient-to-r from-purple-600 to-red-500 text-white';
-    return 'bg-slate-500 text-white';
-  };
 
   const attendanceRate = mp.attendanceRate || 0;
 
   return (
     <Link to={`/poslowie/${mp.slug || mp.id}`}>
       <motion.div
-        className="group relative bg-surface/50 backdrop-blur-sm p-4 rounded-2xl border border-border-base hover:border-accent-blue/50 transition-all duration-500 shadow-sm hover:shadow-2xl hover:shadow-accent-blue/5 hover:-translate-y-1 flex flex-col items-center text-center"
+        className="group relative bg-surface/50 backdrop-blur-sm p-5 rounded-2xl border border-border-base hover:border-accent-blue/30 transition-all duration-500 shadow-sm hover:shadow-2xl hover:shadow-accent-blue/5 hover:-translate-y-1 flex flex-col items-center text-center"
         whileTap={{ scale: 0.98 }}
       >
         {/* Compact circular photo to maintain quality */}
@@ -33,25 +23,25 @@ export default function MpCard({ mp }: MpCardProps) {
           <img
             src={mp.photo_url || `https://ui-avatars.com/api/?name=${mp.first_name}+${mp.last_name}&background=1e293b&color=94a3b8`}
             alt=""
-            className="w-12 h-12 rounded-full object-cover object-top border-2 border-border-base relative z-10 transition-transform group-hover:scale-110"
+            className="w-20 h-20 rounded-full object-cover object-top border-2 border-border-base relative z-10 transition-transform group-hover:scale-110"
             loading="lazy"
           />
         </div>
 
         <div className="flex-1 w-full space-y-1.5">
-          <h3 className="font-bold text-primary text-[13px] leading-tight line-clamp-2 group-hover:text-accent-blue transition-colors">
-            {mp.first_name} <span className="block">{mp.last_name}</span>
+          <h3 className="font-bold text-primary text-[15px] leading-tight line-clamp-2 group-hover:text-accent-blue transition-colors">
+            {mp.first_name} {mp.last_name && <span className="block">{mp.last_name}</span>}
           </h3>
 
           <div className="flex flex-col items-center gap-2 pt-1">
-            <span className={`px-2 py-0.5 text-[8px] font-black rounded-lg uppercase tracking-wider ${getPartyBadge(mp.club)}`}>
+            <Badge variant="party" party={mp.club} size="xs">
               {mp.club}
-            </span>
+            </Badge>
           </div>
 
           {/* Simple participation score */}
           <div className="pt-2">
-            <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-widest text-secondary/40 mb-1">
+            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-secondary/40 mb-1">
               <span>Udział</span>
               <span className="text-primary">{attendanceRate}%</span>
             </div>

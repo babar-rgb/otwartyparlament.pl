@@ -2,21 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
 @layer base {
   :root {
     --bg-page: 248 250 252;
-    /* #F8FAFC (slate-50) */
+    /* #F8FAFC */
     --bg-surface: 255 255 255;
     /* #FFFFFF */
     --text-primary: 15 23 42;
-    /* #0F172A (slate-900) */
+    /* #0F172A */
     --text-secondary: 71 85 105;
-    /* #475569 (slate-600) */
+    /* #475569 */
     --border-base: 226 232 240;
-    /* #E2E8F0 (slate-200) */
+    /* #E2E8F0 */
     --accent-blue: 37 99 235;
     /* #2563EB */
     --accent-gradient: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+
+    /* Semantic Interaction */
+    --bg-hover: rgba(15, 23, 42, 0.05);
+
+    /* Geometry System */
+    --radius-card-xl: 2.5rem;
+    --radius-card-md: 1.5rem;
+    --radius-badge: 0.5rem;
   }
 
   .dark {
@@ -32,12 +42,16 @@
     /* #1E293B (Slate 800) */
     --accent-blue: 99 102 241;
     /* #6366F1 (Indigo) */
+
+    /* Semantic Interaction */
+    --bg-hover: rgba(255, 255, 255, 0.05);
   }
 
   body {
     background-color: rgb(var(--bg-page));
     color: rgb(var(--text-primary));
-    @apply font-sans antialiased transition-colors duration-300;
+    font-family: 'Space Grotesk', sans-serif;
+    @apply antialiased transition-colors duration-300;
   }
 
   #root {

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Calendar, User, Filter, X, ArrowRight } from 'lucide-react';
 import { useSpeeches } from '../hooks/useSpeeches';
+import EmptyState from '../components/ui/EmptyState';
 
 export default function SpeechesList() {
     const {
@@ -88,7 +89,7 @@ export default function SpeechesList() {
                                 placeholder="Wpisz frazę (np. 'inflacja', 'CPK', 'aborcja')..."
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
-                                className="w-full pl-12 pr-32 py-4 rounded-xl bg-black/5 dark:bg-white/5 border border-border-base focus:border-accent-blue/50 focus:ring-0 text-lg text-primary placeholder:text-secondary/30 transition-colors"
+                                className="w-full pl-12 pr-32 py-4 rounded-[var(--radius-badge)] bg-hover border border-border-base focus:border-accent-blue/50 focus:ring-0 text-lg text-primary placeholder:text-secondary/30 transition-colors"
                             />
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary/30" size={24} />
 
@@ -96,7 +97,7 @@ export default function SpeechesList() {
                                 <button
                                     type="button"
                                     onClick={() => setShowFilters(!showFilters)}
-                                    className={`p-2.5 rounded-xl transition-colors ${showFilters ? 'bg-accent-blue text-white' : 'bg-black/10 dark:bg-white/5 text-secondary hover:bg-black/20 dark:hover:bg-white/10'}`}
+                                    className={`p-2.5 rounded-[var(--radius-badge)] transition-colors ${showFilters ? 'bg-accent-blue text-white' : 'bg-hover text-secondary hover:bg-black/20 dark:hover:bg-white/10'}`}
                                     title="Filtry"
                                 >
                                     <Filter size={18} />
@@ -104,7 +105,7 @@ export default function SpeechesList() {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="px-5 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                    className="px-5 py-2.5 bg-accent-blue text-white font-bold rounded-[var(--radius-badge)] hover:bg-blue-700 transition-colors disabled:opacity-50"
                                 >
                                     {loading ? '...' : 'Szukaj'}
                                 </button>
@@ -116,11 +117,11 @@ export default function SpeechesList() {
                             <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
                                 {/* MP Filter */}
                                 <div>
-                                    <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Poseł</label>
+                                    <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-2">Poseł</label>
                                     <select
                                         value={selectedMp}
                                         onChange={(e) => setSelectedMp(e.target.value)}
-                                        className="w-full p-3 bg-black/5 dark:bg-white/5 border border-border-base rounded-xl text-sm text-primary focus:border-accent-blue/50 focus:ring-0 appearance-none cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                                        className="w-full p-3 bg-hover border border-border-base rounded-[var(--radius-badge)] text-sm text-primary focus:border-accent-blue/50 focus:ring-0 appearance-none cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
                                         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '16px' }}
                                     >
                                         <option value="">Wszyscy posłowie</option>
@@ -132,11 +133,11 @@ export default function SpeechesList() {
 
                                 {/* Party Filter */}
                                 <div>
-                                    <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Klub / Koło</label>
+                                    <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-2">Klub / Koło</label>
                                     <select
                                         value={selectedParty}
                                         onChange={(e) => setSelectedParty(e.target.value)}
-                                        className="w-full p-3 bg-black/5 dark:bg-white/5 border border-border-base rounded-xl text-sm text-primary focus:border-accent-blue/50 focus:ring-0 appearance-none cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                                        className="w-full p-3 bg-hover border border-border-base rounded-[var(--radius-badge)] text-sm text-primary focus:border-accent-blue/50 focus:ring-0 appearance-none cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
                                         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '16px' }}
                                     >
                                         <option value="">Wszystkie kluby</option>
@@ -148,7 +149,7 @@ export default function SpeechesList() {
 
                                 {/* Date Filter */}
                                 <div>
-                                    <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Zakres dat</label>
+                                    <label className="block text-[10px] font-bold text-white/40 uppercase tracking-wider mb-2">Zakres dat</label>
                                     <div className="flex gap-2">
                                         <input
                                             type="date"
@@ -193,15 +194,16 @@ export default function SpeechesList() {
                     <div className="grid gap-4">
                         {/* Show No Results Message */}
                         {hasSearched && speeches.length === 0 && (
-                            <div className="text-center py-12 bg-slate-50 rounded-xl border border-slate-200">
-                                <p className="text-xl font-bold text-slate-700 mb-2">Nie znaleziono wypowiedzi.</p>
-                                <p className="text-slate-500">Spróbuj zmienić kryteria wyszukiwania.</p>
-                            </div>
+                            <EmptyState
+                                title="Brak wypowiedzi"
+                                description="Spróbuj zmienić kryteria wyszukiwania lub wpisać inną frazę."
+                                icon="search"
+                            />
                         )}
 
                         {/* Show Results OR Recent (if not searched) */}
                         {(!hasSearched ? recentSpeeches : speeches).map((speech) => (
-                            <div key={speech.id} className="bg-surface p-8 rounded-[2rem] border border-border-base shadow-sm hover:shadow-xl transition-all group">
+                            <div key={speech.id} className="bg-surface p-8 rounded-[var(--radius-card-md)] border border-border-base shadow-sm hover:shadow-xl transition-all group">
                                 <div className="flex justify-between items-start gap-4 mb-4">
                                     <div className="flex items-center gap-3">
                                         {speech.mp ? (
@@ -215,7 +217,7 @@ export default function SpeechesList() {
                                                     <p className="font-black text-primary group-hover/author:text-accent-blue transition-colors text-lg">
                                                         {speech.mp.name}
                                                     </p>
-                                                    <p className="text-[10px] font-black text-secondary uppercase tracking-widest opacity-60">
+                                                    <p className="text-[10px] font-black text-secondary uppercase tracking-wider opacity-60">
                                                         {speech.mp.party}
                                                     </p>
                                                 </div>
@@ -231,10 +233,10 @@ export default function SpeechesList() {
                                     </div>
 
                                     <div className="text-right">
-                                        <span className="text-[10px] font-black text-secondary bg-black/5 dark:bg-white/5 px-3 py-1.5 rounded-full uppercase tracking-widest border border-border-base">
+                                        <span className="text-[10px] font-black text-secondary bg-hover px-3 py-1.5 rounded-full uppercase tracking-wider border border-border-base">
                                             {speech.date}
                                         </span>
-                                        <p className="text-[10px] font-black text-secondary opacity-40 mt-1 uppercase tracking-widest">Posiedzenie {speech.sitting}</p>
+                                        <p className="text-[10px] font-black text-secondary opacity-40 mt-1 uppercase tracking-wider">Posiedzenie {speech.sitting}</p>
                                     </div>
                                 </div>
 
@@ -247,16 +249,18 @@ export default function SpeechesList() {
                                     />
                                 </div>
 
-                                <Link to={`/wypowiedzi/${speech.id}`} className="inline-flex items-center gap-2 text-xs font-black text-accent-blue uppercase tracking-widest hover:translate-x-1 transition-transform">
+                                <Link to={`/wypowiedzi/${speech.id}`} className="inline-flex items-center gap-2 text-xs font-black text-accent-blue uppercase tracking-wider hover:translate-x-1 transition-transform">
                                     Czytaj całą wypowiedź <ArrowRight size={14} />
                                 </Link>
                             </div>
                         ))}
 
                         {speeches.length === 0 && recentSpeeches.length === 0 && (
-                            <div className="text-center py-12 text-slate-500">
-                                Brak wypowiedzi w bazie. Uruchom skrypt importu.
-                            </div>
+                            <EmptyState
+                                title="Brak wypowiedzi"
+                                description="Baza danych wypowiedzi jest obecnie pusta. Uruchom skrypt importu, aby pobrać dane."
+                                icon="file"
+                            />
                         )}
                     </div>
                 </div>

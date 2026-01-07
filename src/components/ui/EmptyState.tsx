@@ -23,17 +23,18 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
     const Icon = icons[icon];
 
     return (
-        <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-            <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-                <Icon className="w-8 h-8 text-slate-400" />
+        <div className="flex flex-col items-center justify-center py-16 px-4 text-center animate-fade-in">
+            <div className="w-20 h-20 rounded-[var(--radius-card-md)] bg-surface border border-border-base flex items-center justify-center mb-6 shadow-xl relative overflow-hidden group">
+                <div className="absolute inset-0 bg-accent-blue/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Icon className="w-10 h-10 text-secondary" />
             </div>
-            <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
+            <h3 className="text-2xl font-black text-primary mb-3">
                 {title}
             </h3>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-sm mb-4">
+            <p className="text-base text-secondary max-w-sm mb-8 font-medium leading-relaxed opacity-60">
                 {description}
             </p>
-            {action && <div>{action}</div>}
+            {action && <div className="animate-fade-in-up delay-200">{action}</div>}
         </div>
     );
 };

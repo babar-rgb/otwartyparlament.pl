@@ -167,22 +167,14 @@ const SejmHemicycle: React.FC<SejmHemicycleProps> = ({ data, mode = 'vote' }) =>
         }
 
         // Vote mode
-        // Vote mode
-        switch (mp.vote) {
-            case 'YES':
-            case 'Za':
-                return '#16a34a';
-            case 'NO':
-            case 'Przeciw':
-                return '#dc2626';
-            case 'ABSTAIN':
-            case 'Wstrzymał się':
-                return '#f59e0b';
-            case 'ABSENT':
-            case 'Nieobecny':
-                return '#d4d4d8';
-            default: return '#e5e7eb';
+        if (typeof mp.vote === 'string') {
+            const v = mp.vote.toUpperCase();
+            if (v === 'YES' || v === 'ZA') return '#16a34a';
+            if (v === 'NO' || v === 'PRZECIW') return '#dc2626';
+            if (v === 'ABSTAIN' || v === 'WSTRZYMAŁ SIĘ' || v === 'WSTRZ.') return '#f59e0b';
+            if (v === 'ABSENT' || v === 'NIEOBECNY' || v === 'NIEOB.') return '#d4d4d8';
         }
+        return '#e5e7eb';
     };
 
     const handleKeyDown = (e: React.KeyboardEvent, mp?: MPData) => {
@@ -260,13 +252,51 @@ const SejmHemicycle: React.FC<SejmHemicycleProps> = ({ data, mode = 'vote' }) =>
                 )}
             </div>
 
+            {/* Dynamic Legend */}
+            <div className="flex flex-wrap justify-center gap-x-6 gap-y-4 pt-6 mt-6 border-t border-border-base/50 w-full max-w-4xl">
+                {mode === 'vote' ? (
+                    <>
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-secondary">
+                            <div className="w-2.5 h-2.5 rounded-full bg-[#16a34a]" />
+                            <span>Za</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-secondary">
+                            <div className="w-2.5 h-2.5 rounded-full bg-[#dc2626]" />
+                            <span>Przeciw</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-secondary">
+                            <div className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
+                            <span>Wstrzymał się</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-secondary">
+                            <div className="w-2.5 h-2.5 rounded-full bg-[#d4d4d8]" />
+                            <span>Nieobecny</span>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        {/* Show Legend for active parties in this view */}
+                        {Array.from(new Set(data.map(mp => mp.party)))
+                            .filter(Boolean)
+                            .sort()
+                            .map(party => (
+                                <div key={party} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-secondary">
+                                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getPartyColor(party) }} />
+                                    <span>{party}</span>
+                                </div>
+                            ))
+                        }
+                    </>
+                )}
+            </div>
+
             {/* Overflow Zone */}
             {overflowMPs.length > 0 && (
-                <div className="w-full max-w-4xl mt-8 px-4">
-                    <div className="text-sm font-semibold text-neutral-500 mb-2 uppercase tracking-wider">
-                        Posłowie bez przypisanego miejsca / Nowi ({overflowMPs.length})
+                <div className="w-full max-w-4xl mt-12 px-4">
+                    <div className="text-[10px] font-black text-secondary/40 mb-4 uppercase tracking-[0.2em] text-center">
+                        Nowi posłowie / bez stałego miejsca ({overflowMPs.length})
                     </div>
-                    <div className="flex flex-wrap gap-2 justify-center bg-neutral-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-dashed border-neutral-300 dark:border-slate-700">
+                    <div className="flex flex-wrap gap-2 justify-center bg-black/5 dark:bg-white/5 p-8 rounded-[2rem] border border-dashed border-border-base">
                         {overflowMPs.map((mp, idx) => (
                             <div
                                 key={idx}
@@ -277,7 +307,7 @@ const SejmHemicycle: React.FC<SejmHemicycleProps> = ({ data, mode = 'vote' }) =>
                                 onKeyDown={(e) => handleKeyDown(e, mp)}
                                 onMouseEnter={() => setHoveredMP(mp)}
                                 onMouseLeave={() => setHoveredMP(null)}
-                                className="w-3 h-3 rounded-full cursor-pointer hover:scale-125 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 ring-offset-neutral-50 focus:ring-blue-500"
+                                className="w-3 h-3 rounded-full cursor-pointer hover:scale-150 transition-all focus:outline-none focus:ring-2 focus:ring-accent-blue"
                                 style={{ backgroundColor: getColor(mp) }}
                             />
                         ))}

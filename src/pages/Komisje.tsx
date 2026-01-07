@@ -105,8 +105,8 @@ export default function Komisje() {
                                     key={f.value}
                                     onClick={() => setFilterType(f.value)}
                                     className={`px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-wider whitespace-nowrap transition-all border ${filterType === f.value
-                                        ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/20'
-                                        : 'bg-surface text-secondary border-transparent hover:bg-white/5 hover:text-primary'
+                                        ? 'bg-accent-blue text-white border-accent-blue shadow-lg shadow-accent-blue/20'
+                                        : 'bg-surface text-secondary border-transparent hover:bg-hover hover:text-primary'
                                         }`}
                                 >
                                     {f.label}
@@ -121,7 +121,7 @@ export default function Komisje() {
                         <Link
                             key={committee.code}
                             to={`/komisje/${committee.code}`}
-                            className="bg-surface rounded-2xl border border-border-base p-6 hover:border-accent-blue/50 hover:bg-slate-50 dark:hover:bg-[#16162d] transition-all group shadow-sm hover:shadow-xl hover:-translate-y-1"
+                            className="bg-surface rounded-[var(--radius-card-md)] border border-border-base p-6 hover:border-accent-blue/50 hover:bg-hover transition-all group shadow-sm hover:shadow-xl hover:-translate-y-1"
                         >
                             <h3 className="font-bold text-primary mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
                                 {committee.name}

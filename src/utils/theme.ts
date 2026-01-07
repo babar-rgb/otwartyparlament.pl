@@ -14,11 +14,11 @@ export const getPartyStyle = (party: string): string => {
         return 'bg-gradient-to-r from-blue-700 to-blue-900 text-white border-transparent shadow-md';
 
     // Polska 2050 - official golden yellow
-    if (p.includes('polska 2050') || p.includes('trzecia droga (polska 2050)'))
+    if (p.includes('polska 2050') || p.includes('trzecia droga (polska 2050)') || p === 'polska2050')
         return 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 border-transparent shadow-md';
 
     // PSL
-    if (p.includes('psl') || p.includes('trzecia droga (psl)') || p.includes('ludowe'))
+    if (p.includes('psl') || p.includes('trzecia droga (psl)') || p.includes('ludowe') || p === 'psl-td')
         return 'bg-gradient-to-r from-green-600 to-emerald-700 text-white border-transparent shadow-md';
 
     // Lewica / Razem
@@ -30,7 +30,20 @@ export const getPartyStyle = (party: string): string => {
         return 'bg-slate-700 text-white border-transparent shadow-md';
 
     // Default / Other
-    return 'bg-white text-slate-700 border-slate-200 hover:border-blue-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 dark:hover:border-blue-500';
+    return 'bg-surface text-secondary border-border-base';
+};
+
+export const getEuGroupStyle = (group: string): string => {
+    const g = group?.toUpperCase() || '';
+    if (g.includes('PPE')) return 'bg-blue-600 text-white border-transparent shadow-md';
+    if (g.includes('S&D')) return 'bg-red-600 text-white border-transparent shadow-md';
+    if (g.includes('RENEW')) return 'bg-amber-400 text-slate-900 border-transparent shadow-md';
+    if (g.includes('ECR')) return 'bg-indigo-900 text-white border-transparent shadow-md';
+    if (g.includes('VERTS/ALE')) return 'bg-green-600 text-white border-transparent shadow-md';
+    if (g.includes('THE LEFT')) return 'bg-red-800 text-white border-transparent shadow-md';
+    if (g.includes('ID')) return 'bg-slate-800 text-white border-transparent shadow-md';
+    if (g.includes('NI')) return 'bg-slate-500 text-white border-transparent shadow-md';
+    return 'bg-surface text-secondary border-border-base';
 };
 
 // Simple HEX colors for Charts/Graphs where CSS classes don't work

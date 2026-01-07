@@ -134,6 +134,14 @@ def sync_sitting_votes(term: int, sitting_num: int) -> int:
                 inserted += 1
         
         logger.info(f"Sitting {sitting_num}: {inserted} votes synced")
+        
+        # Sync detailed results
+        try:
+            from backend.etl.vote_results import ResultsETL
+            ResultsETL().run(limit=1000, force_sitting=sitting_num)
+        except Exception as e:
+            logger.error(f"Error syncing results for sitting {sitting_num}: {e}")
+
         return inserted
         
     except Exception as e:
@@ -164,15 +172,32 @@ def sync_new_mps(term: int):
                     last_name = mp.get('lastName', '')
                     club = mp.get('club', 'Niezrzeszony')
                     
+                    active = mp.get('active', True)
+                    
+                    # Biography data
+                    birth_date = mp.get('birthDate')
+                    birth_location = mp.get('birthLocation')
+                    profession = mp.get('profession')
+                    education_level = mp.get('educationLevel')
+                    education_history = json.dumps(mp.get('educations', []))
+                    
                     sql = """
-                        INSERT INTO mps (id, first_name, last_name, club, term, active, created_at)
-                        VALUES (%s, %s, %s, %s, %s, true, NOW())
+                        INSERT INTO mps (id, first_name, last_name, club, term, active, 
+                                         birth_date, birth_location, profession, education_level, education_history,
+                                         created_at)
+                        VALUES (%s, %s, %s, %s, %s, true, %s, %s, %s, %s, %s, NOW())
                         ON CONFLICT (id) DO UPDATE SET
                             first_name = EXCLUDED.first_name,
                             last_name = EXCLUDED.last_name,
-                            club = EXCLUDED.club;
+                            club = EXCLUDED.club,
+                            birth_date = EXCLUDED.birth_date,
+                            birth_location = EXCLUDED.birth_location,
+                            profession = EXCLUDED.profession,
+                            education_level = EXCLUDED.education_level,
+                            education_history = EXCLUDED.education_history;
                     """
-                    cur.execute(sql, (mp['id'], first_name, last_name, club, term))
+                    cur.execute(sql, (mp['id'], first_name, last_name, club, term, 
+                                      birth_date, birth_location, profession, education_level, education_history))
                     new_count += 1
             
             if new_count > 0:

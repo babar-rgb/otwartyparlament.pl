@@ -44,8 +44,9 @@ export default function TopVoteCard({ loading, topVote }: TopVoteCardProps) {
                     Analiza AI
                     <ArrowRight className="w-4 h-4" />
                 </div>
-                <div className="h-1.5 w-32 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-indigo-500 w-full animate-pulse" />
+                <div className="flex items-center gap-2 px-3 py-1 bg-indigo-500/10 text-indigo-500 rounded-lg text-[9px] font-black uppercase tracking-widest border border-indigo-500/20">
+                    <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
+                    Gotowa
                 </div>
             </div>
         </div>

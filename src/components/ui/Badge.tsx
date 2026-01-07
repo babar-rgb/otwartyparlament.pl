@@ -1,10 +1,11 @@
 import React from 'react';
+import { getPartyStyle } from '../../utils/theme';
 
 interface BadgeProps {
     children: React.ReactNode;
     variant?: 'default' | 'success' | 'warning' | 'danger' | 'info' | 'party';
-    partyColor?: string;
-    size?: 'sm' | 'md';
+    party?: string;
+    size?: 'sm' | 'md' | 'xs';
     className?: string;
 }
 
@@ -18,6 +19,7 @@ const variantStyles = {
 };
 
 const sizeStyles = {
+    xs: 'px-1.5 py-0.5 text-[9px]',
     sm: 'px-2 py-0.5 text-xs',
     md: 'px-3 py-1 text-sm',
 };
@@ -25,21 +27,18 @@ const sizeStyles = {
 export const Badge: React.FC<BadgeProps> = ({
     children,
     variant = 'default',
-    partyColor,
+    party,
     size = 'sm',
     className = '',
 }) => {
-    const baseStyles = 'inline-flex items-center font-medium rounded-full border';
+    const baseStyles = 'inline-flex items-center font-black uppercase tracking-wider rounded-lg border border-transparent';
 
-    const style = variant === 'party' && partyColor
-        ? { backgroundColor: `${partyColor}20`, color: partyColor, borderColor: `${partyColor}40` }
-        : {};
+    const mergedClassName = variant === 'party' && party
+        ? `${baseStyles} ${getPartyStyle(party)} ${sizeStyles[size]} ${className}`
+        : `${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`;
 
     return (
-        <span
-            className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
-            style={style}
-        >
+        <span className={mergedClassName}>
             {children}
         </span>
     );

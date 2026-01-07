@@ -63,7 +63,7 @@ export default function Home() {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setTermDropdownOpen(!termDropdownOpen)}
-                className="flex items-center gap-2 px-4 py-2 bg-surface border border-border-base rounded-xl hover:bg-page transition-all shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-surface border border-border-base rounded-[var(--radius-badge)] hover:bg-hover transition-all shadow-sm"
               >
                 <div className="w-2 h-2 bg-accent-blue rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
                 <span className="font-bold text-sm tracking-wide text-primary">{term} Kadencja</span>
@@ -76,7 +76,7 @@ export default function Home() {
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute top-full right-0 mt-2 w-48 bg-surface border border-border-base rounded-xl shadow-2xl overflow-hidden z-50 p-1"
+                    className="absolute top-full right-0 mt-2 w-48 bg-surface border border-border-base rounded-[var(--radius-badge)] shadow-2xl overflow-hidden z-50 p-1"
                   >
                     {[10, 9].map((t) => (
                       <button
@@ -104,7 +104,7 @@ export default function Home() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary w-4 h-4" />
               <input
                 type="text"
-                placeholder="Szukaj..."
+                placeholder="Szukaj (Enter)..."
                 className="bg-surface border border-border-base rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-accent-blue focus:ring-1 focus:ring-accent-blue transition-all w-64 text-primary placeholder:text-secondary opacity-80"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -191,21 +191,6 @@ export default function Home() {
                 />
               </div>
 
-              {/* Legend Component (Minimal) */}
-              <div className="flex flex-wrap justify-center gap-6 mt-12 relative z-10">
-                {[
-                  { label: 'Lewica', color: '#dc2626' },
-                  { label: 'KO', color: '#3b82f6' },
-                  { label: 'PL2050', color: '#eab308' },
-                  { label: 'PiS', color: '#1d4ed8' },
-                  { label: 'Konfederacja', color: '#142544' }
-                ].map(party => (
-                  <div key={party.label} className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: party.color }} />
-                    <span className="text-[10px] font-black text-secondary uppercase tracking-widest">{party.label}</span>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
 
@@ -217,34 +202,6 @@ export default function Home() {
         </div>
       </div>
 
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
-        
-        body {
-          font-family: 'Space Grotesk', sans-serif !important;
-        }
-
-        .dashboard-card {
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-        }
-
-        /* Customize scrollbars for dark theme */
-        .dark ::-webkit-scrollbar {
-          width: 8px;
-        }
-        .dark ::-webkit-scrollbar-track {
-          background: #06060e;
-        }
-        .dark ::-webkit-scrollbar-thumb {
-          background: #1e293b;
-          border-radius: 10px;
-        }
-        .dark ::-webkit-scrollbar-thumb:hover {
-          background: #334155;
-        }
-      `}} />
     </div >
   );
 }

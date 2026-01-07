@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { fetchEuroMPs } from '../api';
 import { Search, Globe, Users, ExternalLink } from 'lucide-react';
 import SEO from '../components/SEO';
+import Badge from '../components/ui/Badge';
+import { getEuGroupStyle } from '../utils/theme';
 
 // Helper for name formatting
 const formatName = (name: string) => {
@@ -12,34 +14,6 @@ const formatName = (name: string) => {
         .join(' ');
 };
 
-// EU Group Colors
-const getGroupColor = (group: string) => {
-    const colors: Record<string, string> = {
-        'PPE': 'bg-blue-600 text-white',
-        'S&D': 'bg-red-600 text-white',
-        'Renew': 'bg-yellow-500 text-black',
-        'ECR': 'bg-indigo-900 text-white',
-        'Verts/ALE': 'bg-green-600 text-white',
-        'The Left': 'bg-red-800 text-white',
-        'ID': 'bg-slate-800 text-white',
-        'NI': 'bg-gray-500 text-white'
-    };
-    return colors[group] || 'bg-slate-600 text-white';
-};
-
-const getGroupGradient = (group: string) => {
-    const gradients: Record<string, string> = {
-        'PPE': 'from-blue-600/20 to-blue-600/5',
-        'S&D': 'from-red-600/20 to-red-600/5',
-        'Renew': 'from-yellow-500/20 to-yellow-500/5',
-        'ECR': 'from-indigo-900/20 to-indigo-900/5',
-        'Verts/ALE': 'from-green-600/20 to-green-600/5',
-        'The Left': 'from-red-800/20 to-red-800/5',
-        'ID': 'from-slate-800/20 to-slate-800/5',
-        'NI': 'from-gray-500/20 to-gray-500/5'
-    };
-    return gradients[group] || 'from-slate-600/20 to-slate-600/5';
-};
 
 export default function Europarlament() {
     const [meps, setMeps] = useState<any[]>([]);
@@ -148,11 +122,11 @@ export default function Europarlament() {
                     {filteredMeps.map((mep, index) => (
                         <div
                             key={mep.id}
-                            className="group bg-surface rounded-2xl border border-border-base overflow-hidden hover:shadow-xl hover:shadow-accent-blue/5 hover:-translate-y-1 transition-all duration-300 relative flex flex-col"
+                            className="group bg-surface rounded-2xl border border-border-base overflow-hidden hover:shadow-2xl hover:shadow-accent-blue/5 hover:border-accent-blue/30 hover:-translate-y-1 transition-all duration-300 relative flex flex-col"
                             style={{ animationDelay: `${index * 50}ms` }}
                         >
                             {/* Status Indicator */}
-                            <div className={`absolute top-0 inset-x-0 h-1 bg-gradient-to-r ${getGroupGradient(mep.eu_group).replace('/20', '').replace('/5', '')}`} />
+                            <div className={`absolute top-0 inset-x-0 h-1 ${getEuGroupStyle(mep.eu_group)} opacity-50`} />
 
                             <div className="p-6 flex items-start gap-4">
                                 <div className="relative w-20 h-20 flex-shrink-0">
@@ -164,21 +138,23 @@ export default function Europarlament() {
                                         loading="lazy"
                                     />
                                     <div className="absolute -bottom-1 -right-1 z-20">
-                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm border border-surface ${getGroupColor(mep.eu_group)}`}>
+                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm border border-surface ${getEuGroupStyle(mep.eu_group)}`}>
                                             <Globe size={10} />
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="min-w-0">
-                                    <h3 className="font-bold text-lg text-primary leading-tight mb-1 group-hover:text-accent-blue transition-colors truncate">
+                                    <h3 className="font-bold text-lg text-primary leading-tight mb-2 group-hover:text-accent-blue transition-colors truncate">
                                         {formatName(mep.full_name)}
                                     </h3>
-                                    <p className="text-xs font-semibold text-secondary uppercase tracking-wide mb-2 truncate" title={mep.national_party}>
-                                        {mep.national_party}
-                                    </p>
-                                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-page border border-border-base text-[10px] font-medium text-secondary">
-                                        {mep.eu_group}
+                                    <div className="flex flex-wrap gap-2">
+                                        <Badge variant="party" party={mep.national_party} size="xs">
+                                            {mep.national_party}
+                                        </Badge>
+                                        <div className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${getEuGroupStyle(mep.eu_group)} opacity-80`}>
+                                            {mep.eu_group}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

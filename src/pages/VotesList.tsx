@@ -116,7 +116,7 @@ const VotesList = () => {
             <div className="max-w-6xl mx-auto px-4 md:px-8 pt-12">
 
                 {/* Filter & Search Section */}
-                <div className="bg-surface p-6 rounded-[2rem] border border-border-base mb-10 shadow-2xl backdrop-blur-md">
+                <div className="bg-surface p-6 rounded-[var(--radius-card-xl)] border border-border-base mb-10 shadow-2xl backdrop-blur-md">
                     <div className="flex flex-col gap-6">
                         <div className="flex flex-col md:flex-row gap-6">
                             <div className="relative flex-1">
@@ -145,9 +145,9 @@ const VotesList = () => {
                                     <button
                                         key={f.value}
                                         onClick={() => setFilterSource(f.value as any)}
-                                        className={`px-6 py-4 rounded-xl font-black text-xs uppercase tracking-widest whitespace-nowrap transition-all border ${filterSource === f.value
+                                        className={`px-6 py-4 rounded-[var(--radius-badge)] font-black text-xs uppercase tracking-wider whitespace-nowrap transition-all border ${filterSource === f.value
                                             ? 'bg-accent-blue text-white border-accent-blue shadow-lg shadow-accent-blue/20'
-                                            : 'bg-page text-secondary border-border-base hover:bg-surface hover:text-primary'
+                                            : 'bg-page text-secondary border-border-base hover:bg-hover hover:text-primary'
                                             }`}
                                     >
                                         {f.label}
@@ -162,9 +162,9 @@ const VotesList = () => {
                                 <button
                                     key={f.value}
                                     onClick={() => setFilterCategory(f.value as any)}
-                                    className={`px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-wider whitespace-nowrap transition-all border ${filterCategory === f.value
+                                    className={`px-4 py-2 rounded-[var(--radius-badge)] font-bold text-[10px] uppercase tracking-wider whitespace-nowrap transition-all border ${filterCategory === f.value
                                         ? 'bg-accent-blue text-white border-accent-blue shadow-lg shadow-accent-blue/20'
-                                        : 'bg-surface text-secondary border-border-base hover:bg-page hover:text-primary'
+                                        : 'bg-surface text-secondary border-border-base hover:bg-hover hover:text-primary'
                                         }`}
                                 >
                                     {f.label}
@@ -177,11 +177,11 @@ const VotesList = () => {
                 {loading ? (
                     <div className="grid gap-4">
                         {[...Array(5)].map((_, i) => (
-                            <div key={i} className="bg-surface border border-border-base p-6 rounded-3xl flex flex-col md:flex-row gap-6 items-center shadow-sm">
-                                <Skeleton className="w-16 h-16 rounded-2xl bg-white/5" />
+                            <div key={i} className="bg-surface border border-border-base p-6 rounded-[var(--radius-card-md)] flex flex-col md:flex-row gap-6 items-center shadow-sm">
+                                <Skeleton className="w-16 h-16 rounded-[var(--radius-badge)]" />
                                 <div className="flex-1 w-full space-y-3">
-                                    <Skeleton className="h-8 w-3/4 bg-white/5 rounded-xl" />
-                                    <Skeleton className="h-4 w-1/2 bg-white/5" />
+                                    <Skeleton className="h-8 w-3/4 rounded-[var(--radius-badge)]" />
+                                    <Skeleton className="h-4 w-1/2" />
                                 </div>
                             </div>
                         ))}
@@ -193,10 +193,10 @@ const VotesList = () => {
                                 <Link
                                     key={vote.id}
                                     to={`/glosowania/${vote.term}/${vote.sitting}/${vote.voting_number}`}
-                                    className="group bg-surface hover:bg-page border border-border-base p-6 rounded-3xl transition-all shadow-sm hover:shadow-xl hover:shadow-accent-blue/5"
+                                    className="group bg-surface hover:bg-hover border border-border-base p-6 rounded-[var(--radius-card-md)] transition-all shadow-sm hover:shadow-xl hover:shadow-accent-blue/5"
                                 >
                                     <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-                                        <div className="flex flex-col items-center justify-center w-16 h-16 bg-page rounded-2xl shrink-0 group-hover:bg-accent-blue group-hover:text-white transition-colors border border-border-base/50">
+                                        <div className="flex flex-col items-center justify-center w-16 h-16 bg-page rounded-[var(--radius-badge)] shrink-0 group-hover:bg-accent-blue group-hover:text-white transition-colors border border-border-base/50">
                                             <span className="text-xs font-bold uppercase opacity-60">{new Date(vote.date).toLocaleString('default', { month: 'short' })}</span>
                                             <span className="text-2xl font-black">{new Date(vote.date).getDate()}</span>
                                         </div>
@@ -213,7 +213,41 @@ const VotesList = () => {
                                             <h3 className="text-lg md:text-xl font-bold text-primary group-hover:text-accent-blue transition-colors leading-tight mb-2">
                                                 {vote.title_clean || cleanSejmTitle(vote.title)}
                                             </h3>
-                                            <p className="text-sm text-secondary line-clamp-1">{vote.topic}</p>
+
+                                            <div className="flex flex-wrap items-center gap-4 mt-3">
+                                                {/* Verdict Badge */}
+                                                <div className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border ${vote.verdict === 'PRZYJĘTO'
+                                                    ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
+                                                    : 'bg-rose-500/10 text-rose-600 border-rose-500/20'
+                                                    }`}>
+                                                    {vote.verdict}
+                                                </div>
+
+                                                {/* Mini Results Bar (if available) */}
+                                                {(vote.for !== undefined && (vote.for > 0 || (vote.against || 0) > 0)) && (
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="h-1.5 w-24 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden flex">
+                                                            <div
+                                                                className="h-full bg-emerald-500"
+                                                                style={{ width: `${(vote.for! / (vote.for! + (vote.against || 0) + (vote.abstained || 0))) * 100}%` }}
+                                                            />
+                                                            <div
+                                                                className="h-full bg-rose-500"
+                                                                style={{ width: `${((vote.against || 0) / (vote.for! + (vote.against || 0) + (vote.abstained || 0))) * 100}%` }}
+                                                            />
+                                                            <div
+                                                                className="h-full bg-amber-500"
+                                                                style={{ width: `${((vote.abstained || 0) / (vote.for! + (vote.against || 0) + (vote.abstained || 0))) * 100}%` }}
+                                                            />
+                                                        </div>
+                                                        <span className="text-[10px] font-bold text-secondary tabular-nums">
+                                                            {vote.for}-{vote.against || 0}
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                <p className="text-sm text-secondary line-clamp-1 border-l border-border-base pl-3">{vote.topic}</p>
+                                            </div>
                                         </div>
 
                                         {vote.mpVote && (

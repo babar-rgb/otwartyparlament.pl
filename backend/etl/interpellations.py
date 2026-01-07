@@ -56,19 +56,30 @@ class InterpellationsETL:
             try:
                 with db.get_cursor(commit=True) as cur:
                     # Upsert interpellation
+                    # Fetch proper content
+                    import json
+                    i_id = item['num']
+                    title = item.get('title', '')
+                    sent_date = item.get('sentDate')
+                    last_modified = item.get('lastModified')
+                    raw_json = json.dumps(item)
+
+                    try:
+                        body_url = f"{SEJM_API_URL}/interpellations/{i_id}/body"
+                        body_resp = http_session.get(body_url, timeout=5)
+                        content = body_resp.text if body_resp.status_code == 200 else None
+                    except:
+                        content = None # Fallback
+
                     sql = """
-                        INSERT INTO interpellations (id, title, sent_date, last_modified, raw_data, created_at)
-                        VALUES (%s, %s, %s, %s, %s, NOW())
+                        INSERT INTO interpellations (id, title, sent_date, last_modified, raw_data, term, content)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
                         ON CONFLICT (id) DO UPDATE SET
                             title = EXCLUDED.title,
                             last_modified = EXCLUDED.last_modified,
-                            raw_data = EXCLUDED.raw_data;
+                            raw_data = EXCLUDED.raw_data,
+                            content = COALESCE(EXCLUDED.content, interpellations.content);
                     """
-                    import json
-                    cur.execute(sql, (
-                        item['num'],
-                        item.get('title', ''),
-                        item.get('sentDate'),
                         item.get('lastModified'),
                         json.dumps(item)
                     ))
@@ -117,16 +128,31 @@ class InterpellationsETL:
                 club = mp.get('club', 'Niezrzeszony')
                 active = mp.get('active', False)
                 
+                birth_date = mp.get('birthDate')
+                birth_location = mp.get('birthLocation')
+                profession = mp.get('profession')
+                education_level = mp.get('educationLevel')
+                import json
+                education_history = json.dumps(mp.get('educations', []))
+                
                 sql = """
-                    INSERT INTO mps (id, first_name, last_name, club, term, active, created_at)
-                    VALUES (%s, %s, %s, %s, 10, %s, NOW())
+                    INSERT INTO mps (id, first_name, last_name, club, term, active, 
+                                     birth_date, birth_location, profession, education_level, education_history,
+                                     created_at)
+                    VALUES (%s, %s, %s, %s, 10, %s, %s, %s, %s, %s, %s, NOW())
                     ON CONFLICT (id) DO UPDATE SET
                         first_name = EXCLUDED.first_name,
                         last_name = EXCLUDED.last_name,
                         active = EXCLUDED.active,
-                        club = EXCLUDED.club;
+                        club = EXCLUDED.club,
+                        birth_date = EXCLUDED.birth_date,
+                        birth_location = EXCLUDED.birth_location,
+                        profession = EXCLUDED.profession,
+                        education_level = EXCLUDED.education_level,
+                        education_history = EXCLUDED.education_history;
                 """
-                cur.execute(sql, (mp['id'], first_name, last_name, club, active))
+                cur.execute(sql, (mp['id'], first_name, last_name, club, active,
+                                  birth_date, birth_location, profession, education_level, education_history))
                 return True
         except Exception as e:
             logger.error(f"JIT MP fetch error: {e}")

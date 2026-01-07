@@ -1,12 +1,10 @@
-import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useScrollRestoration } from '../../hooks/useScrollRestoration';
 
+/**
+ * ScrollToTop Component
+ * Integrated with useScrollRestoration to provide seamless navigation context.
+ */
 export default function ScrollToTop() {
-    const { pathname } = useLocation();
-
-    useEffect(() => {
-        window.scrollTo(0, 0);
-    }, [pathname]);
-
+    useScrollRestoration();
     return null;
 }

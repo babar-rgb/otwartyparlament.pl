@@ -93,6 +93,27 @@ export const fetchVoteAnalysis = async (voteId: string): Promise<VoteAnalysis | 
   }
 };
 
+export const generateVoteAnalysis = async (voteId: string): Promise<VoteAnalysis | null> => {
+  try {
+    const response = await fetch(`${API_URL}/votes/${voteId}/analyze`, {
+      method: 'POST'
+    });
+    if (!response.ok) {
+      throw new Error('Failed to generate Analysis');
+    }
+    const data = await response.json();
+    return {
+      vote_id: data.vote_id,
+      summary: data.summary,
+      pros: Array.isArray(data.pros) ? data.pros : [],
+      cons: Array.isArray(data.cons) ? data.cons : []
+    };
+  } catch (e) {
+    console.error("Error generating analysis:", e);
+    return null;
+  }
+};
+
 export const fetchMPStats = async (mpId: string | number): Promise<Record<string, any>> => {
   try {
     const response = await fetch(`${API_URL}/mps/${mpId}/stats`);
@@ -143,6 +164,12 @@ export const fetchVoteResults = async (options?: { mp_id?: number | string; vote
 
   const response = await fetch(`${API_URL}/votes/results?${params.toString()}`);
   if (!response.ok) throw new Error('Failed to fetch vote results');
+  return await response.json();
+};
+
+export const fetchVoteResultsDetailed = async (voteId: number | string) => {
+  const response = await fetch(`${API_URL}/votes/${voteId}/results`);
+  if (!response.ok) throw new Error('Failed to fetch detailed vote results');
   return await response.json();
 };
 

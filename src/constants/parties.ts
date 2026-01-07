@@ -12,7 +12,7 @@ export const PARTY_METADATA: Record<string, PartyMetadata> = {
         id: 'KO',
         name: 'Koalicja Obywatelska',
         shortName: 'KO',
-        color: '#ff6b35', // Orange/Red gradient base
+        color: '#ff6b35', // Standard Orange for KO
     },
     'PiS': {
         id: 'PiS',

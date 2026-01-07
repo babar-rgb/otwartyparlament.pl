@@ -121,3 +121,51 @@ def read_vote_analysis(vote_id: int, db: Session = Depends(database.get_db)):
 def read_vote_results(vote_id: int, db: Session = Depends(database.get_db)):
     results = db.query(models.VoteResult).filter(models.VoteResult.vote_id == vote_id).options(joinedload(models.VoteResult.mp)).all()
     return results
+
+@router.post("/{vote_id}/analyze")
+def generate_vote_analysis(vote_id: int, db: Session = Depends(database.get_db)):
+    # 1. Check if analysis already exists
+    existing = db.query(models.VoteAnalysis).filter(models.VoteAnalysis.vote_id == vote_id).first()
+    if existing:
+        return existing
+
+    # 2. Fetch vote data
+    vote = db.query(models.Vote).filter(models.Vote.id == vote_id).first()
+    if not vote:
+        raise HTTPException(status_code=404, detail="Vote not found")
+
+    # 3. Call Ollama Service
+    from backend.services.ollama import ollama_service
+    from backend.models import Bill
+    import re
+
+    # Prepare context
+    title = vote.title_clean or vote.title_raw
+    context = f"Tytuł: {title}\nOpis: {vote.description or ''}"
+    
+    # Try to find print number in title for extra context
+    match = re.search(r'druki? nr (\d+)', title, re.IGNORECASE)
+    if match:
+        print_nr = match.group(1)
+        bill = db.query(Bill).filter(Bill.number == print_nr).first()
+        if bill:
+            context += f"\n\nPowiązany Projekt Ustawy (Druk {print_nr}): {bill.title}\nUzasadnienie projektu: {bill.description or ''}"
+
+    analysis_data = ollama_service.analyze_vote(title, context)
+    
+    if not analysis_data:
+        raise HTTPException(status_code=500, detail="AI Analysis failed")
+
+    # 4. Save result
+    analysis = models.VoteAnalysis(
+        vote_id=vote.id,
+        summary=analysis_data.get("summary"),
+        pros=analysis_data.get("pros", []),
+        cons=analysis_data.get("cons", []),
+        mind_map=analysis_data.get("mind_map")
+    )
+    db.add(analysis)
+    db.commit()
+    db.refresh(analysis)
+    
+    return analysis

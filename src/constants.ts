@@ -30,7 +30,7 @@ export const PARTY_CONFIG: Record<string, {
     order: number;
 }> = {
     'PiS': { color: '#1d4ed8', bgColor: 'bg-blue-600', name: 'Prawo i Sprawiedliwość', shortName: 'PiS', order: 4 },
-    'KO': { color: '#f97316', bgColor: 'bg-orange-500', name: 'Koalicja Obywatelska', shortName: 'KO', order: 2 },
+    'KO': { color: '#ff6b35', bgColor: 'bg-orange-500', name: 'Koalicja Obywatelska', shortName: 'KO', order: 2 },
     'Polska2050': { color: '#eab308', bgColor: 'bg-yellow-500', name: 'Polska 2050', shortName: 'PL2050', order: 3 },
     'PSL-TD': { color: '#22c55e', bgColor: 'bg-green-500', name: 'Polskie Stronnictwo Ludowe - Trzecia Droga', shortName: 'PSL', order: 3 },
     'Lewica': { color: '#dc2626', bgColor: 'bg-red-600', name: 'Lewica', shortName: 'Lewica', order: 1 },

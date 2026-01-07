@@ -17,6 +17,14 @@ class MP(Base):
     stats_attendance = Column(Float, default=0.0)
     stats_rebellion = Column(Integer, default=0)
     term = Column(Integer, index=True)
+    
+    # Biography / details
+    birth_date = Column(Date, nullable=True)
+    birth_location = Column(String, nullable=True)
+    profession = Column(String, nullable=True)
+    education_level = Column(String, nullable=True)
+    education_history = Column(JSONB, nullable=True)
+    
     created_at = Column(DateTime, server_default=func.now())
 
     votes = relationship("VoteResult", back_populates="mp")
@@ -97,8 +105,8 @@ class Interpellation(Base):
     sent_date = Column(Date)
     last_modified = Column(DateTime)
     raw_data = Column(JSONB)
-    # status = Column(String) # Removed as missing in DB
-    # created_at = Column(DateTime, server_default=func.now()) # Removed as missing in DB
+    content = Column(Text)
+    reply_content = Column(Text)
 
     authors = relationship("MP", secondary="interpellation_authors", back_populates="interpellations")
 
@@ -154,9 +162,10 @@ class AssetDeclaration(Base):
     id = Column(Integer, primary_key=True, index=True)
     mp_id = Column(Integer, ForeignKey("mps.id"))
     year = Column(String)
-    type = Column(String)
     pdf_url = Column(String)
-    raw_data = Column(JSONB)
+    file_path = Column(String)
+    parsed_content = Column(JSONB)
+    summary = Column(Text)
     created_at = Column(DateTime, server_default=func.now())
 
 
@@ -264,7 +273,7 @@ class EuroVoteResult(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     vote_id = Column(String, ForeignKey("euro_votes.id"))
-    mp_id = Column(Integer, ForeignKey("euro_meps.id"))
-    result = Column(String)
+    mep_id = Column(Integer, ForeignKey("euro_meps.id"))
+    vote = Column(String)
 
 

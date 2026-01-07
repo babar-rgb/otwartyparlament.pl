@@ -2,6 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, FileText, CheckCircle2, XCircle, MinusCircle, HelpCircle, ArrowLeft, ArrowRight, MessageSquare, Mail, Users, TrendingUp, Sparkles } from 'lucide-react';
 import { cleanSejmTitle } from '../utils/titleFormatter';
+import { formatMPName } from '../utils';
 import { getPartyHexColor } from '../utils/theme';
 import SEO from '../components/SEO';
 import { useMpProfile } from '../hooks/useMpProfile';
@@ -58,14 +59,18 @@ const MpProfile = () => {
   return (
     <div className="min-h-screen bg-page pt-24 pb-16 px-4 md:px-8 text-primary">
       <SEO
-        title={`${mp.first_name} ${mp.last_name}`}
-        description={`Profil posła ${mp.first_name} ${mp.last_name}. Zobacz statystyki głosowań, oświadczenia majątkowe i aktywność w Sejmie.`}
+        title={formatMPName(mp.first_name, mp.last_name)}
+        description={`Profil posła ${formatMPName(mp.first_name, mp.last_name)}. Zobacz statystyki głosowań, oświadczenia majątkowe i aktywność w Sejmie.`}
         image={mp.photo_url}
       />
 
       <div className="max-w-5xl mx-auto">
         {/* Back Button */}
-        <Link to="/poslowie" className="inline-flex items-center gap-2 text-secondary hover:text-primary mb-6 text-sm font-medium transition-colors">
+        <Link
+          to="/poslowie"
+          onClick={() => (window as any).isReturningFromMp = true}
+          className="inline-flex items-center gap-2 text-secondary hover:text-primary mb-6 text-sm font-medium transition-colors"
+        >
           <ArrowLeft size={16} />
           Wróć do listy posłów
         </Link>
@@ -85,7 +90,7 @@ const MpProfile = () => {
               <div className="absolute -inset-1 bg-gradient-to-br from-accent-blue/20 to-indigo-500/20 rounded-2xl blur opacity-0 group-hover/photo:opacity-100 transition-opacity duration-500" />
               <img
                 src={mp.photo_url}
-                alt={`${mp.first_name} ${mp.last_name}`}
+                alt={formatMPName(mp.first_name, mp.last_name)}
                 className="w-32 h-32 md:w-40 md:h-40 rounded-2xl object-cover border-2 border-border-base shadow-lg relative z-10 transition-transform hover:scale-[1.02] duration-500"
                 loading="lazy"
               />
@@ -94,7 +99,7 @@ const MpProfile = () => {
             {/* Info */}
             <div className="flex-1 w-full">
               <h1 className="text-3xl md:text-5xl font-black text-primary mb-4 tracking-tight">
-                {mp.first_name} {mp.last_name}
+                {formatMPName(mp.first_name, mp.last_name)}
               </h1>
 
               <div className="flex flex-wrap gap-2 mb-6">
@@ -142,10 +147,10 @@ const MpProfile = () => {
                   <div className="text-2xl md:text-4xl font-black text-accent-blue transition-transform group-hover:scale-110">{rebelVotes}</div>
                   <div className="text-[10px] text-secondary uppercase tracking-[0.2em] font-black mt-1">Buntów</div>
                 </div>
-                <div className="text-center group">
+                <Link to={`/interpelacje?mp_id=${mp.id}`} className="text-center group cursor-pointer block">
                   <div className="text-2xl md:text-4xl font-black text-indigo-400 transition-transform group-hover:scale-110">{interpellationCount}</div>
-                  <div className="text-[10px] text-secondary uppercase tracking-[0.2em] font-black mt-1">Interpelacji</div>
-                </div>
+                  <div className="text-[10px] text-secondary uppercase tracking-[0.2em] font-black mt-1 group-hover:text-indigo-400 transition-colors">Interpelacji</div>
+                </Link>
               </div>
             </div>
           </div>
@@ -328,6 +333,42 @@ const MpProfile = () => {
             transition={{ delay: 0.2 }}
             className="space-y-6"
           >
+            {/* Biography Section (New!) */}
+            <div className="bg-surface rounded-2xl border border-border-base p-5 shadow-sm">
+              <h3 className="text-sm font-bold text-primary mb-4 flex items-center gap-2">
+                <FileText size={16} className="text-blue-500" />
+                Biografia
+              </h3>
+              <div className="space-y-4 text-sm">
+                <div>
+                  <div className="text-[10px] text-secondary uppercase font-bold tracking-wider mb-1">Data i miejsce urodzenia</div>
+                  <div className="font-medium text-primary">
+                    {mp.birth_date ? new Date(mp.birth_date).toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Brak danych'}
+                    {mp.birth_location && <span className="text-secondary">, {mp.birth_location}</span>}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-[10px] text-secondary uppercase font-bold tracking-wider mb-1">Wykształcenie</div>
+                  <div className="font-medium text-primary">{mp.education_level || 'Brak danych'}</div>
+                  {mp.education_history && Array.isArray(mp.education_history) && mp.education_history.length > 0 && (
+                    <ul className="mt-2 space-y-1">
+                      {mp.education_history.map((edu: string, idx: number) => (
+                        <li key={idx} className="text-xs text-secondary pl-3 border-l-2 border-border-base">
+                          {edu}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div>
+                  <div className="text-[10px] text-secondary uppercase font-bold tracking-wider mb-1">Zawód / Tytuł</div>
+                  <div className="font-medium text-primary">{mp.profession || 'Posel na Sejm RP'}</div>
+                </div>
+              </div>
+            </div>
+
             {/* Top 3 Priorities (New!) */}
             {topPriorities.length > 0 && (
               <div className="bg-surface rounded-2xl border border-border-base p-5 shadow-sm">

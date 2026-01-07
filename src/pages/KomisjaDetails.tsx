@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { fetchCommittee } from '../api';
+import { formatMPName } from '../utils';
 import { ArrowLeft, Users, Calendar, Video, MapPin, ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
 
@@ -194,7 +195,8 @@ export default function KomisjaDetails() {
                             />
                             <div className="flex-1 min-w-0">
                                 <div className="font-medium text-slate-900 dark:text-white group-hover:text-blue-600 truncate text-sm">
-                                    {member.mps ? `${member.mps.first_name} ${member.mps.last_name}` : 'Nieznany'}
+                                    {member.mps ? formatMPName(member.mps.first_name, member.mps.last_name) : 'Nieznany'}
+
                                 </div>
                                 <div className="text-xs text-slate-500 truncate">
                                     {member.function || member.mps?.club || ''}

@@ -60,15 +60,26 @@ def process_votes(db: Session, batch_size: int = 50):
             analysis_data = ollama_service.analyze_vote(title, context)
             
             if analysis_data:
-                # Save to VoteAnalysis
+                # 1. Update Vote metadata (Topic/Kind/Importance)
+                category = analysis_data.get("category", "Inne")
+                vote.topic = category
+                # Auto-classify procedural votes
+                if category == "Proceduralne":
+                    vote.kind = "Proceduralny"
+                    vote.importance = 1
+                else:
+                    vote.importance = 5 # Default, can be improved later
+                
+                # 2. Save Analysis
                 analysis = VoteAnalysis(
                     vote_id=vote.id,
                     summary=analysis_data.get("summary"),
                     pros=analysis_data.get("pros", []),
                     cons=analysis_data.get("cons", []),
-                    mind_map=analysis_data.get("mind_map") # Optional, if AI provides it
+                    mind_map=analysis_data.get("mind_map")
                 )
                 db.add(analysis)
+                db.add(vote) # Ensure vote updates are tracked
                 
                 logger.info(f"   ✓ Success")
                 processed_count += 1

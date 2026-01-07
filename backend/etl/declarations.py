@@ -75,12 +75,13 @@ class DeclarationsETL:
                 # but legacy script used DO NOTHING. I'll use DO NOTHING to be safe unless we are sure.
                 
                 sql_safe = """
-                    INSERT INTO asset_declarations (mp_id, year, type, pdf_url, raw_data)
-                    VALUES (%s, %s, %s, %s, %s)
+                    INSERT INTO asset_declarations (mp_id, year, pdf_url, parsed_content)
+                    VALUES (%s, %s, %s, %s)
                     ON CONFLICT DO NOTHING;
                 """
                 
-                cur.execute(sql_safe, (mp_id, year, decl_type, pdf_url, raw_json))
+                # We store raw JSON in 'parsed_content' for now as a backup
+                cur.execute(sql_safe, (mp_id, year, pdf_url, raw_json))
                 self.new_declarations += 1
 
 if __name__ == "__main__":

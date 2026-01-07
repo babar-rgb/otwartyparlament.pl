@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Resolve project root and cd into it to ensure relative paths work
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+cd "$PROJECT_ROOT"
+
 # Function to kill child processes on exit
 cleanup() {
   echo "🛑 Zatrzymuję procesy..."
@@ -22,20 +27,18 @@ echo "✅ PostgreSQL gotowy!"
 # 2. Start Backend (FastAPI with Uvicorn)
 echo "🐍 Startuję Backend (FastAPI)..."
 
-# Activate venv if exists
-if [ -d ".venv" ]; then
-    source .venv/bin/activate
-elif [ -d "venv" ]; then
-    source venv/bin/activate
+# Determine Python interpreter
+PYTHON_CMD="python3"
+if [ -f ".venv/bin/python" ]; then
+    PYTHON_CMD=".venv/bin/python"
+    echo "✅ Używam wirtualnego środowiska: $PYTHON_CMD"
+elif [ -f "venv/bin/python" ]; then
+    PYTHON_CMD="venv/bin/python"
+    echo "✅ Używam wirtualnego środowiska: $PYTHON_CMD"
 fi
 
-# Check if uvicorn is in path or use python -m
-if command -v uvicorn >/dev/null 2>&1; then
-    uvicorn backend.main:app --reload --port 8000 &
-else
-    # Fallback to python modules if uvicorn binary not directly found
-    python3 -m uvicorn backend.main:app --reload --port 8000 &
-fi
+# Run backend
+$PYTHON_CMD -m uvicorn backend.main:app --reload --port 8000 &
 BACKEND_PID=$!
 sleep 2
 

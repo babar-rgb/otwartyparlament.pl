@@ -54,6 +54,11 @@ class BillsETL:
                         if isinstance(print_num, dict):
                             print_num = print_num.get('number')
                         
+                        # Fallback: if no prints list, assume top-level number is the print number
+                        # (Common for Citizen Bills)
+                        if not print_num and proc.get('number'):
+                            print_num = proc.get('number')
+                        
                         url = None
                         if print_num:
                             url = f"https://www.sejm.gov.pl/Sejm10.nsf/druk.xsp?nr={print_num}"

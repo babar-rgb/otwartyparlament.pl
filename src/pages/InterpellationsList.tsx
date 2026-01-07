@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { fetchInterpellations, fetchMP } from '../api';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, FileText, ArrowRight } from 'lucide-react';
+import EmptyState from '../components/ui/EmptyState';
 
 interface Interpellation {
     id: number;
@@ -124,10 +125,10 @@ export default function InterpellationsList() {
                             placeholder="Szukaj (np. 'szpital')..."
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            className="w-full pl-14 pr-32 py-5 rounded-[1.5rem] bg-surface border border-border-base focus:border-accent-blue focus:ring-0 transition-all text-lg shadow-xl"
+                            className="w-full pl-14 pr-32 py-5 rounded-[var(--radius-card-md)] bg-surface border border-border-base focus:border-accent-blue focus:ring-0 transition-all text-lg shadow-xl"
                         />
                         <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-secondary/30" size={24} />
-                        <button type="submit" disabled={loading} className="absolute right-3 top-3 bottom-3 px-8 bg-accent-blue text-white font-black rounded-xl uppercase tracking-widest text-xs">
+                        <button type="submit" disabled={loading} className="absolute right-3 top-3 bottom-3 px-8 bg-accent-blue text-white font-black rounded-[var(--radius-badge)] uppercase tracking-wider text-xs">
                             {loading ? 'Szukam...' : 'Szukaj'}
                         </button>
                     </form>
@@ -140,13 +141,21 @@ export default function InterpellationsList() {
                     </h2>
 
                     <div className="grid gap-6">
+                        {(!hasSearched ? recentInterpellations : interpellations).length === 0 && !loading && (
+                            <EmptyState
+                                title="Brak interpelacji"
+                                description="Nie znaleziono zapytań spełniających podane kryteria."
+                                icon="file"
+                            />
+                        )}
                         {(!hasSearched ? recentInterpellations : interpellations).map((item) => {
+                            // ... loop content remains identical ...
                             const authorList = item.raw_data?.from || [];
                             const authorName = Array.isArray(authorList) ? (authorList[0] || 'Nieznany poseł') : authorList;
                             const contentText = item.content || item.raw_data?.content || item.title;
 
                             return (
-                                <Link key={item.id} to={`/interpelacje/${item.id}`} className="group block bg-surface p-8 rounded-[2rem] border border-border-base shadow-sm hover:shadow-xl transition-all relative overflow-hidden">
+                                <Link key={item.id} to={`/interpelacje/${item.id}`} className="group block bg-surface p-8 rounded-[var(--radius-card-md)] border border-border-base shadow-sm hover:shadow-xl transition-all relative overflow-hidden">
                                     <div className="absolute top-0 left-0 w-1 h-full bg-accent-blue opacity-0 group-hover:opacity-100 transition-opacity" />
                                     <div className="flex justify-between items-start gap-4 mb-6">
                                         <div className="flex items-center gap-4">

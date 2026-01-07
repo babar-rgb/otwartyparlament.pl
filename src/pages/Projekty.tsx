@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Search, FileText, Loader2, ChevronDown, ChevronUp, Sparkles, Target } from 'lucide-react';
 import TermSwitcher from '../components/ui/TermSwitcher';
+import Skeleton from '../components/ui/Skeleton';
 import { useTerm } from '../context/TermContext';
 import { useSejmPrints } from '../hooks/useSejmPrints';
 import { PRINT_CATEGORIES, DEFAULT_PRINT_STYLE, PRINT_SOURCE_FILTERS } from '../constants';
@@ -242,16 +243,18 @@ export default function Projekty() {
                                                     )}
 
                                                     <div className="flex items-center gap-4 mt-8">
-                                                        <a
-                                                            href={`https://www.sejm.gov.pl/Sejm10.nsf/druk.xsp?nr=${print.number}`}
-                                                            target="_blank"
-                                                            rel="noreferrer"
-                                                            onClick={(e) => e.stopPropagation()}
-                                                            className="inline-flex items-center gap-2 px-6 py-3 bg-page hover:bg-surface text-primary rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border border-border-base shadow-lg"
-                                                        >
-                                                            <FileText size={18} />
-                                                            Otwórz źródłowy PDF
-                                                        </a>
+                                                        {print.number && print.number !== 'null' && (
+                                                            <a
+                                                                href={`https://www.sejm.gov.pl/Sejm10.nsf/druk.xsp?nr=${print.number}`}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                className="inline-flex items-center gap-2 px-6 py-3 bg-page hover:bg-surface text-primary rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border border-border-base shadow-lg"
+                                                            >
+                                                                <FileText size={18} />
+                                                                Otwórz źródłowy PDF
+                                                            </a>
+                                                        )}
                                                     </div>
                                                 </div>
                                             )}

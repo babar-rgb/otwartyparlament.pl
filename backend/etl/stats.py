@@ -24,7 +24,7 @@ def calculate_stats():
                 SELECT 
                     mp_id,
                     COUNT(*) as total,
-                    COUNT(CASE WHEN result IN ('Za', 'Przeciw', 'Wstrzymał się') THEN 1 END) as present
+                    COUNT(CASE WHEN result IN ('YES', 'NO', 'ABSTAIN', 'PRESENT') THEN 1 END) as present
                 FROM vote_results
                 GROUP BY mp_id
             )
@@ -69,8 +69,8 @@ def calculate_stats():
                 JOIN mps m ON vr.mp_id = m.id
                 JOIN club_winners cw ON vr.vote_id = cw.vote_id AND m.club = cw.club
                 WHERE vr.result != cw.majority_result
-                  AND vr.result IN ('Za', 'Przeciw', 'Wstrzymał się') -- Ignore absence as rebellion? Usually yes.
-                  AND cw.majority_result IN ('Za', 'Przeciw', 'Wstrzymał się') -- Ignore if club was absent
+                  AND vr.result IN ('YES', 'NO', 'ABSTAIN') -- Ignore absence as rebellion? Usually yes.
+                  AND cw.majority_result IN ('YES', 'NO', 'ABSTAIN') -- Ignore if club was absent
                 GROUP BY vr.mp_id
             )
             UPDATE mps
