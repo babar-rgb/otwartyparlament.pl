@@ -24,6 +24,8 @@ class MP(Base):
     profession = Column(String, nullable=True)
     education_level = Column(String, nullable=True)
     education_history = Column(JSONB, nullable=True)
+    contact_info = Column(JSONB, nullable=True) # Stores {twitter, facebook, etc}
+    email = Column(String, nullable=True)
     
     created_at = Column(DateTime, server_default=func.now())
 
@@ -48,10 +50,13 @@ class Vote(Base):
     importance = Column(Integer, default=0) # AI calculated 1-10
     kind = Column(String, nullable=True) # e.g., 'ustawa', 'uchwała'
     vector_embedding = Column(JSONB, nullable=True) # 384-dim vector for semantic search
+    print_number = Column(String, index=True, nullable=True) # Extracted from title or API
+    bill_id = Column(Integer, ForeignKey("bills.id"), nullable=True, index=True)
     created_at = Column(DateTime, server_default=func.now())
 
     results = relationship("VoteResult", back_populates="vote")
     analysis = relationship("VoteAnalysis", uselist=False, back_populates="vote")
+    bill = relationship("Bill", back_populates="votes")
 
 class VoteResult(Base):
     __tablename__ = "vote_results"
@@ -77,11 +82,14 @@ class Bill(Base):
     type = Column(String, index=True) # poselski, rzadowy
     url = Column(String, nullable=True)
     mp_id = Column(Integer, ForeignKey("mps.id"), nullable=True)
+    topic = Column(String, index=True, nullable=True) # AI classified
+    importance = Column(Integer, default=0) # AI calculated 1-10
     vector_embedding = Column(JSONB, nullable=True) # 384-dim vector
     created_at = Column(DateTime, server_default=func.now())
 
     mp = relationship("MP", back_populates="bills")
     analysis = relationship("BillAnalysis", uselist=False, back_populates="bill")
+    votes = relationship("Vote", back_populates="bill")
 
 class BillAnalysis(Base):
     __tablename__ = "bill_analyses"
@@ -277,3 +285,14 @@ class EuroVoteResult(Base):
     vote = Column(String)
 
 
+class SejmPrint(Base):
+    __tablename__ = "sejm_prints"
+    
+    # number is the actual Primary Key in the legacy DB
+    number = Column(String, primary_key=True, index=True) 
+    title = Column(Text)
+    summary = Column(Text, nullable=True)
+    process_id = Column(String, nullable=True) # Linked process
+    document_type = Column(String, nullable=True)
+    attachments = Column(JSONB, nullable=True) # List of PDFs/HTMLs
+    created_at = Column(DateTime, server_default=func.now())

@@ -375,10 +375,11 @@ const mapBackendMP = (data: any): MP => {
     district: data.district,
     photo_url: data.photo_url,
     active: data.active,
-    email: email,
+    email: data.email || email, // Prefer DB email if exists, else construct
     attendanceRate: data.stats_attendance,
     rebelVotes: data.stats_rebellion,
     term: data.term,
+    contact_info: data.contact_info, // Pass through JSONB
     slug: data.slug
   } as MP;
 };

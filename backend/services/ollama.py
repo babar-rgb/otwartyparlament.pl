@@ -24,6 +24,7 @@ class OllamaService:
         Zwróć wynik WYŁĄCZNIE w formacie JSON o następującej strukturze:
         {{
             "summary": "Krótkie streszczenie (TL;DR) dla obywatela (2-3 zdania).",
+            "category": "JEDNA z kategorii: Gospodarka, Zdrowie, Obronność, Edukacja, Infrastruktura, Rolnictwo, Ustrój, Społeczeństwo, Proceduralne, Inne",
             "pros": ["zaleta 1", "zaleta 2"],
             "cons": ["wada 1", "wada 2"],
             "impact": "Kogo to dotyczy najbardziej?",
