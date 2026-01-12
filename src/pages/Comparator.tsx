@@ -189,7 +189,7 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
                         Porównywarka <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Posłów</span>
                     </h1>
                     <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-                        Sprawdź, jak bardzo różnią się Twoi reprezentanci. Porównaj ich głosowania, frekwencję i statystyki buntu.
+                        Sprawdź, jak bardzo różnią się Twoi reprezentanci. Porównaj ich głosowania, frekwencję i wskaźnik niezależności.
                     </p>
                 </div>
             )}
@@ -421,7 +421,7 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
 
                             <div>
                                 <div className="flex justify-between text-sm font-bold text-slate-500 mb-2">
-                                    <span>Buntownik (Głosy przeciw partii)</span>
+                                    <span>Niezgodność z Klubem</span>
                                 </div>
                                 <div className="flex items-center gap-4">
                                     <span className="font-black text-slate-900 w-12 text-right">{mpA.rebelVotes || 0}</span>

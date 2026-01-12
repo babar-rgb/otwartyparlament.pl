@@ -101,7 +101,7 @@ const EuroVoteDetails: React.FC = () => {
                     {/* Description & AI Analysis */}
                     <div className="bg-black/5 dark:bg-white/5 p-8 rounded-3xl border border-border-base/50 mb-8 backdrop-blur-sm">
                         <h2 className="text-xs font-black uppercase text-accent-blue mb-4 tracking-[0.2em] flex items-center gap-2">
-                            🧠 Analiza (Kontekst)
+                            🧠 Kontekst Głosowania
                         </h2>
 
                         {/* Context Description */}
@@ -276,7 +276,7 @@ const EuroVoteDetails: React.FC = () => {
                                             <div className="flex flex-col items-center justify-center h-full text-slate-500">
                                                 <div className="mb-2">🤝</div>
                                                 <div>Pełna dyscyplina partyjna</div>
-                                                <div className="text-xs opacity-50">Brak buntowników</div>
+                                                <div className="text-xs opacity-50">Brak głosów odrębnych</div>
                                             </div>
                                         );
                                     }

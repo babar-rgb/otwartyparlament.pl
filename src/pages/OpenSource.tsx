@@ -64,21 +64,21 @@ export default function OpenSource() {
                         <Layers size={24} />
                     </div>
                     <h3 className="font-bold text-slate-900 mb-1">Tailwind CSS</h3>
-                    <p className="text-xs text-slate-500">Styling Engine</p>
+                    <p className="text-xs text-slate-500">Silnik Stylów</p>
                 </div>
                 <div className="bg-white p-6 rounded-xl border border-slate-200 text-center hover:shadow-md transition-shadow">
                     <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center mx-auto mb-4 text-green-600">
                         <Database size={24} />
                     </div>
                     <h3 className="font-bold text-slate-900 mb-1">Supabase</h3>
-                    <p className="text-xs text-slate-500">Database & Backend</p>
+                    <p className="text-xs text-slate-500">Baza Danych & Backend</p>
                 </div>
                 <div className="bg-white p-6 rounded-xl border border-slate-200 text-center hover:shadow-md transition-shadow">
                     <div className="w-12 h-12 bg-yellow-50 rounded-lg flex items-center justify-center mx-auto mb-4 text-yellow-600">
                         <Zap size={24} />
                     </div>
                     <h3 className="font-bold text-slate-900 mb-1">Python ETL</h3>
-                    <p className="text-xs text-slate-500">Data Processing</p>
+                    <p className="text-xs text-slate-500">Przetwarzanie Danych</p>
                 </div>
             </div>
 

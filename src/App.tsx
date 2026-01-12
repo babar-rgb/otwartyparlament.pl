@@ -45,6 +45,10 @@ const NotFound = lazy(() => import('./pages/NotFound'));
 const Transfery = lazy(() => import('./pages/Transfery'));
 const Rzad = lazy(() => import('./pages/Rzad'));
 const AITwin = lazy(() => import('./pages/AITwin'));
+const SittingsHistory = lazy(() => import('./pages/SittingsHistory'));
+const HelpPage = lazy(() => import('./pages/HelpPage'));
+
+const HelpButton = lazy(() => import('./components/layout/HelpButton'));
 
 export default function App() {
   return (
@@ -92,16 +96,18 @@ export default function App() {
                 <Route path="/open-source" element={<OpenSource />} />
                 <Route path="/newsletter" element={<Newsletter />} />
                 <Route path="/kontakt" element={<Contact />} />
+                <Route path="/pomoc" element={<HelpPage />} />
                 <Route path="/porownywarka" element={<Comparator />} />
-                <Route path="/szukaj" element={<SearchPage />} />
                 <Route path="/szukaj" element={<SearchPage />} />
                 <Route path="/live" element={<LiveAnalysis />} />
                 <Route path="/transfery" element={<Transfery />} />
                 <Route path="/rzad" element={<Rzad />} />
                 <Route path="/ai-twin" element={<AITwin />} />
+                <Route path="/posiedzenia/historia" element={<SittingsHistory />} />
                 {/* Catch-all MUST be last */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <HelpButton />
             </Suspense>
           </main>
           <Footer />

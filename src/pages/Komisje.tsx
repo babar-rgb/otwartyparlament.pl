@@ -82,7 +82,7 @@ export default function Komisje() {
                                         placeholder="Szukaj komisji..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full bg-transparent text-xl font-bold text-primary placeholder:text-secondary/20 focus:outline-none"
+                                        className="w-full bg-transparent text-xl font-bold text-primary placeholder:text-slate-400 focus:outline-none"
                                     />
                                     {searchQuery && (
                                         <button onClick={() => setSearchQuery('')} className="p-2 text-secondary hover:text-primary transition-colors">
@@ -105,8 +105,8 @@ export default function Komisje() {
                                     key={f.value}
                                     onClick={() => setFilterType(f.value)}
                                     className={`px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-wider whitespace-nowrap transition-all border ${filterType === f.value
-                                        ? 'bg-accent-blue text-white border-accent-blue shadow-lg shadow-accent-blue/20'
-                                        : 'bg-surface text-secondary border-transparent hover:bg-hover hover:text-primary'
+                                        ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20'
+                                        : 'bg-white/50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-white hover:text-primary transition-colors'
                                         }`}
                                 >
                                     {f.label}
@@ -126,7 +126,7 @@ export default function Komisje() {
                             <h3 className="font-bold text-primary mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
                                 {committee.name}
                             </h3>
-                            <div className="flex gap-4 text-xs font-bold text-secondary uppercase opacity-60">
+                            <div className="flex gap-4 text-xs font-bold text-secondary uppercase opacity-80">
                                 <span className="flex items-center gap-1"><Users size={12} /> {committee.member_count}</span>
                                 <span className="flex items-center gap-1"><Calendar size={12} /> {committee.sitting_count}</span>
                             </div>

@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, BarChart3, Grid3X3, TrendingUp, Filter, ChevronRight, Sparkles } from 'lucide-react';
+import { ArrowLeft, BarChart3, Grid3X3, TrendingUp, Filter, ChevronRight } from 'lucide-react';
+
 import { fetchCategories, fetchCategoryVoteCounts, fetchVotes } from '../api';
 import TermSwitcher from '../components/ui/TermSwitcher';
 import SEO from '../components/SEO';
+
+
 
 interface Category {
     id: number;
@@ -126,10 +129,6 @@ export default function Categories() {
 
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-12">
                         <div className="flex-1">
-                            <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-full border border-purple-500/20 text-[10px] font-black uppercase tracking-[0.3em] mb-6 backdrop-blur-md">
-                                <Sparkles size={14} className="animate-pulse" />
-                                Semantic Analysis Engine
-                            </div>
                             <h1 className="text-5xl md:text-8xl font-black text-primary mb-8 tracking-tighter">
                                 Kategorie <span className="italic font-serif text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-500">Głosowań</span>
                             </h1>
@@ -173,7 +172,7 @@ export default function Categories() {
                             <div className="p-4 bg-accent-blue/10 text-accent-blue rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-accent-blue/5">
                                 <BarChart3 size={28} />
                             </div>
-                            <span className="text-[10px] font-black text-secondary uppercase tracking-[0.3em]">Total Records</span>
+                            <span className="text-[10px] font-black text-secondary uppercase tracking-[0.3em]">Wszystkie Głosowania</span>
                         </div>
                         <p className="text-5xl font-black text-primary tracking-tighter">
                             {totalVotes.toLocaleString()}
@@ -185,7 +184,7 @@ export default function Categories() {
                             <div className="p-4 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-emerald-500/5">
                                 <Filter size={28} />
                             </div>
-                            <span className="text-[10px] font-black text-secondary uppercase tracking-[0.3em]">Categorized</span>
+                            <span className="text-[10px] font-black text-secondary uppercase tracking-[0.3em]">Skategoryzowane</span>
                         </div>
                         <div className="flex items-baseline gap-4">
                             <p className="text-5xl font-black text-primary tracking-tighter">
@@ -202,7 +201,7 @@ export default function Categories() {
                             <div className="p-4 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-2xl group-hover:scale-110 transition-transform shadow-lg shadow-indigo-500/5">
                                 <TrendingUp size={28} />
                             </div>
-                            <span className="text-[10px] font-black text-secondary uppercase tracking-[0.3em]">Active Domains</span>
+                            <span className="text-[10px] font-black text-secondary uppercase tracking-[0.3em]">Aktywne Obszary</span>
                         </div>
                         <p className="text-5xl font-black text-primary tracking-tighter">
                             {categories.length}
@@ -296,7 +295,7 @@ export default function Categories() {
 
                                 <div className="flex items-baseline gap-2 mb-8">
                                     <span className="text-4xl font-mono font-black text-primary leading-none">{domain.vote_count.toLocaleString()}</span>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-secondary opacity-40">Records</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-secondary opacity-40">Głosowań</span>
                                 </div>
 
                                 {/* Mini summary */}

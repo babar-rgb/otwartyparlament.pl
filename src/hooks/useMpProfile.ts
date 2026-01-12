@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchMP, fetchSpeeches, fetchVotes, fetchInterpellations, fetchMPStats, fetchMPAlignment } from '../api';
+import { fetchMP, fetchSpeeches, fetchVotes, fetchInterpellations, fetchMPStats, fetchMPAlignment, fetchMPDeclarations } from '../api';
 import { MP, MPRelation } from '../types/domain';
 
 export interface VoteHistoryItem {
@@ -29,6 +29,7 @@ export function useMpProfile(idOrSlug?: string) {
     const [interpellationCount, setInterpellationCount] = useState<number>(0);
     const [stats, setStats] = useState<Record<string, any>>({});
     const [relations, setRelations] = useState<MPRelation[]>([]);
+    const [digitizedDeclarations, setDigitizedDeclarations] = useState<any[]>([]);
 
     useEffect(() => {
         const load = async () => {
@@ -42,18 +43,20 @@ export function useMpProfile(idOrSlug?: string) {
                     return;
                 }
 
-                const [speeches, votesData, interps, mpStats, mpRelations] = await Promise.all([
+                const [speeches, votesData, interps, mpStats, mpRelations, mpDeclarations] = await Promise.all([
                     fetchSpeeches({ mp_id: mpData.id, limit: 5 }),
                     fetchVotes({ mp_id: mpData.id, limit: 20 }),
                     fetchInterpellations({ mp_id: mpData.id, limit: 100 }),
                     fetchMPStats(mpData.id),
-                    fetchMPAlignment(mpData.id)
+                    fetchMPAlignment(mpData.id),
+                    fetchMPDeclarations(mpData.id)
                 ]);
 
                 setRecentSpeeches(speeches.items);
                 setInterpellationCount(interps.length);
                 setStats(mpStats);
                 setRelations(mpRelations);
+                setDigitizedDeclarations(mpDeclarations);
 
                 // Map standard Vote items to VoteHistoryItem structure
                 const mappedHistory = votesData.items.map((v: any) => ({
@@ -84,5 +87,5 @@ export function useMpProfile(idOrSlug?: string) {
         load();
     }, [idOrSlug, navigate]);
 
-    return { mp, voteHistory, keyVotes, digitizedDeclarations: [], recentSpeeches, loading, interpellationCount, stats, relations };
+    return { mp, voteHistory, keyVotes, digitizedDeclarations, recentSpeeches, loading, interpellationCount, stats, relations };
 }

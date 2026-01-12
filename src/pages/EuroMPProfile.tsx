@@ -183,7 +183,7 @@ const EuroMPProfile = () => {
 
                 {/* Rebellion */}
                 <div className="bg-surface rounded-2xl border border-border-base p-6 shadow-sm group hover:-translate-y-1 transition-transform duration-300">
-                    <p className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] mb-4">Buntownik (Rebellion Rate)</p>
+                    <p className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] mb-4">Wskaźnik Niezależności</p>
                     <div className="flex items-end gap-2 mb-2">
                         <span className={`text-5xl font-black tracking-tighter ${(mp.rebellion_rate || 0) <= 5 ? 'text-green-600 dark:text-green-400' :
                             (mp.rebellion_rate || 0) <= 15 ? 'text-amber-500' : 'text-red-500'

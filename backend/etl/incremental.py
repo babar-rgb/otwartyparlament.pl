@@ -45,7 +45,13 @@ except ImportError:
         from committees import CommitteesETL
         from declarations import DeclarationsETL
         from interpellations import InterpellationsETL
+        from speeches import SpeechesETL
+        from pdf_extractor import PDFReplyExtractor
+        from bills_linker import BillVoteLinker
+        from summarize_sitting import SittingSummarizer
+        from socials import SocialsETL
         from europarl import EuroparlETL
+        from stats import calculate_stats
 
 logger = get_logger("etl.incremental")
 
@@ -120,17 +126,20 @@ def sync_sitting_votes(term: int, sitting_num: int) -> int:
                 # Calculate ID
                 vote_id = sitting_num * 10000 + vote_num if term == 10 else term * 10000000 + sitting_num * 10000 + vote_num
                 
+                link_sejm = f"https://www.sejm.gov.pl/Sejm10.nsf/agent.xsp?symbol=glosowania&NrKadencji={term}&NrPosiedzenia={sitting_num}&NrGlosowania={vote_num}"
+                
                 sql = """
                     INSERT INTO votes (id, sitting, voting_number, date, title_raw, title_clean, 
-                                       verdict, term, details_json, created_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                                       verdict, term, details_json, created_at, link_sejm)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)
                     ON CONFLICT (id) DO UPDATE SET
                         title_clean = EXCLUDED.title_clean,
                         verdict = EXCLUDED.verdict,
-                        details_json = EXCLUDED.details_json;
+                        details_json = EXCLUDED.details_json,
+                        link_sejm = EXCLUDED.link_sejm;
                 """
                 details = json.dumps({"yes": yes, "no": no, "abstain": abstain})
-                cur.execute(sql, (vote_id, sitting_num, vote_num, date, title, title, verdict, term, details))
+                cur.execute(sql, (vote_id, sitting_num, vote_num, date, title, title, verdict, term, details, link_sejm))
                 inserted += 1
         
         logger.info(f"Sitting {sitting_num}: {inserted} votes synced")
@@ -181,11 +190,13 @@ def sync_new_mps(term: int):
                     education_level = mp.get('educationLevel')
                     education_history = json.dumps(mp.get('educations', []))
                     
+                    link_sejm = f"https://www.sejm.gov.pl/Sejm10.nsf/posel.xsp?id={mp['id']}&term={term}"
+
                     sql = """
                         INSERT INTO mps (id, first_name, last_name, club, term, active, 
                                          birth_date, birth_location, profession, education_level, education_history,
-                                         created_at)
-                        VALUES (%s, %s, %s, %s, %s, true, %s, %s, %s, %s, %s, NOW())
+                                         created_at, link_sejm)
+                        VALUES (%s, %s, %s, %s, %s, true, %s, %s, %s, %s, %s, NOW(), %s)
                         ON CONFLICT (id) DO UPDATE SET
                             first_name = EXCLUDED.first_name,
                             last_name = EXCLUDED.last_name,
@@ -194,10 +205,11 @@ def sync_new_mps(term: int):
                             birth_location = EXCLUDED.birth_location,
                             profession = EXCLUDED.profession,
                             education_level = EXCLUDED.education_level,
-                            education_history = EXCLUDED.education_history;
+                            education_history = EXCLUDED.education_history,
+                            link_sejm = EXCLUDED.link_sejm;
                     """
                     cur.execute(sql, (mp['id'], first_name, last_name, club, term, 
-                                      birth_date, birth_location, profession, education_level, education_history))
+                                      birth_date, birth_location, profession, education_level, education_history, link_sejm))
                     new_count += 1
             
             if new_count > 0:
@@ -268,6 +280,13 @@ class IncrementalETL:
                 votes = sync_sitting_votes(self.term, sitting)
                 total_votes += votes
             
+            # Sync Speeches for new sittings
+            logger.info("Syncing Speeches for new sittings...")
+            try:
+                SpeechesETL(term=self.term).process_sittings(new_sittings)
+            except Exception as e:
+                logger.error(f"Error syncing speeches: {e}")
+            
             # Update state
             self.state["last_sync"][str(self.term)] = api_latest
             save_state(self.state)
@@ -293,7 +312,14 @@ class IncrementalETL:
             (InterpellationsETL, "Interpellations"),
             (CommitteesETL, "Committees"),
             (DeclarationsETL, "Asset Declarations"),
-            (EuroparlETL, "Europarl Votes")
+            (PDFReplyExtractor, "PDF Replies"), # Auto-extract content
+            (BillVoteLinker, "Linking Votes"),
+            (EuroparlETL, "Europarl Votes"),
+            (SittingSummarizer, "AI Sitting Summaries"), # Requires GEMINI_API_KEY
+            (SocialsETL, "MP Socials Discovery"),        # Requires GEMINI_API_KEY
+            # Run stats LAST to include all new data
+            # Run stats LAST to include all new data
+            (lambda: type('StatsETL', (), {'run': calculate_stats})(), "Stats Recalculation")
         ]
         
         for etl_cls, name in etls:

@@ -81,14 +81,31 @@ def import_interpellations():
                 for item in data:
                     # Fetch body
                     content = None
+                    reply_content = None
+
                     try:
                         num = item['num']
+                        # Fetch Main Content
                         body_url = f"{SEJM_API_URL}/interpellations/{num}/body"
                         r_body = requests.get(body_url)
                         if r_body.status_code == 200:
-                            content = r_body.text
+                            content = clean_html(r_body.text)
+                        
+                        # Fetch Reply Content
+                        if 'replies' in item:
+                            for reply in item['replies']:
+                                if 'links' in reply:
+                                    for link in reply['links']:
+                                        if link.get('rel') == 'body':
+                                            r_reply = requests.get(link['href'])
+                                            if r_reply.status_code == 200:
+                                                cleaned_reply = clean_html(r_reply.text)
+                                                if reply_content:
+                                                    reply_content += "\n\n--- ODPOWIEDŹ ---\n\n" + cleaned_reply
+                                                else:
+                                                    reply_content = cleaned_reply
                     except Exception as e:
-                        print(f"  Error fetching body for {item['num']}: {e}")
+                        print(f"  Error fetching body/reply for {item['num']}: {e}")
 
                     # Prepare Data
                     interp_data = {
@@ -99,7 +116,9 @@ def import_interpellations():
                         "raw_data": item
                     }
                     if content:
-                        interp_data['raw_data']['content'] = content
+                        interp_data['content'] = content
+                    if reply_content:
+                        interp_data['reply_content'] = reply_content
                     
                     # 1. Upsert Interpellation
                     upsert_interpellation(db, interp_data)
@@ -129,6 +148,44 @@ def import_interpellations():
         
     finally:
         db.close()
+
+def clean_html(html_content):
+    if not html_content:
+        return None
+    import re
+    # Remove DOCTYPE, html, head, body tags but keep content
+    # Simple regex approach to strip tags but keep paragraphs Structure if needed
+    # Ideally we'd use BeautifulSoup but avoiding extra deps if possible
+    
+    # 1. Extract body content if present
+    body_match = re.search(r'<body[^>]*>(.*?)</body>', html_content, re.DOTALL | re.IGNORECASE)
+    if body_match:
+        html_content = body_match.group(1)
+        
+    # 2. Remove script and style
+    html_content = re.sub(r'<(script|style)[^>]*>.*?</\1>', '', html_content, flags=re.DOTALL | re.IGNORECASE)
+    
+    # 3. Simple tag stripping (but keeping p/br for structure?) 
+    # For now, let's keep it simple: strip all tags and fixing whitespace
+    # OR: keep <p> and <br> for display? User complained about "weird format". 
+    # Let's try to keep text only but organized.
+    
+    # Replace <p>, <br> with newlines
+    html_content = re.sub(r'<br\s*/?>', '\n', html_content, flags=re.IGNORECASE)
+    html_content = re.sub(r'</p>', '\n\n', html_content, flags=re.IGNORECASE)
+    
+    # Strip all other tags
+    html_content = re.sub(r'<[^>]+>', '', html_content)
+    
+    # Fix entities
+    import html
+    html_content = html.unescape(html_content)
+    
+    # Fix excess whitespace
+    lines = [line.strip() for line in html_content.split('\n')]
+    clean_text = '\n'.join(line for line in lines if line)
+    
+    return clean_text
 
 if __name__ == "__main__":
     import_interpellations()

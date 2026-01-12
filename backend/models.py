@@ -26,6 +26,7 @@ class MP(Base):
     education_history = Column(JSONB, nullable=True)
     contact_info = Column(JSONB, nullable=True) # Stores {twitter, facebook, etc}
     email = Column(String, nullable=True)
+    biography = Column(Text, nullable=True)
     
     created_at = Column(DateTime, server_default=func.now())
 

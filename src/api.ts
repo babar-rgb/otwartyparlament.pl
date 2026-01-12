@@ -38,6 +38,7 @@ type FetchVotesOptions = {
   limit?: number;
   offset?: number; // New pagination param, replaces skip
   has_results?: boolean;
+  rebellion?: boolean;
 };
 
 export const fetchVotes = async (options: FetchVotesOptions = {}): Promise<{ items: any[]; total: number }> => {
@@ -52,6 +53,7 @@ export const fetchVotes = async (options: FetchVotesOptions = {}): Promise<{ ite
   else if (options.skip) params.append('skip', options.skip.toString());
   if (options.limit) params.append('limit', options.limit.toString());
   if (options.has_results) params.append('has_results', 'true');
+  if (options.rebellion) params.append('rebellion', 'true');
 
   const response = await fetch(`${API_URL}/votes?${params.toString()}`);
   if (!response.ok) {
@@ -145,13 +147,36 @@ export const fetchMPAlignment = async (mpId: string | number) => {
   }
 };
 
+export const fetchMPDeclarations = async (mpId: string | number) => {
+  try {
+    const response = await fetch(`${API_URL}/mps/${mpId}/declarations`);
+    if (!response.ok) return [];
+    return await response.json();
+  } catch (e) {
+    console.error("Error fetching declarations:", e);
+    return [];
+  }
+};
+
 export const fetchInterpellations = async (options?: { mp_id?: number; skip?: number; limit?: number }) => {
   const params = new URLSearchParams();
   if (options?.mp_id) params.append('mp_id', options.mp_id.toString());
   if (options?.skip) params.append('skip', options.skip.toString());
   if (options?.limit) params.append('limit', options.limit.toString());
   const response = await fetch(`${API_URL}/interpellations?${params.toString()}`);
-  if (!response.ok) throw new Error('Failed to fetch interpellations');
+  return await response.json();
+};
+
+export const fetchInterpellationsCount = async () => {
+  const response = await fetch(`${API_URL}/interpellations/count`);
+  if (!response.ok) throw new Error('Failed to fetch interpellations count');
+  const data = await response.json();
+  return data.count;
+};
+
+export const fetchInterpellation = async (id: string | number) => {
+  const response = await fetch(`${API_URL}/interpellations/${id}`);
+  if (!response.ok) throw new Error('Failed to fetch interpellation');
   return await response.json();
 };
 
@@ -380,7 +405,13 @@ const mapBackendMP = (data: any): MP => {
     rebelVotes: data.stats_rebellion,
     term: data.term,
     contact_info: data.contact_info, // Pass through JSONB
-    slug: data.slug
+    slug: data.slug,
+    biography: data.biography,
+    birth_date: data.birth_date,
+    birth_location: data.birth_location,
+    profession: data.profession,
+    education_level: data.education_level,
+    education_history: data.education_history
   } as MP;
 };
 

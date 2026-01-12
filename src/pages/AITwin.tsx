@@ -43,7 +43,7 @@ export default function AITwin() {
                 <div className="text-center mb-16 animate-fade-in">
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent-blue/10 border border-accent-blue/20 rounded-full mb-6">
                         <Sparkles className="text-accent-blue" size={16} />
-                        <span className="text-accent-blue font-bold text-xs uppercase tracking-widest">BETA Intelligence</span>
+                        <span className="text-accent-blue font-bold text-xs uppercase tracking-widest">System Dopasowania</span>
                     </div>
                     <h1 className="text-4xl md:text-6xl font-black text-primary mb-6 leading-tight">
                         Znajdź Swojego <br />

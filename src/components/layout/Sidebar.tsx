@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { X, Github, Mail, BookOpen, Database, Heart, Search, Users, Briefcase, CheckSquare, BarChart3, FileText, Globe, Radio, Wallet, Building2, Sparkles } from 'lucide-react';
+import { X, Github, Mail, BookOpen, Database, Heart, Search, Users, Briefcase, CheckSquare, BarChart3, FileText, Globe, Radio, Wallet, Building2, Sparkles, Eye, Minimize2, Maximize2, HelpCircle } from 'lucide-react';
+import { useAccessibility } from '../../context/AccessibilityContext';
 
 interface SidebarProps {
     isOpen: boolean;
@@ -8,6 +9,8 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const navigate = useNavigate();
+    const { isSimpleMode, toggleSimpleMode, fontSizeMultiplier, increaseFont, decreaseFont } = useAccessibility();
+
     return (
         <>
             {/* Backdrop Overlay */}
@@ -139,6 +142,55 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             </nav>
                         </div>
 
+                        {/* Section: Dostępność / Accessibility */}
+                        <div className="mb-8 p-4 bg-page rounded-2xl border border-border-base">
+                            <h3 className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                <Eye size={12} />
+                                Dostępność
+                            </h3>
+
+                            <div className="space-y-3">
+                                <button
+                                    onClick={toggleSimpleMode}
+                                    className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${isSimpleMode
+                                        ? 'bg-black text-white border-black ring-2 ring-offset-2 ring-black'
+                                        : 'bg-surface text-primary border-border-base hover:bg-hover'
+                                        }`}
+                                >
+                                    <span className="font-bold text-sm">Tryb Uproszczony</span>
+                                    {isSimpleMode ? (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] uppercase font-black bg-yellow-400 text-black px-1.5 rounded">ON</span>
+                                        </div>
+                                    ) : (
+                                        <div className="w-8 h-4 bg-border-base rounded-full" />
+                                    )}
+                                </button>
+
+                                <div className="flex items-center gap-2 bg-surface p-1 rounded-xl border border-border-base">
+                                    <button
+                                        onClick={decreaseFont}
+                                        className="flex-1 p-2 hover:bg-hover rounded-lg text-secondary hover:text-primary transition-colors disabled:opacity-30"
+                                        disabled={fontSizeMultiplier <= 1}
+                                        aria-label="Zmniejsz tekst"
+                                    >
+                                        <Minimize2 size={16} className="mx-auto" />
+                                    </button>
+                                    <span className="font-mono font-bold text-xs w-12 text-center text-primary">
+                                        {Math.round(fontSizeMultiplier * 100)}%
+                                    </span>
+                                    <button
+                                        onClick={increaseFont}
+                                        className="flex-1 p-2 hover:bg-hover rounded-lg text-secondary hover:text-primary transition-colors disabled:opacity-30"
+                                        disabled={fontSizeMultiplier >= 1.5}
+                                        aria-label="Powiększ tekst"
+                                    >
+                                        <Maximize2 size={16} className="mx-auto" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Section B: Pomoc i Kontakt */}
                         <div>
                             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-4">
@@ -158,13 +210,25 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                 </Link>
 
                                 <Link
+                                    to="/pomoc"
+                                    onClick={onClose}
+                                    className="flex items-center gap-3 p-4 rounded-lg hover:bg-slate-50 transition-colors group"
+                                >
+                                    <HelpCircle size={20} className="text-accent-blue group-hover:scale-110 transition-transform" />
+                                    <div>
+                                        <div className="font-bold text-slate-900">Centrum Pomocy</div>
+                                        <div className="text-sm text-slate-600">Słownik pojęć, FAQ, Przewodnik</div>
+                                    </div>
+                                </Link>
+
+                                <Link
                                     to="/kontakt"
                                     onClick={onClose}
                                     className="flex items-center gap-3 p-4 rounded-lg hover:bg-slate-50 transition-colors group"
                                 >
                                     <BookOpen size={20} className="text-purple-600 group-hover:scale-110 transition-transform" />
                                     <div>
-                                        <div className="font-bold text-slate-900">Kontakt / FAQ</div>
+                                        <div className="font-bold text-slate-900">Kontakt</div>
                                         <div className="text-sm text-slate-600">Masz pytania? Napisz!</div>
                                     </div>
                                 </Link>

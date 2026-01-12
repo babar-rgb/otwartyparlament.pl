@@ -4,7 +4,7 @@ import { MP, fetchMPs } from '../api';
 import { useTerm } from '../context/TermContext';
 import TermSwitcher from '../components/ui/TermSwitcher';
 import MpCard from '../components/features/sejm/MpCard';
-import { Search, Sparkles, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const MAJOR_CLUBS = ['KO', 'PiS', 'Polska2050', 'PSL-TD', 'Lewica', 'Konfederacja'];
@@ -101,12 +101,27 @@ export default function Poslowie() {
     loadMps();
   }, [term]);
 
+  const normalizePl = (str: string) => {
+    return str.toLowerCase()
+      .replace(/ą/g, 'a')
+      .replace(/ć/g, 'c')
+      .replace(/ę/g, 'e')
+      .replace(/ł/g, 'l')
+      .replace(/ń/g, 'n')
+      .replace(/ó/g, 'o')
+      .replace(/ś/g, 's')
+      .replace(/ź/g, 'z')
+      .replace(/ż/g, 'z');
+  };
+
   const filtered = useMemo(() => {
     let result = mps;
     if (searchTerm) {
-      result = result.filter((mp) =>
-        [mp.first_name, mp.last_name].filter(Boolean).join(' ').toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      const normalizedSearch = normalizePl(searchTerm);
+      result = result.filter((mp) => {
+        const fullName = [mp.first_name, mp.last_name].filter(Boolean).join(' ');
+        return normalizePl(fullName).includes(normalizedSearch);
+      });
     }
     if (selectedParty) {
       if (selectedParty === 'INNE') {
@@ -141,10 +156,7 @@ export default function Poslowie() {
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent-blue/10 text-accent-blue rounded-full border border-accent-blue/20 text-[10px] font-black uppercase tracking-widest mb-4">
-                <Sparkles size={12} />
-                Legislative Database v1.0
-              </div>
+
               <h1 className="text-4xl md:text-6xl font-black text-primary mb-4 tracking-tighter">
                 Nasi <span className="italic font-serif text-accent-blue/80">Reprezentanci</span>
               </h1>
@@ -170,7 +182,7 @@ export default function Poslowie() {
                     placeholder="Szukaj posła (imię, nazwisko)..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-transparent text-xl font-bold text-primary placeholder:text-secondary/30 focus:outline-none"
+                    className="w-full bg-transparent text-xl font-bold text-primary placeholder:text-slate-400 focus:outline-none"
                   />
                   {searchTerm && (
                     <button onClick={() => setSearchTerm('')} className="p-2 text-secondary hover:text-primary transition-colors">
@@ -186,8 +198,8 @@ export default function Poslowie() {
               <button
                 onClick={() => setSelectedParty('')}
                 className={`px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-wider whitespace-nowrap transition-all border ${selectedParty === ''
-                  ? 'bg-accent-blue text-white border-accent-blue shadow-lg shadow-accent-blue/20'
-                  : 'bg-page text-secondary border-border-base hover:bg-surface hover:text-primary'
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20'
+                  : 'bg-white/50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-white hover:text-primary transition-colors'
                   }`}
               >
                 Wszyscy ({mps.length})
@@ -198,8 +210,8 @@ export default function Poslowie() {
                   key={party.id}
                   onClick={() => setSelectedParty(party.id)}
                   className={`px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-wider whitespace-nowrap transition-all border ${selectedParty === party.id
-                    ? 'bg-accent-blue text-white border-accent-blue shadow-lg shadow-accent-blue/20'
-                    : 'bg-page text-secondary border-border-base hover:bg-surface hover:text-primary'
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20'
+                    : 'bg-white/50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-white hover:text-primary transition-colors'
                     }`}
                 >
                   {party.name}

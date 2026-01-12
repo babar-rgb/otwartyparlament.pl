@@ -9,8 +9,10 @@ import SejmHemicycle from '../components/features/sejm/SejmHemicycle';
 import OutliersSection from '../components/features/analysis/OutliersSection';
 import SEO from '../components/SEO';
 import VoteMindMap from '../components/features/analysis/VoteMindMap';
-import ProcessTLDR from '../components/ProcessTLDR';
+
 import { useVoteDetails } from '../hooks/useVoteDetails';
+import DataPendingState from '../components/DataPendingState';
+import { formatPolishDate } from '../utils/dateUtils';
 
 const VoteDetails: React.FC = () => {
     const { term, sitting, votingNumber, id } = useParams();
@@ -74,7 +76,7 @@ const VoteDetails: React.FC = () => {
         <div className="min-h-screen bg-page text-primary">
             <SEO
                 title={cleanSejmTitle(vote.title_clean || vote.title_raw || "Szczegóły Głosowania")}
-                description={`Wynik głosowania: ${vote.verdict}. Data: ${new Date(vote.date).toLocaleDateString()}. Zobacz jak głosowali posłowie.`}
+                description={`Wynik głosowania: ${vote.verdict}. Data: ${formatPolishDate(vote.date)}. Zobacz jak głosowali posłowie.`}
             />
 
             {/* Hero Section - Full Width Dark */}
@@ -108,7 +110,7 @@ const VoteDetails: React.FC = () => {
                         )}
                         <span className="text-secondary text-sm flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
-                            {new Date(vote.date).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            {formatPolishDate(vote.date)}
                         </span>
                         <span className="text-secondary opacity-60 text-sm">
                             Posiedzenie {vote.sitting} · Głosowanie nr {vote.voting_number}
@@ -282,13 +284,7 @@ const VoteDetails: React.FC = () => {
             {/* AI Analysis Section */}
             {analysis ? (
                 <div className="max-w-6xl mx-auto px-6 py-10">
-                    <ProcessTLDR data={{
-                        tldr: analysis.summary,
-                        what_changes: analysis.summary,
-                        who_affected: [],
-                        pros: analysis.pros,
-                        cons: analysis.cons
-                    }} />
+
 
                     {/* Mind Map Visualization */}
                     <div className="mt-8">
@@ -322,16 +318,16 @@ const VoteDetails: React.FC = () => {
                 </div>
             )}
 
-            {/* Sejm Hemicycle Visualization */}
-            <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                    <Users className="w-6 h-6 text-accent-blue" />
-                    <h2 className="text-2xl font-black tracking-tight">Sala Sejmowa</h2>
-                </div>
-                <div className="bg-surface rounded-3xl p-4 md:p-8 shadow-sm border border-border-base relative overflow-hidden">
-                    <div className="absolute inset-0 bg-accent-blue/5 pointer-events-none" />
-                    {results.length > 0 ? (
-                        <>
+            {results.length > 0 ? (
+                <>
+                    {/* Sejm Hemicycle Visualization */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <Users className="w-6 h-6 text-accent-blue" />
+                            <h2 className="text-2xl font-black tracking-tight">Sala Sejmowa</h2>
+                        </div>
+                        <div className="bg-surface rounded-3xl p-4 md:p-8 shadow-sm border border-border-base relative overflow-hidden">
+                            <div className="absolute inset-0 bg-accent-blue/5 pointer-events-none" />
                             <SejmHemicycle
                                 data={results.map(r => ({
                                     name: r.mps?.name || 'Nieznany',
@@ -349,104 +345,95 @@ const VoteDetails: React.FC = () => {
                                 <div className="flex items-center gap-2 relative z-10"><span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> WSTRZYMAŁ SIĘ</div>
                                 <div className="flex items-center gap-2 relative z-10"><span className="w-2.5 h-2.5 rounded-full bg-secondary"></span> NIEOBECNY</div>
                             </div>
-                        </>
-                    ) : (
-                        <div className="py-20 flex flex-col items-center justify-center text-secondary italic">
-                            <Users className="w-12 h-12 mb-4 opacity-20" />
-                            Brak szczegółowych danych o rozmieszczeniu głosów dla tego głosowania.
                         </div>
-                    )}
-                </div>
-            </div>
-            <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                    <PieChart className="w-6 h-6 text-accent-blue" />
-                    <h2 className="text-2xl font-black tracking-tight">Głosowanie w Klubach</h2>
-                </div>
+                    </div>
 
-                <div className="bg-surface rounded-2xl overflow-hidden shadow-sm border border-border-base">
-                    {Object.keys(partyStats).length > 0 ? (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="bg-black/5 dark:bg-black/20 text-[10px] font-black uppercase tracking-widest text-secondary opacity-60">
-                                        <th className="p-4">Klub / Koło</th>
-                                        <th className="p-4 text-emerald-600">Za</th>
-                                        <th className="p-4 text-rose-600">Przeciw</th>
-                                        <th className="p-4">Wstrzymał się</th>
-                                        <th className="p-4">Nieobecny</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border-base">
-                                    {Object.entries(partyStats).map(([party, stats]) => (
-                                        <tr key={party} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
-                                            <td className="p-4 font-black text-primary">{party}</td>
-                                            <td className="p-4 font-black text-emerald-600">{stats.yes}</td>
-                                            <td className="p-4 font-black text-rose-600">{stats.no}</td>
-                                            <td className="p-4 font-black text-primary">{stats.abstain}</td>
-                                            <td className="p-4 text-secondary opacity-40 font-black">{stats.absent}</td>
+                    {/* Party Breakdown */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <PieChart className="w-6 h-6 text-accent-blue" />
+                            <h2 className="text-2xl font-black tracking-tight">Głosowanie w Klubach</h2>
+                        </div>
+
+                        <div className="bg-surface rounded-2xl overflow-hidden shadow-sm border border-border-base">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-black/5 dark:bg-black/20 text-[10px] font-black uppercase tracking-widest text-secondary opacity-60">
+                                            <th className="p-4">Klub / Koło</th>
+                                            <th className="p-4 text-emerald-600">Za</th>
+                                            <th className="p-4 text-rose-600">Przeciw</th>
+                                            <th className="p-4">Wstrzymał się</th>
+                                            <th className="p-4">Nieobecny</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    ) : (
-                        <div className="p-12 text-center text-secondary italic">
-                            Brak danych o głosowaniu w klubach.
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Outliers (Rebels) Section */}
-            <OutliersSection results={results} partyStats={partyStats} />
-
-            {/* Individual Votes (Optional / Collapsible could be better but listing all for now as requested) */}
-            <div className="space-y-4 pt-8">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <Users className="w-6 h-6 text-accent-blue" />
-                        <h2 className="text-2xl font-black tracking-tight">Wyniki Indywidualne</h2>
-                    </div>
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary opacity-30 w-4 h-4" />
-                        <input
-                            type="text"
-                            placeholder="Szukaj posła..."
-                            value={mpSearch}
-                            onChange={(e) => setMpSearch(e.target.value)}
-                            className="pl-10 pr-4 py-3 border border-border-base rounded-2xl text-sm focus:outline-none focus:border-accent-blue focus:ring-1 focus:ring-accent-blue w-full sm:w-64 bg-surface text-primary placeholder:text-secondary opacity-80"
-                        />
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {results.length > 0 ? (results
-                        .filter(r => !mpSearch || r.mps.name.toLowerCase().includes(mpSearch.toLowerCase()) || r.mps.party.toLowerCase().includes(mpSearch.toLowerCase()))
-                        .map((r, idx) => (
-                            <div key={idx} className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-border-base transition-colors hover:border-accent-blue shadow-sm">
-                                <div className={`w-2 h-10 rounded-full ${r.vote === 'YES' ? 'bg-emerald-500' :
-                                    r.vote === 'NO' ? 'bg-rose-500' :
-                                        r.vote === 'ABSTAIN' ? 'bg-amber-500' : 'bg-secondary opacity-20'
-                                    }`} />
-                                <div>
-                                    <div className="font-bold text-sm text-primary">{r.mps.name}</div>
-                                    <div className="text-[10px] font-black uppercase tracking-wider text-secondary">{r.mps.party}</div>
-                                </div>
-                                <div className="ml-auto text-xs font-black">
-                                    {r.vote === 'YES' && <span className="text-emerald-500">ZA</span>}
-                                    {r.vote === 'NO' && <span className="text-red-500">PRZECIW</span>}
-                                    {r.vote === 'ABSTAIN' && <span className="text-amber-500">WSTRZ.</span>}
-                                    {r.vote === 'ABSENT' && <span className="text-secondary opacity-50">NIEOB.</span>}
-                                </div>
+                                    </thead>
+                                    <tbody className="divide-y divide-border-base">
+                                        {Object.entries(partyStats).map(([party, stats]) => (
+                                            <tr key={party} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                                                <td className="p-4 font-black text-primary">{party}</td>
+                                                <td className="p-4 font-black text-emerald-600">{stats.yes}</td>
+                                                <td className="p-4 font-black text-rose-600">{stats.no}</td>
+                                                <td className="p-4 font-black text-primary">{stats.abstain}</td>
+                                                <td className="p-4 text-secondary opacity-40 font-black">{stats.absent}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
-                        ))) : (
-                        <div className="col-span-full py-12 text-center text-secondary italic">
-                            Brak szczegółowych wyników imiennych dla tego głosowania.
                         </div>
-                    )}
+                    </div>
+
+                    {/* Outliers (Rebels) Section */}
+                    <OutliersSection results={results} partyStats={partyStats} />
+
+                    {/* Individual Votes */}
+                    <div className="space-y-4 pt-8">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <Users className="w-6 h-6 text-accent-blue" />
+                                <h2 className="text-2xl font-black tracking-tight">Wyniki Indywidualne</h2>
+                            </div>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary opacity-30 w-4 h-4" />
+                                <input
+                                    type="text"
+                                    placeholder="Szukaj posła..."
+                                    value={mpSearch}
+                                    onChange={(e) => setMpSearch(e.target.value)}
+                                    className="pl-10 pr-4 py-3 border border-border-base rounded-2xl text-sm focus:outline-none focus:border-accent-blue focus:ring-1 focus:ring-accent-blue w-full sm:w-64 bg-surface text-primary placeholder:text-secondary opacity-80"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {results
+                                .filter(r => !mpSearch || r.mps.name.toLowerCase().includes(mpSearch.toLowerCase()) || r.mps.party.toLowerCase().includes(mpSearch.toLowerCase()))
+                                .map((r, idx) => (
+                                    <div key={idx} className="flex items-center gap-3 p-3 bg-surface rounded-xl border border-border-base transition-colors hover:border-accent-blue shadow-sm">
+                                        <div className={`w-2 h-10 rounded-full ${r.vote === 'YES' ? 'bg-emerald-500' :
+                                            r.vote === 'NO' ? 'bg-rose-500' :
+                                                r.vote === 'ABSTAIN' ? 'bg-amber-500' : 'bg-secondary opacity-20'
+                                            }`} />
+                                        <div>
+                                            <div className="font-bold text-sm text-primary">{r.mps.name}</div>
+                                            <div className="text-[10px] font-black uppercase tracking-wider text-secondary">{r.mps.party}</div>
+                                        </div>
+                                        <div className="ml-auto text-xs font-black">
+                                            {r.vote === 'YES' && <span className="text-emerald-500">ZA</span>}
+                                            {r.vote === 'NO' && <span className="text-red-500">PRZECIW</span>}
+                                            {r.vote === 'ABSTAIN' && <span className="text-amber-500">WSTRZ.</span>}
+                                            {r.vote === 'ABSENT' && <span className="text-secondary opacity-50">NIEOB.</span>}
+                                        </div>
+                                    </div>
+                                ))}
+                        </div>
+                    </div>
+                </>
+            ) : (
+                <div className="max-w-2xl mx-auto py-10">
+                    <DataPendingState />
                 </div>
-            </div>
+            )}
             {/* Hidden capture target for Social Media Graphics */}
             <div
                 className="fixed left-[-2000px] top-[-2000px] pointer-events-none"
@@ -455,7 +442,7 @@ const VoteDetails: React.FC = () => {
                 <SocialShareCard
                     title={cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
                     verdict={vote.verdict as 'PRZYJĘTO' | 'ODRZUCONO'}
-                    date={new Date(vote.date).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    date={formatPolishDate(vote.date)}
                     stats={{
                         yes: vote.details_json?.yes || 0,
                         no: vote.details_json?.no || 0,

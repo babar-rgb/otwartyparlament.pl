@@ -31,19 +31,17 @@
 
   .dark {
     --bg-page: 6 6 14;
-    /* #06060E (Deep Midnight) */
+    /* #06060E */
     --bg-surface: 15 15 35;
-    /* #0F0F23 (Midnight Surface) */
+    /* #0F0F23 */
     --text-primary: 248 250 252;
-    /* #F8FAFC (Slate 50) */
+    /* #F8FAFC */
     --text-secondary: 148 163 184;
-    /* #94A3B8 (Slate 400) */
+    /* #94A3B8 */
     --border-base: 30 41 59;
-    /* #1E293B (Slate 800) */
+    /* #1E293B */
     --accent-blue: 99 102 241;
-    /* #6366F1 (Indigo) */
-
-    /* Semantic Interaction */
+    /* #6366F1 */
     --bg-hover: rgba(255, 255, 255, 0.05);
   }
 
@@ -52,6 +50,65 @@
     color: rgb(var(--text-primary));
     font-family: 'Space Grotesk', sans-serif;
     @apply antialiased transition-colors duration-300;
+  }
+
+  /* --- SIMPLE MODE / SENIOR MODE --- */
+  :root[data-mode="simple"] {
+    /* Pure Black & White Foundation */
+    --bg-page: 255 255 255;
+    --bg-surface: 255 255 255;
+    --text-primary: 0 0 0;
+    --text-secondary: 0 0 0;
+    /* No gray text */
+    --border-base: 0 0 0;
+    /* Pure black borders */
+
+    /* Remove fancy gradients */
+    --accent-gradient: none;
+    --accent-blue: 37 99 235;
+    /* Keep pure blue for links */
+
+    /* Simplify Geometry */
+    --radius-card-xl: 4px;
+    --radius-card-md: 4px;
+    --radius-badge: 0px;
+  }
+
+  /* Force attributes even if dark mode was active in background */
+  :root[data-mode="simple"] .dark {
+    --bg-page: 255 255 255;
+    --bg-surface: 255 255 255;
+    --text-primary: 0 0 0;
+  }
+
+  /* Font Scaling Support - Applied via inline style --font-scale on html */
+  html {
+    font-size: calc(16px * var(--font-scale, 1));
+  }
+
+  /* Hide decorative elements in Simple Mode */
+  :root[data-mode="simple"] .dashboard-mesh,
+  :root[data-mode="simple"] .animate-pulse,
+  :root[data-mode="simple"] .backdrop-blur-md,
+  :root[data-mode="simple"] .backdrop-blur-xl,
+  :root[data-mode="simple"] .backdrop-blur-3xl {
+    background-image: none !important;
+    backdrop-filter: none !important;
+    animation: none !important;
+    box-shadow: none !important;
+    background-color: transparent !important;
+  }
+
+  /* Enforce solid borders in Simple Mode */
+  :root[data-mode="simple"] * {
+    border-style: solid;
+    text-shadow: none !important;
+  }
+
+  :root[data-mode="simple"] button,
+  :root[data-mode="simple"] .card {
+    border: 2px solid black !important;
+    box-shadow: none !important;
   }
 
   #root {
@@ -81,10 +138,6 @@
   }
 
   /* --- CLEAN THEMES --- */
-
-  /* Automatyczne mapowanie popularnych klas Tailwinda na zmienne w dark mode */
-  /* To pozwala uniknąć edytowania każdego pliku .tsx, dopóki nie przejdziemy na pełne klasy semantyczne */
-
   .dark .bg-white,
   .dark .bg-paper-pure,
   .dark .bg-slate-50,
@@ -110,7 +163,6 @@
     color: rgb(var(--text-secondary)) !important;
   }
 
-  /* Akcenty w Dark Mode - delikatniejsze */
   .dark .bg-purple-50,
   .dark .bg-indigo-50 {
     background-color: rgba(99, 102, 241, 0.1) !important;

@@ -85,14 +85,14 @@ export default function LiveAnalysis() {
                             <div className="p-3 bg-accent-blue/10 rounded-2xl text-accent-blue shadow-lg shadow-accent-blue/5">
                                 <Mic size={32} className="animate-pulse" />
                             </div>
-                            Analiza <span className="italic font-serif text-transparent bg-clip-text bg-gradient-to-r from-accent-blue to-indigo-500">Live</span>
+                            Analiza <span className="italic font-serif text-transparent bg-clip-text bg-gradient-to-r from-accent-blue to-indigo-500">Na Żywo</span>
                         </h1>
                         <div className="flex items-center gap-2 bg-red-500/10 px-4 py-2 rounded-full border border-red-500/20">
                             <span className="flex h-3 w-3 relative">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
                             </span>
-                            <span className="text-red-700 dark:text-red-500 font-black text-xs tracking-widest uppercase">Recording</span>
+                            <span className="text-red-700 dark:text-red-500 font-black text-xs tracking-widest uppercase">Nagrywanie</span>
                         </div>
                     </div>
 
@@ -107,7 +107,7 @@ export default function LiveAnalysis() {
                         <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] text-secondary mb-2">
                             <div className="flex items-center gap-3">
                                 <Activity size={16} className="text-accent-blue" />
-                                <span>Audio Stream: 44.1kHz | High Density PCM</span>
+                                <span>Strumień Audio</span>
                             </div>
                             <div className="flex gap-4">
                                 <button onClick={() => setIsRecording(!isRecording)} className="hover:text-accent-blue transition-colors">
@@ -153,7 +153,7 @@ export default function LiveAnalysis() {
                 <div className="lg:col-span-1 space-y-8">
                     <div className="bg-surface/80 backdrop-blur-2xl border border-accent-blue/20 rounded-[2.5rem] p-8 shadow-2xl shadow-accent-blue/5 md:sticky md:top-32">
                         <h3 className="text-xs font-black text-accent-blue tracking-[0.3em] mb-8 flex items-center gap-3 border-b border-border-base pb-6 uppercase">
-                            <Zap size={16} fill="currentColor" /> AI Core Intelligence
+                            <Zap size={16} fill="currentColor" /> Panel Analityczny
                         </h3>
 
                         <div className="grid grid-cols-2 gap-6 mb-8">

@@ -30,6 +30,7 @@ export interface MP {
         offices?: { address: string; phone?: string }[];
     };
     // Biography
+    biography?: string;
     birth_date?: string;
     birth_location?: string;
     profession?: string;
@@ -38,9 +39,11 @@ export interface MP {
     stats?: {
         speeches?: number;
         interpellations?: number;
+        bills?: number;
+        activity_score?: number;
         voteParticipation?: number;
     };
-}
+};
 
 export interface Vote {
     id: number;

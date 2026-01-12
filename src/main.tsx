@@ -6,16 +6,19 @@ import './index.css';
 
 import { ThemeProvider } from './context/ThemeContext';
 import { TermProvider } from './context/TermContext';
+import { AccessibilityProvider } from './context/AccessibilityContext';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     {/* ... */}
     <HelmetProvider>
-      <ThemeProvider>
-        <TermProvider>
-          <App />
-        </TermProvider>
-      </ThemeProvider>
+      <AccessibilityProvider>
+        <ThemeProvider>
+          <TermProvider>
+            <App />
+          </TermProvider>
+        </ThemeProvider>
+      </AccessibilityProvider>
     </HelmetProvider>
   </StrictMode>
 );

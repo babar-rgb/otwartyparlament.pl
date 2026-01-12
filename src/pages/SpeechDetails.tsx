@@ -44,7 +44,7 @@ export default function SpeechDetails() {
 
     if (loading) return (
         <div className="min-h-screen bg-page flex items-center justify-center">
-            <div className="text-secondary text-sm font-black tracking-[0.3em] uppercase animate-pulse">Establishing Semantic Connection...</div>
+            <div className="text-secondary text-sm font-black tracking-[0.3em] uppercase animate-pulse">Wczytywanie analizy...</div>
         </div>
     );
 
@@ -131,7 +131,7 @@ export default function SpeechDetails() {
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
                                 </span>
-                                AI SPEECH COMPOSER
+                                AI SPEECH ANALYZER
                             </h2>
                             <div className="text-xs font-mono text-indigo-300 bg-indigo-900/30 px-3 py-1 rounded-full border border-indigo-500/30">
                                 EMOCJE: {speech.ai_analysis.summary?.emotion_level || "Analiza..."}

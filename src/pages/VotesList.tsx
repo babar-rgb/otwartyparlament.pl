@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Search, ArrowLeft, CheckCircle2, XCircle, MinusCircle, HelpCircle, Sparkles } from 'lucide-react';
+import { Search, ArrowLeft, CheckCircle2, XCircle, MinusCircle, HelpCircle } from 'lucide-react';
 import TermSwitcher from '../components/ui/TermSwitcher';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import { useVotesList } from '../hooks/useVotesList';
 import SEO from '../components/SEO';
 import { fetchMP } from '../api';
 import Skeleton from '../components/ui/Skeleton';
+import { formatPolishDate } from '../utils/dateUtils';
 
 const VotesList = () => {
     const [searchParams] = useSearchParams();
     const mpId = searchParams.get('mp_id');
+    const rebellion = searchParams.get('rebellion') === 'true';
     const [mpName, setMpName] = useState<string | null>(null);
 
     const {
@@ -22,7 +24,8 @@ const VotesList = () => {
         term,
         setPage,
         hasMore
-    } = useVotesList(mpId);
+    } = useVotesList(mpId, rebellion);
+
 
     useEffect(() => {
         if (mpId) {
@@ -92,18 +95,19 @@ const VotesList = () => {
                                     Wróć do wszystkich głosowań
                                 </Link>
                             )}
-                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full border border-blue-500/20 text-[10px] font-black uppercase tracking-widest mb-4">
-                                <Sparkles size={12} />
-                                Legislative Database v1.0
-                            </div>
+
                             <h1 className="text-4xl md:text-6xl font-black text-primary mb-4 tracking-tighter">
-                                {mpName ? `Głosowania: ${mpName}` : (
+                                {mpName ? (
+                                    rebellion ? `Głosy Odrębne: ${mpName}` : `Głosowania: ${mpName}`
+                                ) : (
                                     <>Archiwum <span className="italic font-serif text-accent-blue/80">Głosowań</span></>
                                 )}
                             </h1>
                             <p className="text-secondary text-lg font-medium max-w-xl leading-relaxed">
                                 {mpName
-                                    ? `Wszystkie głosowania, w których brał udział poseł ${mpName} w ${term}. kadencji.`
+                                    ? (rebellion
+                                        ? `Lista głosowań, w których poseł ${mpName} zagłosował inaczej niż większość jego klubu.`
+                                        : `Wszystkie głosowania, w których brał udział poseł ${mpName} w ${term}. kadencji.`)
                                     : `Pełna historia decyzji podjętych przez Sejm ${term}. kadencji. Przeglądaj, filtruj i analizuj wyniki.`
                                 }
                             </p>
@@ -113,7 +117,7 @@ const VotesList = () => {
                 </div>
             </div>
 
-            <div className="max-w-6xl mx-auto px-4 md:px-8 pt-12">
+            <div className="max-w-7xl mx-auto px-4 md:px-8 pt-12">
 
                 {/* Filter & Search Section */}
                 <div className="bg-surface p-6 rounded-[var(--radius-card-xl)] border border-border-base mb-10 shadow-2xl backdrop-blur-md">
@@ -127,7 +131,7 @@ const VotesList = () => {
                                         placeholder="Szukaj po tytule, temacie lub słowach kluczowych..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full bg-transparent text-xl font-bold text-primary placeholder:text-secondary/20 focus:outline-none"
+                                        className="w-full bg-transparent text-xl font-bold text-primary placeholder:text-slate-400 focus:outline-none"
                                     />
                                     {isContextualSearch && (
                                         <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-accent-blue/10 rounded-full border border-accent-blue/20 animate-fade-in">
@@ -146,8 +150,8 @@ const VotesList = () => {
                                         key={f.value}
                                         onClick={() => setFilterSource(f.value as any)}
                                         className={`px-6 py-4 rounded-[var(--radius-badge)] font-black text-xs uppercase tracking-wider whitespace-nowrap transition-all border ${filterSource === f.value
-                                            ? 'bg-accent-blue text-white border-accent-blue shadow-lg shadow-accent-blue/20'
-                                            : 'bg-page text-secondary border-border-base hover:bg-hover hover:text-primary'
+                                            ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20'
+                                            : 'bg-white/50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-white hover:text-primary transition-colors'
                                             }`}
                                     >
                                         {f.label}
@@ -163,8 +167,8 @@ const VotesList = () => {
                                     key={f.value}
                                     onClick={() => setFilterCategory(f.value as any)}
                                     className={`px-4 py-2 rounded-[var(--radius-badge)] font-bold text-[10px] uppercase tracking-wider whitespace-nowrap transition-all border ${filterCategory === f.value
-                                        ? 'bg-accent-blue text-white border-accent-blue shadow-lg shadow-accent-blue/20'
-                                        : 'bg-surface text-secondary border-border-base hover:bg-hover hover:text-primary'
+                                        ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20'
+                                        : 'bg-white/50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-white hover:text-primary transition-colors'
                                         }`}
                                 >
                                     {f.label}
@@ -176,6 +180,11 @@ const VotesList = () => {
 
                 {loading ? (
                     <div className="grid gap-4">
+                        <div className="text-center py-8 animate-pulse text-secondary font-medium">
+                            {rebellion
+                                ? "Analizuję archiwum głosowań w poszukiwaniu głosów odrębnych... To może potrwać kilka sekund."
+                                : "Pobieranie archiwum głosowań..."}
+                        </div>
                         {[...Array(5)].map((_, i) => (
                             <div key={i} className="bg-surface border border-border-base p-6 rounded-[var(--radius-card-md)] flex flex-col md:flex-row gap-6 items-center shadow-sm">
                                 <Skeleton className="w-16 h-16 rounded-[var(--radius-badge)]" />
@@ -197,12 +206,17 @@ const VotesList = () => {
                                 >
                                     <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
                                         <div className="flex flex-col items-center justify-center w-16 h-16 bg-page rounded-[var(--radius-badge)] shrink-0 group-hover:bg-accent-blue group-hover:text-white transition-colors border border-border-base/50">
-                                            <span className="text-xs font-bold uppercase opacity-60">{new Date(vote.date).toLocaleString('default', { month: 'short' })}</span>
+                                            <span className="text-[10px] font-bold uppercase opacity-60">
+                                                {new Date(vote.date).toLocaleDateString('pl-PL', { month: 'short' }).replace('.', '')}
+                                            </span>
                                             <span className="text-2xl font-black">{new Date(vote.date).getDate()}</span>
                                         </div>
 
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-3 mb-2">
+                                                <span className="px-3 py-1 bg-white/5 text-secondary text-[10px] font-black uppercase tracking-widest rounded-lg">
+                                                    {formatPolishDate(vote.date)}
+                                                </span>
                                                 <span className="px-3 py-1 bg-white/5 text-secondary text-[10px] font-black uppercase tracking-widest rounded-lg">
                                                     Posiedzenie {vote.sitting}
                                                 </span>

@@ -30,7 +30,7 @@ export interface VoteItem {
     abstained?: number;
 }
 
-export function useVotesList(mpId?: string | null) {
+export function useVotesList(mpId?: string | null, rebellion?: boolean) {
     const { term } = useTerm();
     const [votes, setVotes] = useState<VoteItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -88,6 +88,7 @@ export function useVotesList(mpId?: string | null) {
             const { items: mappedData, total: count } = await apiFetchVotes({
                 term,
                 mp_id: mpId ? parseInt(mpId) : undefined,
+                rebellion,
                 skip,
                 limit
             });

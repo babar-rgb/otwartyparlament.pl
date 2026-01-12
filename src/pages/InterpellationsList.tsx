@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from 'react';
-import { fetchInterpellations, fetchMP } from '../api';
+import { fetchInterpellations, fetchMP, fetchInterpellationsCount } from '../api';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, FileText, ArrowRight } from 'lucide-react';
 import EmptyState from '../components/ui/EmptyState';
+import { formatPolishDate } from '../utils/dateUtils';
 
 interface Interpellation {
     id: number;
@@ -30,17 +32,29 @@ export default function InterpellationsList() {
     const [hasSearched, setHasSearched] = useState(false);
     const [totalCount, setTotalCount] = useState<number>(0);
 
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const mpIdFilter = searchParams.get('mp_id');
     const [filterMpName, setFilterMpName] = useState<string>('');
 
+    const [page, setPage] = useState(1);
+    const ITEMS_PER_PAGE = 20;
+
     useEffect(() => {
+        const getCount = async () => {
+            const c = await fetchInterpellationsCount();
+            setTotalCount(c);
+        }
+        getCount();
+
         if (mpIdFilter) {
             fetchByMp(mpIdFilter);
         } else {
             fetchRecent();
         }
-        // Total count could be a separate endpoint or just from recent results
+    }, [mpIdFilter, page]);
+
+    useEffect(() => {
+        setPage(1);
     }, [mpIdFilter]);
 
     const fetchByMp = async (mpId: string) => {
@@ -49,7 +63,8 @@ export default function InterpellationsList() {
             const mp = await fetchMP(mpId);
             setFilterMpName(`${mp.first_name} ${mp.last_name}`);
 
-            const data = await fetchInterpellations({ mp_id: parseInt(mpId) });
+            const skip = (page - 1) * ITEMS_PER_PAGE;
+            const data = await fetchInterpellations({ mp_id: parseInt(mpId), skip, limit: ITEMS_PER_PAGE });
             setInterpellations(data);
             setHasSearched(true);
         } catch (err) {
@@ -63,9 +78,9 @@ export default function InterpellationsList() {
     const fetchRecent = async () => {
         try {
             setLoading(true);
-            const data = await fetchInterpellations({ limit: 10 });
+            const skip = (page - 1) * ITEMS_PER_PAGE;
+            const data = await fetchInterpellations({ limit: ITEMS_PER_PAGE, skip });
             setRecentInterpellations(data);
-            setTotalCount(data.length * 100); // Mocking total count for UI feel if not in API
         } catch (err) {
             console.error('Error fetching recent interpellations:', err);
         } finally {
@@ -75,16 +90,30 @@ export default function InterpellationsList() {
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!query.trim()) return;
+
+        const params: Record<string, string> = {};
+        if (query.trim()) params.q = query;
+        if (mpIdFilter) params.mp_id = mpIdFilter;
+        setSearchParams(params);
+        setPage(1);
+
+        if (!query.trim()) {
+            if (mpIdFilter) fetchByMp(mpIdFilter);
+            else fetchRecent();
+            setHasSearched(false);
+            return;
+        }
 
         setLoading(true);
         setHasSearched(true);
         try {
-            const data = await fetchInterpellations({ limit: 50 }); // Backend doesn't support q yet in interpellations
-            // Filter in frontend if q is provided until backend is updated
+            const fetchOptions: any = { limit: 100 };
+            if (mpIdFilter) fetchOptions.mp_id = parseInt(mpIdFilter);
+
+            const data = await fetchInterpellations(fetchOptions);
             const filtered = data.filter((item: any) =>
-                item.title?.toLowerCase().includes(query.toLowerCase()) ||
-                item.content?.toLowerCase().includes(query.toLowerCase())
+                (item.title?.toLowerCase() || '').includes(query.toLowerCase()) ||
+                (item.content?.toLowerCase() || '').includes(query.toLowerCase())
             );
             setInterpellations(filtered);
         } catch (err) {
@@ -109,82 +138,137 @@ export default function InterpellationsList() {
     };
 
     return (
-        <div className="min-h-screen bg-page text-primary pt-24 pb-12 px-4 md:px-8 font-sans">
-            <div className="max-w-5xl mx-auto space-y-12 animate-fade-in">
-                <div className="text-center space-y-6">
-                    <h1 className="text-4xl md:text-5xl font-black text-primary tracking-tight">
-                        Wyszukiwarka <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-blue to-purple-500 italic font-serif">Interpelacji</span>
-                    </h1>
-                    <p className="text-lg text-secondary font-medium max-w-2xl mx-auto italic">
-                        Przeszukaj <span className="text-primary font-black">{totalCount.toLocaleString()}</span> interpelacji poselskich.
-                    </p>
-
-                    <form onSubmit={handleSearch} className="max-w-2xl mx-auto relative group">
-                        <input
-                            type="text"
-                            placeholder="Szukaj (np. 'szpital')..."
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                            className="w-full pl-14 pr-32 py-5 rounded-[var(--radius-card-md)] bg-surface border border-border-base focus:border-accent-blue focus:ring-0 transition-all text-lg shadow-xl"
-                        />
-                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-secondary/30" size={24} />
-                        <button type="submit" disabled={loading} className="absolute right-3 top-3 bottom-3 px-8 bg-accent-blue text-white font-black rounded-[var(--radius-badge)] uppercase tracking-wider text-xs">
-                            {loading ? 'Szukam...' : 'Szukaj'}
-                        </button>
-                    </form>
+        <div className="min-h-screen bg-page text-primary pb-16">
+            <div className="animate-fade-in">
+                {/* Hero Section */}
+                <div className="pt-32 pb-16 px-4 md:px-8 relative overflow-hidden border-b border-border-base bg-page">
+                    <div className="max-w-7xl mx-auto relative z-10">
+                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+                            <div className="flex-1">
+                                <h1 className="text-4xl md:text-6xl font-black text-primary mb-4 tracking-tighter">
+                                    Wyszukiwarka <span className="italic font-serif text-accent-blue/80">interpelacji</span>
+                                </h1>
+                                <p className="text-secondary text-lg font-medium max-w-xl leading-relaxed">
+                                    Przeszukaj bazę <span className="text-primary font-black">{totalCount.toLocaleString()}</span> zapytań i interpelacji poselskich. Analizuj aktywność parlamentarną w czasie rzeczywistym.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="space-y-6">
-                    <h2 className="text-2xl font-black text-primary flex items-center gap-3">
-                        <FileText className="text-accent-blue" />
-                        {mpIdFilter && filterMpName ? `Interpelacje posła ${filterMpName}` : hasSearched ? `Wyniki wyszukiwania` : 'Ostatnie interpelacje'}
-                    </h2>
+                <div className="max-w-7xl mx-auto px-4 md:px-8 mt-12">
+                    {/* Search Panel */}
+                    <div className="bg-surface p-6 rounded-[var(--radius-card-xl)] border border-border-base mb-10 shadow-2xl backdrop-blur-md">
+                        <form onSubmit={handleSearch} className="relative group">
+                            <div className="relative flex items-center gap-4">
+                                <Search className="text-secondary/30" size={24} />
+                                <input
+                                    type="text"
+                                    placeholder="Szukaj po tytule, treści lub autorze..."
+                                    value={query}
+                                    onChange={(e) => setQuery(e.target.value)}
+                                    className="w-full bg-transparent text-xl font-bold text-primary placeholder:text-slate-400 focus:outline-none"
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="px-8 py-3 bg-accent-blue text-white font-black rounded-[var(--radius-badge)] uppercase tracking-wider text-xs transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
+                                >
+                                    {loading ? '...' : 'SZUKAJ'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
 
-                    <div className="grid gap-6">
-                        {(!hasSearched ? recentInterpellations : interpellations).length === 0 && !loading && (
-                            <EmptyState
-                                title="Brak interpelacji"
-                                description="Nie znaleziono zapytań spełniających podane kryteria."
-                                icon="file"
-                            />
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between mb-8 pb-4 border-b border-border-base/50">
+                            <h2 className="text-2xl font-black text-primary flex items-center gap-3">
+                                <FileText className="text-accent-blue" />
+                                {mpIdFilter && filterMpName
+                                    ? `Interpelacje: ${filterMpName}`
+                                    : hasSearched && query
+                                        ? `Wyniki dla: "${query}"`
+                                        : 'Ostatnio złożone'}
+                            </h2>
+                        </div>
+
+                        <div className="grid gap-6">
+                            {(!hasSearched ? recentInterpellations : interpellations).length === 0 && !loading && (
+                                <EmptyState
+                                    title="Brak interpelacji"
+                                    description="Nie znaleziono zapytań spełniających podane kryteria."
+                                    icon="file"
+                                />
+                            )}
+                            {(!hasSearched ? recentInterpellations : interpellations).map((item) => {
+                                const authorList = item.raw_data?.from || [];
+                                const authorName = (item as any).authors?.length > 0
+                                    ? (item as any).authors.map((a: any) => `${a.first_name} ${a.last_name}`).join(', ')
+                                    : (Array.isArray(authorList) ? (authorList[0] || 'Nieznany poseł') : authorList);
+
+                                const contentText = item.content || item.raw_data?.content || item.title;
+
+                                return (
+                                    <Link key={item.id} to={`/interpelacje/${item.id}`} className="group block bg-surface p-6 md:p-8 rounded-[var(--radius-card-md)] border border-border-base shadow-sm hover:shadow-xl transition-all relative overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-1.5 h-full bg-accent-blue opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-accent-blue border border-border-base/50">
+                                                    <FileText size={22} />
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-primary text-lg leading-tight">{authorName}</p>
+                                                    <p className="text-[10px] font-black text-secondary opacity-50 uppercase mt-0.5">Nr {item.raw_data?.num || item.id}</p>
+                                                </div>
+                                            </div>
+                                            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-black/5 dark:bg-white/5 rounded-lg border border-border-base">
+                                                <span className="text-[11px] font-black text-secondary uppercase tracking-widest">
+                                                    {formatPolishDate(item.sent_date)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <h3 className="text-xl md:text-2xl font-black text-primary mb-4 leading-tight group-hover:text-accent-blue transition-colors">{item.title}</h3>
+                                        <div className="prose prose-slate dark:prose-invert max-w-none mb-6">
+                                            <p className="text-secondary leading-relaxed line-clamp-2 text-sm font-medium italic opacity-70"
+                                                dangerouslySetInnerHTML={{ __html: query ? highlightText(contentText || '', query) : ((contentText || '').slice(0, 200) + '...') }}
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[10px] font-black text-accent-blue uppercase tracking-[0.2em] transform translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                                            Szczegóły Interpelacji <ArrowRight size={14} />
+                                        </div>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+
+                        {/* Pagination Controls */}
+                        {(!hasSearched || !query) && (
+                            <div className="flex justify-center items-center gap-4 pt-8">
+                                <button
+                                    onClick={() => {
+                                        setPage(p => Math.max(1, p - 1));
+                                        window.scrollTo({ top: 0, behavior: 'instant' });
+                                    }}
+                                    disabled={page === 1 || loading}
+                                    className="px-6 py-3 rounded-xl bg-surface border border-border-base hover:bg-black/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-black text-xs uppercase tracking-widest"
+                                >
+                                    Poprzednia
+                                </button>
+                                <span className="font-black text-sm text-secondary">
+                                    Strona {page}
+                                </span>
+                                <button
+                                    onClick={() => {
+                                        setPage(p => p + 1);
+                                        window.scrollTo({ top: 0, behavior: 'instant' });
+                                    }}
+                                    disabled={loading || (!hasSearched ? recentInterpellations.length : interpellations.length) < ITEMS_PER_PAGE}
+                                    className="px-6 py-3 rounded-xl bg-surface border border-border-base hover:bg-black/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-black text-xs uppercase tracking-widest"
+                                >
+                                    Następna
+                                </button>
+                            </div>
                         )}
-                        {(!hasSearched ? recentInterpellations : interpellations).map((item) => {
-                            // ... loop content remains identical ...
-                            const authorList = item.raw_data?.from || [];
-                            const authorName = Array.isArray(authorList) ? (authorList[0] || 'Nieznany poseł') : authorList;
-                            const contentText = item.content || item.raw_data?.content || item.title;
-
-                            return (
-                                <Link key={item.id} to={`/interpelacje/${item.id}`} className="group block bg-surface p-8 rounded-[var(--radius-card-md)] border border-border-base shadow-sm hover:shadow-xl transition-all relative overflow-hidden">
-                                    <div className="absolute top-0 left-0 w-1 h-full bg-accent-blue opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    <div className="flex justify-between items-start gap-4 mb-6">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-2xl bg-black/5 flex items-center justify-center text-accent-blue">
-                                                <FileText size={22} />
-                                            </div>
-                                            <div>
-                                                <p className="font-black text-primary text-lg">{authorName}</p>
-                                                <p className="text-[10px] font-black text-secondary opacity-40 uppercase">Nr {item.raw_data?.num || item.id}</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <span className="text-[10px] font-black text-secondary bg-black/5 px-3 py-1.5 rounded-full uppercase tracking-widest border border-border-base">
-                                                {item.sent_date}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <h3 className="text-xl font-black text-primary mb-4 leading-tight">{item.title}</h3>
-                                    <div className="prose prose-slate dark:prose-invert max-w-none mb-6">
-                                        <p className="text-secondary leading-relaxed line-clamp-3 text-sm font-medium italic opacity-80"
-                                            dangerouslySetInnerHTML={{ __html: query ? highlightText(contentText || '', query) : ((contentText || '').slice(0, 300) + '...') }}
-                                        />
-                                    </div>
-                                    <div className="flex items-center gap-2 text-[10px] font-black text-accent-blue uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                                        Zobacz szczegóły <ArrowRight size={14} />
-                                    </div>
-                                </Link>
-                            );
-                        })}
                     </div>
                 </div>
             </div>

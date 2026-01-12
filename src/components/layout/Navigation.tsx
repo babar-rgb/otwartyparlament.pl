@@ -3,11 +3,13 @@ import { Menu, X, Search } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import SearchOverlay from '../ui/SearchOverlay';
+import { useAccessibility } from '../../context/AccessibilityContext';
 
 import ThemeToggle from '../ui/ThemeToggle';
 // TermSwitcher removed
 
 export default function Navigation() {
+  const { isSimpleMode } = useAccessibility();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -57,32 +59,39 @@ export default function Navigation() {
             {/* Center: Main Links (Desktop) */}
             {/* Center: Main Links (Desktop) */}
             {/* Center: Main Links (Desktop) */}
+            {/* Center: Main Links (Desktop) */}
             <div className="hidden xl:flex items-center gap-6 2xl:gap-8">
-              <Link to="/poslowie" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
-                Posłowie
-              </Link>
-              <Link to="/komisje" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
-                Komisje
-              </Link>
-              <Link to="/glosowania" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
-                Głosowania
-              </Link>
-              <Link to="/rankingi" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
-                Rankingi
-              </Link>
-              <Link to="/interpelacje" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
-                Interpelacje
-              </Link>
-              <Link to="/projekty" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
-                Projekty
-              </Link>
-              <Link to="/europarlament" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
-                Europarlament
-              </Link>
+              {!isSimpleMode && (
+                <>
+                  <Link to="/poslowie" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
+                    Posłowie
+                  </Link>
 
-              <Link to="/o-projekcie" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
-                O Projekcie
-              </Link>
+                  <Link to="/komisje" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
+                    Komisje
+                  </Link>
+
+                  <Link to="/glosowania" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
+                    Głosowania
+                  </Link>
+
+                  <Link to="/rankingi" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
+                    Rankingi
+                  </Link>
+                  <Link to="/interpelacje" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
+                    Interpelacje
+                  </Link>
+                  <Link to="/projekty" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
+                    Projekty
+                  </Link>
+                  <Link to="/europarlament" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
+                    Europarlament
+                  </Link>
+                  <Link to="/o-projekcie" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
+                    O Projekcie
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Right: Actions */}

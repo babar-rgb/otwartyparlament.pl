@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ArrowLeft, Mail, Calendar, User, FileText, MessageSquare, ExternalLink } from 'lucide-react';
 import SEO from '../components/SEO';
 import { useInterpellationDetails } from '../hooks/useInterpellationDetails';
+import { formatPolishDate } from '../utils/dateUtils';
 
 export default function InterpellationDetails() {
     const { id } = useParams();
@@ -61,9 +62,14 @@ export default function InterpellationDetails() {
                             <Mail size={32} className="text-accent-blue" />
                         </div>
                         <div className="text-center md:text-left">
-                            <span className="text-[10px] font-black text-accent-blue uppercase tracking-[0.2em] bg-accent-blue/5 px-3 py-1 rounded-full border border-accent-blue/10">
-                                Interpelacja nr {interpellation.id}
-                            </span>
+                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-4">
+                                <span className="text-[10px] font-black text-accent-blue uppercase tracking-[0.2em] bg-accent-blue/5 px-3 py-1 rounded-full border border-accent-blue/10">
+                                    Interpelacja nr {interpellation.id}
+                                </span>
+                                <span className="text-[10px] font-black text-white uppercase tracking-[0.2em] bg-white/10 px-3 py-1 rounded-full border border-white/20">
+                                    {formatPolishDate(interpellation.sent_date)}
+                                </span>
+                            </div>
                             <h1 className="text-2xl md:text-4xl font-black text-primary mt-4 leading-tight italic font-serif">
                                 {interpellation.title}
                             </h1>
@@ -74,7 +80,7 @@ export default function InterpellationDetails() {
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-8">
                         <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/5 dark:bg-white/5 border border-border-base text-xs font-black text-secondary uppercase tracking-widest">
                             <Calendar size={14} className="text-accent-blue" />
-                            <span>Złożono: {interpellation.sent_date}</span>
+                            <span>Złożono: {formatPolishDate(interpellation.sent_date)}</span>
                         </div>
                         {interpellation.addressee && (
                             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/5 dark:bg-white/5 border border-border-base text-xs font-black text-secondary uppercase tracking-widest">
@@ -197,6 +203,6 @@ export default function InterpellationDetails() {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }

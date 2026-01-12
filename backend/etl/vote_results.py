@@ -58,7 +58,10 @@ class ResultsETL:
                 resp = http_session.get(url, timeout=10)
                 
                 if resp.status_code != 200:
-                    logger.error(f"Failed to fetch {url}: {resp.status_code}")
+                    if resp.status_code == 404:
+                        logger.warning(f"API Returned 404 for {url}. This is expected for recent votes - Sejm API has not published details yet (Eventual Consistency).")
+                    else:
+                        logger.error(f"Failed to fetch {url}: {resp.status_code}")
                     continue
                     
                 data = resp.json()
@@ -82,10 +85,11 @@ class ResultsETL:
                         continue
                         
                     res_str = 'ABSENT'
-                    if res == 1: res_str = 'YES'
-                    elif res == 2: res_str = 'NO'
-                    elif res == 3: res_str = 'ABSTAIN'
-                    elif res == 4: res_str = 'ABSENT'
+                    # Handle both Integer and String responses from API
+                    if res == 1 or res == 'YES': res_str = 'YES'
+                    elif res == 2 or res == 'NO': res_str = 'NO'
+                    elif res == 3 or res == 'ABSTAIN': res_str = 'ABSTAIN'
+                    elif res == 4 or res == 'ABSENT': res_str = 'ABSENT'
                     
                     # Also handle list updates? No, just insert.
                     # Delete existing if force_sitting?

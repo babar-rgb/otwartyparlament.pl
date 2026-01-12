@@ -18,6 +18,7 @@ def read_votes(
     mp_id: Optional[int] = None,
     print_number: Optional[str] = None,
     has_results: Optional[bool] = None,
+    rebellion: Optional[bool] = None,
     db: Session = Depends(database.get_db)
 ):
     query = db.query(models.Vote)
@@ -32,6 +33,60 @@ def read_votes(
 
     
     if mp_id is not None:
+        if rebellion:
+            # Rebellious votes: MP result != Club Majority
+            # We use a raw SQL approach for efficiency relative to the 'stats.py' logic
+            from sqlalchemy import text
+            
+            # This query mimics stats.py:
+            # 1. Finds consensus for the MP's club for each vote
+            # 2. Compares MP's vote to consensus
+            # 3. Returns filtering IDs
+            # Note: We filter by term if provided to speed it up
+            
+            raw_sql = """
+                WITH target_mp AS (
+                    SELECT id, club, term FROM mps WHERE id = :mp_id
+                ),
+                vote_results_filtered AS (
+                    SELECT vr.vote_id, vr.result, v.term
+                    FROM vote_results vr
+                    JOIN votes v ON vr.vote_id = v.id
+                    JOIN target_mp t ON vr.mp_id = t.id
+                    WHERE v.term = t.term
+                ),
+                club_votes AS (
+                    SELECT vr.vote_id, vr.result, count(*) as cnt
+                    FROM vote_results vr
+                    JOIN mps m ON vr.mp_id = m.id
+                    JOIN target_mp t ON m.club = t.club
+                    JOIN votes v ON vr.vote_id = v.id
+                    WHERE v.term = t.term
+                    GROUP BY vr.vote_id, vr.result
+                ),
+                club_winners AS (
+                    SELECT DISTINCT ON (vote_id) vote_id, result as majority_result
+                    FROM club_votes
+                    ORDER BY vote_id, cnt DESC
+                )
+                SELECT vrf.vote_id
+                FROM vote_results_filtered vrf
+                JOIN club_winners cw ON vrf.vote_id = cw.vote_id
+                WHERE vrf.result != cw.majority_result
+                  AND vrf.result IN ('YES', 'NO', 'ABSTAIN')
+                  AND cw.majority_result IN ('YES', 'NO', 'ABSTAIN')
+            """
+            
+            rebel_vote_ids = db.execute(text(raw_sql), {"mp_id": mp_id}).fetchall()
+            rebel_ids_list = [r[0] for r in rebel_vote_ids]
+            
+            # Apply filter
+            if not rebel_ids_list:
+                # No rebellions found, return empty result strictly
+                query = query.filter(models.Vote.id == -1) 
+            else:
+                query = query.filter(models.Vote.id.in_(rebel_ids_list))
+        
         # Join with results to get only votes where this MP participated and was not absent
         # We also need to select the result to return it
         query = query.join(models.VoteResult).filter(

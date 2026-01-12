@@ -85,9 +85,9 @@ def main():
             total += count
             logger.info(f"Cumulative total: {total}")
             
-            if total >= 50:
-                logger.info("🛑 Reached limit of 50 bills. Stopping.")
-                break
+            # if total >= 50:
+            #     logger.info("🛑 Reached limit of 50 bills. Stopping.")
+            #     break
             
         logger.info(f"✅ Bill processing complete. Total analyzed: {total}")
         

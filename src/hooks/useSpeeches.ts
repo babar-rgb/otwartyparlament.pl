@@ -9,7 +9,10 @@ export interface MPFilter {
     party: string;
 }
 
+import { useSearchParams } from 'react-router-dom';
+
 export function useSpeeches() {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [query, setQuery] = useState('');
     const [speeches, setSpeeches] = useState<Speech[]>([]);
     const [loading, setLoading] = useState(false);
@@ -19,9 +22,9 @@ export function useSpeeches() {
     const [currentPage, setCurrentPage] = useState(0);
     const ITEMS_PER_PAGE = 10;
 
-    // Filters
+    // Filters - Initialize from URL
     const [mps, setMps] = useState<MPFilter[]>([]);
-    const [selectedMp, setSelectedMp] = useState<string>('');
+    const [selectedMp, setSelectedMp] = useState<string>(searchParams.get('mp_id') || '');
     const [selectedParty, setSelectedParty] = useState<string>('');
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
@@ -43,9 +46,20 @@ export function useSpeeches() {
                 party: m.club
             })));
 
-            // Fetch first page of recent speeches
-            const data = await fetchSpeeches({ skip: 0, limit: ITEMS_PER_PAGE });
-            setRecentSpeeches(data.items);
+            const initialMpId = searchParams.get('mp_id');
+            if (initialMpId) {
+                // If MP ID is in URL, perform a search immediately
+                setHasSearched(true);
+                const data = await fetchSpeeches({
+                    mp_id: initialMpId,
+                    limit: 50
+                });
+                setSpeeches(data.items);
+            } else {
+                // Otherwise fetch recent
+                const data = await fetchSpeeches({ skip: 0, limit: ITEMS_PER_PAGE });
+                setRecentSpeeches(data.items);
+            }
         } catch (err) {
             console.error('Error fetching initial speeches data:', err);
         } finally {
@@ -73,6 +87,10 @@ export function useSpeeches() {
 
         setLoading(true);
         setHasSearched(true);
+
+        // Update URL with search params just for user convenience/sharing (optional but good practice)
+        // For now, let's keep it simple as user asked for Clear Filter fix.
+
         try {
             const data = await fetchSpeeches({
                 q: query,
@@ -91,6 +109,7 @@ export function useSpeeches() {
     };
 
     const clearFilters = () => {
+        // 1. Reset Internal State
         setQuery('');
         setSelectedMp('');
         setSelectedParty('');
@@ -98,6 +117,14 @@ export function useSpeeches() {
         setDateTo('');
         setHasSearched(false);
         setSpeeches([]);
+
+        // 2. Clear URL params
+        setSearchParams({});
+
+        // 3. Re-fetch default data (Recent Speeches) because it might be empty if we started directly with a filter
+        // Reset to page 0
+        setCurrentPage(0);
+        fetchSpeechesPage(0);
     };
 
     return {

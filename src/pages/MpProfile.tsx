@@ -1,11 +1,12 @@
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, FileText, CheckCircle2, XCircle, MinusCircle, HelpCircle, ArrowLeft, ArrowRight, MessageSquare, Mail, Users, TrendingUp, Sparkles } from 'lucide-react';
+import { MapPin, FileText, CheckCircle2, XCircle, MinusCircle, HelpCircle, ArrowLeft, ArrowRight, MessageSquare, Mail, Users, TrendingUp, Sparkles, Briefcase, Globe } from 'lucide-react';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import { formatMPName } from '../utils';
 import { getPartyHexColor } from '../utils/theme';
 import SEO from '../components/SEO';
 import { useMpProfile } from '../hooks/useMpProfile';
+import { formatPolishDate, formatPolishDateLong } from '../utils/dateUtils';
 
 const MpProfile = () => {
   const { idOrSlug } = useParams();
@@ -25,7 +26,7 @@ const MpProfile = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-page flex items-center justify-center">
-        <div className="text-secondary text-sm font-black tracking-[0.3em] uppercase animate-pulse">System Intelligence Loading...</div>
+        <div className="text-secondary text-sm font-black tracking-[0.3em] uppercase animate-pulse">profile loading</div>
       </div>
     );
   }
@@ -116,6 +117,21 @@ const MpProfile = () => {
                 <span className="px-3 py-1.5 rounded-full bg-page/50 text-secondary text-[10px] font-black uppercase tracking-widest border border-border-base transition-colors hover:bg-page">
                   {mp.term === 9 ? 'IX' : 'X'} Kadencja
                 </span>
+
+                {/* Government Function Badge */}
+                {stats?.function_gov && (
+                  <span className={`px-3 py-1.5 rounded-full text-white text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-sm border ${stats.function_gov.includes('(były)')
+                    ? 'bg-slate-500/80 border-slate-500/50'
+                    : stats.function_gov.includes('Europy') || stats.function_gov.includes('Deleguj')
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 border-indigo-500/50'
+                      : 'bg-gradient-to-r from-red-600 to-red-500 border-red-500/50'
+                    }`}>
+                    {stats.function_gov.includes('Europy') || stats.function_gov.includes('Deleguj')
+                      ? <Globe size={12} />
+                      : <Briefcase size={12} />}
+                    {stats.function_gov}
+                  </span>
+                )}
               </div>
 
               {/* Badges Row (New!) */}
@@ -136,21 +152,25 @@ const MpProfile = () => {
               )}
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-3 gap-4 border-t border-border-base/50 pt-6">
+              <div className="grid grid-cols-4 gap-4 border-t border-border-base/50 pt-6">
                 <div className="text-center group">
-                  <div className={`text-2xl md:text-4xl font-black transition-transform group-hover:scale-110 ${attendance >= 90 ? 'text-emerald-500' : attendance >= 70 ? 'text-amber-500' : 'text-rose-500'}`}>
+                  <div className={`text-xl md:text-3xl font-black transition-transform group-hover:scale-110 ${attendance >= 90 ? 'text-emerald-500' : attendance >= 70 ? 'text-amber-500' : 'text-rose-500'}`}>
                     {attendance}%
                   </div>
-                  <div className="text-[10px] text-secondary uppercase tracking-[0.2em] font-black mt-1">Frekwencja</div>
+                  <div className="text-[9px] text-secondary uppercase tracking-[0.1em] font-black mt-1">Frekwencja</div>
                 </div>
-                <div className="text-center border-x border-border-base/50 group">
-                  <div className="text-2xl md:text-4xl font-black text-accent-blue transition-transform group-hover:scale-110">{rebelVotes}</div>
-                  <div className="text-[10px] text-secondary uppercase tracking-[0.2em] font-black mt-1">Buntów</div>
-                </div>
-                <Link to={`/interpelacje?mp_id=${mp.id}`} className="text-center group cursor-pointer block">
-                  <div className="text-2xl md:text-4xl font-black text-indigo-400 transition-transform group-hover:scale-110">{interpellationCount}</div>
-                  <div className="text-[10px] text-secondary uppercase tracking-[0.2em] font-black mt-1 group-hover:text-indigo-400 transition-colors">Interpelacji</div>
+                <Link to={`/glosowania?mp_id=${mp.id}&rebellion=true`} className="text-center border-l border-border-base/30 group cursor-pointer block">
+                  <div className="text-xl md:text-3xl font-black text-rose-500 transition-transform group-hover:scale-110">{rebelVotes}</div>
+                  <div className="text-[9px] text-secondary uppercase tracking-[0.1em] font-black mt-1 group-hover:text-rose-500 transition-colors">Głosy Odrębne</div>
                 </Link>
+                <Link to={`/interpelacje?mp_id=${mp.id}`} className="text-center border-l border-border-base/30 group cursor-pointer block">
+                  <div className="text-xl md:text-3xl font-black text-indigo-400 transition-transform group-hover:scale-110">{interpellationCount}</div>
+                  <div className="text-[9px] text-secondary uppercase tracking-[0.1em] font-black mt-1 group-hover:text-indigo-400 transition-colors">Interpelacji</div>
+                </Link>
+                <div className="text-center border-l border-border-base/30 group" title="Oparte na liczbie interpelacji i wystąpień">
+                  <div className="text-xl md:text-3xl font-black text-amber-500 transition-transform group-hover:scale-110">{mp.stats?.activity_score || 0}</div>
+                  <div className="text-[9px] text-secondary uppercase tracking-[0.1em] font-black mt-1">Aktywność</div>
+                </div>
               </div>
             </div>
           </div>
@@ -201,7 +221,7 @@ const MpProfile = () => {
                         </p>
                         <div className="flex items-center gap-2">
                           <span className="text-secondary text-[10px] uppercase font-bold tracking-tighter">
-                            {new Date(item.votes.date).toLocaleDateString('pl-PL')}
+                            {formatPolishDate(item.votes.date)}
                           </span>
                           <span className="text-secondary opacity-30 text-xs">•</span>
                           <span className="text-secondary text-[10px] uppercase font-bold tracking-tighter">
@@ -256,7 +276,7 @@ const MpProfile = () => {
                         </p>
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="text-secondary text-[10px] uppercase font-bold tracking-tighter">
-                            {new Date(item.votes.date).toLocaleDateString('pl-PL')}
+                            {formatPolishDate(item.votes.date)}
                           </span>
                           <span className="text-secondary opacity-30 text-xs hidden sm:inline">•</span>
                           <span className="text-secondary text-[10px] uppercase font-bold tracking-tighter hidden sm:inline">
@@ -306,7 +326,7 @@ const MpProfile = () => {
                           Posiedzenie {speech.sitting}
                         </span>
                         <span className="text-secondary opacity-30">•</span>
-                        <span className="text-[10px] text-secondary">{speech.date}</span>
+                        <span className="text-[10px] text-secondary">{formatPolishDate(speech.date)}</span>
                       </div>
                       <p className="text-secondary/80 text-sm italic line-clamp-2 group-hover/speech:text-primary transition-colors">
                         "{speech.content?.substring(0, 150)}..."
@@ -320,7 +340,7 @@ const MpProfile = () => {
                 </div>
               )}
 
-              <Link to="/wypowiedzi" className="block p-4 text-center text-sm font-bold text-blue-500 hover:text-blue-600 border-t border-border-base transition-colors">
+              <Link to={`/wypowiedzi?mp_id=${mp.id}`} className="block p-4 text-center text-sm font-bold text-blue-500 hover:text-blue-600 border-t border-border-base transition-colors">
                 Przeszukaj stenogramy →
               </Link>
             </div>
@@ -337,13 +357,15 @@ const MpProfile = () => {
             <div className="bg-surface rounded-2xl border border-border-base p-5 shadow-sm">
               <h3 className="text-sm font-bold text-primary mb-4 flex items-center gap-2">
                 <FileText size={16} className="text-blue-500" />
-                Biografia
+                Dane Parlamentarzysty
               </h3>
+
+
               <div className="space-y-4 text-sm">
                 <div>
                   <div className="text-[10px] text-secondary uppercase font-bold tracking-wider mb-1">Data i miejsce urodzenia</div>
                   <div className="font-medium text-primary">
-                    {mp.birth_date ? new Date(mp.birth_date).toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Brak danych'}
+                    {mp.birth_date ? formatPolishDateLong(mp.birth_date) : 'Brak danych'}
                     {mp.birth_location && <span className="text-secondary">, {mp.birth_location}</span>}
                   </div>
                 </div>
@@ -372,10 +394,19 @@ const MpProfile = () => {
             {/* Top 3 Priorities (New!) */}
             {topPriorities.length > 0 && (
               <div className="bg-surface rounded-2xl border border-border-base p-5 shadow-sm">
-                <h3 className="text-sm font-bold text-primary mb-4 flex items-center gap-2">
-                  <TrendingUp size={16} className="text-pink-500" />
-                  Główne Priorytety
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold text-primary flex items-center gap-2">
+                    <TrendingUp size={16} className="text-pink-500" />
+                    Główne Priorytety
+                  </h3>
+                  <div className="relative group/tooltip">
+                    <HelpCircle size={12} className="text-secondary opacity-30 cursor-help" />
+                    <div className="absolute bottom-full right-0 mb-2 w-56 p-2 bg-slate-900 border border-border-base rounded-lg text-[10px] text-secondary leading-tight opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all shadow-xl z-50 backdrop-blur-md">
+                      Wyliczone na podstawie analizy statystycznej interpelacji i projektów ustaw. System identyfikuje główne tematy aktywności parlamentarnej.
+                      <div className="absolute top-full right-2 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-slate-900" />
+                    </div>
+                  </div>
+                </div>
                 <div className="space-y-2">
                   {topPriorities.map((item: any, idx: number) => (
                     <div key={idx} className="flex justify-between items-center p-2.5 bg-black/5 dark:bg-white/5 rounded-lg border border-border-base">
@@ -396,25 +427,61 @@ const MpProfile = () => {
                 </h3>
                 <div className="space-y-3">
                   {ideologicalTwin && ideologicalTwin.mp_target && (
-                    <div className="p-3 bg-violet-500/5 rounded-xl border border-violet-500/20">
-                      <div className="text-[10px] font-black text-violet-500 uppercase tracking-widest mb-2">Bliźniak Ideowy</div>
+                    <div className="p-3 bg-white/[0.03] rounded-xl border border-border-base transition-colors hover:border-violet-500/30">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5">
+                          <div className="text-[10px] font-black text-violet-400 uppercase tracking-widest">Bliźniak Ideowy</div>
+                          <span className="text-[11px] font-black text-violet-400 bg-violet-400/10 px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                            {Math.round(ideologicalTwin.similarity_score * 100)}% <span className="text-[8px] opacity-70 uppercase">zgodności</span>
+                          </span>
+                        </div>
+                        <div className="relative group/tooltip">
+                          <HelpCircle size={12} className="text-violet-400/30 cursor-help" />
+                          <div className="absolute bottom-full right-0 mb-2 w-64 p-3 bg-slate-900 border border-violet-500/30 rounded-lg text-[10px] text-violet-200 leading-normal opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all shadow-xl z-50 backdrop-blur-md">
+                            <p className="font-bold mb-1 border-b border-violet-500/20 pb-1">Metodologia (min. 100 głosowań)</p>
+                            Ta osoba statystycznie najczęściej głosuje tak samo. System bierze pod uwagę tylko pary posłów z min. 100 wspólnymi głosami, co eliminuje przypadkowe dopasowania.
+                            <div className="absolute top-full right-2 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-slate-900" />
+                          </div>
+                        </div>
+                      </div>
                       <Link to={`/poslowie/${ideologicalTwin.mp_target.slug || ideologicalTwin.mp_target.id}`} className="flex items-center gap-3 group">
                         <img src={ideologicalTwin.mp_target.photo_url} className="w-10 h-10 rounded-full object-cover border border-border-base" />
                         <div>
-                          <div className="text-sm font-bold text-primary group-hover:text-violet-500 transition-colors">{ideologicalTwin.mp_target.first_name} {ideologicalTwin.mp_target.last_name}</div>
-                          <div className="text-[10px] font-bold" style={{ color: getPartyHexColor(ideologicalTwin.mp_target.club) }}>{ideologicalTwin.mp_target.club}</div>
+                          <div className="text-sm font-bold text-primary group-hover:text-violet-400 transition-colors">{ideologicalTwin.mp_target.first_name} {ideologicalTwin.mp_target.last_name}</div>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getPartyHexColor(ideologicalTwin.mp_target.club) }} />
+                            <div className="text-[10px] font-bold text-secondary uppercase tracking-wider">{ideologicalTwin.mp_target.club}</div>
+                          </div>
                         </div>
                       </Link>
                     </div>
                   )}
                   {oppositionTwin && oppositionTwin.mp_target && (
-                    <div className="p-3 bg-orange-500/5 rounded-xl border border-orange-500/20">
-                      <div className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-2">Bliźniak Opozycyjny</div>
+                    <div className="p-3 bg-white/[0.03] rounded-xl border border-border-base transition-colors hover:border-orange-500/30">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-1.5">
+                          <div className="text-[10px] font-black text-orange-400 uppercase tracking-widest">Ideowe Przeciwieństwo</div>
+                          <span className="text-[11px] font-black text-orange-400 bg-orange-400/10 px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                            {Math.round(oppositionTwin.similarity_score * 100)}% <span className="text-[8px] opacity-70 uppercase">sprzeczności</span>
+                          </span>
+                        </div>
+                        <div className="relative group/tooltip">
+                          <HelpCircle size={12} className="text-orange-400/30 cursor-help" />
+                          <div className="absolute bottom-full right-0 mb-2 w-72 p-3 bg-slate-900 border border-orange-500/30 rounded-lg text-[10px] text-orange-200 leading-normal opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all shadow-xl z-50 backdrop-blur-md">
+                            <p className="font-bold mb-1 border-b border-orange-500/20 pb-1">Co oznacza ten procent?</p>
+                            To wskaźnik, jak często ci posłowie głosują zupełnie inaczej (jeden "Za", drugi "Przeciw"). Ponieważ połowa głosowań v Sejmie to nudne sprawy techniczne gdzie wszyscy są zgodni, wynik powyżej 50% oznacza, że w sprawach ważnych i politycznych ci posłowie prawie nigdy się nie zgadzają.
+                            <div className="absolute top-full right-2 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-slate-900" />
+                          </div>
+                        </div>
+                      </div>
                       <Link to={`/poslowie/${oppositionTwin.mp_target.slug || oppositionTwin.mp_target.id}`} className="flex items-center gap-3 group">
                         <img src={oppositionTwin.mp_target.photo_url} className="w-10 h-10 rounded-full object-cover border border-border-base" />
                         <div>
-                          <div className="text-sm font-bold text-primary group-hover:text-orange-500 transition-colors">{oppositionTwin.mp_target.first_name} {oppositionTwin.mp_target.last_name}</div>
-                          <div className="text-[10px] font-bold" style={{ color: getPartyHexColor(oppositionTwin.mp_target.club) }}>{oppositionTwin.mp_target.club}</div>
+                          <div className="text-sm font-bold text-primary group-hover:text-orange-400 transition-colors">{oppositionTwin.mp_target.first_name} {oppositionTwin.mp_target.last_name}</div>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getPartyHexColor(oppositionTwin.mp_target.club) }} />
+                            <div className="text-[10px] font-bold text-secondary uppercase tracking-wider">{oppositionTwin.mp_target.club}</div>
+                          </div>
                         </div>
                       </Link>
                     </div>

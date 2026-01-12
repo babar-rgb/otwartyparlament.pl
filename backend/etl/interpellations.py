@@ -59,6 +59,7 @@ class InterpellationsETL:
                     # Fetch proper content
                     import json
                     i_id = item['num']
+                    term = item.get('term', 10) # Default to 10 if missing
                     title = item.get('title', '')
                     sent_date = item.get('sentDate')
                     last_modified = item.get('lastModified')
@@ -71,17 +72,32 @@ class InterpellationsETL:
                     except:
                         content = None # Fallback
 
+                    # Generate Official Link
+                    # API usually provides 'key' which is needed for proper linking
+                    # https://www.sejm.gov.pl/Sejm10.nsf/InterpelacjaTresc.xsp?key={KEY}
+                    link_sejm = None
+                    if 'key' in item:
+                        link_sejm = f"https://www.sejm.gov.pl/Sejm10.nsf/InterpelacjaTresc.xsp?key={item['key']}&view=1"
+
                     sql = """
-                        INSERT INTO interpellations (id, title, sent_date, last_modified, raw_data, term, content)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        INSERT INTO interpellations (id, title, sent_date, last_modified, raw_data, term, content, link_sejm)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                         ON CONFLICT (id) DO UPDATE SET
                             title = EXCLUDED.title,
                             last_modified = EXCLUDED.last_modified,
                             raw_data = EXCLUDED.raw_data,
-                            content = COALESCE(EXCLUDED.content, interpellations.content);
+                            content = COALESCE(EXCLUDED.content, interpellations.content),
+                            link_sejm = EXCLUDED.link_sejm;
                     """
-                        item.get('lastModified'),
-                        json.dumps(item)
+                    cur.execute(sql, (
+                        i_id,
+                        title,
+                        sent_date,
+                        last_modified,
+                        raw_json,
+                        term,
+                        content,
+                        link_sejm
                     ))
                     
                     # Upsert authors

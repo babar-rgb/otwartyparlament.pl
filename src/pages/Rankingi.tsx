@@ -15,7 +15,7 @@ export default function Rankingi() {
           <div className="w-16 h-16 border-4 border-border-base rounded-full"></div>
           <div className="absolute top-0 left-0 w-16 h-16 border-4 border-t-accent-blue rounded-full animate-spin"></div>
         </div>
-        <p className="text-xs font-black uppercase tracking-[0.4em] text-secondary">System Analytics Loading</p>
+        <p className="text-xs font-black uppercase tracking-[0.4em] text-secondary">Wczytywanie Danych Analitycznych</p>
       </div>
     );
   }
@@ -66,10 +66,6 @@ export default function Rankingi() {
       <div className="max-w-7xl mx-auto">
         {/* Modern Header Section */}
         <div className="mb-16 relative">
-          <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-accent-blue/10 text-accent-blue rounded-full text-[10px] font-black uppercase tracking-[0.3em] border border-accent-blue/20 mb-6 backdrop-blur-md">
-            <Activity size={14} className="animate-pulse" />
-            Live Intelligence Hub
-          </div>
           <h1 className="text-4xl md:text-7xl font-black tracking-tighter mb-6 flex flex-col md:flex-row md:items-baseline gap-4 text-primary">
             Analityka <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-500 to-primary/40 italic font-serif">Parlamentarna</span>
           </h1>
@@ -87,7 +83,7 @@ export default function Rankingi() {
             <div className="relative z-10">
               <div className="inline-flex items-center gap-2 text-emerald-600 dark:text-emerald-500 text-[10px] font-black uppercase tracking-widest mb-4">
                 <span className="w-8 h-[1px] bg-emerald-500/50"></span>
-                Financial Transparency
+                Jawność Finansowa
               </div>
               <h3 className="text-3xl font-black mb-4 group-hover:text-emerald-600 transition-colors">Portfel Sejmu</h3>
               <p className="text-secondary font-medium max-w-xs mb-8">Systemowa analiza oświadczeń majątkowych. Zobacz stan posiadania Twoich reprezentantów.</p>
@@ -102,7 +98,7 @@ export default function Rankingi() {
             <div className="relative z-10">
               <div className="inline-flex items-center gap-2 text-accent-blue text-[10px] font-black uppercase tracking-widest mb-4">
                 <span className="w-8 h-[1px] bg-accent-blue/50"></span>
-                Semantic Analysis
+                Analiza Tematyczna
               </div>
               <h3 className="text-3xl font-black mb-4 group-hover:text-accent-blue transition-colors">Analiza Retoryki</h3>
               <p className="text-secondary font-medium max-w-xs mb-8">Przeszukiwanie stenogramów wspomagane przez AI. Kto realnie dyskutuje, a kto ogranicza się do komunikatów?</p>
@@ -171,7 +167,7 @@ export default function Rankingi() {
                         <Info size={24} />
                       </div>
                     </div>
-                    <h4 className="text-xl font-black self-center tracking-tight text-primary">Veto Monitor & Intelligence</h4>
+                    <h4 className="text-xl font-black self-center tracking-tight text-primary">Monitoring Głosowań</h4>
                   </div>
                   <div className="space-y-6 text-secondary text-lg leading-relaxed font-medium">
                     <p>Analiza <span className="text-primary">druków sejmowych</span> wykazuje dominację ścieżki rządowej, co jest typowe dla parlamentaryzmu gabinetowego. Krytycznym wskaźnikiem jest jednak wzrost odsetka projektów procedowanych w trybie <span className="text-emerald-600 dark:text-emerald-500">pilnym</span>.</p>
@@ -250,21 +246,21 @@ export default function Rankingi() {
           <div className="space-y-4">
             <div className="flex items-center gap-3 text-[10px] font-black text-secondary uppercase tracking-[0.2em]">
               <div className="w-6 h-[1px] bg-border-base"></div>
-              Engine Version
+              Wersja Systemu
             </div>
             <p className="text-xs text-secondary leading-relaxed font-medium">Baza danych synchronizowana w czasie rzeczywistym z API Sejmu RP. Algorytm weryfikuje kworum i status każdego aktu prawnego.</p>
           </div>
           <div className="space-y-4">
             <div className="flex items-center gap-3 text-[10px] font-black text-secondary uppercase tracking-[0.2em]">
               <div className="w-6 h-[1px] bg-border-base"></div>
-              Data Integrity
+              Integralność Danych
             </div>
             <p className="text-xs text-secondary leading-relaxed font-medium">Wskaźnik "Indywidualizm" jest obliczany na podstawie korelacji kross-klubowej, eliminując błędy statystyczne wynikające z pomyłek technicznych posłów.</p>
           </div>
           <div className="space-y-4">
             <div className="flex items-center gap-3 text-[10px] font-black text-secondary uppercase tracking-[0.2em]">
               <div className="w-6 h-[1px] bg-border-base"></div>
-              Legal Notice
+              Nota Prawna
             </div>
             <p className="text-xs text-secondary leading-relaxed font-medium">Zestawienia mają charakter statystyczny i służą do analizy ilościowej. Nie stanowią oceny merytorycznej pracy poszczególnych posłów.</p>
           </div>

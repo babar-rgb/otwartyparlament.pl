@@ -29,6 +29,7 @@ app.include_router(general.router, tags=["General"])
 def read_root():
     return {"message": "Welcome to Sejm API"}
 
+
 @app.get("/health/ml")
 def check_ml_health():
     from backend.services.embedding import embedding_service
@@ -37,3 +38,36 @@ def check_ml_health():
         "model": embedding_service.MODEL_NAME,
         "lazy_loading": True
     }
+
+@app.get("/sittings/latest/summary")
+def get_latest_sitting_summary(term: int = 10):
+    """Get the AI-generated summary for the latest sitting of a specific term."""
+    from backend.core.db import db
+    
+    # Get latest summary for the specific term
+    query = """
+        SELECT term, sitting_number, summary_md, updated_at 
+        FROM sitting_summaries 
+        WHERE term = %s
+        ORDER BY sitting_number DESC 
+        LIMIT 1
+    """
+    summary = db.fetch_one(query, (term,))
+    
+    if not summary:
+        return {"summary": None}
+        
+    return summary
+
+@app.get("/sittings/summaries")
+def get_all_sitting_summaries(term: int = 10):
+    """Get all sitting summaries for a term."""
+    from backend.core.db import db
+    
+    query = """
+        SELECT id, term, sitting_number, summary_md, updated_at 
+        FROM sitting_summaries 
+        WHERE term = %s
+        ORDER BY sitting_number DESC
+    """
+    return db.fetch_all(query, (term,))

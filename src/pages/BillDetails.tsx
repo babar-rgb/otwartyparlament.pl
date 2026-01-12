@@ -4,6 +4,7 @@ import BillTimeline, { TimelineStage } from '../components/BillTimeline';
 import ProcessTLDR from '../components/ProcessTLDR';
 import { useState, useEffect } from 'react';
 import { fetchProcess, fetchVotes, fetchRelatedProcesses } from '../api';
+import { formatPolishDate } from '../utils/dateUtils';
 
 interface BillData {
     id: string;
@@ -127,7 +128,7 @@ export default function BillDetails() {
                         </div>
                         <div className="flex items-center gap-2 px-3 py-1 bg-slate-100 text-slate-600 rounded-full font-medium border border-slate-200">
                             <Calendar size={14} />
-                            {bill.date}
+                            {formatPolishDate(bill.date)}
                         </div>
                         <div className="flex items-center gap-2 px-3 py-1 bg-slate-100 text-slate-600 rounded-full font-medium border border-slate-200">
                             <User size={14} />
@@ -214,7 +215,7 @@ export default function BillDetails() {
                                     >
                                         <div className="flex justify-between items-start mb-2">
                                             <span className="text-xs font-medium text-slate-500">
-                                                {new Date(vote.date).toLocaleDateString('pl-PL')}
+                                                {formatPolishDate(vote.date)}
                                             </span>
                                             <span className={`flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${vote.verdict === 'PRZYJĘTO'
                                                 ? 'bg-green-100 text-green-700'
@@ -250,7 +251,7 @@ export default function BillDetails() {
                     <div className="p-8 border-t border-slate-100 bg-slate-50/30">
                         <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
                             <Network className="text-purple-500" size={20} />
-                            Kontekst Semantyczny (Podobne Projekty)
+                            Podobne Projekty
                         </h2>
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {relatedProcesses.map((rel) => (

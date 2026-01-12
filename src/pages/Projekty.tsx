@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Search, FileText, Loader2, ChevronDown, ChevronUp, Sparkles, Target } from 'lucide-react';
+import { Search, FileText, Loader2, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import TermSwitcher from '../components/ui/TermSwitcher';
-import Skeleton from '../components/ui/Skeleton';
 import { useTerm } from '../context/TermContext';
 import { useSejmPrints } from '../hooks/useSejmPrints';
 import { PRINT_CATEGORIES, DEFAULT_PRINT_STYLE, PRINT_SOURCE_FILTERS } from '../constants';
@@ -60,10 +59,6 @@ export default function Projekty() {
                 <div className="max-w-7xl mx-auto relative z-10">
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
                         <div className="flex-1">
-                            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-accent-blue/10 text-accent-blue rounded-full font-bold text-[10px] uppercase tracking-wider mb-6 border border-accent-blue/20">
-                                <Target size={14} />
-                                <span>Baza Legislatywna v1.0</span>
-                            </div>
                             <h1 className="text-4xl md:text-6xl font-black text-primary mb-6 tracking-tight leading-tight">
                                 Projekty i Dokumenty <br />
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-blue to-indigo-500 underline decoration-accent-blue/20 underline-offset-8 italic font-serif opacity-90">Sejmowe.</span>

@@ -34,26 +34,32 @@ export function useDashboardData() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Only fetch votes that HAVE results to avoid empty hemicycle
-                const { items: lastVotes, total: votesTotal } = await fetchVotes({ term, limit: 20, has_results: true });
+                // Fetch a larger sample of recent votes to determine the trending topic (Option 1: Recent Hot Topics)
+                const { items: recentVotes, total: votesTotal } = await fetchVotes({ term, limit: 50, has_results: true });
                 const printsTotal = await fetchProcessesCount(term);
 
-                const lastDate = lastVotes[0]?.date || '---';
-                const topics = lastVotes.map((v: any) => v.topic).filter(Boolean) as string[];
-                const mostFrequentTopic = topics.length > 0
-                    ? [...topics].sort((a, b) => topics.filter(v => v === a).length - topics.filter(v => v === b).length).pop()
-                    : 'Legislacja';
+                const lastDate = recentVotes[0]?.date || '---';
+
+                // Determine trending topic based on frequency in recent votes
+                const topics = recentVotes.map((v: any) => v.topic).filter(Boolean) as string[];
+                let trendingTopic = 'Legislacja';
+
+                if (topics.length > 0) {
+                    const counts: Record<string, number> = {};
+                    topics.forEach(t => { counts[t] = (counts[t] || 0) + 1; });
+                    trendingTopic = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
+                }
 
                 setStats({
                     mpsCount: 460,
                     votesCount: votesTotal || 0,
                     printsCount: printsTotal || 0,
                     lastSittingDate: lastDate !== '---' ? new Date(lastDate).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' }) : 'Brak danych',
-                    trendingTopic: mostFrequentTopic || 'Legislacja'
+                    trendingTopic: trendingTopic
                 });
 
-                if (lastVotes.length > 0) {
-                    const topV = lastVotes[0];
+                if (recentVotes.length > 0) {
+                    const topV = recentVotes[0];
                     const analysis = await fetchVoteAnalysis(topV.id.toString());
                     const results = await fetchVoteResults({ vote_id: topV.id, limit: 460 });
 

@@ -73,10 +73,28 @@ class Database:
                     pass
                 self.pool.putconn(conn)
 
+
     def close(self):
         """Close the connection pool."""
         if self.pool:
             self.pool.closeall()
             logger.info("Database connection pool closed")
+
+    def execute(self, query, params=None):
+        """Execute a query (INSERT, UPDATE, DELETE)."""
+        with self.get_cursor(commit=True) as cur:
+            cur.execute(query, params)
+
+    def fetch_all(self, query, params=None):
+        """Fetch all results from a query."""
+        with self.get_cursor() as cur:
+            cur.execute(query, params)
+            return cur.fetchall()
+
+    def fetch_one(self, query, params=None):
+        """Fetch a single result from a query."""
+        with self.get_cursor() as cur:
+            cur.execute(query, params)
+            return cur.fetchone()
 
 db = Database()

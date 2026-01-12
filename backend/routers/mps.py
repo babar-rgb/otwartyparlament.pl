@@ -73,3 +73,8 @@ def read_mp_alignment(mp_id: int, db: Session = Depends(database.get_db)):
 def read_mp_stats(mp_id: int, db: Session = Depends(database.get_db)):
     stats = db.query(models.MPStat).filter(models.MPStat.mp_id == mp_id).all()
     return {s.stat_key: s.stat_value for s in stats}
+
+@router.get("/{mp_id}/declarations")
+def read_mp_declarations(mp_id: int, db: Session = Depends(database.get_db)):
+    declarations = db.query(models.AssetDeclaration).filter(models.AssetDeclaration.mp_id == mp_id).order_by(models.AssetDeclaration.year.desc()).all()
+    return [{c.name: getattr(d, c.name) for c in d.__table__.columns} for d in declarations]

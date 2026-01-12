@@ -68,7 +68,7 @@ def process_votes(db: Session, batch_size: int = 50):
                     vote.kind = "Proceduralny"
                     vote.importance = 1
                 else:
-                    vote.importance = 5 # Default, can be improved later
+                    vote.importance = analysis_data.get("importance", 5)
                 
                 # 2. Save Analysis
                 analysis = VoteAnalysis(

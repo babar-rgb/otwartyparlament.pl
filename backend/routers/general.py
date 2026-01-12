@@ -167,6 +167,11 @@ def read_committee_sitting(sitting_id: int, db: Session = Depends(database.get_d
         
     return s_dict
 
+@router.get("/interpellations/count")
+def read_interpellations_count(db: Session = Depends(database.get_db)):
+    count = db.query(models.Interpellation).count()
+    return {"count": count}
+
 @router.get("/interpellations")
 def read_interpellations(
     mp_id: Optional[int] = None,
@@ -178,19 +183,51 @@ def read_interpellations(
     if mp_id:
         query = query.join(models.InterpellationAuthor).filter(models.InterpellationAuthor.mp_id == mp_id)
     
-    interpellations = query.order_by(models.Interpellation.sent_date.desc()).offset(skip).limit(limit).all()
+    # Eager load authors
+    interpellations = query.options(joinedload(models.Interpellation.authors))\
+        .order_by(models.Interpellation.sent_date.desc()).offset(skip).limit(limit).all()
     
     final_items = []
     for i in interpellations:
         i_dict = {c.name: getattr(i, c.name) for c in i.__table__.columns}
+        # Serialize authors
+        i_dict['authors'] = [{c.name: getattr(a, c.name) for c in a.__table__.columns} for a in i.authors]
         final_items.append(i_dict)
         
     return final_items
+
+@router.get("/interpellations/{id}")
+def read_interpellation(id: int, db: Session = Depends(database.get_db)):
+    interpellation = db.query(models.Interpellation).filter(models.Interpellation.id == id).first()
+    if not interpellation:
+        raise HTTPException(status_code=404, detail="Interpellation not found")
+    
+    # Manually serialize + add raw_data if needed
+    i_dict = {c.name: getattr(interpellation, c.name) for c in interpellation.__table__.columns}
+    
+    # Get authors
+    authors = db.query(models.MP).join(models.InterpellationAuthor).filter(models.InterpellationAuthor.interpellation_id == id).all()
+    i_dict['authors'] = [{c.name: getattr(a, c.name) for c in a.__table__.columns} for a in authors]
+    
+    return i_dict
 
 @router.get("/speeches/count")
 def read_speeches_count(db: Session = Depends(database.get_db)):
     count = db.query(models.Speech).count()
     return {"count": count}
+
+@router.get("/speeches/{id}")
+def read_speech(id: int, db: Session = Depends(database.get_db)):
+    speech = db.query(models.Speech).options(joinedload(models.Speech.mp)).filter(models.Speech.id == id).first()
+    
+    if not speech:
+        raise HTTPException(status_code=404, detail="Speech not found")
+        
+    s_dict = {c.name: getattr(speech, c.name) for c in speech.__table__.columns}
+    if speech.mp:
+        s_dict['mp'] = {c.name: getattr(speech.mp, c.name) for c in speech.mp.__table__.columns}
+        
+    return s_dict
 
 @router.get("/speeches")
 def read_speeches(
