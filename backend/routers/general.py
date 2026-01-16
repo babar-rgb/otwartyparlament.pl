@@ -114,7 +114,9 @@ def search_all(
                 "date": str(vote.date),
                 "term": vote.term,
                 "topic": vote.topic,
-                "ux_category": vote.kind or "Głosowanie"
+                "ux_category": vote.kind or "Głosowanie",
+                "sitting": vote.sitting,
+                "voting_number": vote.voting_number
             })
 
     # 3. Search across Bills (Projekty)

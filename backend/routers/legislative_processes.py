@@ -37,9 +37,9 @@ def read_processes(
             "id": p.id,
             "title": p.title,
             "status": p.status,
-            "start_date": p.start_date,
+            "start_date": p.start_date.isoformat() if p.start_date else None,
             "stage_count": stages_count,
-            "last_update": last_stage.date if last_stage else p.start_date,
+            "last_update": (last_stage.date.isoformat() if last_stage.date else None) if last_stage else (p.start_date.isoformat() if p.start_date else None),
             "last_stage_title": last_stage.title if last_stage else "Inicjacja"
         })
         
@@ -90,12 +90,27 @@ def read_process_details(process_id: str, db: Session = Depends(database.get_db)
         for nid in node_ids:
             nodes.append({"id": nid, "label": f"Druk {nid}"})
             
+    # Serialize stages manually to avoid Date serialization issues
+    stages_serialized = []
+    if process.stages:
+        for s in process.stages:
+            stages_serialized.append({
+                "id": s.id,
+                "process_id": s.process_id,
+                "stage_type": s.stage_type,
+                "title": s.title,
+                "description": s.description,
+                "date": s.date.isoformat() if s.date else None,
+                "bill_number": s.bill_number,
+                "vote_id": s.vote_id
+            })
+
     return {
         "id": process.id,
         "title": process.title,
         "status": process.status,
-        "start_date": process.start_date,
-        "stages": process.stages,
+        "start_date": process.start_date.isoformat() if process.start_date else None,
+        "stages": stages_serialized,
         "graph": {
             "nodes": nodes,
             "edges": edges

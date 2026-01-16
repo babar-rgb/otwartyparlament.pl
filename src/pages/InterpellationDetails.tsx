@@ -40,8 +40,9 @@ export default function InterpellationDetails() {
     return (
         <div className="min-h-screen bg-page pt-24 pb-16 px-4 md:px-8 transition-all duration-500">
             <SEO
-                title={`Interpelacja nr ${interpellation.id}`}
-                description={interpellation.title}
+                title={interpellation.title}
+                description={`Interpelacja nr ${interpellation.id}${authors.length > 0 ? ` - ${authors.map(a => a.mps?.name || '').filter(Boolean).join(', ')}` : ''}. Data: ${formatPolishDate(interpellation.sent_date)}.`}
+                url={`/interpelacje/${id}`}
             />
 
             <div className="max-w-4xl mx-auto">

@@ -38,8 +38,9 @@ export default function Komisje() {
     return (
         <div className="min-h-screen bg-page transition-colors duration-500 pb-16">
             <SEO
-                title="Komisje Sejmowe"
-                description="Lista wszystkich komisji sejmowych z informacjami o posiedzeniach, członkach i agendzie."
+                title="Komisje Sejmowe - Skład i Aktywność"
+                description={`Pełna lista ${committees.length} komisji sejmowych. Sprawdź skład, harmonogram posiedzeń i aktywność parlamentarną.`}
+                url="/komisje"
             />
 
             <CommitteeHero committeeCount={committees.length} />

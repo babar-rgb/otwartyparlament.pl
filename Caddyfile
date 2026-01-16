@@ -1,0 +1,9 @@
+# Replace 'twojadomena.pl' with your actual domain
+twojadomena.pl {
+    reverse_proxy frontend:80
+}
+
+# Subdomain for API
+api.twojadomena.pl {
+    reverse_proxy backend:8000
+}

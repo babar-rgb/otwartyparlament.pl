@@ -122,7 +122,15 @@ def read_votes(
         
         final_items = []
         for vote, result in results:
-            vote_dict = {c.name: getattr(vote, c.name) for c in vote.__table__.columns if c.name not in ['vector_embedding', 'search_vector']}
+            vote_dict = {}
+            for c in vote.__table__.columns:
+                if c.name not in ['vector_embedding', 'search_vector']:
+                    value = getattr(vote, c.name)
+                    # Convert Date objects to string
+                    if hasattr(value, 'isoformat'):
+                        vote_dict[c.name] = value.isoformat()
+                    else:
+                        vote_dict[c.name] = value
             vote_dict['mp_vote'] = result
             final_items.append(vote_dict)
             
@@ -137,7 +145,15 @@ def read_votes(
         final_items = []
         for vote in results:
             # Exclude vector_embedding and search_vector from serialization
-            vote_dict = {c.name: getattr(vote, c.name) for c in vote.__table__.columns if c.name not in ['vector_embedding', 'search_vector']}
+            vote_dict = {}
+            for c in vote.__table__.columns:
+                if c.name not in ['vector_embedding', 'search_vector']:
+                    value = getattr(vote, c.name)
+                    # Convert Date objects to string
+                    if hasattr(value, 'isoformat'):
+                        vote_dict[c.name] = value.isoformat()
+                    else:
+                        vote_dict[c.name] = value
             final_items.append(vote_dict)
             
         return {

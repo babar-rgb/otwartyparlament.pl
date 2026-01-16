@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Search, FileText, Loader2, ChevronDown, ChevronUp, Sparkles, ArrowRight, Zap, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Search, FileText, Loader2, ChevronDown, ChevronUp, Sparkles, ArrowRight, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import TermSwitcher from '../components/ui/TermSwitcher';
 import { useTerm } from '../context/TermContext';
 import { useSejmPrints } from '../hooks/useSejmPrints';
 import { PRINT_CATEGORIES, DEFAULT_PRINT_STYLE, PRINT_SOURCE_FILTERS } from '../constants';
 import EmptyState from '../components/ui/EmptyState';
+import SEO from '../components/SEO';
 
 export default function Projekty() {
     const { term } = useTerm();
@@ -58,6 +59,11 @@ export default function Projekty() {
 
     return (
         <div className="min-h-screen bg-page text-primary pb-16">
+            <SEO
+                title={`Projekty Ustaw - Baza Legislacyjna ${term}. Kadencji`}
+                description={`Przeglądaj ${totalCount > 0 ? totalCount.toLocaleString() : ''} projektów ustaw i uchwał Sejmu ${term}. kadencji. Każdy dokument analizowany przez AI.`}
+                url="/projekty"
+            />
             <div className="animate-fade-in">
                 {/* Hero Section - Matching InterpellationsList */}
                 <div className="pt-32 pb-16 px-4 md:px-8 relative overflow-hidden border-b border-border-base bg-page">

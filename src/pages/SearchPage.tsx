@@ -24,9 +24,9 @@ const SearchPage: React.FC = () => {
     const results = data?.results || [];
 
     // Grouping results for UI
-    const processes = results.filter(r => r.type === 'process');
-    const votes = results.filter(r => r.type === 'vote');
-    const speeches = results.filter(r => r.type === 'speech');
+    const processes = results.filter((r: any) => r.type === 'process');
+    const votes = results.filter((r: any) => r.type === 'vote');
+    const speeches = results.filter((r: any) => r.type === 'speech');
 
     return (
         <div className="min-h-screen bg-page pt-32 pb-12 px-4 md:px-8 text-primary">
@@ -47,7 +47,7 @@ const SearchPage: React.FC = () => {
                                 { id: 'process', label: 'Projekty' },
                                 { id: 'speech', label: 'Wypowiedzi' },
                                 { id: 'mp', label: 'Posłowie' },
-                            ].map(type => (
+                            ].map((type: any) => (
                                 <button
                                     key={type.id || 'all'}
                                     onClick={() => setSelectedType(type.id)}
@@ -89,7 +89,7 @@ const SearchPage: React.FC = () => {
                                     <h2 className="text-3xl font-black text-primary">Posłowie</h2>
                                 </div>
                                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                                    {mps.map(mp => (
+                                    {mps.map((mp: any) => (
                                         <MpCard key={mp.id} mp={mp} />
                                     ))}
                                 </div>
@@ -104,7 +104,7 @@ const SearchPage: React.FC = () => {
                                     <h2 className="text-2xl font-bold text-primary">Głosowania</h2>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {votes.map(vote => (
+                                    {votes.map((vote: any) => (
                                         <Link key={vote.id} to={`/glosowanie/${vote.id}`} className="block bg-surface rounded-2xl border border-border-base p-6 hover:border-blue-500/30 transition-all duration-300 shadow-sm hover:shadow-lg h-full flex flex-col justify-between group">
                                             <div>
                                                 <div className="flex items-center gap-2 mb-4 flex-wrap">
@@ -114,6 +114,16 @@ const SearchPage: React.FC = () => {
                                                     {vote.term && (
                                                         <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full border border-border-base bg-surface text-secondary">
                                                             {vote.term}. Kadencja
+                                                        </span>
+                                                    )}
+                                                    {vote.sitting && typeof vote.sitting === 'number' && (
+                                                        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full border border-border-base bg-surface text-secondary">
+                                                            Posiedzenie {vote.sitting}
+                                                        </span>
+                                                    )}
+                                                    {vote.voting_number && typeof vote.voting_number === 'number' && (
+                                                        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full border border-border-base bg-surface text-secondary">
+                                                            Głosowanie nr {vote.voting_number}
                                                         </span>
                                                     )}
                                                     <span className="text-[10px] text-secondary font-bold uppercase tracking-tight">
@@ -141,7 +151,7 @@ const SearchPage: React.FC = () => {
                                     <h2 className="text-2xl font-bold text-primary">Projekty Ustaw i Uchwał</h2>
                                 </div>
                                 <div className="grid grid-cols-1 gap-4">
-                                    {processes.map(proc => (
+                                    {processes.map((proc: any) => (
                                         <Link key={proc.id} to={`/projekty/${proc.id}`} className="block bg-surface p-6 rounded-xl border border-border-base hover:border-amber-500/30 hover:shadow-md transition-all group">
                                             <div className="flex justify-between items-start">
                                                 <div>
@@ -180,7 +190,7 @@ const SearchPage: React.FC = () => {
                                     <h2 className="text-2xl font-bold text-primary">Wypowiedzi</h2>
                                 </div>
                                 <div className="space-y-4">
-                                    {speeches.map((speech) => (
+                                    {speeches.map((speech: any) => (
                                         <div key={speech.id} className="p-6 bg-surface rounded-xl border border-border-base hover:border-indigo-500/30 transition-colors relative group">
                                             {speech.term && (
                                                 <span className="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full border border-border-base bg-surface text-secondary">

@@ -4,6 +4,7 @@ import BillTimeline from '../components/BillTimeline';
 import ProcessTLDR from '../components/ProcessTLDR';
 import { formatPolishDate } from '../utils/dateUtils';
 import { useBillDetails } from '../hooks/useBillDetails';
+import SEO from '../components/SEO';
 
 export default function BillDetails() {
     const { id } = useParams();
@@ -32,6 +33,11 @@ export default function BillDetails() {
 
     return (
         <div className="container mx-auto px-4 pt-24 pb-12 max-w-5xl animate-fade-in">
+            <SEO
+                title={`Druk ${bill.printNumber} - ${bill.title.substring(0, 60)}...`}
+                description={bill.description || `Projekt ustawy ${bill.printNumber}. Wnioskodawca: ${bill.proposer}. Data: ${formatPolishDate(bill.date)}.`}
+                url={`/ustawy/${id}`}
+            />
             <Link to="/projekty" className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors mb-8 group">
                 <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                 Powrót do listy

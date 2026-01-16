@@ -78,7 +78,13 @@ const LegislativeTracker: React.FC = () => {
                                 >
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="px-3 py-1 bg-white/5 rounded-lg text-xs font-mono text-secondary">
-                                            {process.start_date ? format(new Date(process.start_date), 'dd.MM.yyyy', { locale: pl }) : 'Brak daty'}
+                                            {(() => {
+                                                try {
+                                                    return process.start_date ? format(new Date(process.start_date), 'dd.MM.yyyy', { locale: pl }) : 'Brak daty';
+                                                } catch (e) {
+                                                    return 'Brak daty';
+                                                }
+                                            })()}
                                         </div>
                                         <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${process.status === 'IN_PROGRESS' ? 'bg-blue-500/20 text-blue-400' :
                                             process.status === 'SIGNED' ? 'bg-emerald-500/20 text-emerald-400' :

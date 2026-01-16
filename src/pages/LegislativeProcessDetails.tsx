@@ -15,6 +15,7 @@ import LegislativeNetwork from '../components/features/analysis/LegislativeNetwo
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { useLegislativeProcessDetails } from '../hooks/useLegislativeProcessDetails';
+import SEO from '../components/SEO';
 
 const LegislativeProcessDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -40,6 +41,11 @@ const LegislativeProcessDetails: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-[#0A0A0A] font-sans text-primary pb-24 pt-24 px-6 overflow-x-hidden">
+            <SEO
+                title={`${process.title}`}
+                description={process.description || `Szczegóły procesu legislacyjnego: ${process.title}. Sprawdź etapy, druki i powiązania.`}
+                url={`/procesy/${id}`}
+            />
             {/* Background Ambient Orbs */}
             <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden -z-10">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 blur-[120px] rounded-full" />
@@ -82,17 +88,23 @@ const LegislativeProcessDetails: React.FC = () => {
                             <div className="flex flex-wrap items-center gap-4 mb-8">
                                 <div className="px-4 py-1.5 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-[11px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
                                     <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                                    Active Process
+                                    Proces Aktywny
                                 </div>
                                 <div className="px-4 py-1.5 bg-white/5 border border-white/10 rounded-full text-[11px] font-mono text-secondary flex items-center gap-2">
                                     <Calendar size={12} className="opacity-50" />
-                                    Started: {format(new Date(process.start_date), 'dd MMM yyyy', { locale: pl })}
+                                    Data wszczęcia: {(() => {
+                                        try {
+                                            return process.start_date ? format(new Date(process.start_date), 'dd MMM yyyy', { locale: pl }) : 'Brak daty';
+                                        } catch (e) {
+                                            return 'Brak daty';
+                                        }
+                                    })()}
                                 </div>
                                 <div className={`px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest border ${process.status === 'IN_PROGRESS' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' :
-                                        process.status === 'SIGNED' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
-                                            'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                                    process.status === 'SIGNED' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+                                        'bg-rose-500/10 border-rose-500/20 text-rose-400'
                                     }`}>
-                                    {process.status}
+                                    {process.status === 'IN_PROGRESS' ? 'W TOKU' : process.status === 'SIGNED' ? 'PODPISANA' : process.status === 'REJECTED' ? 'ODRZUCONA' : process.status}
                                 </div>
                             </div>
 
@@ -103,32 +115,32 @@ const LegislativeProcessDetails: React.FC = () => {
                             <div className="flex flex-wrap gap-4">
                                 <button className="px-8 py-4 rounded-2xl bg-indigo-500 text-white font-black text-sm hover:bg-indigo-600 hover:shadow-lg hover:shadow-indigo-500/20 transition-all flex items-center gap-3">
                                     <FileText size={18} />
-                                    Source Documents
+                                    Dokumenty Źródłowe
                                 </button>
                                 <button className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-primary font-black text-sm hover:bg-white/10 transition-all flex items-center gap-3">
                                     <Sparkles size={18} className="text-indigo-400" />
-                                    AI Insight
+                                    Analiza AI
                                 </button>
                             </div>
                         </div>
 
                         <div className="lg:col-span-4 hidden lg:block">
                             <div className="p-8 rounded-[2rem] bg-white/[0.03] border border-white/10 backdrop-blur-sm">
-                                <div className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] mb-6 block">Quick Metrics</div>
+                                <div className="text-[10px] font-black text-secondary uppercase tracking-[0.2em] mb-6 block">Kluczowe Wskaźniki</div>
                                 <div className="space-y-6">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs text-secondary/60">Stage Density</span>
-                                        <span className="text-sm font-bold font-mono">{process.stages.length} Levels</span>
+                                        <span className="text-xs text-secondary/60">Liczba Etapów</span>
+                                        <span className="text-sm font-bold font-mono">{(process.stages || []).length}</span>
                                     </div>
                                     <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                                        <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${Math.min(100, process.stages.length * 10)}%` }} />
+                                        <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${Math.min(100, (process.stages || []).length * 10)}%` }} />
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs text-secondary/60">Network Nodes</span>
-                                        <span className="text-sm font-bold font-mono">{process.graph?.nodes.length || 0} Entities</span>
+                                        <span className="text-xs text-secondary/60">Powiązane Podmioty</span>
+                                        <span className="text-sm font-bold font-mono">{process.graph?.nodes?.length || 0}</span>
                                     </div>
                                     <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                                        <div className="h-full bg-purple-500 rounded-full" style={{ width: `${Math.min(100, (process.graph?.nodes.length || 0) * 15)}%` }} />
+                                        <div className="h-full bg-purple-500 rounded-full" style={{ width: `${Math.min(100, (process.graph?.nodes?.length || 0) * 15)}%` }} />
                                     </div>
                                 </div>
                             </div>
@@ -147,14 +159,14 @@ const LegislativeProcessDetails: React.FC = () => {
                                     <Layers size={24} />
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-black text-white leading-none mb-2">Metro Timeline</h2>
+                                    <h2 className="text-2xl font-black text-white leading-none mb-2">Oś Czasu Procesu</h2>
                                     <p className="text-xs text-secondary/60 font-mono tracking-wider uppercase">Linear Legislative Progression</p>
                                 </div>
                             </div>
 
                             <div className="bg-[#0F0F0F] rounded-[3rem] border border-white/5 p-8 md:p-12 shadow-2xl relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 blur-[80px] rounded-full -mr-20 -mt-20" />
-                                <LegislativeProcessTimeline stages={process.stages} variant="full" />
+                                <LegislativeProcessTimeline stages={process.stages || []} variant="full" />
                             </div>
                         </section>
                     </div>
@@ -172,13 +184,16 @@ const LegislativeProcessDetails: React.FC = () => {
                             <div className="absolute top-0 right-0 p-6 opacity-20">
                                 <Sparkles size={24} className="text-indigo-400" />
                             </div>
-                            <h3 className="text-sm font-black text-indigo-400 uppercase tracking-widest mb-4">AI Procedural Context</h3>
+                            <h3 className="text-sm font-black text-indigo-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                Analiza Proceduralna AI
+                                <span className="text-[9px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded border border-indigo-500/30">BETA</span>
+                            </h3>
                             <p className="text-sm leading-relaxed text-secondary/80 italic">
-                                "{process.description || 'System Gemini obecnie analizuje wzajemne powiązania między drukami oraz skutki prawne tego etapu. Pełny raport narracyjny pojawi się wkrótce.'}"
+                                "{process.description || 'System Gemini obecnie analizuje wzajemne powiązania między drukami oraz skutki prawne tego etapu. Pełny raport narracyjny pojawi się wkrótce (trwa backfill danych historycznych).'}"
                             </p>
                             <div className="mt-6 pt-6 border-t border-indigo-500/10 flex items-center gap-2 text-[10px] font-bold text-secondary uppercase tracking-widest">
                                 <div className="w-1 h-1 rounded-full bg-emerald-500" />
-                                Content Verified by Gemini 2.0
+                                Weryfikacja treści: Gemini 2.0 (Preview)
                             </div>
                         </motion.section>
 
@@ -190,7 +205,7 @@ const LegislativeProcessDetails: React.FC = () => {
                                         <Network size={24} />
                                     </div>
                                     <div>
-                                        <h2 className="text-xl font-black text-white leading-none mb-1">Entity Graph</h2>
+                                        <h2 className="text-xl font-black text-white leading-none mb-1">Graf Powiązań</h2>
                                         <p className="text-[10px] text-secondary/60 font-mono tracking-wider uppercase">Relational Document Mapping</p>
                                     </div>
                                 </div>
@@ -203,14 +218,14 @@ const LegislativeProcessDetails: React.FC = () => {
 
                         {/* Quick Stats / Info */}
                         <section className="p-8 rounded-[2rem] bg-white/[0.02] border border-white/5">
-                            <h3 className="text-xs font-black text-secondary/40 uppercase tracking-[0.2em] mb-6">Metadata Archives</h3>
+                            <h3 className="text-xs font-black text-secondary/40 uppercase tracking-[0.2em] mb-6">Archiwum Metadanych</h3>
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer group">
-                                    <span className="text-xs font-bold text-secondary">Unique Process ID</span>
+                                    <span className="text-xs font-bold text-secondary">Identyfikator Procesu</span>
                                     <span className="text-[10px] font-mono text-secondary group-hover:text-primary">{id}</span>
                                 </div>
                                 <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer group">
-                                    <span className="text-xs font-bold text-secondary">Registry Data Source</span>
+                                    <span className="text-xs font-bold text-secondary">Źródło Danych Rejestru</span>
                                     <span className="text-[10px] font-mono text-indigo-400 uppercase">Sejm API v1</span>
                                 </div>
                             </div>

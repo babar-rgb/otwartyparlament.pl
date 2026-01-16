@@ -1,74 +1,53 @@
 version: '3.8'
 
 services:
-  # 1. DATABASE
-  db:
-    image: postgres:17-alpine
+  # Caddy handles SSL certificates automatically and acts as a reverse proxy
+  caddy:
+    image: caddy:latest
     restart: always
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:?error}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
-      POSTGRES_DB: ${POSTGRES_DB:?error}
+    ports:
+      - "80:80"
+      - "443:443"
     volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks:
-      - app-network
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+      - frontend
 
-  # 2.5 BACKEND API (Python FastAPI)
+  # Backend API (FastAPI)
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    build: ./backend
     restart: always
+    env_file: .env.prod
     environment:
-      POSTGRES_HOST: ${POSTGRES_HOST:-db}
-      POSTGRES_USER: ${POSTGRES_USER:?error}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
-      POSTGRES_DB: ${POSTGRES_DB:?error}
-    # No ports mapping to host to avoid 8000 conflict. 
-    # Frontend/Nginx should proxy to http://backend:8000 if needed.
-    networks:
-      - app-network
+      - DB_HOST=db
+      - DB_PORT=5432
     depends_on:
       - db
 
-  # 3. WORKER (ETL & Scheduler)
-  worker:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    restart: always
-    environment:
-      POSTGRES_HOST: ${POSTGRES_HOST:-db}
-      POSTGRES_USER: ${POSTGRES_USER:?error}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?error}
-      POSTGRES_DB: ${POSTGRES_DB:?error}
-      # API URL for internal calls if needed
-
-    command: [ "python3", "-m", "backend.scheduler" ]
-    networks:
-      - app-network
-    depends_on:
-      - db
-
-  # 4. FRONTEND (Nginx)
+  # Frontend (Vite/Nginx)
+  # In a strict production setup, you would verify this builds to static files
+  # hosted by Nginx or Caddy directly. For simplicity, we use the container.
   frontend:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        # Public URL where the API will be accessible from the browser
-
     restart: always
-    ports:
-      - "${APP_PORT:-8080}:80"
-    networks:
-      - app-network
+    environment:
+      # Ensure this matches your domain
+      - VITE_API_BASE_URL=https://api.twojadomena.pl 
+
+  # Database
+  db:
+    image: postgres:15
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file: .env.prod
 
 volumes:
-  pgdata:
-
-
-networks:
-  app-network:
-    driver: bridge
+  caddy_data:
+  caddy_config:
+  postgres_data:

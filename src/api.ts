@@ -300,7 +300,7 @@ export const unifiedSearch = async (options: { q: string; type?: string; period?
 };
 
 export const fetchProcess = async (id: string) => {
-  const response = await fetch(`${API_URL}/processes/${id}`);
+  const response = await fetch(`${API_URL}/legislative_processes/${id}`);
   if (!response.ok) throw new Error('Failed to fetch process');
   return await response.json();
 };
@@ -312,7 +312,7 @@ export const fetchProcesses = async (options?: { skip?: number; limit?: number; 
   if (options?.term) params.append('term', options.term.toString());
   if (options?.q) params.append('q', options.q);
   if (options?.type) params.append('type', options.type);
-  const response = await fetch(`${API_URL}/processes?${params.toString()}`);
+  const response = await fetch(`${API_URL}/legislative_processes?${params.toString()}`);
   if (!response.ok) throw new Error('Failed to fetch processes');
   return await response.json();
 };
@@ -320,7 +320,7 @@ export const fetchProcesses = async (options?: { skip?: number; limit?: number; 
 export const fetchProcessesCount = async (term?: number) => {
   const params = new URLSearchParams();
   if (term) params.append('term', term.toString());
-  const response = await fetch(`${API_URL}/processes/count?${params.toString()}`);
+  const response = await fetch(`${API_URL}/legislative_processes/count?${params.toString()}`);
   if (!response.ok) throw new Error('Failed to fetch processes count');
   const data = await response.json();
   return data.count;

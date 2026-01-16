@@ -1,5 +1,6 @@
 from typing import List, Optional
 import numpy as np
+import threading
 from backend.core.logger import get_logger
 
 logger = get_logger("services.embedding")
@@ -16,27 +17,34 @@ class EmbeddingService:
     def __init__(self):
         self._model = None
         self._enabled = True
+        self._lock = threading.Lock()  # Thread safety for lazy loading
         logger.info("EmbeddingService initialized (model lazy-loading enabled)")
 
     def _load_model(self):
-        """Internal method to load the model only when needed."""
+        """Internal method to load the model only when needed. Thread-safe."""
         if self._model is not None:
             return self._model
-            
-        try:
-            from sentence_transformers import SentenceTransformer
-            logger.info(f"Loading embedding model: {self.MODEL_NAME}...")
-            self._model = SentenceTransformer(self.MODEL_NAME)
-            logger.info("Model loaded successfully.")
-            return self._model
-        except ImportError:
-            logger.error("sentence-transformers not installed. Embedding features disabled.")
-            self._enabled = False
-            return None
-        except Exception as e:
-            logger.error(f"Failed to load embedding model: {e}")
-            self._enabled = False
-            return None
+        
+        with self._lock:
+            # Double-check after acquiring lock (another thread might have loaded it)
+            if self._model is not None:
+                return self._model
+                
+            try:
+                from sentence_transformers import SentenceTransformer
+                logger.info(f"Loading embedding model: {self.MODEL_NAME}...")
+                self._model = SentenceTransformer(self.MODEL_NAME)
+                logger.info("Model loaded successfully.")
+                return self._model
+            except ImportError:
+                logger.error("sentence-transformers not installed. Embedding features disabled.")
+                self._enabled = False
+                return None
+            except Exception as e:
+                logger.error(f"Failed to load embedding model: {e}")
+                self._enabled = False
+                return None
+
 
     def get_embedding(self, text: str) -> Optional[List[float]]:
         """Generate a 384-dimensional vector for the given text."""

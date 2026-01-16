@@ -79,7 +79,8 @@ const VoteDetails: React.FC = () => {
         <div className="min-h-screen bg-page text-primary">
             <SEO
                 title={cleanSejmTitle(vote.title_clean || vote.title_raw || "Szczegóły Głosowania")}
-                description={`Wynik głosowania: ${vote.verdict}. Data: ${formatPolishDate(vote.date)}. Zobacz jak głosowali posłowie.`}
+                description={`Wynik: ${vote.verdict}. ${vote.for || 0} za, ${vote.against || 0} przeciw. Posiedzenie ${vote.sitting}, głosowanie ${vote.voting_number}. Data: ${formatPolishDate(vote.date)}.`}
+                url={`/glosowania/${vote.term}/${vote.sitting}/${vote.voting_number}`}
             />
 
             {/* Hero Section - Full Width Dark */}

@@ -106,8 +106,9 @@ export default function Poslowie() {
   return (
     <div className="min-h-screen bg-page transition-colors duration-500 pb-24">
       <SEO
-        title="Posłowie RP"
-        description="Baza danych posłów X kadencji Sejmu. Statystyki, obecność, przynależność partyjna."
+        title={`Posłowie Sejmu ${term}. Kadencji`}
+        description={`Pełna baza ${mps.length} posłów Sejmu RP ${term}. kadencji. Sprawdź statystyki głosowań, frekwencję, interpelacje i aktywność parlamentarną.`}
+        url="/poslowie"
       />
 
       {/* Hero Section */}

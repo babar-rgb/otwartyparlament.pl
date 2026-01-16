@@ -4,6 +4,7 @@ import { Search, FileText, ArrowRight } from 'lucide-react';
 import EmptyState from '../components/ui/EmptyState';
 import { formatPolishDate } from '../utils/dateUtils';
 import { useInterpellationsList } from '../hooks/useInterpellationsList';
+import SEO from '../components/SEO';
 
 interface Interpellation {
     id: number;
@@ -75,6 +76,11 @@ export default function InterpellationsList() {
 
     return (
         <div className="min-h-screen bg-page text-primary pb-16">
+            <SEO
+                title={mpIdFilter && filterMpName ? `Interpelacje: ${filterMpName}` : queryParam ? `Wyniki: "${queryParam}"` : "Wyszukiwarka Interpelacji"}
+                description={`Przeszukaj bazę ${totalCount.toLocaleString()} zapytań i interpelacji poselskich. Analizuj aktywność parlamentarną w czasie rzeczywistym.`}
+                url="/interpelacje"
+            />
             <div className="animate-fade-in">
                 {/* Hero Section */}
                 <div className="pt-32 pb-16 px-4 md:px-8 relative overflow-hidden border-b border-border-base bg-page">
