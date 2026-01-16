@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import Optional
 from backend import models
 from backend.core import orm_db as database
@@ -12,13 +12,27 @@ def read_processes(
     limit: int = 100,
     term: Optional[int] = None,
     q: Optional[str] = None,
+    type: Optional[str] = None,
     db: Session = Depends(database.get_db)
 ):
-    query = db.query(models.Bill)
+    query = db.query(models.Bill).options(joinedload(models.Bill.analysis))
     
-    # Filter by term if provided
     if term is not None and hasattr(models.Bill, 'term'):
         query = query.filter(models.Bill.term == term)
+
+    if type:
+        # Map frontend filters to DB values
+        # Frontend: poselski, rzadowy, obywatelski, senacki
+        # DB: poselski, rządowy, obywatelski, senacki
+        type_map = {
+            "poselski": "poselski",
+            "rzadowy": "rządowy",
+            "obywatelski": "obywatelski",
+            "senacki": "senacki",
+            "prezydencki": "prezydencki"
+        }
+        db_type = type_map.get(type.lower(), type)
+        query = query.filter(models.Bill.type == db_type)
     
     if q and len(q) > 3:
         # Semantic Search Path
@@ -39,6 +53,12 @@ def read_processes(
     final_items = []
     for b in bills:
         b_dict = {c.name: getattr(b, c.name) for c in b.__table__.columns if c.name != 'vector_embedding'}
+        if b.analysis:
+            b_dict['analysis'] = {
+                'summary': b.analysis.summary,
+                'pros': b.analysis.pros,
+                'cons': b.analysis.cons
+            }
         final_items.append(b_dict)
         
     return {

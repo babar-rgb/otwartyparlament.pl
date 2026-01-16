@@ -86,11 +86,14 @@ export interface Speech {
 }
 
 export interface SejmPrint {
+    id?: number;
     number: string;
     title: string;
     summary: string | null;
     process_id: string | null;
     ai_summary?: string;
+    pros?: string[];
+    cons?: string[];
     justification_text?: string;
     document_type?: string;
 }
@@ -158,6 +161,7 @@ export interface VoteAnalysis {
     summary: string;
     pros: string[];
     cons: string[];
+    procedural_context?: string;
 }
 
 // Party type for strict typing

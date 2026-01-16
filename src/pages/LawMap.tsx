@@ -343,7 +343,7 @@ export default function LawMap() {
                     label: 'TL;DR',
                     content: (typeof process.simple_summary === 'object' && process.simple_summary !== null && 'tldr' in process.simple_summary)
                         ? (process.simple_summary.tldr || 'Generowanie podsumowania...')
-                        : (typeof process.simple_summary === 'string' ? process.simple_summary : 'Generowanie podsumowania... 🤖'),
+                        : (typeof process.simple_summary === 'string' ? process.simple_summary : 'Generowanie podsumowania...'),
                     icon: 'zap',
                     color: 'purple'
                 },

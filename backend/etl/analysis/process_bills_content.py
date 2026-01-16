@@ -106,6 +106,11 @@ def process_single_bill(db: Session, bill: models.Bill):
             
         logger.info(f"  ✅ Extracted {len(text_content)} chars.")
         
+        # Save raw content to Bill
+        bill.content = text_content
+        db.add(bill)
+        db.commit() # Commit content immediately
+        
         # 3. Analyze with AI
         logger.info("  🤖 Analyzing with Ollama...")
         analysis = ollama_service.analyze_legislative_text(bill.title, text_content)
@@ -127,7 +132,7 @@ def process_single_bill(db: Session, bill: models.Bill):
             logger.info("  💾 Saved Analysis.")
             return True
         else:
-            logger.warning("  ⚠️ AI returned no result.")
+            logger.warning(f"  ⚠️ AI returned no result for Bill {bill.id}. Content saved, analysis skipped.")
             return False
             
     finally:
@@ -145,10 +150,10 @@ def run_pipeline(limit=10, force=False):
             logger.error("❌ pdftotext not found! Please install poppler-utils.")
             return
 
-        # Find bills without analysis
-        query = db.query(models.Bill).outerjoin(models.BillAnalysis).filter(
-            models.BillAnalysis.bill_id == None,
-            models.Bill.number != None # Must have print number to fetch PDF
+        # Find bills missing content (backfill + new)
+        query = db.query(models.Bill).filter(
+            models.Bill.content == None,
+            models.Bill.number != None
         )
         
         # Prioritize newer bills
@@ -169,4 +174,4 @@ def run_pipeline(limit=10, force=False):
         db.close()
 
 if __name__ == "__main__":
-    run_pipeline(limit=5)
+    run_pipeline(limit=20)

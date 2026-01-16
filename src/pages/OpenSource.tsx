@@ -8,7 +8,7 @@ export default function OpenSource() {
                 <div className="flex-1">
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-full font-bold text-sm mb-6 border border-slate-200">
                         <Github size={16} />
-                        <span>Open Source</span>
+                        <span>Kod Źródłowy</span>
                     </div>
                     <h1 className="text-5xl md:text-7xl font-black text-slate-900 mb-6 tracking-tight leading-tight">
                         Kod dla <br />
@@ -57,7 +57,7 @@ export default function OpenSource() {
                         <Code2 size={24} />
                     </div>
                     <h3 className="font-bold text-slate-900 mb-1">React + Vite</h3>
-                    <p className="text-xs text-slate-500">Frontend Framework</p>
+                    <p className="text-xs text-slate-500">Warstwa Wizualna</p>
                 </div>
                 <div className="bg-white p-6 rounded-xl border border-slate-200 text-center hover:shadow-md transition-shadow">
                     <div className="w-12 h-12 bg-cyan-50 rounded-lg flex items-center justify-center mx-auto mb-4 text-cyan-600">

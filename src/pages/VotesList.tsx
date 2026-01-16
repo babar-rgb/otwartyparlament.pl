@@ -23,7 +23,13 @@ const VotesList = () => {
         isContextualSearch,
         term,
         setPage,
-        hasMore
+        hasMore,
+        dateFrom,
+        setDateFrom,
+        dateTo,
+        setDateTo,
+        verdict,
+        setVerdict
     } = useVotesList(mpId, rebellion);
 
 
@@ -135,7 +141,7 @@ const VotesList = () => {
                                     />
                                     {isContextualSearch && (
                                         <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-accent-blue/10 rounded-full border border-accent-blue/20 animate-fade-in">
-                                            <span className="text-[10px] font-bold text-accent-blue uppercase tracking-wider">Context Search Active</span>
+                                            <span className="text-[10px] font-bold text-accent-blue uppercase tracking-wider">Wyszukiwanie kontekstowe aktywne</span>
                                         </div>
                                     )}
                                 </div>
@@ -161,7 +167,7 @@ const VotesList = () => {
                         </div>
 
                         {/* Category Filters */}
-                        <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 border-t border-border-base/50 pt-6">
+                        <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 border-t border-border-base/50 pt-6 items-end">
                             {CATEGORY_FILTERS.map((f) => (
                                 <button
                                     key={f.value}
@@ -174,6 +180,32 @@ const VotesList = () => {
                                     {f.label}
                                 </button>
                             ))}
+                            <div className="h-8 w-px bg-border-base mx-2" />
+                            {/* Advanced Filters */}
+                            <div className="flex gap-2">
+                                <input
+                                    type="date"
+                                    value={dateFrom}
+                                    onChange={(e) => setDateFrom(e.target.value)}
+                                    className="px-3 py-2 rounded-lg text-xs font-medium bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-accent-blue"
+                                />
+                                <span className="self-center text-secondary">-</span>
+                                <input
+                                    type="date"
+                                    value={dateTo}
+                                    onChange={(e) => setDateTo(e.target.value)}
+                                    className="px-3 py-2 rounded-lg text-xs font-medium bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-accent-blue"
+                                />
+                                <select
+                                    value={verdict}
+                                    onChange={(e) => setVerdict(e.target.value)}
+                                    className="px-3 py-2 rounded-lg text-xs font-medium bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-accent-blue uppercase tracking-wider"
+                                >
+                                    <option value="">Werdykt (Wszystkie)</option>
+                                    <option value="PRZYJĘTO">Przyjęto</option>
+                                    <option value="ODRZUCONO">Odrzucono</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -182,7 +214,7 @@ const VotesList = () => {
                     <div className="grid gap-4">
                         <div className="text-center py-8 animate-pulse text-secondary font-medium">
                             {rebellion
-                                ? "Analizuję archiwum głosowań w poszukiwaniu głosów odrębnych... To może potrwać kilka sekund."
+                                ? "Analiza archiwum głosowań..."
                                 : "Pobieranie archiwum głosowań..."}
                         </div>
                         {[...Array(5)].map((_, i) => (

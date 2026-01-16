@@ -36,7 +36,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                         </div>
 
                         <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-4">
-                            Ups! Coś poszło nie tak.
+                            Wystąpił nieoczekiwany błąd.
                         </h1>
 
                         <p className="text-slate-600 dark:text-slate-400 mb-8">

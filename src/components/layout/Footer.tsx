@@ -28,7 +28,7 @@ export default function Footer() {
               <li><a href="/rankingi" className="text-slate-400 hover:text-white transition">Rankingi</a></li>
               <li><a href="/test" className="text-slate-400 hover:text-white transition">Test wyborczy</a></li>
               <li><a href="/o-projekcie" className="text-slate-400 hover:text-white transition">O projekcie</a></li>
-              <li><a href="/metodologia" className="text-slate-400 hover:text-white transition">Źródła danych</a></li>
+              <li><a href="/metodologia" className="text-slate-400 hover:text-white transition">Metodologia i Weryfikacja</a></li>
             </ul>
           </div>
 

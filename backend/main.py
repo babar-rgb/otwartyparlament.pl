@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend import models
 from backend.core import orm_db as database
-from backend.routers import mps, votes, general, processes, alignment
+from backend.routers import mps, votes, general, processes, alignment, euro, personas, legislative_processes
 
 # Create DB tables
 models.Base.metadata.create_all(bind=database.engine)
@@ -21,8 +21,11 @@ app.add_middleware(
 # Include Routers
 app.include_router(mps.router, prefix="/mps", tags=["MPs"])
 app.include_router(votes.router, prefix="/votes", tags=["Votes"])
-app.include_router(processes.router, prefix="/processes", tags=["Processes"])
+app.include_router(processes.router, prefix="/processes", tags=["Processes"]) # Existing processes (bills?)
+app.include_router(legislative_processes.router, prefix="/legislative_processes", tags=["Legislative Processes"]) # New!
 app.include_router(alignment.router, prefix="/alignment", tags=["Alignment"])
+app.include_router(euro.router, prefix="/euro", tags=["Euro"])
+app.include_router(personas.router, prefix="/personas", tags=["Personas"])
 app.include_router(general.router, tags=["General"])
 
 @app.get("/")

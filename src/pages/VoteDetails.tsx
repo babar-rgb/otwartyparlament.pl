@@ -293,6 +293,8 @@ const VoteDetails: React.FC = () => {
                             summary={analysis.summary}
                             pros={analysis.pros || []}
                             cons={analysis.cons || []}
+                            voteId={vote.id}
+                            procedural_context={analysis.procedural_context}
                         />
                     </div>
                 </div>

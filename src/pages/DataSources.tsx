@@ -68,7 +68,7 @@ export default function DataSources() {
                         </div>
                         <h3 className="text-3xl font-black text-primary mb-6 tracking-tight">Analiza AI (NLP)</h3>
                         <p className="text-secondary leading-relaxed font-medium mb-8">
-                            Każde głosowanie jest analizowane przez wyspecjalizowane agensy językowe. System generuje ekstrakty kluczowych informacji:
+                            Każde głosowanie jest analizowane przez wyspecjalizowane modele językowe. System generuje ekstrakty kluczowych informacji:
                         </p>
                         <ul className="space-y-4">
                             {[

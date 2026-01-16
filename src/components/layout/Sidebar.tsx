@@ -9,7 +9,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const navigate = useNavigate();
-    const { isSimpleMode, toggleSimpleMode, fontSizeMultiplier, increaseFont, decreaseFont } = useAccessibility();
+    const { isSimpleMode, toggleSimpleMode, fontSize, setFontSize } = useAccessibility();
 
     return (
         <>
@@ -123,8 +123,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                 >
                                     <Database size={20} className="text-green-600 group-hover:scale-110 transition-transform" />
                                     <div>
-                                        <div className="font-bold text-slate-900">Źródła Danych i Metodologia</div>
-                                        <div className="text-sm text-slate-600">Sejm API, skrypty, AI</div>
+                                        <div className="font-bold text-slate-900">Metodologia i Weryfikacja</div>
+                                        <div className="text-sm text-slate-600">Jak sprawdzamy dane?</div>
                                     </div>
                                 </Link>
 
@@ -169,20 +169,20 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                                 <div className="flex items-center gap-2 bg-surface p-1 rounded-xl border border-border-base">
                                     <button
-                                        onClick={decreaseFont}
+                                        onClick={() => setFontSize(Math.max(0, fontSize - 1))}
                                         className="flex-1 p-2 hover:bg-hover rounded-lg text-secondary hover:text-primary transition-colors disabled:opacity-30"
-                                        disabled={fontSizeMultiplier <= 1}
+                                        disabled={fontSize <= 0}
                                         aria-label="Zmniejsz tekst"
                                     >
                                         <Minimize2 size={16} className="mx-auto" />
                                     </button>
                                     <span className="font-mono font-bold text-xs w-12 text-center text-primary">
-                                        {Math.round(fontSizeMultiplier * 100)}%
+                                        {fontSize === 0 ? '100%' : fontSize === 1 ? '125%' : '150%'}
                                     </span>
                                     <button
-                                        onClick={increaseFont}
+                                        onClick={() => setFontSize(Math.min(2, fontSize + 1))}
                                         className="flex-1 p-2 hover:bg-hover rounded-lg text-secondary hover:text-primary transition-colors disabled:opacity-30"
-                                        disabled={fontSizeMultiplier >= 1.5}
+                                        disabled={fontSize >= 2}
                                         aria-label="Powiększ tekst"
                                     >
                                         <Maximize2 size={16} className="mx-auto" />

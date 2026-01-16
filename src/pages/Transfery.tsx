@@ -70,7 +70,7 @@ const Transfery = () => {
     const activePersona = PERSONAS.find(p => p.id === selectedPersonaId) || PERSONAS[0];
 
     const getImpactStyle = (score: number) => {
-        if (score >= 7) return { color: 'text-emerald-500', bg: 'bg-emerald-500/10', icon: TrendingUp, label: 'Super Korzystne' };
+        if (score >= 7) return { color: 'text-emerald-500', bg: 'bg-emerald-500/10', icon: TrendingUp, label: 'Kluczowe wzmocnienie' };
         if (score > 0) return { color: 'text-emerald-400', bg: 'bg-emerald-500/5', icon: TrendingUp, label: 'Korzystne' };
         if (score === 0) return { color: 'text-slate-400', bg: 'bg-slate-500/10', icon: Wallet, label: 'Neutralne' };
         if (score > -7) return { color: 'text-red-400', bg: 'bg-red-500/5', icon: TrendingDown, label: 'Niekorzystne' };

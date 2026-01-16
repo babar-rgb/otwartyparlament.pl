@@ -24,7 +24,8 @@ export function useSejmPrints() {
                 const { items, total } = await fetchProcesses({
                     skip,
                     limit: ITEMS_PER_PAGE,
-                    q: searchTerm
+                    q: searchTerm,
+                    type: filterSource || undefined
                 });
 
                 setPrints(items.map((p: any) => ({
@@ -33,9 +34,11 @@ export function useSejmPrints() {
                     term: p.term,
                     title: p.title,
                     type: p.type,
-                    ai_summary: '',
+                    ai_summary: p.analysis?.summary || p.description || '',
+                    pros: p.analysis?.pros || [],
+                    cons: p.analysis?.cons || [],
                     justification_text: '',
-                    document_type: ''
+                    document_type: p.type // map 'poselski' etc
                 })));
                 setTotalCount(total);
             } catch (err) {

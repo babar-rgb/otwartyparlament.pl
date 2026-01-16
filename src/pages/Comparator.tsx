@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { fetchMPs, fetchSpeeches, fetchInterpellations, fetchVoteResults } from '../api';
+import { fetchMPs, fetchVoteResults, fetchVotes } from '../api';
 import SEO from '../components/SEO';
 import { MP } from '../api';
 import { Search, Swords, Trophy, TrendingUp, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
@@ -183,7 +183,7 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
                 <div className="text-center mb-12">
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-full font-bold text-sm mb-6 border border-purple-100">
                         <Swords size={16} />
-                        <span>Versus Mode</span>
+                        <span>Tryb Porównania</span>
                     </div>
                     <h1 className="text-4xl md:text-6xl font-black text-slate-900 mb-4 tracking-tight">
                         Porównywarka <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Posłów</span>

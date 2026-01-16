@@ -52,9 +52,11 @@ class OllamaService:
         }}
         
         Zasady:
-        1. Używaj trybu przypuszczającego dla projektów ("Projekt zakłada...").
-        2. Bądź merytoryczny i neutralny.
-        3. Importance: 1-10 (10 to kluczowe zmiany ustrojowe/budżetowe).
+        1. ODPOWIADAJ WYŁĄCZNIE W JĘZYKU POLSKIM. Nie używaj chińskiego, angielskiego ani żadnego innego języka.
+        2. Używaj trybu przypuszczającego dla projektów ("Projekt zakłada...").
+        3. Bądź merytoryczny i neutralny.
+        4. Importance: 1-10 (10 to kluczowe zmiany ustrojowe/budżetowe).
+        5. NIE HALUCYNUJ. Opieraj się tylko na dostarczonym tekście.
         """
 
         try:
@@ -100,9 +102,10 @@ class OllamaService:
         }}
         
         Zasady:
-        1. Bądź merytoryczny i neutralny.
-        2. Kategoria "Proceduralne" jest dla głosowań technicznych (przerwy, odroczenia, zmiany w komisjach).
-        3. Wyjaśnij prostym językiem znaczenie tego głosowania dla obywatela.
+        1. ODPOWIADAJ WYŁĄCZNIE W JĘZYKU POLSKIM. Zero chińskich znaków.
+        2. Bądź merytoryczny i neutralny.
+        3. Kategoria "Proceduralne" jest dla głosowań technicznych (przerwy, odroczenia, zmiany w komisjach).
+        4. Wyjaśnij prostym językiem znaczenie tego głosowania dla obywatela.
         """
 
         try:

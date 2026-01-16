@@ -42,6 +42,10 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
     const [totalCount, setTotalCount] = useState(0);
     const PAGE_SIZE = 100;
 
+    const [dateFrom, setDateFrom] = useState<string>('');
+    const [dateTo, setDateTo] = useState<string>('');
+    const [verdict, setVerdict] = useState<string>('');
+
     // Contextual search expansion (mock logic as placeholder for advanced AI search)
     // This mirrors the logic from the conversation "Enabling Contextual Search"
     const expandSearchQuery = (query: string): string[] => {
@@ -69,11 +73,11 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
 
     useEffect(() => {
         fetchVotes();
-    }, [term, page]); // Refetch if term or page changes
+    }, [term, page, dateFrom, dateTo, verdict]); // Refetch if filters change
 
     useEffect(() => {
         setPage(1);
-    }, [searchQuery]);
+    }, [searchQuery, dateFrom, dateTo, verdict]);
 
     useEffect(() => {
         filterVotes();
@@ -90,7 +94,10 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
                 mp_id: mpId ? parseInt(mpId) : undefined,
                 rebellion,
                 skip,
-                limit
+                limit,
+                date_from: dateFrom || undefined,
+                date_to: dateTo || undefined,
+                verdict: verdict || undefined
             });
 
             if (count !== null) setTotalCount(count);
@@ -145,6 +152,12 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
         setPage,
         hasMore,
         totalCount,
-        pageSize: PAGE_SIZE
+        pageSize: PAGE_SIZE,
+        dateFrom,
+        setDateFrom,
+        dateTo,
+        setDateTo,
+        verdict,
+        setVerdict
     };
 }

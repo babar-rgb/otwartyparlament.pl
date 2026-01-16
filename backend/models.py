@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Date, ForeignKey, Boolean, Text, Float, DateTime
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
+from pgvector.sqlalchemy import Vector
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from backend.core.orm_db import Base
@@ -50,7 +51,8 @@ class Vote(Base):
     topic = Column(String, index=True, nullable=True) # AI classified
     importance = Column(Integer, default=0) # AI calculated 1-10
     kind = Column(String, nullable=True) # e.g., 'ustawa', 'uchwała'
-    vector_embedding = Column(JSONB, nullable=True) # 384-dim vector for semantic search
+    vector_embedding = Column(Vector(384), nullable=True) # 384-dim vector for semantic search
+    search_vector = Column(TSVECTOR, nullable=True) # Postgres Full Text Search
     print_number = Column(String, index=True, nullable=True) # Extracted from title or API
     bill_id = Column(Integer, ForeignKey("bills.id"), nullable=True, index=True)
     created_at = Column(DateTime, server_default=func.now())
@@ -85,7 +87,8 @@ class Bill(Base):
     mp_id = Column(Integer, ForeignKey("mps.id"), nullable=True)
     topic = Column(String, index=True, nullable=True) # AI classified
     importance = Column(Integer, default=0) # AI calculated 1-10
-    vector_embedding = Column(JSONB, nullable=True) # 384-dim vector
+    vector_embedding = Column(Vector(384), nullable=True) # 384-dim vector
+    content = Column(Text, nullable=True) # Full text extraction from PDF
     created_at = Column(DateTime, server_default=func.now())
 
     mp = relationship("MP", back_populates="bills")
@@ -198,6 +201,7 @@ class VoteAnalysis(Base):
     pros = Column(JSONB)
     cons = Column(JSONB)
     mind_map = Column(Text, nullable=True)
+    procedural_context = Column(Text, nullable=True) # AI generated context about the legislative stage & legal consequences
     created_at = Column(DateTime, server_default=func.now())
     
     vote = relationship("Vote", back_populates="analysis")
@@ -272,7 +276,7 @@ class EuroVote(Base):
     votes_abstain = Column(Integer)
     importance_score = Column(Integer)
     is_key_vote = Column(Boolean, default=False)
-    vector_embedding = Column(JSONB, nullable=True) # 384-dim vector
+    vector_embedding = Column(Vector(384), nullable=True) # 384-dim vector
     term = Column(Integer)
     topic_tag = Column(String)
 
@@ -296,4 +300,56 @@ class SejmPrint(Base):
     process_id = Column(String, nullable=True) # Linked process
     document_type = Column(String, nullable=True)
     attachments = Column(JSONB, nullable=True) # List of PDFs/HTMLs
+    created_at = Column(DateTime, server_default=func.now())
+
+class LegislativeProcess(Base):
+    """
+    Represents a unified Legislative Process (e.g. 'Budget 2026')
+    that groups multiple physical Bills (Prints) and Votes together.
+    Root ID Strategy.
+    """
+    __tablename__ = "legislative_processes"
+
+    id = Column(String, primary_key=True) # UUID
+    title = Column(String, index=True)
+    description = Column(Text, nullable=True)
+    status = Column(String) # IN_PROGRESS, SIGNED, REJECTED, VETO
+    start_date = Column(Date, nullable=True)
+    end_date = Column(Date, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+    stages = relationship("LegislativeStage", back_populates="process", order_by="LegislativeStage.date")
+
+class LegislativeStage(Base):
+    """
+    Represents a single step in the process (The Metro Station).
+    e.g. 'Senate Resolution', 'Expose', 'First Reading'.
+    """
+    __tablename__ = "legislative_stages"
+
+    id = Column(String, primary_key=True) # UUID
+    process_id = Column(String, ForeignKey("legislative_processes.id"), index=True)
+    stage_type = Column(String) # SUBMISSION, READING_1, READING_2, SENATE, VOTE, SIGNATURE
+    title = Column(String) # Human readable title
+    description = Column(Text, nullable=True)
+    date = Column(Date, index=True)
+    
+    # Optional links to physical entities
+    bill_number = Column(String, nullable=True) # Linked Bill/Print
+    vote_id = Column(Integer, ForeignKey("votes.id"), nullable=True)
+
+    process = relationship("LegislativeProcess", back_populates="stages")
+
+
+class LegislativeLink(Base):
+    """
+    Represents a graph edge between two documents (The Graph Logic).
+    Used for specific traceability (e.g. this Amendment modifies that Bill).
+    """
+    __tablename__ = "legislative_links"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    source_bill = Column(String, index=True) # Print Number
+    target_bill = Column(String, index=True) # Print Number
+    relation_type = Column(String) # AMENDS, REPORTS_ON, MERGES_INTO
     created_at = Column(DateTime, server_default=func.now())

@@ -26,7 +26,7 @@ const MpProfile = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-page flex items-center justify-center">
-        <div className="text-secondary text-sm font-black tracking-[0.3em] uppercase animate-pulse">profile loading</div>
+        <div className="text-secondary text-sm font-black tracking-[0.3em] uppercase animate-pulse">Wczytywanie profilu...</div>
       </div>
     );
   }

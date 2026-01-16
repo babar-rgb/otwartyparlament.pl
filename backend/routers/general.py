@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_
+from sqlalchemy import or_, func, text
 from typing import Optional
 from backend import models
 from backend.core import orm_db as database
@@ -17,49 +17,193 @@ def search_all(
     db: Session = Depends(database.get_db)
 ):
     # This is a complex unified search. For now, we'll search basic entities.
+    from backend.services.embedding import embedding_service
     results = []
     
+    # helper to check if we should search a specific type
+    def should_search(t):
+        return type is None or type == t
+    
     # 1. Search across MPs (Traditional)
-    mps = db.query(models.MP).filter(
-        or_(
-            models.MP.first_name.ilike(f"%{q}%"),
-            models.MP.last_name.ilike(f"%{q}%")
-        )
-    ).limit(6).all()
-    
-    # 2. Search across Votes (Semantic)
-    from backend.services.embedding import embedding_service
-    
-    # Get recent/relevant votes to rank (loading all embeddings might be slow for a single request, but 12k is okay)
-    # We load IDs and embeddings only to optimize.
-    all_votes = db.query(models.Vote).filter(models.Vote.vector_embedding != None).all()
-    
-    if q and len(q) > 3:
-        votes = embedding_service.semantic_search(q, all_votes, limit=20)
-    else:
-        # Fallback to simple ILIKE if search query too short
-        votes = db.query(models.Vote).filter(models.Vote.title_clean.ilike(f"%{q}%")).limit(20).all()
-    
-    # Format results to match frontend SearchResult interface
-    for mp in mps:
-        mp_dict = {c.name: getattr(mp, c.name) for c in mp.__table__.columns}
-        results.append({
-            "type": "mp",
-            "id": str(mp.id),
-            "title": f"{mp.first_name} {mp.last_name}",
-            "data": mp_dict
-        })
+    if should_search('mp') and not period:
+        # Postgres specific concat
+        full_name_normal = func.concat(models.MP.first_name, ' ', models.MP.last_name)
+        full_name_reverse = func.concat(models.MP.last_name, ' ', models.MP.first_name)
         
-    for vote in votes:
-        results.append({
-            "type": "vote",
-            "id": str(vote.id),
-            "title": vote.title_clean,
-            "date": str(vote.date),
-            "term": vote.term,
-            "topic": vote.topic
-        })
+        mp_query = db.query(models.MP)
+        if period:
+             mp_query = mp_query.filter(models.MP.term == int(period))
+
+        mps = mp_query.filter(
+            or_(
+                models.MP.first_name.ilike(f"%{q}%"),
+                models.MP.last_name.ilike(f"%{q}%"),
+                full_name_normal.ilike(f"%{q}%"),
+                full_name_reverse.ilike(f"%{q}%")
+            )
+        ).limit(6).all()
         
+        for mp in mps:
+            mp_dict = {c.name: getattr(mp, c.name) for c in mp.__table__.columns}
+            results.append({
+                "type": "mp",
+                "id": str(mp.id),
+                "title": f"{mp.first_name} {mp.last_name}",
+                "data": mp_dict
+            })
+    
+    # 2. Search across Votes
+    if should_search('vote'):
+        # Base query
+        vote_query = db.query(models.Vote)
+        if q and len(q) > 3:
+            # Semantic search with optional period filtering
+            # Semantic search with optional period filtering
+            # OPTIMIZATION PHASE 2: PGVECTOR NATIVE SEARCH
+            query_vec = embedding_service.get_embedding(q)
+            
+            if query_vec:
+                # Use pgvector cosine distance
+                # Order by distance ASC (closest first)
+                votes_q = db.query(models.Vote).filter(models.Vote.vector_embedding != None)
+                
+                if period:
+                    votes_q = votes_q.filter(models.Vote.term == int(period))
+                
+                # NOISE FILTER: Exclude "Sprawy Regulaminowe" and "Posiedzenie Sejmu" unless user asks for it
+                if "regulamin" not in q.lower() and "posiedzenie" not in q.lower():
+                     votes_q = votes_q.filter(models.Vote.title_clean.notilike("%Sprawy Regulaminowe%"))
+                     votes_q = votes_q.filter(models.Vote.title_clean.notilike("%Posiedzenie Sejmu%"))
+
+                # HYBRID SORT: FTS Priority > Text Match > Semantic Relevance
+                from sqlalchemy import case, literal, func
+                
+                # 1. Full Text Search Match (Morphology: ciąża = ciąży)
+                # We use @@ operator with websearch_to_tsquery('polish', q)
+                fts_match = models.Vote.search_vector.op('@@')(func.websearch_to_tsquery('polish', q))
+
+                # 2. Simple Substring Match (Old school: "regul" matches "regulamin")
+                title_ilike = models.Vote.title_clean.ilike(f"%{q}%")
+                
+                # Priority: FTS (0) -> ILIKE (1) -> Vector (2)
+                rank_algo = case(
+                    (fts_match, 0),
+                    (title_ilike, 1),
+                    else_=2
+                )
+                
+                votes = votes_q.order_by(
+                    rank_algo.asc(),
+                    models.Vote.vector_embedding.cosine_distance(query_vec).asc()
+                ).limit(20).all()
+                    
+                # Fallback Smart Ranking if needed, or trust vector distance
+                # currently vector distance is primary.
+            else:
+                 votes = []
+            
+        else:
+            # Fallback to simple ILIKE
+            votes = vote_query.filter(models.Vote.title_clean.ilike(f"%{q}%")).order_by(models.Vote.importance.desc()).limit(20).all()
+
+        for vote in votes:
+            results.append({
+                "type": "vote",
+                "id": str(vote.id),
+                "title": vote.title_clean,
+                "date": str(vote.date),
+                "term": vote.term,
+                "topic": vote.topic,
+                "ux_category": vote.kind or "Głosowanie"
+            })
+
+    # 3. Search across Bills (Projekty)
+    if should_search('process'):
+        # Date logic for terms: Term 10 start > 2023-11-13
+        bill_query = db.query(models.Bill)
+        
+        if period:
+            p = int(period)
+            if p == 10:
+                bill_query = bill_query.filter(models.Bill.date >= '2023-11-13')
+            elif p == 9:
+                bill_query = bill_query.filter(models.Bill.date < '2023-11-13', models.Bill.date >= '2019-11-12')
+        
+        if q and len(q) > 3:
+            # Semantic search for Bills
+            # Semantic search for Bills
+            # OPTIMIZATION PHASE 2: PGVECTOR NATIVE SEARCH
+            query_vec = embedding_service.get_embedding(q)
+            
+            if query_vec:
+                bills_q = db.query(models.Bill).filter(models.Bill.vector_embedding != None)
+                
+                if period:
+                    p = int(period)
+                    if p == 10:
+                        bills_q = bills_q.filter(models.Bill.date >= '2023-11-13')
+                    elif p == 9:
+                        bills_q = bills_q.filter(models.Bill.date < '2023-11-13', models.Bill.date >= '2019-11-12')
+                        
+                bills = bills_q.order_by(models.Bill.vector_embedding.cosine_distance(query_vec))\
+                    .limit(20).all()
+            else:
+                bills = []
+            
+            if not bills:
+                 bills = bill_query.filter(
+                    or_(
+                        models.Bill.title.ilike(f"%{q}%"),
+                        models.Bill.description.ilike(f"%{q}%"),
+                        models.Bill.number == q
+                    )
+                ).limit(20).all()
+        else:
+            bills = bill_query.filter(
+                or_(
+                    models.Bill.title.ilike(f"%{q}%"),
+                    models.Bill.description.ilike(f"%{q}%"),
+                    models.Bill.number == q
+                )
+            ).limit(20).all()
+
+        for bill in bills:
+            # Infer term for display
+            b_term = 10
+            if bill.date and str(bill.date) < '2023-11-13':
+                b_term = 9
+                
+            results.append({
+                "type": "process",
+                "id": str(bill.id),
+                "title": f"Druk nr {bill.number}: {bill.title}",
+                "date": str(bill.date),
+                "term": b_term,
+                "topic": bill.topic,
+                "ux_category": bill.type or "Projekt"
+            })
+
+    # 4. Search across Speeches (Wypowiedzi) - Text Match
+    if should_search('speech'):
+        speech_query = db.query(models.Speech)
+        if period:
+            speech_query = speech_query.filter(models.Speech.term == int(period))
+            
+        speeches = speech_query.filter(
+            models.Speech.content.ilike(f"%{q}%")
+        ).limit(5).all()
+        
+        for s in speeches:
+            results.append({
+                "type": "speech",
+                "id": str(s.id),
+                "title": f"Wypowiedź: {s.speaker_name}",
+                "date": str(s.date),
+                "content_preview": s.content[:200] + "...",
+                "term": s.term,
+                "mp_id": str(s.mp_id)
+            })
+    
     return results
 
 @router.get("/categories")

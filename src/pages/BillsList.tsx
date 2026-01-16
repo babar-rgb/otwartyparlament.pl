@@ -88,7 +88,7 @@ export default function BillsList() {
 
                 {loading ? (
                     <div className="flex items-center justify-center py-24">
-                        <div className="text-secondary text-sm font-black tracking-[0.3em] uppercase animate-pulse">Scanning Legislative Database...</div>
+                        <div className="text-secondary text-sm font-black tracking-[0.3em] uppercase animate-pulse">Przeszukiwanie bazy legislacyjnej...</div>
                     </div>
                 ) : (
                     <div className="space-y-4">

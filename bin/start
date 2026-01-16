@@ -19,7 +19,7 @@ echo "-----------------------------------"
 if ! pg_isready -h localhost -p 5432 > /dev/null 2>&1; then
   echo "⚠️  PostgreSQL nie jest uruchomiony!"
   echo "👉 Uruchamiam PostgreSQL..."
-  brew services start postgresql@17
+  brew services start postgresql@14
   sleep 3
 fi
 echo "✅ PostgreSQL gotowy!"
@@ -50,9 +50,33 @@ else
   exit 1
 fi
 
-# 3. Start Frontend
+# 3. Check Frontend Dependencies
+if [ ! -d "node_modules" ]; then
+  echo "⚠️  Brak folderu node_modules!"
+  echo "📦 Instaluję zależności (to potrwa chwilę)..."
+  npm install
+fi
+
+# 4. Start Frontend
 echo "💻 Startuję stronę (Vite)..."
-npm run dev
+npm run dev &
+FRONTEND_PID=$!
+
+# 5. Auto-open Browser
+# Wait for port 5173 to be open/listening
+echo "⏳ Czekam na start serwera..."
+count=0
+while ! nc -z localhost 5173 2>/dev/null; do
+  sleep 1
+  count=$((count+1))
+  if [ $count -ge 30 ]; then
+      echo "⚠️  Frontend długo nie wstaje, otwieram mimo to..."
+      break
+  fi
+done
+
+echo "🚀 Otwieram dashboard!"
+open "http://localhost:5173"
 
 # Wait for all background processes
 wait

@@ -39,6 +39,10 @@ type FetchVotesOptions = {
   offset?: number; // New pagination param, replaces skip
   has_results?: boolean;
   rebellion?: boolean;
+  // New filters
+  date_from?: string;
+  date_to?: string;
+  verdict?: string;
 };
 
 export const fetchVotes = async (options: FetchVotesOptions = {}): Promise<{ items: any[]; total: number }> => {
@@ -54,6 +58,9 @@ export const fetchVotes = async (options: FetchVotesOptions = {}): Promise<{ ite
   if (options.limit) params.append('limit', options.limit.toString());
   if (options.has_results) params.append('has_results', 'true');
   if (options.rebellion) params.append('rebellion', 'true');
+  if (options.date_from) params.append('date_from', options.date_from);
+  if (options.date_to) params.append('date_to', options.date_to);
+  if (options.verdict) params.append('verdict', options.verdict);
 
   const response = await fetch(`${API_URL}/votes?${params.toString()}`);
   if (!response.ok) {
@@ -298,12 +305,13 @@ export const fetchProcess = async (id: string) => {
   return await response.json();
 };
 
-export const fetchProcesses = async (options?: { skip?: number; limit?: number; term?: number; q?: string }) => {
+export const fetchProcesses = async (options?: { skip?: number; limit?: number; term?: number; q?: string; type?: string }) => {
   const params = new URLSearchParams();
   if (options?.skip) params.append('skip', options.skip.toString());
   if (options?.limit) params.append('limit', options.limit.toString());
   if (options?.term) params.append('term', options.term.toString());
   if (options?.q) params.append('q', options.q);
+  if (options?.type) params.append('type', options.type);
   const response = await fetch(`${API_URL}/processes?${params.toString()}`);
   if (!response.ok) throw new Error('Failed to fetch processes');
   return await response.json();

@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
-import { Menu, X, Search } from 'lucide-react';
+import { Menu, X, Search, MessageSquareQuote } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import SearchOverlay from '../ui/SearchOverlay';
 import { useAccessibility } from '../../context/AccessibilityContext';
+import BetaWelcomeModal from '../ui/BetaWelcomeModal';
 
 import ThemeToggle from '../ui/ThemeToggle';
 // TermSwitcher removed
@@ -41,6 +42,7 @@ export default function Navigation() {
 
   return (
     <>
+      <BetaWelcomeModal />
       <nav
         className={`fixed top-0 w-full z-50 py-6 transition-all duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'
           } ${lastScrollY > 50
@@ -55,10 +57,9 @@ export default function Navigation() {
               <span>otwartyparlament.pl</span>
             </Link>
 
-            {/* Center: Main Links (Desktop) */}
-            {/* Center: Main Links (Desktop) */}
-            {/* Center: Main Links (Desktop) */}
-            {/* Center: Main Links (Desktop) */}
+            {/* Spacer for better separation */}
+            <div className="hidden xl:block w-8 2xl:w-16" />
+
             {/* Center: Main Links (Desktop) */}
             <div className="hidden xl:flex items-center gap-6 2xl:gap-8">
               {!isSimpleMode && (
@@ -75,6 +76,10 @@ export default function Navigation() {
                     Głosowania
                   </Link>
 
+                  <Link to="/dla-ciebie" className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 hover:scale-105 transform duration-200">
+                    Dla Ciebie ✨
+                  </Link>
+
                   <Link to="/rankingi" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
                     Rankingi
                   </Link>
@@ -84,8 +89,8 @@ export default function Navigation() {
                   <Link to="/projekty" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
                     Projekty
                   </Link>
-                  <Link to="/europarlament" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
-                    Europarlament
+                  <Link to="/procesy" className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400 hover:scale-105 transform duration-200 animate-pulse">
+                    Procesy (Nowość)
                   </Link>
                   <Link to="/o-projekcie" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
                     O Projekcie
@@ -96,6 +101,17 @@ export default function Navigation() {
 
             {/* Right: Actions */}
             <div className="flex items-center gap-2">
+
+              {/* Feedback Button */}
+              <a
+                href="https://forms.gle/owu162jGe9GbQZ73A"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 bg-purple-600 text-white text-xs font-bold rounded-full hover:bg-purple-700 transition-colors mr-2 shadow-lg shadow-purple-500/20"
+              >
+                <MessageSquareQuote size={14} />
+                <span>Twoja Opinia</span>
+              </a>
 
               <div className="hidden md:block">
                 {/* TermSwitcher removed to avoid crowding */}

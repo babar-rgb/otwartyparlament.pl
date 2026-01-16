@@ -19,15 +19,34 @@ def read_votes(
     print_number: Optional[str] = None,
     has_results: Optional[bool] = None,
     rebellion: Optional[bool] = None,
+    # New filters
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    verdict: Optional[str] = None,
     db: Session = Depends(database.get_db)
 ):
-    query = db.query(models.Vote)
+    from sqlalchemy.orm import defer
+    query = db.query(models.Vote).options(
+        defer(models.Vote.vector_embedding),
+        defer(models.Vote.search_vector)
+    )
     if term is not None:
         query = query.filter(models.Vote.term == term)
     if sitting is not None:
         query = query.filter(models.Vote.sitting == sitting)
     if voting_number is not None:
         query = query.filter(models.Vote.voting_number == voting_number)
+    
+    # New Filter Logic
+    if date_from:
+        query = query.filter(models.Vote.date >= date_from)
+    if date_to:
+        query = query.filter(models.Vote.date <= date_to)
+    if verdict:
+        # Frontend might send 'Uchwalono', 'Odrzucono' etc.
+        # DB stores exact strings. We use ilike for flexibility
+        query = query.filter(models.Vote.verdict.ilike(f"%{verdict}%"))
+
     if has_results is True:
         query = query.filter(exists().where(models.VoteResult.vote_id == models.Vote.id))
 
@@ -103,7 +122,7 @@ def read_votes(
         
         final_items = []
         for vote, result in results:
-            vote_dict = {c.name: getattr(vote, c.name) for c in vote.__table__.columns}
+            vote_dict = {c.name: getattr(vote, c.name) for c in vote.__table__.columns if c.name not in ['vector_embedding', 'search_vector']}
             vote_dict['mp_vote'] = result
             final_items.append(vote_dict)
             
@@ -117,7 +136,8 @@ def read_votes(
         
         final_items = []
         for vote in results:
-            vote_dict = {c.name: getattr(vote, c.name) for c in vote.__table__.columns}
+            # Exclude vector_embedding and search_vector from serialization
+            vote_dict = {c.name: getattr(vote, c.name) for c in vote.__table__.columns if c.name not in ['vector_embedding', 'search_vector']}
             final_items.append(vote_dict)
             
         return {
@@ -142,7 +162,7 @@ def read_votes_results_v2(
         query = query.filter(models.VoteResult.mp_id.in_(mp_ids))
     
     # Eager load the MP relationship to avoid N+1 queries
-    results = query.options(joinedload(models.VoteResult.mp)).limit(limit).all()
+    results = query.order_by(models.VoteResult.vote_id.desc()).options(joinedload(models.VoteResult.mp)).limit(limit).all()
     
     out = []
     for r in results:
@@ -160,10 +180,21 @@ def read_votes_results_v2(
 
 @router.get("/{vote_id}")
 def read_vote(vote_id: int, db: Session = Depends(database.get_db)):
-    vote = db.query(models.Vote).filter(models.Vote.id == vote_id).options(joinedload(models.Vote.analysis)).first()
+    # Defer vector loading
+    from sqlalchemy.orm import defer
+    vote = db.query(models.Vote).filter(models.Vote.id == vote_id)\
+        .options(joinedload(models.Vote.analysis), defer(models.Vote.vector_embedding), defer(models.Vote.search_vector))\
+        .first()
     if vote is None:
         raise HTTPException(status_code=404, detail="Vote not found")
-    return vote
+    vote_dict = {c.name: getattr(vote, c.name) for c in vote.__table__.columns if c.name not in ['vector_embedding', 'search_vector']}
+    # Add analysis if loaded
+    if vote.analysis:
+        vote_dict['analysis'] = {c.name: getattr(vote.analysis, c.name) for c in vote.analysis.__table__.columns}
+    else:
+        vote_dict['analysis'] = None
+        
+    return vote_dict
 
 @router.get("/{vote_id}/analysis")
 def read_vote_analysis(vote_id: int, db: Session = Depends(database.get_db)):
@@ -224,3 +255,29 @@ def generate_vote_analysis(vote_id: int, db: Session = Depends(database.get_db))
     db.refresh(analysis)
     
     return analysis
+
+@router.get("/{vote_id}/legislative_process")
+def read_legislative_process_for_vote(vote_id: int, db: Session = Depends(database.get_db)):
+    """
+    Returns the full timeline (Metro Map) for a given vote.
+    Finds the LegislativeProcess via the Vote's stage.
+    """
+    # 1. Find the stage corresponding to this vote
+    from backend.models import LegislativeStage, LegislativeProcess
+    
+    current_stage = db.query(LegislativeStage).filter(LegislativeStage.vote_id == vote_id).first()
+    
+    if not current_stage:
+        # Fallback: Maybe the Bill linked to this vote has a process?
+        vote = db.query(models.Vote).filter(models.Vote.id == vote_id).first()
+        if vote and vote.bill:
+             current_stage = db.query(LegislativeStage).filter(LegislativeStage.bill_number == vote.bill.number).first()
+        
+        if not current_stage:
+            # No process found, return empty structure (Frontend will handle gracefull)
+            return None
+
+    # 2. Fetch the process
+    process = db.query(LegislativeProcess).filter(LegislativeProcess.id == current_stage.process_id).first()
+    return process
+

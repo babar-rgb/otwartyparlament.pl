@@ -38,7 +38,7 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
     const [results, setResults] = useState<VoteResult[]>([]);
     const [partyStats, setPartyStats] = useState<Record<string, PartyStats>>({});
     const [loading, setLoading] = useState(true);
-    const [analysis, setAnalysis] = useState<{ summary: string; pros: string[]; cons: string[] } | null>(null);
+    const [analysis, setAnalysis] = useState<{ summary: string; pros: string[]; cons: string[]; procedural_context?: string } | null>(null);
     const [linkedProcessId, _setLinkedProcessId] = useState<string | null>(null);
     const [linkedPrint, _setLinkedPrint] = useState<{ number: string; title: string } | null>(null);
     const [projectContext, _setProjectContext] = useState<{ ai_summary: string; justification_text: string; pdf_url: string } | null>(null);
@@ -120,7 +120,8 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
                 setAnalysis({
                     summary: aiData.summary,
                     pros: aiData.pros,
-                    cons: aiData.cons
+                    cons: aiData.cons,
+                    procedural_context: aiData.procedural_context
                 });
             }
 
@@ -184,7 +185,8 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
                 setAnalysis({
                     summary: aiData.summary,
                     pros: aiData.pros,
-                    cons: aiData.cons
+                    cons: aiData.cons,
+                    procedural_context: aiData.procedural_context
                 });
             }
         } catch (e) {

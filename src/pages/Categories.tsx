@@ -100,7 +100,7 @@ export default function Categories() {
             <div className="min-h-screen bg-page flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 border-4 border-accent-blue/20 border-t-accent-blue rounded-full animate-spin"></div>
-                    <div className="text-secondary text-xs font-black uppercase tracking-widest">Katalogowanie tematów...</div>
+                    <div className="text-secondary text-xs font-black uppercase tracking-widest">Wczytywanie kategorii...</div>
                 </div>
             </div>
         );

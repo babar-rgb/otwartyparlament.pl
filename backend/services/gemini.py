@@ -18,17 +18,17 @@ else:
 class GeminiService:
     def __init__(self):
         # Models configuration (January 2026 specs)
-        self.model_flash = 'gemini-2.0-flash-exp' # Fast, Cheap ($0.10/1M)
-        self.model_pro = 'gemini-1.5-pro'     # Expert, Expensive ($1.20/1M)
-        self.model_lite = 'gemini-1.5-flash-8b' # Ultra-cheap ($0.03/1M)
+        self.model_flash = 'gemini-2.0-flash-lite'   # Standard (Newest Lite model)
+        self.model_pro = 'gemini-2.0-flash-lite'     # Forcing Lite for cost/speed
+        self.model_lite = 'gemini-2.0-flash-lite'    # Forcing Lite
 
     def _get_model(self, model_name: str):
         return genai.GenerativeModel(model_name)
 
-    def analyze_vote_expert(self, title: str, description: str, bill_text: Optional[str] = None) -> Dict[str, Any]:
+    def analyze_expert(self, title: str, description: str, bill_text: Optional[str] = None, doc_type: str = "vote") -> Dict[str, Any]:
         """
-        Expert analysis using Intelligent Router.
-        Decides which model to use based on input complexity.
+        Expert analysis for Votes, Bills, or Interpellations.
+        doc_type: 'vote', 'bill', 'interpellation'
         """
         complexity = self._assess_complexity(title, description, bill_text)
         
@@ -42,7 +42,7 @@ class GeminiService:
             model_name = self.model_flash
             logger.info(f"🚀 Using FLASH model ({model_name}) for standard task.")
 
-        prompt = self._build_prompt(title, description, bill_text, complexity)
+        prompt = self._build_prompt(title, description, bill_text, complexity, doc_type)
         
         try:
             model = self._get_model(model_name)
@@ -51,11 +51,20 @@ class GeminiService:
                 prompt,
                 generation_config={"response_mime_type": "application/json"}
             )
+            # Log Usage Stats
+            if response.usage_metadata:
+                u = response.usage_metadata
+                logger.info(f"💰 [GEMINI USAGE] Model: {model_name} | Input: {u.prompt_token_count} tokens | Output: {u.candidates_token_count} tokens")
+            
             return json.loads(response.text)
             
         except Exception as e:
             logger.error(f"Gemini API Error: {e}")
             return None
+
+    # Alias for backward compatibility (temporarily)
+    def analyze_vote_expert(self, title: str, description: str, bill_text: Optional[str] = None) -> Dict[str, Any]:
+        return self.analyze_expert(title, description, bill_text, doc_type="vote")
 
     def _assess_complexity(self, title: str, description: str, bill_text: Optional[str]) -> str:
         """
@@ -74,28 +83,88 @@ class GeminiService:
         else:
             return "MEDIUM" # Standard -> FLASH
 
-    def _build_prompt(self, title, description, bill_text, complexity):
+    def _build_prompt(self, title, description, bill_text, complexity, doc_type="vote"):
+        
+        context_word = "głosowania" if doc_type == "vote" else "dokumentu"
+        if doc_type == "bill": context_word = "projektu ustawy/druku"
+        if doc_type == "interpellation": context_word = "interpelacji poselskiej"
+        if doc_type == "process_context": context_word = "etapu legislacyjnego"
+
         base_prompt = f"""
-        Jesteś ekspertem legislacyjnym OtwartyParlament.pl.
-        Przeanalizuj to głosowanie i/lub ustawę.
+        Jesteś bezstronnym analitykiem sejmowym OtwartyParlament.pl.
+        Twoim zadaniem jest dostarczenie surowej, obiektywnej analizy prawnej i ekonomicznej tego {{context_word}}.
         
-        TYTUŁ: {title}
-        OPIS: {description}
-        TREŚĆ USTAWY: {bill_text[:100000] if bill_text else "BRAK"}
+        WAŻNE: CAŁA ODPOWIEDŹ MUSI BYĆ W JĘZYKU POLSKIM (POLISH).
         
-        Zwróć JSON:
-        {{
-            "summary": "Merytoryczne streszczenie (TL;DR).",
+        ZASADY:
+        1. Zachowaj absolutną neutralność polityczną.
+        2. STYL: Ekspercki, pogłębiony, "śledczy".
+        3. KLUCZOWE: Odwołuj się bezpośrednio do numerów druków i treści dokumentów.
+        4. Wykaż relację między dokumentem a stanem prawnym (co się zmienia?).
+        5. Cytuj konkretne kwoty i nazwy programów, jeśli występują w tekście.
+        
+        JAKOŚĆ I POKRYCIE:
+        - UNIKAJ POWTÓRZEŃ.
+        - UNIKAJ BANALNYCH WNIOSKÓW.
+        - ZALETY I WADY (BARDZO WAŻNE): 
+            * W "Zaletach" wymień KONKRETNE grupy/programy (np. "Wsparcie dla Szpitala w Bydgoszczy", "100 mln na Aktywnych Seniorów").
+            * W "Wadach" wymień KONKRETNE instytucje/ryzyka (np. "Cięcia w budżecie IPN", "Ryzyko inflacyjne").
+            * ZAKAZ używania ogólników.
+        
+        DANE WEJŚCIOWE:
+        TYTUŁ: {{title}}
+        OPIS: {{description}}
+        TREŚĆ: {{bill_text[:100000] if bill_text else "BRAK - Analizuj tylko na podstawie tytułu i opisu."}}
+        
+        Zwróć JSON (Wartosci w JSON muszą być po POLSKU):
+        {{{{
+            "summary": "Analiza merytoryczna (MINIMUM 10 zdań). Użyj myślników (-) do wylistowania kluczowych punktów. STRUKTURA: 1. Kontekst. 2. LISTA ZMIAN (-). 3. Skutki.",
             "category": "Jedna z: Gospodarka, Zdrowie, Obronność, Edukacja, Ustrój, Inne",
-            "importance_score": 1-10 (gdzie 10 to zmiana ustrojowa/podatkowa, 1 to techniczna),
-            "justification": "Dlaczego taka ocena wagi?",
-            "impact": "Kto zyska, kto straci (konkretne grupy społeczne)."
-        }}
+            "importance_score": 1-10 (10=Kluczowa Refoma, 1=Korekta techniczna),
+            "pros": ["Zaleta 1", "Zaleta 2"],
+            "cons": ["Wada 1", "Wada 2"],
+            "personas": {{{{
+                "Przedsiębiorca": "Wpływ.",
+                "Pracownik": "Wpływ.",
+                "Rolnik": "Wpływ.",
+                "Emeryt": "Wpływ.",
+                "Student": "Wpływ.",
+                "Rodzic": "Wpływ."
+            }}}}
+        }}}}
         """
-        
-        if complexity == "HIGH":
-            base_prompt += "\nUWAGA: To jest kluczowe głosowanie. Skup się na ukrytych ryzykach prawnych i kruczkach."
+
+        if doc_type == "process_context":
+            base_prompt = f"""
+            Jesteś ekspertem legislacyjnym Kancelarii Sejmu.
+            Twoim zadaniem jest wyjaśnienie obecnego ETAPU PROCESU LEGISLACYJNEGO.
             
-        return base_prompt
+            KONTEKST (Oś Czasu):
+            {{bill_text}}
+
+            OBECNY ETAP: {{title}} ({{description}})
+
+            KLUCZOWE WYMOGI (TON: PROFESJONALNY, NEUTRALNY, PRAWNICZY):
+            1. Wyjaśnij, co proceduralnie oznacza ten etap (np. "Jest to głosowanie nad uchwałą Senatu").
+            2. Wyjaśnij wymogi większości (zwykła, bezwzględna, 3/5) jeśli dotyczy.
+            3. Wyjaśnij skutki prawne (np. "Odrzucenie weta oznacza wejście ustawy w życie").
+            4. ŻADNYCH OCEN i EMOCJI. ("Ważny moment", "Dramatyczne głosowanie" -> ZAKAZANE).
+            
+            Zwróć JSON:
+            {{{{
+                "procedural_context": "Zwięzłe wyjaśnienie proceduralne (max 3 zdania). Skup się na mechanice procesu.",
+                "legal_consequence": "Co się stanie po głosowaniu ZA, a co po PRZECIW."
+            }}}}
+            """
+            return base_prompt.format(title=title, description=description, bill_text=bill_text)
+         
+        
+        if doc_type == "vote":
+            base_prompt += "\\nJEŚLI GŁOSOWANIE JEST TECHNICZNE (przerwa, odroczenie): Zwróć summary='Głosowanie techniczne.' i puste listy pros/cons."
+            
+        if complexity == "HIGH":
+            base_prompt += "\\nUWAGA: To jest kluczowy dokument. Dokładnie przeanalizuj wpływ finansowy."
+            
+        return base_prompt.format(context_word=context_word, title=title, description=description, bill_text=bill_text)
 
 gemini_service = GeminiService()
