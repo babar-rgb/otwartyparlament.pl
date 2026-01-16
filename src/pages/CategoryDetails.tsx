@@ -1,31 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { fetchVotes } from '../api';
 import { ArrowLeft, FileText, CheckCircle, XCircle } from 'lucide-react';
 import SEO from '../components/SEO';
-
-interface Vote {
-    id: number;
-    sitting: number;
-    voting_number: number;
-    date: string;
-    title_clean: string;
-    category: string;
-    verdict: string;
-    description?: string;
-    details_json: {
-        yes: number;
-        no: number;
-        abstain: number;
-    };
-    term: number;
-    is_key_vote?: boolean;
-}
+import { useCategoryDetails } from '../hooks/useCategoryDetails';
 
 export default function CategoryDetails() {
     const { slug } = useParams<{ slug: string }>();
-    const [votes, setVotes] = useState<Vote[]>([]);
-    const [loading, setLoading] = useState(true);
     const [showKeyOnly, setShowKeyOnly] = useState(true);
 
     const formatTitle = (s: string) => {
@@ -51,7 +31,7 @@ export default function CategoryDetails() {
         return mapping[s.toLowerCase()] || formatTitle(s);
     }
 
-    const title = slug ? mapSlugToTitle(slug) : 'Kategoria';
+    const title = useMemo(() => slug ? mapSlugToTitle(slug) : 'Kategoria', [slug]);
 
     const mapSlugToCategory = (s: string) => {
         const mapping: Record<string, string> = {
@@ -72,35 +52,11 @@ export default function CategoryDetails() {
         return mapping[s.toLowerCase()] || s.toUpperCase();
     };
 
-    useEffect(() => {
-        if (slug) {
-            const loadVotes = async () => {
-                setLoading(true);
-                try {
-                    const categoryName = mapSlugToCategory(slug);
-                    const { items } = await fetchVotes({ limit: 100 });
-                    // Filter by category in frontend for now as backend filter might be exact
-                    let filtered = items.filter((v: any) => v.topic?.toUpperCase() === categoryName || (v.tags && v.tags.map((t: string) => t.toUpperCase()).includes(categoryName)));
+    const categoryName = useMemo(() => slug ? mapSlugToCategory(slug) : '', [slug]);
+    const { data, isLoading: loading } = useCategoryDetails(categoryName, showKeyOnly);
 
-                    if (showKeyOnly) {
-                        filtered = filtered.filter((v: any) => v.importance === 'High' || v.is_key_vote);
-                    }
-                    setVotes(filtered);
-                } catch (error) {
-                    console.error('Error fetching category votes:', error);
-                } finally {
-                    setLoading(false);
-                }
-            };
-            loadVotes();
-        }
-    }, [slug, showKeyOnly]);
-
-    const stats = {
-        total: votes.length,
-        accepted: votes.filter(v => v.verdict === 'PRZYJĘTO').length,
-        rejected: votes.filter(v => v.verdict !== 'PRZYJĘTO').length,
-    };
+    const votes = data?.votes || [];
+    const stats = data?.stats || { total: 0, accepted: 0, rejected: 0 };
 
     return (
         <div className="min-h-screen bg-paper pt-32 pb-12 px-6">

@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchCommittees } from '../api';
 import { Users, Calendar, Search, X } from 'lucide-react';
 import SEO from '../components/SEO';
 import CommitteeHero from '../components/features/sejm/CommitteeHero';
+import { useCommittees } from '../hooks/useCommittees';
 
 interface Committee {
     id: number;
@@ -17,40 +17,15 @@ interface Committee {
 }
 
 export default function Komisje() {
-    const [committees, setCommittees] = useState<Committee[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { data: committees = [], isLoading: loading } = useCommittees();
     const [searchQuery, setSearchQuery] = useState('');
     const [filterType, setFilterType] = useState<string>('all');
 
-    useEffect(() => {
-        const loadCommittees = async () => {
-            try {
-                const commData = await fetchCommittees();
-                // For member counts and sittings, we'd ideally have an endpoint or get it from committee details
-                // For now, let's keep them as placeholders or map them if available in the response
-                setCommittees(commData.map((c: any) => ({
-                    ...c,
-                    member_count: c.member_count || 0,
-                    sitting_count: c.sitting_count || 0
-                })));
-            } catch (error) {
-                console.error('Error loading committees:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadCommittees();
-    }, []);
-
-    const filteredCommittees = committees.filter((c) => {
+    const filteredCommittees = (committees as Committee[]).filter((c: Committee) => {
         const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesType = filterType === 'all' || c.committee_type === filterType;
         return matchesSearch && matchesType;
     });
-
-    const totalSittings = committees.reduce((sum, c) => sum + (c.sitting_count || 0), 0);
-    const totalMembers = committees.reduce((sum, c) => sum + (c.member_count || 0), 0);
 
     if (loading) {
         return (
@@ -117,7 +92,7 @@ export default function Komisje() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {filteredCommittees.map((committee) => (
+                    {filteredCommittees.map((committee: Committee) => (
                         <Link
                             key={committee.code}
                             to={`/komisje/${committee.code}`}

@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from 'react';
-import { fetchInterpellations, fetchMP, fetchInterpellationsCount } from '../api';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, FileText, ArrowRight } from 'lucide-react';
 import EmptyState from '../components/ui/EmptyState';
 import { formatPolishDate } from '../utils/dateUtils';
+import { useInterpellationsList } from '../hooks/useInterpellationsList';
 
 interface Interpellation {
     id: number;
@@ -24,118 +23,55 @@ interface Interpellation {
     };
 }
 
+const highlightText = (text: string, highlight: string) => {
+    if (!text) return '';
+    if (!highlight.trim()) return text.slice(0, 300) + '...';
+    const safe = highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${safe})`, 'gi');
+    const match = regex.exec(text);
+    if (!match) return text.slice(0, 300) + '...';
+    const start = Math.max(0, match.index - 60);
+    const end = Math.min(text.length, match.index + highlight.length + 240);
+    let snippet = text.slice(start, end);
+    snippet = snippet.replace(regex, (m) => `<mark class="bg-yellow-200 font-bold rounded px-1">${m}</mark>`);
+    return (start > 0 ? '...' : '') + snippet + (end < text.length ? '...' : '');
+};
+
 export default function InterpellationsList() {
-    const [query, setQuery] = useState('');
-    const [interpellations, setInterpellations] = useState<Interpellation[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [recentInterpellations, setRecentInterpellations] = useState<Interpellation[]>([]);
-    const [hasSearched, setHasSearched] = useState(false);
-    const [totalCount, setTotalCount] = useState<number>(0);
-
     const [searchParams, setSearchParams] = useSearchParams();
+    const queryParam = searchParams.get('q') || '';
     const mpIdFilter = searchParams.get('mp_id');
-    const [filterMpName, setFilterMpName] = useState<string>('');
 
+    const [query, setQuery] = useState(queryParam);
     const [page, setPage] = useState(1);
     const ITEMS_PER_PAGE = 20;
 
-    useEffect(() => {
-        const getCount = async () => {
-            const c = await fetchInterpellationsCount();
-            setTotalCount(c);
-        }
-        getCount();
+    const {
+        interpellations,
+        totalCount,
+        mpName: filterMpName,
+        loading
+    } = useInterpellationsList({
+        mpId: mpIdFilter,
+        page,
+        pageSize: ITEMS_PER_PAGE,
+        query: queryParam
+    });
 
-        if (mpIdFilter) {
-            fetchByMp(mpIdFilter);
-        } else {
-            fetchRecent();
-        }
-    }, [mpIdFilter, page]);
+    const hasSearched = !!queryParam;
 
-    useEffect(() => {
-        setPage(1);
-    }, [mpIdFilter]);
-
-    const fetchByMp = async (mpId: string) => {
-        setLoading(true);
-        try {
-            const mp = await fetchMP(mpId);
-            setFilterMpName(`${mp.first_name} ${mp.last_name}`);
-
-            const skip = (page - 1) * ITEMS_PER_PAGE;
-            const data = await fetchInterpellations({ mp_id: parseInt(mpId), skip, limit: ITEMS_PER_PAGE });
-            setInterpellations(data);
-            setHasSearched(true);
-        } catch (err) {
-            console.error('Error fetching interpellations by MP:', err);
-            setInterpellations([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchRecent = async () => {
-        try {
-            setLoading(true);
-            const skip = (page - 1) * ITEMS_PER_PAGE;
-            const data = await fetchInterpellations({ limit: ITEMS_PER_PAGE, skip });
-            setRecentInterpellations(data);
-        } catch (err) {
-            console.error('Error fetching recent interpellations:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleSearch = async (e: React.FormEvent) => {
+    const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-
         const params: Record<string, string> = {};
         if (query.trim()) params.q = query;
         if (mpIdFilter) params.mp_id = mpIdFilter;
         setSearchParams(params);
         setPage(1);
-
-        if (!query.trim()) {
-            if (mpIdFilter) fetchByMp(mpIdFilter);
-            else fetchRecent();
-            setHasSearched(false);
-            return;
-        }
-
-        setLoading(true);
-        setHasSearched(true);
-        try {
-            const fetchOptions: any = { limit: 100 };
-            if (mpIdFilter) fetchOptions.mp_id = parseInt(mpIdFilter);
-
-            const data = await fetchInterpellations(fetchOptions);
-            const filtered = data.filter((item: any) =>
-                (item.title?.toLowerCase() || '').includes(query.toLowerCase()) ||
-                (item.content?.toLowerCase() || '').includes(query.toLowerCase())
-            );
-            setInterpellations(filtered);
-        } catch (err) {
-            console.error('Error searching interpellations:', err);
-        } finally {
-            setLoading(false);
-        }
     };
 
-    const highlightText = (text: string, highlight: string) => {
-        if (!text) return '';
-        if (!highlight.trim()) return text.slice(0, 300) + '...';
-        const safe = highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`(${safe})`, 'gi');
-        const match = regex.exec(text);
-        if (!match) return text.slice(0, 300) + '...';
-        const start = Math.max(0, match.index - 60);
-        const end = Math.min(text.length, match.index + highlight.length + 240);
-        let snippet = text.slice(start, end);
-        snippet = snippet.replace(regex, (m) => `<mark class="bg-yellow-200 font-bold rounded px-1">${m}</mark>`);
-        return (start > 0 ? '...' : '') + snippet + (end < text.length ? '...' : '');
-    };
+    useEffect(() => {
+        setPage(1);
+    }, [mpIdFilter, queryParam]);
 
     return (
         <div className="min-h-screen bg-page text-primary pb-16">
@@ -193,14 +129,14 @@ export default function InterpellationsList() {
                         </div>
 
                         <div className="grid gap-6">
-                            {(!hasSearched ? recentInterpellations : interpellations).length === 0 && !loading && (
+                            {interpellations.length === 0 && !loading && (
                                 <EmptyState
                                     title="Brak interpelacji"
                                     description="Nie znaleziono zapytań spełniających podane kryteria."
                                     icon="file"
                                 />
                             )}
-                            {(!hasSearched ? recentInterpellations : interpellations).map((item) => {
+                            {interpellations.map((item: Interpellation) => {
                                 const authorList = item.raw_data?.from || [];
                                 const authorName = (item as any).authors?.length > 0
                                     ? (item as any).authors.map((a: any) => `${a.first_name} ${a.last_name}`).join(', ')
@@ -262,7 +198,7 @@ export default function InterpellationsList() {
                                         setPage(p => p + 1);
                                         window.scrollTo({ top: 0, behavior: 'instant' });
                                     }}
-                                    disabled={loading || (!hasSearched ? recentInterpellations.length : interpellations.length) < ITEMS_PER_PAGE}
+                                    disabled={loading || interpellations.length < ITEMS_PER_PAGE}
                                     className="px-6 py-3 rounded-xl bg-surface border border-border-base hover:bg-black/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-black text-xs uppercase tracking-widest"
                                 >
                                     Następna

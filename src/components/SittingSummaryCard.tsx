@@ -1,9 +1,10 @@
 
 import React, { useEffect, useState } from 'react';
-import { Calendar, Sparkles, ChevronRight, FileText } from 'lucide-react';
+import { Calendar, Sparkles, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { useTerm } from '../context/TermContext';
+import { API_URL } from '../api';
 
 interface SittingSummary {
     term: number;
@@ -16,23 +17,18 @@ const SittingSummaryCard: React.FC = () => {
     const { term } = useTerm();
     const [summary, setSummary] = useState<SittingSummary | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(false);
 
     useEffect(() => {
         const fetchSummary = async () => {
             // Reset state when term changes
             setLoading(true);
-            setError(false);
             setSummary(null);
 
             try {
-                // Hardcoded for now to ensure it works locally
-                const API_URL = "http://localhost:8000";
                 console.log("Fetching sitting summary from:", `${API_URL}/sittings/latest/summary?term=${term}`);
                 const response = await fetch(`${API_URL}/sittings/latest/summary?term=${term}`);
                 if (!response.ok) {
                     console.error("Fetch failed with status:", response.status);
-                    setError(true);
                     return;
                 }
                 const data = await response.json();
@@ -45,7 +41,6 @@ const SittingSummaryCard: React.FC = () => {
                 }
             } catch (err) {
                 console.error("Failed to fetch sitting summary", err);
-                setError(true);
             } finally {
                 setLoading(false);
             }

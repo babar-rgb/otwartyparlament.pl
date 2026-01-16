@@ -1,61 +1,39 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchEuroVotes } from '../api';
 import { Search, ArrowLeft, Loader2 } from 'lucide-react';
 import { useTerm } from '../context/TermContext';
+import { useEuroVotesList } from '../hooks/useEuroVotesList';
 
 const EuroVotes = () => {
     const { term } = useTerm();
-    const [votes, setVotes] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedTag, setSelectedTag] = useState('Wszystkie');
     const [showKeyOnly, setShowKeyOnly] = useState(false);
-    const [page, setPage] = useState(0);
-    const [hasMore, setHasMore] = useState(true);
     const LIMIT = 20;
 
-    // Distinct tags for filter (could be dynamic)
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isLoading: loading,
+        isFetchingNextPage
+    } = useEuroVotesList({
+        term,
+        tag: selectedTag,
+        keyOnly: showKeyOnly,
+        search: searchTerm,
+        limit: LIMIT
+    });
+
+    const votes = useMemo(() => data?.pages.flat() || [], [data]);
+
     const availableTags = [
         'Wszystkie',
         'ROLNICTWO', 'KLIMAT', 'BUDŻET', 'PRAWO', 'ZEWNĘTRZNE', 'TRANSPORT', 'GOSPODARKA', 'INNE'
     ];
 
-    useEffect(() => {
-        // Reset list when filters change
-        setVotes([]);
-        setPage(0);
-        setHasMore(true);
-        fetchVotesList(0, true);
-    }, [searchTerm, selectedTag, term, showKeyOnly]);
-
-    const fetchVotesList = async (pageIndex: number, listsReset = false) => {
-        setLoading(true);
-        try {
-            const data = await fetchEuroVotes({
-                term,
-                tag: selectedTag,
-                keyOnly: showKeyOnly,
-                search: searchTerm,
-                skip: pageIndex * LIMIT,
-                limit: LIMIT
-            });
-
-            if (data) {
-                if (data.length < LIMIT) setHasMore(false);
-                setVotes(prev => listsReset ? data : [...prev, ...data]);
-            }
-        } catch (error) {
-            console.error('Error fetching votes:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const loadMore = () => {
-        const nextPage = page + 1;
-        setPage(nextPage);
-        fetchVotesList(nextPage, false);
+        fetchNextPage();
     };
 
     return (
@@ -171,14 +149,14 @@ const EuroVotes = () => {
                 )}
 
                 {/* Load More */}
-                {hasMore && (
+                {hasNextPage && (
                     <div className="text-center pt-8">
                         <button
                             onClick={loadMore}
-                            disabled={loading}
-                            className="px-8 py-3 bg-white dark:bg-[#24243e] border border-neutral-200 dark:border-indigo-800 rounded-xl font-bold hover:bg-neutral-50 dark:hover:bg-indigo-900/30 transition-colors disabled:opacity-50"
+                            disabled={loading || isFetchingNextPage}
+                            className="px-8 py-3 bg-white dark:bg-[#24243e] border border-neutral-200 dark:border-indigo-800 rounded-xl font-bold hover:bg-neutral-50 dark:hover:bg-indigo-900/30 transition-colors disabled:opacity-50 min-w-[160px] flex items-center justify-center mx-auto"
                         >
-                            {loading ? <Loader2 className="animate-spin" /> : 'Załaduj więcej'}
+                            {isFetchingNextPage ? <Loader2 className="animate-spin" /> : 'Załaduj więcej'}
                         </button>
                     </div>
                 )}

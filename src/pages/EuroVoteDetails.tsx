@@ -1,57 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { fetchEuroVote, fetchEuroVoteResults } from '../api';
+import { useEuroVoteDetails } from '../hooks/useEuroVoteDetails';
 import { ArrowLeft, Calendar } from 'lucide-react';
-
-interface EuroVote {
-    id: string;
-    title: string;
-    date: string;
-    description?: string;
-    votes_for?: number;
-    votes_against?: number;
-    votes_abstain?: number;
-    topic_tag?: string;
-}
 
 const EuroVoteDetails: React.FC = () => {
     const { id } = useParams();
-    const [vote, setVote] = useState<EuroVote | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [results, setResults] = useState<any[]>([]);
+    const { data, isLoading: loading } = useEuroVoteDetails(id);
 
-    useEffect(() => {
-        const loadVoteData = async () => {
-            if (!id) return;
-            setLoading(true);
-            try {
-                const voteData = await fetchEuroVote(id);
-                setVote(voteData);
-
-                const resultsData = await fetchEuroVoteResults(id);
-                setResults(resultsData || []);
-            } catch (error) {
-                console.error('Error loading vote details:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadVoteData();
-    }, [id]);
+    const vote = data?.vote;
+    const results = data?.results || [];
 
     // Calculate stats
     const stats = {
-        for: results.filter(r => r.vote === 'For').length,
-        against: results.filter(r => r.vote === 'Against').length,
-        abstain: results.filter(r => r.vote === 'Abstain').length,
-        absent: results.filter(r => r.vote === 'Absent').length,
+        for: results.filter((r: any) => r.vote === 'For').length,
+        against: results.filter((r: any) => r.vote === 'Against').length,
+        abstain: results.filter((r: any) => r.vote === 'Abstain').length,
+        absent: results.filter((r: any) => r.vote === 'Absent').length,
     };
 
-    const partyStats = React.useMemo(() => {
+    const partyStats = useMemo(() => {
         const acc: Record<string, { for: number; against: number; abstain: number; absent: number; total: number }> = {};
 
-        results.forEach(r => {
+        results.forEach((r: any) => {
             const party = r.mep?.national_party || 'Inne';
             if (!acc[party]) acc[party] = { for: 0, against: 0, abstain: 0, absent: 0, total: 0 };
 
@@ -343,7 +313,7 @@ const EuroVoteDetails: React.FC = () => {
                             <div>
                                 <h3 className="font-bold text-xl mb-6">Wyniki imienne (Polska delegacja)</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                    {results.map(r => (
+                                    {(results as any[]).map((r: any) => (
                                         <div key={r.id} className="flex items-center gap-3 p-3 rounded-2xl bg-black/5 dark:bg-white/5 border border-border-base hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
                                             <div className={`w-2 h-2 rounded-full ${r.vote === 'For' ? 'bg-green-500' :
                                                 r.vote === 'Against' ? 'bg-red-500' :

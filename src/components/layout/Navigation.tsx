@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Menu, X, Search, MessageSquareQuote } from 'lucide-react';
+import { Menu, X, Search, MessageSquareQuote, Activity, Sparkles, Home } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import SearchOverlay from '../ui/SearchOverlay';
@@ -119,19 +119,19 @@ export default function Navigation() {
 
               <ThemeToggle />
 
-              {/* Search Button */}
+              {/* Search Button (Hidden on Mobile, moved to Bottom Bar) */}
               <button
                 onClick={() => setIsSearchOpen(true)}
-                className="p-2 text-primary hover:text-accent-blue transition-colors"
+                className="p-2 text-primary hover:text-accent-blue transition-colors hidden md:block" // Hidden on mobile
                 aria-label="Szukaj"
               >
                 <Search size={22} strokeWidth={2} />
               </button>
 
-              {/* Hamburger Menu Button */}
+              {/* Hamburger (Desktop/Tablet Only) - On Mobile we use Bottom Bar Menu */}
               <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="p-2 text-primary hover:text-accent-blue transition-colors"
+                className="p-2 text-primary hover:text-accent-blue transition-colors hidden md:block"
                 aria-label="Menu"
               >
                 {isSidebarOpen ? <X size={26} strokeWidth={2} /> : <Menu size={26} strokeWidth={2} />}
@@ -140,6 +140,47 @@ export default function Navigation() {
           </div>
         </div>
       </nav>
+
+      {/* MOBILE BOTTOM NAVIGATION BAR */}
+      <div className="md:hidden fixed bottom-0 left-0 w-full bg-surface/95 backdrop-blur-xl border-t border-white/10 z-50 pb-safe">
+        <div className="flex justify-around items-center p-3">
+          <Link to="/" className="flex flex-col items-center gap-1 text-xs font-medium text-secondary hover:text-primary p-2">
+            <div className="p-1 rounded-full bg-white/5"><Home size={20} className="w-5 h-5" /></div>
+            <span>Start</span>
+          </Link>
+          <Link to="/procesy" className="flex flex-col items-center gap-1 text-xs font-medium text-secondary hover:text-primary p-2">
+            <Activity size={20} className="text-emerald-400" />
+            <span>Procesy</span>
+          </Link>
+
+          {/* Center Search - Floating? No, standard. */}
+          <button
+            onClick={() => setIsSearchOpen(true)}
+            className="flex flex-col items-center gap-1 -mt-6"
+          >
+            <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center shadow-lg shadow-indigo-500/30 text-white">
+              <Search size={24} />
+            </div>
+            <span className="text-xs font-medium text-primary mt-1">Szukaj</span>
+          </button>
+
+          <Link to="/dla-ciebie" className="flex flex-col items-center gap-1 text-xs font-medium text-secondary hover:text-primary p-2">
+            <div className="relative">
+              <Sparkles size={20} className="text-purple-400" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+            </div>
+            <span>Dla Ciebie</span>
+          </Link>
+
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="flex flex-col items-center gap-1 text-xs font-medium text-secondary hover:text-primary p-2"
+          >
+            <Menu size={20} />
+            <span>Menu</span>
+          </button>
+        </div>
+      </div>
 
       {/* Sidebar Drawer */}
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />

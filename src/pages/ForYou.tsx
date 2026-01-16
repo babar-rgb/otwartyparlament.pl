@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Briefcase, GraduationCap, Tractor, User, Users, Baby, ChevronRight, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
+import { usePersonasFeed } from '../hooks/usePersonasFeed';
 
 const PERSONAS = [
     { id: 'Przedsiębiorca', label: 'Przedsiębiorca', icon: Briefcase, color: 'from-blue-500 to-cyan-500', desc: 'Zmiany w podatkach, ZUS i prawie pracy.' },
@@ -18,16 +18,7 @@ const PERSONAS = [
 export default function ForYou() {
     const [selectedPersona, setSelectedPersona] = useState<string | null>(null);
 
-    const { data: votes, isLoading } = useQuery({
-        queryKey: ['for-you', selectedPersona],
-        queryFn: async () => {
-            if (!selectedPersona) return [];
-            const res = await fetch(`http://localhost:3001/personas/feed?persona=${selectedPersona}&limit=20`);
-            if (!res.ok) throw new Error('Failed to fetch');
-            return res.json();
-        },
-        enabled: !!selectedPersona
-    });
+    const { data: votes, isLoading } = usePersonasFeed(selectedPersona);
 
     const activePersona = PERSONAS.find(p => p.id === selectedPersona);
     const ActiveIcon = activePersona?.icon || Briefcase;

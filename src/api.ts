@@ -1,6 +1,6 @@
 import { MP, Vote, VoteAnalysis } from './types/domain';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export type { MP, Vote };
 
@@ -339,6 +339,12 @@ export const matchPoliticalTwin = async (query: string) => {
     body: JSON.stringify({ query })
   });
   if (!response.ok) throw new Error('Failed to calculate alignment');
+  return await response.json();
+};
+
+export const fetchPersonasFeed = async (persona: string, limit: number = 20) => {
+  const response = await fetch(`${API_URL}/personas/feed?persona=${persona}&limit=${limit}`);
+  if (!response.ok) throw new Error('Failed to fetch personas feed');
   return await response.json();
 };
 

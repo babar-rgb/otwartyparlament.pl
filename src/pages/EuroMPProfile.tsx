@@ -1,64 +1,13 @@
 import { useParams, Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { fetchEuroMP, fetchEuroMPHistory } from '../api';
+import { useEuroMPProfile } from '../hooks/useEuroMPProfile';
 import { MapPin, ArrowLeft, CheckCircle2, XCircle, MinusCircle, HelpCircle } from 'lucide-react';
-
-interface EuroMP {
-    id: number;
-    api_id: number;
-    full_name: string;
-    country: string;
-    national_party: string;
-    eu_group: string;
-    photo_url: string;
-    active: boolean;
-    rebellion_rate?: number;
-    attendance_score?: number;
-    total_votes?: number;
-}
-
-interface EuroVoteHistoryItem {
-    vote: string;
-    euro_votes: {
-        id: string;
-        title: string;
-        date: string;
-        votes_for: number;
-        votes_against: number;
-        votes_abstain: number;
-        topic_tag?: string;
-    };
-}
 
 const EuroMPProfile = () => {
     const { id } = useParams();
-    const [mp, setMp] = useState<EuroMP | null>(null);
-    const [voteHistory, setVoteHistory] = useState<EuroVoteHistoryItem[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { data, isLoading: loading } = useEuroMPProfile(id);
 
-    useEffect(() => {
-        const loadMpData = async () => {
-            if (!id) return;
-            try {
-                // 1. Fetch MP Details
-                const mpData = await fetchEuroMP(id);
-                setMp(mpData);
-
-                // 2. Fetch Voting History
-                // Link via api_id (which is in euro_vote_results.mep_id)
-                if (mpData && mpData.api_id) {
-                    const historyData = await fetchEuroMPHistory(mpData.api_id);
-                    setVoteHistory(historyData);
-                }
-
-            } catch (error) {
-                console.error('Error fetching Euro MP data:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        loadMpData();
-    }, [id]);
+    const mp = data?.mp;
+    const voteHistory = data?.voteHistory || [];
 
     if (loading) return <div className="text-center py-12 text-slate-500">Ładowanie profilu europosła...</div>;
 
@@ -213,7 +162,7 @@ const EuroMPProfile = () => {
 
                 {voteHistory.length > 0 ? (
                     <div className="space-y-4">
-                        {voteHistory.map((item, index) => (
+                        {voteHistory.map((item: any, index: number) => (
                             <div key={index} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 py-4 border-b border-border-base/50 last:border-0 hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-xl px-4 -mx-4">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-2">

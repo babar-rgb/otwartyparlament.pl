@@ -1,74 +1,15 @@
-import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { fetchCommitteeSitting, fetchProcess, fetchVotes } from '../api';
+import { useCommitteeSittingDetails } from '../hooks/useCommitteeSittingDetails';
 import { ArrowLeft, Calendar, MapPin, Video, Clock, FileText, Users, ExternalLink } from 'lucide-react';
 import SEO from '../components/SEO';
 
-interface CommitteeSitting {
-    id: number;
-    committee_code: string;
-    sitting_number: number;
-    date: string;
-    start_time: string;
-    end_time: string;
-    room: string;
-    status: string;
-    is_remote: boolean;
-    is_closed: boolean;
-    video_url: string;
-    agenda: any;
-    committee?: Committee; // Add committee to sitting interface for enriched data
-}
-
-interface Committee {
-    code: string;
-    name: string;
-}
-
 export default function CommitteeSittingDetails() {
     const { committeeCode, sittingId } = useParams();
-    const [sitting, setSitting] = useState<CommitteeSitting | null>(null);
-    const [committee, setCommittee] = useState<Committee | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [videoData, setVideoData] = useState<any>(null);
+    const { data, isLoading: loading } = useCommitteeSittingDetails(sittingId);
 
-    useEffect(() => {
-        const loadData = async () => {
-            if (!sittingId) return;
-
-            try {
-                // Fetch sitting details (enriched with committee)
-                const sittingData = await fetchCommitteeSitting(sittingId);
-                setSitting(sittingData);
-
-                if (sittingData.committee) {
-                    setCommittee(sittingData.committee);
-                }
-
-                // Parse video data if exists
-                if (sittingData.video_url) {
-                    try {
-                        const cleanedJson = sittingData.video_url
-                            .replace(/'/g, '"')
-                            .replace(/True/g, 'true')
-                            .replace(/False/g, 'false');
-                        const parsed = JSON.parse(cleanedJson);
-                        setVideoData(parsed);
-                    } catch {
-                        if (sittingData.video_url.startsWith('http')) {
-                            setVideoData({ playerLink: sittingData.video_url });
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading sitting:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadData();
-    }, [sittingId]);
+    const sitting = data?.sitting;
+    const committee = data?.sitting?.committee; // Hook enriches sitting with committee
+    const videoData = data?.videoData;
 
     // Parse agenda - it might be HTML string, array, or other format
     const parseAgenda = (agenda: any): string[] => {

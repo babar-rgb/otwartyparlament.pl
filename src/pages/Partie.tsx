@@ -1,56 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
-import { fetchMPs } from '../api';
-import { getPartyData } from '../constants/parties';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Users, TrendingUp } from 'lucide-react';
+import { usePartiesList } from '../hooks/usePartiesList';
 
-interface PartyStats {
-  id: string; // Matches DB 'party' column
-  mpCount: number;
-}
+// ... (Interface definition if needed, though hook return is typed)
 
 export default function Partie() {
-  const [parties, setParties] = useState<(PartyStats & { metadata: any })[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: parties = [], isLoading: loading } = usePartiesList();
 
-  useEffect(() => {
-    const fetchPartiesAction = async () => {
-      try {
-        const mps = await fetchMPs({ active: true, limit: 1000 });
-
-        const counts: Record<string, number> = {};
-        (mps || []).forEach((mp: any) => {
-          const p = mp.club || 'Niezrzeszeni';
-          counts[p] = (counts[p] || 0) + 1;
-        });
-
-        const result = Object.entries(counts).map(([partyKey, count]) => {
-          const metadata = getPartyData(partyKey);
-          return {
-            id: partyKey,
-            mpCount: count,
-            metadata
-          };
-        }).sort((a, b) => b.mpCount - a.mpCount);
-
-        setParties(result);
-      } catch (err) {
-        console.error("Error fetching parties:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPartiesAction();
-  }, []);
-
-  const chartData = parties.slice(0, 7).map(p => ({
+  const chartData = useMemo(() => parties.slice(0, 7).map(p => ({
     name: p.metadata.shortName,
     count: p.mpCount,
     fill: p.metadata.color
-  }));
+  })), [parties]);
 
   if (loading) {
     return (

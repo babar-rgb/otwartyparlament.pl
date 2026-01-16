@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Target, ArrowRight, ShieldCheck, Info, Loader2, Sparkles } from 'lucide-react';
-import { matchPoliticalTwin } from '../api';
+import { usePoliticalTwin } from '../hooks/usePoliticalTwin';
 
 interface AlignmentPart {
     party: string;
@@ -18,22 +18,12 @@ interface MatchedVote {
 
 export default function AITwin() {
     const [query, setQuery] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [results, setResults] = useState<{ alignment: AlignmentPart[], matched_votes: MatchedVote[] } | null>(null);
+    const { mutate: match, isPending: loading, data: results } = usePoliticalTwin();
 
-    const handleSearch = async (e: React.FormEvent) => {
+    const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         if (!query.trim() || query.length < 5) return;
-
-        setLoading(true);
-        try {
-            const data = await matchPoliticalTwin(query);
-            setResults(data);
-        } catch (error) {
-            console.error('Matchmaking error:', error);
-        } finally {
-            setLoading(false);
-        }
+        match(query);
     };
 
     return (
@@ -97,7 +87,7 @@ export default function AITwin() {
 
                         {/* Alignment List */}
                         <div className="grid gap-4">
-                            {results.alignment.map((item, idx) => (
+                            {results.alignment.map((item: AlignmentPart, idx: number) => (
                                 <div
                                     key={item.party}
                                     className="bg-surface border border-border-base rounded-3xl p-6 flex flex-col md:flex-row items-center gap-8 group hover:border-accent-blue/30 transition-all"
@@ -139,13 +129,13 @@ export default function AITwin() {
                             <div className="space-y-4">
                                 <h3 className="font-bold text-primary">Jak to obliczyliśmy?</h3>
                                 <p className="text-secondary text-sm leading-relaxed">
-                                    Nasza AI odnalazła <strong>{results.matched_votes.length} najważniejsze głosowania</strong>,
+                                    Nasza AI odnalazła <strong>{results.matched_votes?.length || 0} najważniejsze głosowania</strong>,
                                     które semantycznie najlepiej pasują do Twojego zapytania. Następnie przeanalizowaliśmy
                                     rzeczywiste wyniki tych głosowań dla każdego klubu parlamentarnego. Wynik % pokazuje,
                                     jak często dany klub głosował "ZA" w sprawach, które Cię interesują.
                                 </p>
                                 <div className="grid gap-2">
-                                    {results.matched_votes.map(v => (
+                                    {results.matched_votes?.map((v: MatchedVote) => (
                                         <div key={v.id} className="text-[10px] font-bold text-secondary flex items-start gap-2">
                                             <span className="text-accent-blue shrink-0">•</span>
                                             <span className="line-clamp-1 opacity-70 italic">{v.title}</span>

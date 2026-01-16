@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { fetchMP, fetchSpeeches, fetchVotes, fetchInterpellations, fetchMPStats, fetchMPAlignment, fetchMPDeclarations } from '../api';
 import { MP, MPRelation } from '../types/domain';
 
@@ -20,72 +21,79 @@ export interface VoteHistoryItem {
 
 export function useMpProfile(idOrSlug?: string) {
     const navigate = useNavigate();
-    const [mp, setMp] = useState<MP | null>(null);
-    const [voteHistory, setVoteHistory] = useState<VoteHistoryItem[]>([]);
 
-    const [recentSpeeches, setRecentSpeeches] = useState<any[]>([]);
-    const [keyVotes, setKeyVotes] = useState<VoteHistoryItem[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [interpellationCount, setInterpellationCount] = useState<number>(0);
-    const [stats, setStats] = useState<Record<string, any>>({});
-    const [relations, setRelations] = useState<MPRelation[]>([]);
-    const [digitizedDeclarations, setDigitizedDeclarations] = useState<any[]>([]);
+    const { data, isLoading: loading, error } = useQuery({
+        queryKey: ['mpProfile', idOrSlug],
+        queryFn: async () => {
+            if (!idOrSlug) return null;
 
+            // 1. Fetch Core MP Data
+            const mpData = await fetchMP(idOrSlug);
+
+            // 2. Concurrent fetching for the rest
+            const [speeches, votesData, interps, mpStats, mpRelations, mpDeclarations] = await Promise.all([
+                fetchSpeeches({ mp_id: mpData.id, limit: 5 }),
+                fetchVotes({ mp_id: mpData.id, limit: 20 }),
+                fetchInterpellations({ mp_id: mpData.id, limit: 100 }),
+                fetchMPStats(mpData.id),
+                fetchMPAlignment(mpData.id),
+                fetchMPDeclarations(mpData.id)
+            ]);
+
+            // 3. Data Mapping
+            const voteHistory = votesData.items.map((v: any) => ({
+                vote: (v.mpVote === 'YES' || v.mpVote === 'Za') ? 'YES' :
+                    (v.mpVote === 'NO' || v.mpVote === 'Przeciw') ? 'NO' :
+                        (v.mpVote === 'ABSTAIN' || v.mpVote === 'Wstrzymał się') ? 'ABSTAIN' :
+                            'ABSENT',
+                votes: {
+                    id: v.id,
+                    sitting: v.sitting,
+                    voting_number: v.voting_number,
+                    title_clean: v.title_clean || v.title,
+                    title_raw: v.title_raw,
+                    date: v.date,
+                    verdict: v.verdict,
+                    term: v.term
+                },
+                isFinal: true
+            }));
+
+            return {
+                mp: mpData,
+                recentSpeeches: speeches.items,
+                interpellationCount: interps.length,
+                stats: mpStats,
+                relations: mpRelations as MPRelation[],
+                digitizedDeclarations: mpDeclarations,
+                voteHistory,
+                keyVotes: voteHistory.slice(0, 5)
+            };
+        },
+        enabled: !!idOrSlug,
+        staleTime: 1000 * 60 * 15, // MP personal data doesn't change every minute
+    });
+
+    // Handle slug redirect
     useEffect(() => {
-        const load = async () => {
-            if (!idOrSlug) return;
-            try {
-                const mpData = await fetchMP(idOrSlug);
-                setMp(mpData);
+        if (data?.mp && /^\d+$/.test(idOrSlug || "") && data.mp.slug) {
+            navigate(`/poslowie/${data.mp.slug}`, { replace: true });
+        }
+    }, [data, idOrSlug, navigate]);
 
-                if (/^\d+$/.test(idOrSlug) && mpData.slug) {
-                    navigate(`/poslowie/${mpData.slug}`, { replace: true });
-                    return;
-                }
+    if (error) {
+        console.error('Error fetching MP profile:', error);
+    }
 
-                const [speeches, votesData, interps, mpStats, mpRelations, mpDeclarations] = await Promise.all([
-                    fetchSpeeches({ mp_id: mpData.id, limit: 5 }),
-                    fetchVotes({ mp_id: mpData.id, limit: 20 }),
-                    fetchInterpellations({ mp_id: mpData.id, limit: 100 }),
-                    fetchMPStats(mpData.id),
-                    fetchMPAlignment(mpData.id),
-                    fetchMPDeclarations(mpData.id)
-                ]);
-
-                setRecentSpeeches(speeches.items);
-                setInterpellationCount(interps.length);
-                setStats(mpStats);
-                setRelations(mpRelations);
-                setDigitizedDeclarations(mpDeclarations);
-
-                // Map standard Vote items to VoteHistoryItem structure
-                const mappedHistory = votesData.items.map((v: any) => ({
-                    vote: (v.mpVote === 'YES' || v.mpVote === 'Za') ? 'YES' :
-                        (v.mpVote === 'NO' || v.mpVote === 'Przeciw') ? 'NO' :
-                            (v.mpVote === 'ABSTAIN' || v.mpVote === 'Wstrzymał się') ? 'ABSTAIN' :
-                                'ABSENT',
-                    votes: {
-                        id: v.id,
-                        sitting: v.sitting,
-                        voting_number: v.voting_number,
-                        title_clean: v.title_clean || v.title,
-                        title_raw: v.title_raw,
-                        date: v.date,
-                        verdict: v.verdict,
-                        term: v.term
-                    },
-                    isFinal: true
-                }));
-                setVoteHistory(mappedHistory);
-                setKeyVotes(mappedHistory.slice(0, 5));
-            } catch (err) {
-                console.error('Error fetching MP profile:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        load();
-    }, [idOrSlug, navigate]);
-
-    return { mp, voteHistory, keyVotes, digitizedDeclarations, recentSpeeches, loading, interpellationCount, stats, relations };
+    return {
+        mp: data?.mp || null,
+        voteHistory: data?.voteHistory || [],
+        keyVotes: data?.keyVotes || [],
+        digitizedDeclarations: data?.digitizedDeclarations || [],
+        recentSpeeches: data?.recentSpeeches || [],
+        loading,
+        interpellationCount: data?.interpellationCount || 0,
+        stats: data?.stats || {},
+        relations: data?.relations || []
+    };
 }

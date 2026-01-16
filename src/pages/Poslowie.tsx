@@ -1,11 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { MP, fetchMPs } from '../api';
 import { useTerm } from '../context/TermContext';
 import TermSwitcher from '../components/ui/TermSwitcher';
 import MpCard from '../components/features/sejm/MpCard';
 import { Search, X } from 'lucide-react';
 import SEO from '../components/SEO';
+import { useMPs } from '../hooks/useMPs';
 
 const MAJOR_CLUBS = ['KO', 'PiS', 'Polska2050', 'PSL-TD', 'Lewica', 'Konfederacja'];
 const MIN_PARTY_MAP: Record<string, string> = {
@@ -25,29 +25,24 @@ const PARTIES = [
   { id: 'INNE', name: 'INNE' },
 ];
 
-// Module-level cache to persist order during navigation without re-fetching/re-shuffling
-let mpsCache: MP[] = [];
-let lastTerm: number | null = null;
 let lastScrollY = 0;
 
 export default function Poslowie() {
   const [searchParams] = useSearchParams();
   const { term } = useTerm();
-  const [mps, setMps] = useState<MP[]>(mpsCache);
-  const [loading, setLoading] = useState(mpsCache.length === 0);
+  const { data: mps = [], isLoading: loading } = useMPs(term);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [selectedParty, setSelectedParty] = useState<string>('');
 
   // Handle scroll restoration
   useEffect(() => {
-    if (mpsCache.length > 0) {
-      // Small timeout to ensure the grid has rendered before scrolling
+    if (mps.length > 0) {
       const timeout = setTimeout(() => {
         window.scrollTo(0, lastScrollY);
       }, 100);
       return () => clearTimeout(timeout);
     }
-  }, []);
+  }, [mps.length]);
 
   // Save scroll position when leaving
   useEffect(() => {
@@ -64,42 +59,6 @@ export default function Poslowie() {
     const query = searchParams.get('q');
     if (query !== null) setSearchTerm(query);
   }, [searchParams]);
-
-  useEffect(() => {
-    const loadMps = async () => {
-      // If we have cache for the same term, don't re-fetch
-      if (mpsCache.length > 0 && lastTerm === term) {
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const data = await fetchMPs({
-          term,
-          active: term === 10 ? true : undefined,
-          limit: 1000
-        });
-
-        // Client-side shuffle (Fisher-Yates) 
-        const shuffled = [...data];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-
-        mpsCache = shuffled;
-        lastTerm = term;
-        setMps(shuffled);
-      } catch (error: any) {
-        console.error('Error fetching MPs:', error);
-        setMps([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadMps();
-  }, [term]);
 
   const normalizePl = (str: string) => {
     return str.toLowerCase()

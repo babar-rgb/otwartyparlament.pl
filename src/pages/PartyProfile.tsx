@@ -1,34 +1,14 @@
-import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { fetchMPs } from '../api';
 import { getPartyData } from '../constants/parties';
 import SEO from '../components/SEO';
 import { ArrowLeft, Users, TrendingUp } from 'lucide-react';
+import { usePartyProfile } from '../hooks/usePartyProfile';
 
 export default function PartyProfile() {
   const { id } = useParams();
-  const [mps, setMps] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: mps = [], isLoading: loading } = usePartyProfile(id);
 
   const partyMetadata = id ? getPartyData(id) : null;
-
-  useEffect(() => {
-    if (!id) return;
-
-    const fetchPartyMpsAction = async () => {
-      try {
-        const data = await fetchMPs({ limit: 1000, active: true });
-        // Filter locally for now as fetchMPs doesn't have club/party filter yet
-        const filteredResult = data.filter((mp: any) => mp.club === id);
-        setMps(filteredResult);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPartyMpsAction();
-  }, [id]);
 
   if (!partyMetadata) {
     return (

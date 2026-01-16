@@ -1,98 +1,17 @@
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, FileText, Calendar, User, Tag, CheckCircle2, XCircle, ArrowRight, Network } from 'lucide-react';
-import BillTimeline, { TimelineStage } from '../components/BillTimeline';
+import BillTimeline from '../components/BillTimeline';
 import ProcessTLDR from '../components/ProcessTLDR';
-import { useState, useEffect } from 'react';
-import { fetchProcess, fetchVotes, fetchRelatedProcesses } from '../api';
 import { formatPolishDate } from '../utils/dateUtils';
-
-interface BillData {
-    id: string;
-    title: string;
-    description: string;
-    printNumber: string;
-    date: string;
-    proposer: string;
-    currentStage: TimelineStage;
-    status: 'processing' | 'passed' | 'rejected';
-    ai_analysis?: {
-        summary: string;
-        pros: string[];
-        cons: string[];
-        impact: string;
-        importance: number;
-    } | null;
-}
-
-interface RelatedVote {
-    id: number;
-    sitting: number;
-    voting_number: number;
-    date: string;
-    title_clean: string;
-    verdict: string;
-    details_json: {
-        yes: number;
-        no: number;
-        abstain: number;
-    };
-}
+import { useBillDetails } from '../hooks/useBillDetails';
 
 export default function BillDetails() {
     const { id } = useParams();
-    const [bill, setBill] = useState<BillData | null>(null);
-    const [relatedVotes, setRelatedVotes] = useState<RelatedVote[]>([]);
-    const [relatedProcesses, setRelatedProcesses] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { data, isLoading: loading } = useBillDetails(id);
 
-    useEffect(() => {
-        const fetchBillDetails = async () => {
-            if (!id) return;
-            try {
-                // Fetch basic info from Local API
-                const data = await fetchProcess(id);
-
-                // Mock Stages for now
-                const currentStage: TimelineStage = 'committee';
-                const status: 'processing' | 'passed' | 'rejected' = 'processing';
-
-                setBill({
-                    id: data.id,
-                    title: data.title,
-                    description: data.description || 'Brak opisu.',
-                    printNumber: data.print_number || 'Brak',
-                    date: data.process_start_date,
-                    proposer: 'Sejm RP',
-                    currentStage,
-                    status,
-                    ai_analysis: data.ai_analysis
-                });
-
-                // Fetch related votes
-                if (data.print_number) {
-                    const { items: votesData } = await fetchVotes({
-                        limit: 50 // Get related votes via print number later or for now just list
-                    });
-                    // Filtering by print_number actually needs backend support if we want it via fetchVotes
-                    // For now, let's keep it simple or assume backend handles it.
-                    // Wait, fetchVotes doesn't have print_number filter yet.
-                    // I will add it to main.py.
-                    setRelatedVotes(votesData as unknown as RelatedVote[]);
-                }
-
-                // Fetch semantically related processes
-                const related = await fetchRelatedProcesses(id);
-                setRelatedProcesses(related);
-
-            } catch (error) {
-                console.error('Error fetching bill:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchBillDetails();
-    }, [id]);
+    const bill = data?.bill;
+    const relatedVotes = data?.relatedVotes || [];
+    const relatedProcesses = data?.relatedProcesses || [];
 
     if (loading) {
         return (
@@ -254,7 +173,7 @@ export default function BillDetails() {
                             Podobne Projekty
                         </h2>
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {relatedProcesses.map((rel) => (
+                            {relatedProcesses.map((rel: any) => (
                                 <Link
                                     key={rel.id}
                                     to={`/projekty/${rel.id}`}

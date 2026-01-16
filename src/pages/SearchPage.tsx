@@ -1,83 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Search, User, FileText, ArrowRight, MessageSquare, BookOpen, Zap } from 'lucide-react';
-import { unifiedSearch } from '../api';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import MpCard from '../components/features/sejm/MpCard';
-import { MP } from '../api';
-
-interface SearchResult {
-    type: 'process' | 'vote' | 'speech' | 'interpellation';
-    id: string;
-    title: string;
-    ux_category?: string;
-    content_preview?: string;
-    date: string;
-    relevance: number;
-    term?: number;
-}
+import { useUnifiedSearch } from '../hooks/useUnifiedSearch';
 
 const SearchPage: React.FC = () => {
     const [searchParams] = useSearchParams();
     const query = searchParams.get('q') || '';
 
-    const [mps, setMps] = useState<MP[]>([]);
-    const [results, setResults] = useState<SearchResult[]>([]);
-    const [loading, setLoading] = useState(false);
-
     // Filters
     const [selectedTerm, setSelectedTerm] = useState<string>('10');
     const [selectedType, setSelectedType] = useState<string | null>(null);
 
-    // Cache
-    const searchCache = React.useRef<Record<string, any>>({});
+    const { data, isLoading: loading } = useUnifiedSearch(
+        query,
+        selectedTerm,
+        selectedType,
+        searchParams.get('expanded') || undefined
+    );
 
-    useEffect(() => {
-        if (query) {
-            performSearch(query, selectedTerm, selectedType);
-        }
-    }, [query, selectedTerm, selectedType]);
-
-    const performSearch = async (q: string, term: string, type: string | null) => {
-        const cacheKey = `${q}-${term}-${type || 'all'}`;
-
-        // Check cache
-        if (searchCache.current[cacheKey]) {
-            const data = searchCache.current[cacheKey];
-            const mpResults = data.filter((r: any) => r.type === 'mp').map((r: any) => r.data);
-            const otherResults = data.filter((r: any) => r.type !== 'mp');
-            setMps(mpResults);
-            setResults(otherResults);
-            return;
-        }
-
-        setLoading(true);
-        const expanded = searchParams.get('expanded') || undefined;
-
-        try {
-            const data = await unifiedSearch({
-                q,
-                period: term !== 'all' ? term : undefined,
-                type: type || undefined,
-                expanded
-            });
-
-            // Update Cache
-            searchCache.current[cacheKey] = data;
-
-            // Separate MPs from other results
-            const mpResults = data.filter((r: any) => r.type === 'mp').map((r: any) => r.data);
-            const otherResults = data.filter((r: any) => r.type !== 'mp');
-
-            setMps(mpResults);
-            setResults(otherResults);
-
-        } catch (error) {
-            console.error('Search error:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const mps = data?.mps || [];
+    const results = data?.results || [];
 
     // Grouping results for UI
     const processes = results.filter(r => r.type === 'process');

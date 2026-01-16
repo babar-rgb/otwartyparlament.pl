@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchVote, fetchVoteAnalysis, fetchVotes, fetchVoteResultsDetailed, fetchProcess, generateVoteAnalysis } from '../api';
 import { Vote } from '../types/domain';
 import { formatMPName, extractPrintNumber } from '../utils';
@@ -34,29 +34,16 @@ interface PartyStats {
 }
 
 export function useVoteDetails(id?: string, sitting?: string, votingNumber?: string, term?: string) {
-    const [vote, setVote] = useState<VoteDetail | null>(null);
-    const [results, setResults] = useState<VoteResult[]>([]);
-    const [partyStats, setPartyStats] = useState<Record<string, PartyStats>>({});
-    const [loading, setLoading] = useState(true);
-    const [analysis, setAnalysis] = useState<{ summary: string; pros: string[]; cons: string[]; procedural_context?: string } | null>(null);
-    const [linkedProcessId, _setLinkedProcessId] = useState<string | null>(null);
-    const [linkedPrint, _setLinkedPrint] = useState<{ number: string; title: string } | null>(null);
-    const [projectContext, _setProjectContext] = useState<{ ai_summary: string; justification_text: string; pdf_url: string } | null>(null);
+    const queryClient = useQueryClient();
 
-    useEffect(() => {
-        if (id || (sitting && votingNumber)) {
-            fetchVoteDetails();
-        } else {
-            console.warn("Invalid parameters for VoteDetails");
-            setLoading(false);
-        }
-    }, [id, sitting, votingNumber, term]);
+    const queryKey = ['voteDetails', id || `${term}-${sitting}-${votingNumber}`];
 
-    const fetchVoteDetails = async () => {
-        setLoading(true);
-        try {
+    const { data, isLoading: loading, error } = useQuery({
+        queryKey,
+        queryFn: async () => {
             let voteData: Vote | undefined;
 
+            // 1. Fetch Basic Vote Data
             if (id) {
                 voteData = await fetchVote(id);
             } else {
@@ -75,7 +62,7 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
 
             if (!voteData) throw new Error("Vote not found");
 
-            const fullVote: VoteDetail = {
+            const vote: VoteDetail = {
                 ...voteData,
                 details_json: {
                     yes: voteData.for || 0,
@@ -86,125 +73,119 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
                 print_number: null
             };
 
-            setVote(fullVote);
-
-            // 1b. Fetch Linked Process / Bill (Goal B)
+            // 2. Concurrent Data Fetching
             const printNum = extractPrintNumber(voteData.title_clean || voteData.title_raw || "");
-            if (printNum) {
-                try {
-                    const process = await fetchProcess(printNum);
-                    if (process) {
-                        _setLinkedPrint({ number: process.number, title: process.title });
 
-                        // If we have a description or AI analysis, use it
-                        const summary = process.ai_analysis?.summary || process.description || "";
+            const [aiData, resultsData, process] = await Promise.all([
+                fetchVoteAnalysis(voteData.id.toString()).catch(() => null),
+                fetchVoteResultsDetailed(voteData.id).catch(() => []),
+                printNum ? fetchProcess(printNum).catch(() => null) : Promise.resolve(null)
+            ]);
 
-                        if (summary) {
-                            _setProjectContext({
-                                ai_summary: summary,
-                                justification_text: process.description || "",
-                                pdf_url: process.url || ""
-                            });
-                        }
+            // 3. Process Linked Print / Project Context
+            let linkedPrint = null;
+            let projectContext = null;
+            let linkedProcessId = null;
 
-                        if (process.process_id) _setLinkedProcessId(process.process_id);
-                    }
-                } catch (err) {
-                    console.log("No linked process found for print", printNum);
+            if (process) {
+                linkedPrint = { number: process.number, title: process.title };
+                const summary = process.ai_analysis?.summary || process.description || "";
+                if (summary) {
+                    projectContext = {
+                        ai_summary: summary,
+                        justification_text: process.description || "",
+                        pdf_url: process.url || ""
+                    };
                 }
+                if (process.process_id) linkedProcessId = process.process_id;
             }
 
-            // 2. Fetch Analysis (The AI Part)
-            const aiData = await fetchVoteAnalysis(voteData.id.toString());
-            if (aiData) {
-                setAnalysis({
-                    summary: aiData.summary,
-                    pros: aiData.pros,
-                    cons: aiData.cons,
-                    procedural_context: aiData.procedural_context
+            // 4. Process Analysis
+            const analysis = aiData ? {
+                summary: aiData.summary,
+                pros: aiData.pros,
+                cons: aiData.cons,
+                procedural_context: aiData.procedural_context
+            } : null;
+
+            // 5. Process Results & Party Stats
+            const results: VoteResult[] = resultsData
+                .filter((r: any) => r && r.mp)
+                .map((r: any) => {
+                    let normalizedVote = 'ABSENT';
+                    const voteStr = r.result?.toUpperCase();
+                    if (voteStr === 'ZA' || voteStr === 'YES') normalizedVote = 'YES';
+                    else if (voteStr === 'PRZECIW' || voteStr === 'NO') normalizedVote = 'NO';
+                    else if (voteStr === 'WSTRZYMAŁ SIĘ' || voteStr === 'ABSTAIN' || voteStr === 'ABSTAINED') normalizedVote = 'ABSTAIN';
+                    else if (voteStr === 'NIEOBECNY' || voteStr === 'ABSENT') normalizedVote = 'ABSENT';
+
+                    return {
+                        vote: normalizedVote,
+                        mps: {
+                            id: r.mp.id,
+                            name: formatMPName(r.mp.first_name, r.mp.last_name),
+                            party: r.mp.club || 'Niezrzeszeni',
+                            photo_url: r.mp.photo_url || '',
+                            slug: r.mp.slug || r.mp.id.toString()
+                        }
+                    };
                 });
-            }
 
-            // 3. Fetch Results from our new Backend endpoint
-            try {
-                const resultsData = await fetchVoteResultsDetailed(voteData.id);
+            const partyStats: Record<string, PartyStats> = {};
+            results.forEach(r => {
+                const party = r.mps.party || 'Niezrzeszeni';
+                if (!partyStats[party]) partyStats[party] = { yes: 0, no: 0, abstain: 0, absent: 0 };
 
-                const typedResults: VoteResult[] = resultsData
-                    .filter((r: any) => r && r.mp)
-                    .map((r: any) => {
-                        let normalizedVote = 'ABSENT';
-                        const voteStr = r.result?.toUpperCase();
-                        if (voteStr === 'ZA' || voteStr === 'YES') normalizedVote = 'YES';
-                        else if (voteStr === 'PRZECIW' || voteStr === 'NO') normalizedVote = 'NO';
-                        else if (voteStr === 'WSTRZYMAŁ SIĘ' || voteStr === 'ABSTAIN' || voteStr === 'ABSTAINED') normalizedVote = 'ABSTAIN';
-                        else if (voteStr === 'NIEOBECNY' || voteStr === 'ABSENT') normalizedVote = 'ABSENT';
+                if (r.vote === 'YES') partyStats[party].yes++;
+                else if (r.vote === 'NO') partyStats[party].no++;
+                else if (r.vote === 'ABSTAIN') partyStats[party].abstain++;
+                else partyStats[party].absent++;
+            });
 
-                        return {
-                            vote: normalizedVote,
-                            mps: {
-                                id: r.mp.id,
-                                name: formatMPName(r.mp.first_name, r.mp.last_name),
-                                party: r.mp.club || 'Niezrzeszeni',
-                                photo_url: r.mp.photo_url || '',
-                                slug: r.mp.slug || r.mp.id.toString()
-                            }
-                        };
-                    });
+            return {
+                vote,
+                results,
+                partyStats,
+                analysis,
+                linkedProcessId,
+                linkedPrint,
+                projectContext
+            };
+        },
+        enabled: !!(id || (sitting && votingNumber)),
+        staleTime: 1000 * 60 * 10, // Vote details don't change often
+    });
 
-                setResults(typedResults);
+    // Mutation for generating analysis
+    const analysisMutation = useMutation({
+        mutationFn: async (voteId: string) => {
+            return await generateVoteAnalysis(voteId);
+        },
+        onSuccess: () => {
+            // Invalidate and refetch
+            queryClient.invalidateQueries({ queryKey });
+        }
+    });
 
-                const stats: Record<string, PartyStats> = {};
-                typedResults.forEach(r => {
-                    const party = r.mps.party || 'Niezrzeszeni';
-                    if (!stats[party]) stats[party] = { yes: 0, no: 0, abstain: 0, absent: 0 };
-
-                    if (r.vote === 'YES') stats[party].yes++;
-                    else if (r.vote === 'NO') stats[party].no++;
-                    else if (r.vote === 'ABSTAIN') stats[party].abstain++;
-                    else stats[party].absent++;
-                });
-                setPartyStats(stats);
-            } catch (err) {
-                console.error("Failed to load detailed results:", err);
-                // Non-fatal, just no details
-            }
-
-        } catch (error) {
-            console.error('Error fetching vote details:', error);
-        } finally {
-            setLoading(false);
+    const generateAnalysis = async () => {
+        if (data?.vote) {
+            analysisMutation.mutate(data.vote.id.toString());
         }
     };
 
-    const generateAnalysis = async () => {
-        if (!vote) return;
-        setLoading(true);
-        try {
-            const aiData = await generateVoteAnalysis(vote.id.toString());
-            if (aiData) {
-                setAnalysis({
-                    summary: aiData.summary,
-                    pros: aiData.pros,
-                    cons: aiData.cons,
-                    procedural_context: aiData.procedural_context
-                });
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
+    if (error) {
+        console.error('Error fetching vote details:', error);
     }
 
     return {
-        vote,
-        results,
-        partyStats,
-        loading,
-        analysis,
-        linkedProcessId,
-        linkedPrint,
-        projectContext,
+        vote: data?.vote || null,
+        results: data?.results || [],
+        partyStats: data?.partyStats || {},
+        loading: loading || analysisMutation.isPending,
+        analysis: data?.analysis || null,
+        linkedProcessId: data?.linkedProcessId || null,
+        linkedPrint: data?.linkedPrint || null,
+        projectContext: data?.projectContext || null,
         generateAnalysis
     };
 }

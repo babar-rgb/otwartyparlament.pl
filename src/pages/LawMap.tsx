@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import ReactFlow, {
     Node,
-    Edge,
     Controls,
     Background,
     useNodesState,
@@ -29,25 +28,9 @@ import {
     X,
     ExternalLink
 } from 'lucide-react';
-import { fetchProcess } from '../api';
+import { useLawMapData } from '../hooks/useLawMapData';
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
-interface ProcessData {
-    id: string; // Should be string to handle e.g. "16066-z"
-    title: string;
-    description: string;
-    simple_summary?: { tldr?: string } | string;
-    who_affected?: string;
-    topic_tag?: string;
-    category?: string;     // ADDED
-    ux_category?: string;  // ADDED
-    status?: string;
-    document_date?: string;
-    term?: number;
-}
+// Custom nodes and nodeTypes follow...
 
 // ============================================================================
 // CUSTOM NODES
@@ -227,7 +210,7 @@ function StatusNode({ data }: { data: { label: string; stage: string; date?: str
 
                 {/* Progress bar */}
                 <div className="flex items-center gap-1 mb-2">
-                    {stages.map((stage, i) => (
+                    {stages.map((_, i) => (
                         <div key={i} className="flex-1 flex flex-col items-center">
                             <div className={`
                 w-3 h-3 rounded-full border-2
@@ -275,144 +258,19 @@ const nodeTypes: NodeTypes = {
 export default function LawMap() {
     const { processId } = useParams<{ processId: string }>();
     const navigate = useNavigate();
-    const [process, setProcess] = useState<ProcessData | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { data, isLoading: loading } = useLawMapData(processId);
+
+    const process = data?.process;
     const [selectedNode, setSelectedNode] = useState<Node | null>(null);
 
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
-    // Fetch process data
+    // Sync React Flow state with React Query Data
     useEffect(() => {
-        if (!processId) return;
-
-        const loadProcess = async () => {
-            setLoading(true);
-            try {
-                const data = await fetchProcess(processId);
-                setProcess(data);
-            } catch (err) {
-                console.error('Error fetching process:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadProcess();
-    }, [processId]);
-
-    // Build graph from process data
-    useEffect(() => {
-        if (!process) return;
-
-        // Parse who_affected (handle both Array (Postgres) and String (CSV))
-        let affectedGroups: string[] = ['Obywatele'];
-        const whoAffected = (process as any).who_affected;
-        if (Array.isArray(whoAffected)) {
-            affectedGroups = whoAffected;
-        } else if (typeof whoAffected === 'string') {
-            affectedGroups = whoAffected.split(',').map((g: string) => g.trim()).filter(Boolean);
-        }
-
-        // Map category to topic_tag if missing
-        const topic = (process.category || process.ux_category || process.topic_tag || 'Ustawa');
-
-        // Truncate title for node
-        const shortTitle = process.title.length > 60
-            ? process.title.substring(0, 60) + '...'
-            : process.title;
-
-        // Build nodes
-        const graphNodes: Node[] = [
-            // Center: Law title
-            {
-                id: 'law',
-                type: 'lawNode',
-                position: { x: 400, y: 300 },
-                data: {
-                    label: shortTitle,
-                    subtitle: topic
-                },
-            },
-            // Left: TL;DR
-            {
-                id: 'tldr',
-                type: 'infoNode',
-                position: { x: 50, y: 200 },
-                data: {
-                    label: 'TL;DR',
-                    content: (typeof process.simple_summary === 'object' && process.simple_summary !== null && 'tldr' in process.simple_summary)
-                        ? (process.simple_summary.tldr || 'Generowanie podsumowania...')
-                        : (typeof process.simple_summary === 'string' ? process.simple_summary : 'Generowanie podsumowania...'),
-                    icon: 'zap',
-                    color: 'purple'
-                },
-            },
-            // Left: Description
-            {
-                id: 'description',
-                type: 'infoNode',
-                position: { x: 50, y: 380 },
-                data: {
-                    label: 'O co chodzi?',
-                    content: process.description
-                        ? (process.description.length > 150
-                            ? process.description.substring(0, 150) + '...'
-                            : process.description)
-                        : 'Brak opisu ustawy.',
-                    fullContent: process.description || 'Brak opisu.',
-                    icon: 'file',
-                    color: 'blue'
-                },
-            },
-            // Right: Who affected
-            {
-                id: 'people',
-                type: 'peopleNode',
-                position: { x: 750, y: 220 },
-                data: {
-                    label: 'Kogo dotyczy?',
-                    groups: affectedGroups.slice(0, 4),
-                    fullGroups: affectedGroups
-                },
-            },
-            // Right: Topic
-            {
-                id: 'topic',
-                type: 'infoNode',
-                position: { x: 750, y: 380 },
-                data: {
-                    label: 'Kategoria',
-                    content: topic,
-                    icon: 'link',
-                    color: 'green'
-                },
-            },
-            // Bottom: Status
-            {
-                id: 'status',
-                type: 'statusNode',
-                position: { x: 350, y: 520 },
-                data: {
-                    label: 'Etap Legislacyjny',
-                    stage: process.status || 'W trakcie',
-                    date: process.document_date
-                },
-            },
-        ];
-
-        // Build edges
-        const graphEdges: Edge[] = [
-            { id: 'e-law-tldr', source: 'law', target: 'tldr', animated: true, style: { stroke: '#a855f7' } },
-            { id: 'e-law-desc', source: 'law', target: 'description', animated: true, style: { stroke: '#3b82f6' } },
-            { id: 'e-law-people', source: 'law', target: 'people', animated: true, style: { stroke: '#10b981' } },
-            { id: 'e-law-topic', source: 'law', target: 'topic', animated: true, style: { stroke: '#22c55e' } },
-            { id: 'e-law-status', source: 'law', target: 'status', animated: true, style: { stroke: '#f59e0b' } },
-        ];
-
-        setNodes(graphNodes);
-        setEdges(graphEdges);
-    }, [process, setNodes, setEdges]);
+        if (data?.nodes) setNodes(data.nodes);
+        if (data?.edges) setEdges(data.edges);
+    }, [data, setNodes, setEdges]);
 
     const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
         setSelectedNode(node);

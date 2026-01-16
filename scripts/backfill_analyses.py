@@ -252,7 +252,8 @@ def backfill_analyses(limit=127):
                 # Rate limit protection (Paid Tier: high limits, be nice)
                 time.sleep(4) 
             else:
-                logger.error("   ❌ Failed to generate analysis.")
+                logger.error("   ❌ Failed to generate analysis. Sleeping 60s...")
+                time.sleep(60)
                 
     except Exception as e:
         import traceback

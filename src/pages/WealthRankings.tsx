@@ -1,80 +1,15 @@
-import { useState, useEffect } from 'react';
-import { fetchWealthRankings } from '../api';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { TrendingUp, Home, DollarSign, ArrowRight } from 'lucide-react';
 import Badge from '../components/ui/Badge';
-
-interface WealthData {
-    mp_id: number;
-    name: string;
-    party: string;
-    photo_url: string;
-    savings: number;
-    income: number;
-    properties_count: number;
-    summary: string;
-    year?: string;
-}
+import { useWealthRankings } from '../hooks/useWealthRankings';
 
 export default function WealthRankings() {
-    const [rankings, setRankings] = useState<WealthData[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { data: rankings = [], isLoading: loading } = useWealthRankings();
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const mps = await fetchWealthRankings();
-
-                const processed: WealthData[] = mps
-                    .map((mp: any) => {
-                        const sortedDeclarations = (mp.asset_declarations || [])
-                            .filter((d: any) => d && d.parsed_content)
-                            .sort((a: any, b: any) => {
-                                const yearA = a.year || '0000';
-                                const yearB = b.year || '0000';
-                                return yearB.localeCompare(yearA);
-                            });
-
-                        const decl = sortedDeclarations[0];
-                        if (!decl) return null;
-
-                        const parseAmount = (val: any): number => {
-                            if (typeof val === 'number') return val;
-                            if (typeof val === 'string') {
-                                const clean = val.replace(/[^\d.,-]/g, '').replace(',', '.');
-                                return parseFloat(clean) || 0;
-                            }
-                            return 0;
-                        };
-
-                        return {
-                            mp_id: mp.id,
-                            name: `${mp.first_name} ${mp.last_name}`,
-                            party: mp.club,
-                            photo_url: mp.photo_url,
-                            savings: parseAmount(decl.parsed_content.savings),
-                            income: parseAmount(decl.parsed_content.income),
-                            properties_count: decl.parsed_content.real_estate?.length || 0,
-                            summary: decl.summary,
-                            year: decl.year
-                        };
-                    })
-                    .filter(Boolean) as WealthData[];
-
-                setRankings(processed);
-            } catch (err) {
-                console.error('Error fetching wealth data:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, []);
-
-    const topSavings = [...rankings].sort((a, b) => b.savings - a.savings).slice(0, 10);
-    const topIncome = [...rankings].sort((a, b) => b.income - a.income).slice(0, 10);
-    const topProperties = [...rankings].sort((a, b) => b.properties_count - a.properties_count).slice(0, 10);
+    const topSavings = useMemo(() => [...rankings].sort((a, b) => b.savings - a.savings).slice(0, 10), [rankings]);
+    const topIncome = useMemo(() => [...rankings].sort((a, b) => b.income - a.income).slice(0, 10), [rankings]);
+    const topProperties = useMemo(() => [...rankings].sort((a, b) => b.properties_count - a.properties_count).slice(0, 10), [rankings]);
 
 
     if (loading) {

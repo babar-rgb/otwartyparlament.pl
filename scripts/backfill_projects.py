@@ -90,10 +90,52 @@ def backfill_projects(limit=50):
                     logger.info(f"   🆕 Created Sleeping Process: {process_id}")
 
                 db.commit()
+                db.commit()
                 logger.info("   ✅ Saved.")
+                
+                # 4. Linker Logic (Graph Edges)
+                try:
+                    from backend.models import LegislativeLink
+                    import re
+                    
+                    # Pattern: "o projekcie... (druk nr X)" or "o rządowym... (druk nr Y)"
+                    # This captures the "Source Material" for the current bill
+                    linked_prints = re.findall(r"\(druk nr (\d+)\)", bill.title)
+                    if not linked_prints:
+                         # Try simpler "druku nr X"
+                        linked_prints = re.findall(r"druku nr (\d+)", bill.title)
+                    
+                    for target_num in linked_prints:
+                        if target_num != bill.number:
+                             # Determine Type
+                            rel_type = "RELATED"
+                            if "Sprawozdanie" in bill.title: rel_type = "REPORTS_ON"
+                            elif "Uchwała Senatu" in bill.title: rel_type = "SENATE_POSITION"
+                            elif "Komisji" in bill.title: rel_type = "COMMITTEE_WORK"
+                            
+                            # Check if exists
+                            exists = db.query(LegislativeLink).filter_by(
+                                source_bill=bill.number,
+                                target_bill=target_num
+                            ).first()
+                            
+                            if not exists:
+                                link = LegislativeLink(
+                                    source_bill=bill.number,
+                                    target_bill=target_num,
+                                    relation_type=rel_type
+                                )
+                                db.add(link)
+                                logger.info(f"   🕸️ Graph Link: {bill.number} --({rel_type})--> {target_num}")
+                    
+                    db.commit()
+                except Exception as link_e:
+                    logger.error(f"   ⚠️ Linker failed: {link_e}")
+
                 time.sleep(4)
             else:
-                logger.error("   ❌ Gemini failed.")
+                logger.error("   ❌ Gemini failed. Sleeping 60s...")
+                time.sleep(60)
 
     except Exception as e:
         logger.error(f"Critical: {e}")

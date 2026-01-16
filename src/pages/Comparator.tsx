@@ -1,30 +1,16 @@
-import { useState, useEffect, useMemo } from 'react';
-import { fetchMPs, fetchVoteResults, fetchVotes } from '../api';
-import SEO from '../components/SEO';
+import { useState, useMemo } from 'react';
 import { MP } from '../api';
+import SEO from '../components/SEO';
 import { Search, Swords, Trophy, TrendingUp, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
+import { useMPsForSearch } from '../hooks/useMPsForSearch';
+import { useComparatorAgreement } from '../hooks/useComparatorAgreement';
 
 export default function Comparator({ embedded = false }: { embedded?: boolean }) {
-    const [mps, setMps] = useState<MP[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { data: mps = [], isLoading: loading } = useMPsForSearch();
     const [mpA, setMpA] = useState<MP | null>(null);
     const [mpB, setMpB] = useState<MP | null>(null);
     const [searchA, setSearchA] = useState('');
     const [searchB, setSearchB] = useState('');
-
-    useEffect(() => {
-        const fetchMPsAction = async () => {
-            try {
-                const data = await fetchMPs({ limit: 1000 });
-                setMps(data);
-            } catch (err) {
-                console.error('Error fetching MPs:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchMPsAction();
-    }, []);
 
     const filteredMPsA = useMemo(() => {
         if (!searchA) return [];
@@ -42,125 +28,11 @@ export default function Comparator({ embedded = false }: { embedded?: boolean })
         ).slice(0, 5);
     }, [mps, searchB, mpA]);
 
-    const [similarity, setSimilarity] = useState<number | null>(null);
-    const [calculatingSim, setCalculatingSim] = useState(false);
+    const { data: agreementData, isLoading: calculatingSim } = useComparatorAgreement(mpA?.id, mpB?.id);
 
-    useEffect(() => {
-        if (!mpA || !mpB) {
-            setSimilarity(null);
-            return;
-        }
-
-        const calculateSimilarity = async () => {
-            setCalculatingSim(true);
-            try {
-                // Fetch results for both MPs. 
-                // Note: We don't have a specific "shared votes" endpoint yet, 
-                // but we can fetch recent votes for both and compare.
-                // For now, let's assume we can fetch results by MP
-                const resultsA = await fetchVoteResults({ mp_id: mpA.id, limit: 200 });
-                const resultsB = await fetchVoteResults({ mp_id: mpB.id, limit: 200 });
-
-                const votesMapA = new Map(resultsA.map((r: any) => [r.vote_id, r.vote]));
-                const votesMapB = new Map(resultsB.map((r: any) => [r.vote_id, r.vote]));
-
-                let sharedParam = 0;
-                let agreement = 0;
-
-                for (const [voteId, resA] of votesMapA) {
-                    const resB = votesMapB.get(voteId);
-                    if (resB) {
-                        sharedParam++;
-                        if (resA === resB) agreement++;
-                    }
-                }
-
-                if (sharedParam < 5) {
-                    setSimilarity(null);
-                } else {
-                    setSimilarity(Math.round((agreement / sharedParam) * 100));
-                }
-
-            } catch (err) {
-                console.error("Error calculating similarity:", err);
-            } finally {
-                setCalculatingSim(false);
-            }
-        };
-
-        calculateSimilarity();
-    }, [mpA?.id, mpB?.id]);
-
-    const [keyVotes, setKeyVotes] = useState<any[]>([]);
-    const [loadingVotes, setLoadingVotes] = useState(false);
-
-    useEffect(() => {
-        if (!mpA || !mpB) return;
-
-        const fetchKeyVotesAction = async () => {
-            setLoadingVotes(true);
-            try {
-                // 1. We need key votes. Let's assume fetchVotes can filter for key votes or we just fetch recent.
-                // For now, let's just fetch recent important-ish votes.
-                const { items: recentVotes } = await fetchVotes({ limit: 10 });
-
-                const votesWithDecisions = await Promise.all(recentVotes.map(async (vote: any) => {
-                    try {
-                        // Find results for both MPs for this vote
-                        // Note: We might need fetchVoteResults for a specific vote
-                        const results = await fetchVoteResults({ vote_id: vote.id, mp_ids: [mpA.id, mpB.id] });
-
-                        const voteAResult = results.find((r: any) => r.mp_id === mpA.id)?.vote || 'Nieobecny';
-                        const voteBResult = results.find((r: any) => r.mp_id === mpB.id)?.vote || 'Nieobecny';
-
-                        return {
-                            ...vote,
-                            voteA: voteAResult,
-                            voteB: voteBResult
-                        };
-                    } catch (e) {
-                        console.error(`Error fetching details for vote ${vote.id}`, e);
-                        return { ...vote, voteA: '?', voteB: '?' };
-                    }
-                }));
-
-                setKeyVotes(votesWithDecisions.filter(v => v.voteA !== '?' && v.voteB !== '?').slice(0, 5));
-            } catch (err) {
-                console.error('Error fetching key votes:', err);
-            } finally {
-                setLoadingVotes(false);
-            }
-        };
-
-        fetchKeyVotesAction();
-    }, [mpA, mpB]);
-
-    // Extra Stats
-    useEffect(() => {
-        const fetchExtraStats = async () => {
-            const getStats = async (mpId: number) => {
-                // We'd need these endpoints or counts in backend
-                // For now, let's keep them as 0 or placeholder if not available
-                try {
-                    // Placeholder calls - we'll need to check if these exist in api.ts
-                    const sCount = 0; // await fetchSpeechesCount({ mp_id: mpId });
-                    const iCount = 0; // await fetchInterpellationsCount({ mp_id: mpId });
-                    return { speeches: sCount, interpellations: iCount };
-                } catch (e) { return { speeches: 0, interpellations: 0 }; }
-            };
-
-            if (mpA) {
-                getStats(mpA.id).then(stats => setMpA(prev => prev ? { ...prev, stats } as any : null));
-            }
-            if (mpB) {
-                getStats(mpB.id).then(stats => setMpB(prev => prev ? { ...prev, stats } as any : null));
-            }
-        };
-
-        if ((mpA && !mpA.stats?.speeches) || (mpB && !mpB.stats?.speeches)) {
-            // fetchExtraStats(); // Disabled until counts are reliable in backend
-        }
-    }, [mpA?.id, mpB?.id]);
+    const similarity = agreementData?.similarity ?? null;
+    const keyVotes = agreementData?.keyVotes || [];
+    const loadingVotes = calculatingSim;
 
     if (loading) {
         return (

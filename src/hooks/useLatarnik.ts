@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { fetchVotes, fetchVoteResults } from '../api';
 import { LATARNIK_VOTES } from '../data/latarnikConfig';
 
@@ -21,29 +21,16 @@ export interface PartyAlignment {
 }
 
 export const useLatarnik = () => {
-    const [votes, setVotes] = useState<LatarnikVote[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        fetchLatarnikData();
-    }, []);
-
-    const fetchLatarnikData = async () => {
-        try {
-            setLoading(true);
-
-            // Fetch specific votes required for the test
+    const { data: votes = [], isLoading: loading, error } = useQuery({
+        queryKey: ['latarnikData'],
+        queryFn: async () => {
             const mappedVotes = await Promise.all(LATARNIK_VOTES.map(async (config) => {
-                // Fetch the specific vote by sitting and voting number
-                // We ask for term=10 explicitly, though it might be dynamic in future
                 const { items } = await fetchVotes({
                     term: 10,
                     sitting: config.sitting,
                     voting_number: config.voting_number
                 });
 
-                // Find the exact vote in the returned items (api returns a list)
                 const dbVote = items.find((v: any) =>
                     v.sitting === config.sitting &&
                     v.voting_number === config.voting_number
@@ -58,7 +45,7 @@ export const useLatarnik = () => {
                 const partyAggregates: Record<string, Record<string, number>> = {};
 
                 results.forEach((r: any) => {
-                    const party = r.mp_club; // Standardize field name from API
+                    const party = r.mp_club;
                     if (!party) return;
                     if (!partyAggregates[party]) partyAggregates[party] = { 'YES': 0, 'NO': 0, 'ABSTAIN': 0 };
 
@@ -101,18 +88,13 @@ export const useLatarnik = () => {
             const validVotes = mappedVotes.filter((v): v is LatarnikVote => v !== null);
 
             if (validVotes.length === 0) {
-                // Only throw if we found NOTHING. Partial results are better than nothing.
                 throw new Error('Brak zmapowanych głosowań w bazie danych.');
             }
 
-            setVotes(validVotes);
-        } catch (err: any) {
-            console.error('Latarnik Data Fetch Error:', err);
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+            return validVotes;
+        },
+        staleTime: 1000 * 60 * 60, // 1 hour cache
+    });
 
     const calculateFullResults = async (userAnswers: Record<number, string>) => {
         const partyScores: Record<string, { score: number, total: number }> = {};
@@ -132,7 +114,7 @@ export const useLatarnik = () => {
                     partyScores[party].score -= 1;
                 }
             });
-        }); // This brace closes the `votes.forEach` callback
+        });
 
         const partyAlignments = Object.entries(partyScores)
             .map(([party, stats]) => {
@@ -145,8 +127,13 @@ export const useLatarnik = () => {
             })
             .sort((a, b) => b.alignment - a.alignment);
 
-        return { parties: partyAlignments, mps: [] }; // MPs twins disabled for now to simplify
+        return { parties: partyAlignments, mps: [] };
     };
 
-    return { votes, loading, error, calculateFullResults };
+    return {
+        votes,
+        loading,
+        error: error ? (error as Error).message : null,
+        calculateFullResults
+    };
 };

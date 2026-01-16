@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, AlertTriangle, Scale, ArrowRight, ExternalLink } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { ChevronLeft, AlertTriangle, Scale, ArrowRight, ExternalLink, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLatarnik } from '../hooks/useLatarnik';
-import { fetchParties } from '../api';
+import { useParties } from '../hooks/useParties';
 
 const FALLBACK_PARTY_CONFIG: Record<string, { color: string, name: string, logo: string }> = {
   'PiS': {
@@ -34,35 +33,19 @@ const FALLBACK_PARTY_CONFIG: Record<string, { color: string, name: string, logo:
 };
 
 export default function TestWyborczy() {
-  const { votes, loading, error, calculateFullResults } = useLatarnik();
+  const { votes, loading: latarnikLoading, error: latarnikError, calculateFullResults } = useLatarnik();
+  const { data: fetchedPartyConfig, isLoading: partiesLoading } = useParties();
+
+  const partyConfig = useMemo(() => fetchedPartyConfig || FALLBACK_PARTY_CONFIG, [fetchedPartyConfig]);
+
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const [results, setResults] = useState<any>(null);
   const [calculating, setCalculating] = useState(false);
-  const [partyConfig, setPartyConfig] = useState<Record<string, { color: string, name: string, logo: string }>>(FALLBACK_PARTY_CONFIG);
   const [hasStarted, setHasStarted] = useState(false);
 
-  useEffect(() => {
-    const loadParties = async () => {
-      try {
-        const data = await fetchParties();
-        if (data && data.length > 0) {
-          const config: Record<string, any> = {};
-          data.forEach((p: any) => {
-            config[p.id] = {
-              color: p.color,
-              name: p.name,
-              logo: p.logo_url
-            };
-          });
-          setPartyConfig(config);
-        }
-      } catch (err) {
-        console.error("Failed to fetch party metadata:", err);
-      }
-    };
-    loadParties();
-  }, []);
+  const loading = latarnikLoading || partiesLoading;
+  const error = latarnikError;
 
   const handleStart = () => {
     setHasStarted(true);
@@ -157,20 +140,20 @@ export default function TestWyborczy() {
     return (
       <div className="min-h-screen bg-page pt-32 pb-24 px-4">
         <div className="max-w-4xl mx-auto text-center space-y-12">
-          <h1 className="text-4xl font-black">Twój Wynik</h1>
+          <h1 className="text-4xl font-black text-primary">Twój Wynik</h1>
           <div className="bg-surface p-12 rounded-[2.5rem] border border-border-base shadow-xl">
             <div className="text-6xl font-black text-emerald-500 mb-4">{bestMatch.alignment}%</div>
-            <div className="text-2xl font-bold">{partyConfig[bestMatch.party]?.name || bestMatch.party}</div>
+            <div className="text-2xl font-bold text-primary">{partyConfig[bestMatch.party]?.name || bestMatch.party}</div>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             {results.parties.map((p: any) => (
               <div key={p.party} className="p-6 bg-surface border border-border-base rounded-2xl flex justify-between items-center">
-                <span className="font-bold">{partyConfig[p.party]?.name || p.party}</span>
+                <span className="font-bold text-primary">{partyConfig[p.party]?.name || p.party}</span>
                 <span className="font-black text-blue-500">{p.alignment}%</span>
               </div>
             ))}
           </div>
-          <button onClick={handleReset} className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold">Zacznij od nowa</button>
+          <button onClick={handleReset} className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition">Zacznij od nowa</button>
         </div>
       </div>
     );
@@ -188,7 +171,7 @@ export default function TestWyborczy() {
 
         <div className="bg-surface p-10 rounded-[2rem] border border-border-base shadow-xl">
           <div className="text-xs font-black text-blue-500 uppercase mb-4 tracking-widest">Temat: {currentVote.topic}</div>
-          <h2 className="text-2xl font-bold mb-4">{currentVote.title}</h2>
+          <h2 className="text-2xl font-bold text-primary mb-4">{currentVote.title}</h2>
 
           <p className="text-secondary mb-6 leading-relaxed">
             {currentVote.description}
@@ -205,8 +188,9 @@ export default function TestWyborczy() {
 
           <div className="grid gap-4">
             {['YES', 'NO', 'ABSTAIN'].map(val => (
-              <button key={val} onClick={() => handleAnswer(val)} className="p-6 bg-page/50 border-2 border-border-base rounded-2xl hover:border-blue-500/40 font-bold text-left transition-all">
-                {val === 'YES' ? 'Jestem ZA' : val === 'NO' ? 'Jestem PRZECIW' : 'Nie mam zdania'}
+              <button key={val} onClick={() => handleAnswer(val)} className="p-6 bg-page/50 border-2 border-border-base rounded-2xl hover:border-blue-500/40 font-bold text-left transition-all text-primary group flex items-center justify-between">
+                <span>{val === 'YES' ? 'Jestem ZA' : val === 'NO' ? 'Jestem PRZECIW' : 'Nie mam zdania'}</span>
+                <ChevronRight className="opacity-0 group-hover:opacity-100 transition-opacity" />
               </button>
             ))}
           </div>

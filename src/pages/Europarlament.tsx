@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
-import { fetchEuroMPs } from '../api';
+import { useState } from 'react';
 import { Search, Globe, Users, ExternalLink } from 'lucide-react';
 import SEO from '../components/SEO';
 import Badge from '../components/ui/Badge';
 import { getEuGroupStyle } from '../utils/theme';
+import { useEuroMPsList } from '../hooks/useEuroMPsList';
 
-// Helper for name formatting
 const formatName = (name: string) => {
     return name
         .toLowerCase()
@@ -14,43 +13,25 @@ const formatName = (name: string) => {
         .join(' ');
 };
 
-
 export default function Europarlament() {
-    const [meps, setMeps] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { data: meps = [], isLoading: loading } = useEuroMPsList();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedGroup, setSelectedGroup] = useState('All');
 
-    useEffect(() => {
-        const fetchMeps = async () => {
-            try {
-                const data = await fetchEuroMPs({ term: 10, active: true });
-                setMeps(data);
-            } catch (err) {
-                console.error("Error fetching Euro MEPs:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchMeps();
-    }, []);
+    const groups = ['All', ...new Set(meps.map((m: any) => m.eu_group).filter(Boolean))];
 
-    const groups = ['All', ...new Set(meps.map(m => m.eu_group).filter(Boolean))];
-
-    const filteredMeps = meps.filter(m => {
+    const filteredMeps = meps.filter((m: any) => {
         const matchesSearch = m.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             m.national_party?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesGroup = selectedGroup === 'All' || m.eu_group === selectedGroup;
         return matchesSearch && matchesGroup;
     });
 
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center min-h-[50vh]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-blue"></div>
-            </div>
-        );
-    }
+    if (loading) return (
+        <div className="flex justify-center items-center min-h-[50vh]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-blue"></div>
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-page text-primary animate-fade-in pb-20 transition-colors duration-300">
@@ -119,7 +100,7 @@ export default function Europarlament() {
 
                 {/* Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {filteredMeps.map((mep, index) => (
+                    {filteredMeps.map((mep: any, index: number) => (
                         <div
                             key={mep.id}
                             className="group bg-surface rounded-2xl border border-border-base overflow-hidden hover:shadow-2xl hover:shadow-accent-blue/5 hover:border-accent-blue/30 hover:-translate-y-1 transition-all duration-300 relative flex flex-col"

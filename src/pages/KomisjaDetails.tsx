@@ -1,98 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { fetchCommittee } from '../api';
 import { formatMPName } from '../utils';
 import { ArrowLeft, Users, Calendar, Video, MapPin, ArrowRight } from 'lucide-react';
 import SEO from '../components/SEO';
-
-interface Committee {
-    id: number;
-    code: string;
-    name: string;
-    name_genitive: string;
-    committee_type: string;
-    phone: string;
-}
-
-interface CommitteeMember {
-    mp_id: number;
-    function: string;
-    mps: {
-        id: number;
-        first_name: string;
-        last_name: string;
-        club: string;
-        photo_url: string;
-        slug: string;
-    };
-}
-
-interface CommitteeSitting {
-    id: number;
-    sitting_number: number;
-    date: string;
-    start_time: string;
-    end_time: string;
-    room: string;
-    status: string;
-    is_remote: boolean;
-    is_closed: boolean;
-    video_url: string;
-    agenda: any[];
-}
+import { useKomisjaDetails } from '../hooks/useKomisjaDetails';
 
 export default function KomisjaDetails() {
     const { code } = useParams();
-    const [committee, setCommittee] = useState<Committee | null>(null);
-    const [members, setMembers] = useState<CommitteeMember[]>([]);
-    const [sittings, setSittings] = useState<CommitteeSitting[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { data, isLoading: loading } = useKomisjaDetails(code);
+
+    const committee = data?.committee;
+    const members = data?.members || [];
+    const sittings = data?.sittings || [];
+
     const [showAllMembers, setShowAllMembers] = useState(false);
-    const [sittingsLimit, setSittingsLimit] = useState(20);
-    const [totalSittings, setTotalSittings] = useState(0);
-
-    useEffect(() => {
-        const loadData = async () => {
-            if (!code) return;
-
-            try {
-                const data = await fetchCommittee(code);
-                setCommittee(data.committee);
-
-                if (data.members && data.members.length > 0) {
-                    const enrichedMembers = data.members.map((m: any) => ({
-                        mp_id: m.mp_id,
-                        function: m.function,
-                        mps: m.mp ? {
-                            id: m.mp.id,
-                            first_name: m.mp.first_name,
-                            last_name: m.mp.last_name,
-                            club: m.mp.club,
-                            photo_url: m.mp.photo_url,
-                            slug: m.mp.slug
-                        } : null
-                    }));
-                    setMembers(enrichedMembers);
-                }
-
-                // Sittings still need their own endpoint or be part of fetchCommittee
-                // For now, let's keep the PostgREST call if we haven't implemented it in FastAPI yet
-                // WAIT: implementation plan says "Get committee details + members + sittings". 
-                // Let's check main.py again. It doesn't have sittings in read_committee.
-                // I will add sittings to read_committee in main.py in next step.
-                // For now, I'll assume sittings will be there.
-                setSittings(data.sittings || []);
-                setTotalSittings(data.total_sittings || (data.sittings?.length || 0));
-
-            } catch (error) {
-                console.error('Error loading committee:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadData();
-    }, [code, sittingsLimit]);
 
     if (loading) {
         return (
@@ -179,7 +100,7 @@ export default function KomisjaDetails() {
                 </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    {displayedMembers.filter(m => m.mps).map((member) => (
+                    {displayedMembers.filter(m => m.mps).map((member: any) => (
                         <Link
                             key={member.mp_id}
                             to={`/poslowie/${member.mps?.slug || member.mps?.id || member.mp_id}`}
@@ -224,7 +145,7 @@ export default function KomisjaDetails() {
                 </h2>
 
                 <div className="space-y-3">
-                    {sittings.map((sitting) => (
+                    {sittings.map((sitting: any) => (
                         <Link
                             key={sitting.id}
                             to={`/komisje/${code}/posiedzenie/${sitting.id}`}
@@ -285,17 +206,7 @@ export default function KomisjaDetails() {
                         Brak danych o posiedzeniach tej komisji.
                     </div>
                 )}
-
-                {sittings.length > 0 && sittings.length < totalSittings && (
-                    <button
-                        onClick={() => setSittingsLimit(prev => prev + 20)}
-                        className="mt-4 w-full py-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-medium rounded-lg transition-colors"
-                    >
-                        Pokaż więcej posiedzeń ({sittings.length} z {totalSittings})
-                    </button>
-                )}
             </div>
         </div>
     );
 }
-

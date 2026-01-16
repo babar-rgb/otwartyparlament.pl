@@ -1,10 +1,9 @@
-
-import React, { useEffect, useState } from 'react';
-import { Calendar, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Calendar, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import SEO from '../components/SEO';
 import { useTerm } from '../context/TermContext';
+import { useSittingsHistory } from '../hooks/useSittingsHistory';
 
 interface SittingSummary {
     id: number;
@@ -16,29 +15,7 @@ interface SittingSummary {
 
 const SittingsHistory: React.FC = () => {
     const { term } = useTerm();
-    const [summaries, setSummaries] = useState<SittingSummary[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchSummaries = async () => {
-            setLoading(true);
-            try {
-                // Hardcoded API URL as per previous fix
-                const API_URL = "http://localhost:8000";
-                const response = await fetch(`${API_URL}/sittings/summaries?term=${term}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setSummaries(data);
-                }
-            } catch (err) {
-                console.error("Failed to fetch summaries", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchSummaries();
-    }, [term]);
+    const { data: summaries = [], isLoading: loading } = useSittingsHistory(term);
 
     return (
         <div className="min-h-screen bg-page text-primary pt-24 pb-12 px-4 md:px-8 font-sans transition-all duration-500">
@@ -75,7 +52,7 @@ const SittingsHistory: React.FC = () => {
                     </div>
                 ) : (
                     <div className="space-y-12 relative border-l-2 border-border-base ml-4 md:ml-8 pl-8 md:pl-12 py-4">
-                        {summaries.map((sitting) => (
+                        {summaries.map((sitting: SittingSummary) => (
                             <div key={sitting.id} className="relative group">
                                 {/* Timeline Node */}
                                 <div className="absolute -left-[41px] md:-left-[58px] top-8 w-5 h-5 bg-page border-4 border-amber-500 rounded-full group-hover:scale-125 transition-transform duration-300 z-10 box-content" />

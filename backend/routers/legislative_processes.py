@@ -54,4 +54,50 @@ def read_process_details(process_id: str, db: Session = Depends(database.get_db)
     # Return full object with stages sorted
     process.stages.sort(key=lambda x: x.date if x.date else "1900-01-01")
     
-    return process
+    # --- GRAPH DATA ---
+    bill_numbers = set()
+    for stage in process.stages:
+        if stage.bill_number:
+            bill_numbers.add(stage.bill_number)
+            
+    nodes = []
+    edges = []
+    
+    if bill_numbers:
+        from sqlalchemy import or_
+        links = db.query(models.LegislativeLink).filter(
+            or_(
+                models.LegislativeLink.source_bill.in_(bill_numbers),
+                models.LegislativeLink.target_bill.in_(bill_numbers)
+            )
+        ).all()
+        
+        # Build Node Set
+        node_ids = set()
+        for b in bill_numbers:
+            node_ids.add(b)
+        
+        for link in links:
+            node_ids.add(link.source_bill)
+            node_ids.add(link.target_bill)
+            
+            edges.append({
+                "source": link.source_bill,
+                "target": link.target_bill,
+                "type": link.relation_type
+            })
+            
+        for nid in node_ids:
+            nodes.append({"id": nid, "label": f"Druk {nid}"})
+            
+    return {
+        "id": process.id,
+        "title": process.title,
+        "status": process.status,
+        "start_date": process.start_date,
+        "stages": process.stages,
+        "graph": {
+            "nodes": nodes,
+            "edges": edges
+        }
+    }

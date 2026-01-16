@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Calendar, CheckCircle2, XCircle, PieChart, Users, Sparkles, Network, ExternalLink, Search, FileText, Share2 } from 'lucide-react';
-import { toPng } from 'html-to-image';
+
 import SocialShareCard from '../components/SocialShareCard';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import VoteTechnicalDetails from '../components/VoteTechnicalDetails';
@@ -37,6 +37,9 @@ const VoteDetails: React.FC = () => {
 
         setIsGenerating(true);
         try {
+            // Dynamic import for performance
+            const { toPng } = await import('html-to-image');
+
             // Wait a bit for fonts to potentially load/stabilize
             await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -123,7 +126,7 @@ const VoteDetails: React.FC = () => {
                     </h1>
 
                     {/* Smart Actions Grid */}
-                    <div className="grid sm:grid-cols-2 gap-4 mb-10">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
                         {/* 1. Share/Download Card */}
                         <div className="bg-surface p-6 rounded-2xl border border-border-base hover:border-blue-500/30 transition-all group cursor-pointer shadow-sm relative overflow-hidden" onClick={handleDownloadImage}>
                             <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">

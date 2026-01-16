@@ -1,25 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, BarChart3, Grid3X3, TrendingUp, Filter, ChevronRight } from 'lucide-react';
 
-import { fetchCategories, fetchCategoryVoteCounts, fetchVotes } from '../api';
 import TermSwitcher from '../components/ui/TermSwitcher';
 import SEO from '../components/SEO';
-
-
-
-interface Category {
-    id: number;
-    parent_id: number | null;
-    slug: string;
-    name_pl: string;
-    name_citizen: string;
-    level: number;
-    color: string;
-    ux_category?: string;
-    vote_count: number;
-    children?: Category[];
-}
+import { useCategories } from '../hooks/useCategories';
 
 // Color classes for bars with premium gradients
 const BAR_COLORS: Record<string, string> = {
@@ -35,64 +20,15 @@ export default function Categories() {
     const [searchParams] = useSearchParams();
     const termParam = parseInt(searchParams.get('term') || '10');
 
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [totalVotes, setTotalVotes] = useState(0);
-    const [classifiedVotes, setClassifiedVotes] = useState(0);
+    const { data, isLoading: loading } = useCategories(termParam);
+
+    const categories = data?.categories || [];
+    const totalVotes = data?.totalVotes || 0;
+    const classifiedVotes = data?.classifiedVotes || 0;
+
     const [view, setView] = useState<'chart' | 'grid'>('chart');
 
-    useEffect(() => {
-        fetchData();
-    }, [termParam]);
-
-    const fetchData = async () => {
-        setLoading(true);
-        try {
-            // Fetch categories
-            const cats = await fetchCategories();
-
-            // Fetch vote counts per category
-            const countData = await fetchCategoryVoteCounts(termParam);
-
-            // Get total votes
-            const { total: totalCount } = await fetchVotes({
-                term: termParam,
-                limit: 1
-            });
-
-            // Get hierarchy
-            const countMap = new Map<number, number>();
-            if (countData) {
-                countData.forEach((c: { category_id: number; vote_count: number }) => {
-                    countMap.set(c.category_id, c.vote_count);
-                });
-            }
-
-            const domains = (cats?.filter((c: Category) => c.level === 1) || []).map((d: Category) => ({
-                ...d,
-                vote_count: countMap.get(d.id) || 0,
-                children: (cats?.filter((c: Category) => c.level === 2 && c.parent_id === d.id) || [])
-                    .map((a: Category) => ({
-                        ...a,
-                        vote_count: countMap.get(a.id) || 0
-                    }))
-                    .sort((a: Category, b: Category) => b.vote_count - a.vote_count)
-            })).sort((a: Category, b: Category) => b.vote_count - a.vote_count);
-
-            setCategories(domains);
-            setTotalVotes(totalCount || 0);
-
-            // Fetch classified count - mocking for now as we don't have separate endpoint
-            setClassifiedVotes(totalCount || 0);
-
-        } catch (err) {
-            console.error('Error fetching categories:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const maxVotes = Math.max(...categories.map(c => c.vote_count), 1);
+    const maxVotes = Math.max(...categories.map((c: any) => c.vote_count), 1);
     const coveragePercent = totalVotes > 0 ? Math.round((classifiedVotes / totalVotes) * 100) : 0;
 
     if (loading) {
@@ -218,7 +154,7 @@ export default function Categories() {
                         </h2>
 
                         <div className="space-y-12">
-                            {categories.map(domain => (
+                            {categories.map((domain: any) => (
                                 <div key={domain.id} className="space-y-4">
                                     <Link
                                         to={`/glosowania?category_id=${domain.id}&term=${termParam}`}
@@ -247,7 +183,7 @@ export default function Categories() {
                                     {/* Subcategories */}
                                     {domain.children && domain.children.length > 0 && (
                                         <div className="ml-8 space-y-4 border-l border-border-base pl-8 py-2">
-                                            {domain.children.slice(0, 6).map(sub => (
+                                            {domain.children.slice(0, 6).map((sub: any) => (
                                                 <Link
                                                     key={sub.id}
                                                     to={`/glosowania?category_id=${sub.id}&term=${termParam}`}
@@ -276,7 +212,7 @@ export default function Categories() {
                 {/* Grid View */}
                 {view === 'grid' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {categories.map(domain => (
+                        {categories.map((domain: any) => (
                             <Link
                                 key={domain.id}
                                 to={`/glosowania?category_id=${domain.id}&term=${termParam}`}
@@ -300,7 +236,7 @@ export default function Categories() {
 
                                 {/* Mini summary */}
                                 <div className="mt-auto space-y-3 pt-6 border-t border-border-base">
-                                    {domain.children?.slice(0, 3).map(area => (
+                                    {domain.children?.slice(0, 3).map((area: any) => (
                                         <div key={area.id} className="flex items-center gap-3">
                                             <div className="flex-1 h-1 bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
                                                 <div

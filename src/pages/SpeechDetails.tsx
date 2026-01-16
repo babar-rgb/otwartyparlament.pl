@@ -1,46 +1,10 @@
-import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { fetchSpeech } from '../api';
+import { useSpeechDetails } from '../hooks/useSpeechDetails';
 import { ArrowLeft, Calendar, User } from 'lucide-react';
-
-interface Speech {
-    id: number;
-    mp_id: number | null;
-    sitting: number;
-    date: string;
-    speaker_name: string;
-    content: string;
-    topic: string;
-    ai_analysis: any; // JSONB
-    mp?: {
-        id: number;
-        first_name: string;
-        last_name: string;
-        club: string;
-        photo_url: string;
-    };
-}
 
 export default function SpeechDetails() {
     const { id } = useParams();
-    const [speech, setSpeech] = useState<Speech | null>(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const loadSpeech = async () => {
-            if (!id) return;
-            try {
-                const data = await fetchSpeech(id);
-                setSpeech(data);
-            } catch (err) {
-                console.error('Error fetching speech:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadSpeech();
-    }, [id]);
+    const { data: speech, isLoading: loading } = useSpeechDetails(id);
 
     if (loading) return (
         <div className="min-h-screen bg-page flex items-center justify-center">
@@ -202,7 +166,7 @@ export default function SpeechDetails() {
                     </div>
                 ) : (
                     <div className="prose prose-lg dark:prose-invert max-w-none">
-                        {speech.content?.split('\n').map((paragraph, idx) => (
+                        {speech.content?.split('\n').map((paragraph: string, idx: number) => (
                             paragraph.trim() && <p key={idx} className="text-secondary leading-relaxed mb-6 italic font-medium opacity-90 text-lg">{paragraph}</p>
                         ))}
                     </div>

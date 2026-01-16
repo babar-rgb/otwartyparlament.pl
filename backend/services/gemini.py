@@ -17,10 +17,15 @@ else:
 
 class GeminiService:
     def __init__(self):
-        # Models configuration (January 2026 specs)
-        self.model_flash = 'gemini-2.0-flash-lite'   # Standard (Newest Lite model)
-        self.model_pro = 'gemini-2.0-flash-lite'     # Forcing Lite for cost/speed
-        self.model_lite = 'gemini-2.0-flash-lite'    # Forcing Lite
+        # Models configuration (Verified Jan 2026)
+        self.model_flash = 'gemini-2.0-flash'        
+        self.model_pro = 'gemini-2.0-flash'          # 2.0 Flash is very capable
+        self.model_lite = 'gemini-2.0-flash-lite'
+        
+        # Re-configure to be safe
+        key = os.getenv("GEMINI_API_KEY")
+        if key:
+            genai.configure(api_key=key)
 
     def _get_model(self, model_name: str):
         return genai.GenerativeModel(model_name)
@@ -114,7 +119,7 @@ class GeminiService:
         DANE WEJŚCIOWE:
         TYTUŁ: {{title}}
         OPIS: {{description}}
-        TREŚĆ: {{bill_text[:100000] if bill_text else "BRAK - Analizuj tylko na podstawie tytułu i opisu."}}
+        TREŚĆ: {{bill_text}}
         
         Zwróć JSON (Wartosci w JSON muszą być po POLSKU):
         {{{{
@@ -162,9 +167,12 @@ class GeminiService:
         if doc_type == "vote":
             base_prompt += "\\nJEŚLI GŁOSOWANIE JEST TECHNICZNE (przerwa, odroczenie): Zwróć summary='Głosowanie techniczne.' i puste listy pros/cons."
             
-        if complexity == "HIGH":
-            base_prompt += "\\nUWAGA: To jest kluczowy dokument. Dokładnie przeanalizuj wpływ finansowy."
+        if self._assess_complexity(title, description, bill_text) == "HIGH":
+             base_prompt += "\\nUWAGA: To jest kluczowy dokument. Dokładnie przeanalizuj wpływ finansowy."
+        
+        # Prepare content safely
+        bill_text_safe = bill_text[:100000] if bill_text else "BRAK - Analizuj tylko na podstawie tytułu i opisu."
             
-        return base_prompt.format(context_word=context_word, title=title, description=description, bill_text=bill_text)
+        return base_prompt.format(context_word=context_word, title=title, description=description, bill_text=bill_text_safe)
 
 gemini_service = GeminiService()

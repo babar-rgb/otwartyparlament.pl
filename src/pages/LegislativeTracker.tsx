@@ -1,45 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, ArrowRight, Clock, Activity, FileText } from 'lucide-react';
+import { Search, Clock, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-
-interface LegislativeProcessSummary {
-    id: string;
-    title: string;
-    status: string;
-    start_date: string;
-    stage_count: number;
-    last_update: string;
-    last_stage_title: string;
-}
+import { useLegislativeProcesses } from '../hooks/useLegislativeProcesses';
 
 const LegislativeTracker: React.FC = () => {
-    const [processes, setProcesses] = useState<LegislativeProcessSummary[]>([]);
-    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const { data, isLoading: loading } = useLegislativeProcesses({ q: searchTerm });
 
-    useEffect(() => {
-        const fetchProcesses = async () => {
-            try {
-                // Using standard fetch for now, can be moved to api/index.ts
-                const response = await fetch('http://localhost:3001/legislative_processes');
-                const data = await response.json();
-                setProcesses(data.items || []);
-            } catch (error) {
-                console.error("Failed to fetch processes:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchProcesses();
-    }, []);
-
-    const filteredProcesses = processes.filter(p =>
-        p.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const processes = data?.items || [];
 
     return (
         <div className="min-h-screen bg-background font-sans text-primary pb-20">
@@ -86,15 +57,15 @@ const LegislativeTracker: React.FC = () => {
             {/* Grid */}
             <div className="max-w-7xl mx-auto px-6">
                 {loading ? (
-                    <div className="text-center py-20 text-secondary">Ładowanie procesów...</div>
-                ) : filteredProcesses.length === 0 ? (
+                    <div className="text-center py-20 text-secondary animate-pulse">Ładowanie procesów...</div>
+                ) : processes.length === 0 ? (
                     <div className="text-center py-20 text-secondary">
                         <p className="text-xl font-bold mb-2">Brak wyników</p>
                         <p className="text-sm">Nasze crawlery wciąż pracują nad indeksowaniem starszych ustaw.</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredProcesses.map((process, idx) => (
+                        {processes.map((process: any, idx: number) => (
                             <motion.div
                                 key={process.id}
                                 initial={{ opacity: 0, y: 20 }}
@@ -107,7 +78,7 @@ const LegislativeTracker: React.FC = () => {
                                 >
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="px-3 py-1 bg-white/5 rounded-lg text-xs font-mono text-secondary">
-                                            {format(new Date(process.start_date), 'dd.MM.yyyy')}
+                                            {process.start_date ? format(new Date(process.start_date), 'dd.MM.yyyy', { locale: pl }) : 'Brak daty'}
                                         </div>
                                         <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${process.status === 'IN_PROGRESS' ? 'bg-blue-500/20 text-blue-400' :
                                             process.status === 'SIGNED' ? 'bg-emerald-500/20 text-emerald-400' :
@@ -124,19 +95,19 @@ const LegislativeTracker: React.FC = () => {
                                     <div className="mt-auto pt-6 border-t border-border-base/50">
                                         <div className="flex items-center justify-between text-xs text-secondary mb-2">
                                             <span>Postęp prac</span>
-                                            <span className="font-mono">{process.stage_count} etapów</span>
+                                            <span className="font-mono">{process.stage_count || 0} etapów</span>
                                         </div>
                                         {/* Progress Bar Visual */}
                                         <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden mb-4">
                                             <div
                                                 className="h-full bg-gradient-to-r from-indigo-600 to-purple-600"
-                                                style={{ width: `${Math.min((process.stage_count / 10) * 100, 100)}%` }} // Rough estimate visual
+                                                style={{ width: `${Math.min(((process.stage_count || 0) / 10) * 100, 100)}%` }}
                                             />
                                         </div>
 
                                         <div className="flex items-center gap-2 text-xs text-gray-400">
                                             <Clock size={12} />
-                                            <span>Ostatnia zmiana: {process.last_stage_title}</span>
+                                            <span>Ostatnia zmiana: {process.last_stage_title || 'Brak danych'}</span>
                                         </div>
                                     </div>
                                 </Link>

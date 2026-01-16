@@ -1,33 +1,12 @@
-import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
     ArrowLeft, Calendar, FileText, Download,
     CheckCircle2, Circle, Clock, AlertTriangle,
-    Share2, Bookmark, ChevronRight, Zap
+    Share2, Bookmark, Zap
 } from 'lucide-react';
-import { fetchProcess } from '../api';
 import SEO from '../components/SEO';
+import { useLegislativeProcessDetails } from '../hooks/useLegislativeProcessDetails';
 
-
-interface ProcessDetails {
-    id: number;
-    process_id: string;
-    number: string;
-    title: string;
-    description: string;
-    date: string;
-    type: string;
-    status: string;
-    url: string;
-    content?: string;
-    ai_analysis?: {
-        summary: string;
-        pros: string[];
-        cons: string[];
-        impact: string;
-        importance: number;
-    };
-}
 
 const LegislativeTimeline = ({ status }: { status: string }) => {
     // Simplified mapping of status to progress steps
@@ -89,24 +68,7 @@ const LegislativeTimeline = ({ status }: { status: string }) => {
 
 export default function ProjectDetails() {
     const { id } = useParams<{ id: string }>();
-    const [project, setProject] = useState<ProcessDetails | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-
-    useEffect(() => {
-        const loadProject = async () => {
-            try {
-                if (!id) return;
-                const data = await fetchProcess(id);
-                setProject(data);
-            } catch (err) {
-                setError('Nie udało się pobrać szczegółów projektu.');
-            } finally {
-                setLoading(false);
-            }
-        };
-        loadProject();
-    }, [id]);
+    const { data: project, isLoading: loading, isError } = useLegislativeProcessDetails(id);
 
     if (loading) {
         return (
@@ -121,7 +83,7 @@ export default function ProjectDetails() {
         );
     }
 
-    if (error || !project) {
+    if (isError || !project) {
         return (
             <div className="min-h-screen bg-page pt-32 px-4 flex flex-col items-center justify-center">
                 <AlertTriangle size={48} className="text-amber-500 mb-6" />
@@ -257,7 +219,7 @@ export default function ProjectDetails() {
                                 <div className="flex-1 p-8 rounded-[2.5rem] bg-surface border border-border-base flex flex-col justify-center">
                                     <h3 className="text-xs font-black text-secondary uppercase tracking-widest mb-4 opacity-70">Tagi & Kategorie</h3>
                                     <div className="flex flex-wrap gap-2">
-                                        {['Legislacja', 'Sejm RP', project.type].map((tag, i) => (
+                                        {['Legislacja', 'Sejm RP', project.type].map((tag: string, i: number) => (
                                             <span key={i} className="px-3 py-1.5 bg-page border border-border-base rounded-lg text-xs font-bold text-secondary hover:text-primary hover:border-accent-blue/30 transition-colors cursor-default">
                                                 #{tag}
                                             </span>
@@ -272,7 +234,7 @@ export default function ProjectDetails() {
                                     <CheckCircle2 size={16} /> Główne Zalety
                                 </h3>
                                 <ul className="space-y-4">
-                                    {project.ai_analysis.pros.map((item, i) => (
+                                    {project.ai_analysis.pros.map((item: string, i: number) => (
                                         <li key={i} className="flex gap-3 text-sm font-medium text-primary/80 transform group-hover:translate-x-1 transition-transform" style={{ transitionDelay: `${i * 100}ms` }}>
                                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                                             <span className="leading-relaxed">{item}</span>
@@ -286,7 +248,7 @@ export default function ProjectDetails() {
                                     <AlertTriangle size={16} /> Ryzyka i Wady
                                 </h3>
                                 <ul className="space-y-4">
-                                    {project.ai_analysis.cons.map((item, i) => (
+                                    {project.ai_analysis.cons.map((item: string, i: number) => (
                                         <li key={i} className="flex gap-3 text-sm font-medium text-primary/80 transform group-hover:translate-x-1 transition-transform" style={{ transitionDelay: `${i * 100}ms` }}>
                                             <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-2 shrink-0 shadow-[0_0_8px_rgba(244,63,94,0.5)]" />
                                             <span className="leading-relaxed">{item}</span>

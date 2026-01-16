@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { API_URL } from '../../../api';
 import LegislativeProcessTimeline from './LegislativeProcessTimeline';
 
 interface Stage {
@@ -30,7 +31,7 @@ const LegislativeMetro: React.FC<LegislativeMetroProps> = ({ voteId }) => {
     useEffect(() => {
         const fetchProcess = async () => {
             try {
-                const response = await fetch(`http://localhost:8000/votes/${voteId}/legislative_process`);
+                const response = await fetch(`${API_URL}/votes/${voteId}/legislative_process`);
                 if (!response.ok) {
                     if (response.status === 404) {
                         setProcess(null);
