@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_, func, text
+from sqlalchemy import or_, func, text, case, literal
+from sqlalchemy.sql import func
 from typing import Optional
 from backend import models
 from backend.core import orm_db as database
@@ -76,8 +77,7 @@ def search_all(
                      votes_q = votes_q.filter(models.Vote.title_clean.notilike("%Posiedzenie Sejmu%"))
 
                 # HYBRID SORT: FTS Priority > Text Match > Semantic Relevance
-                from sqlalchemy import case, literal, func
-                
+                # HYBRID SORT: FTS Priority > Text Match > Semantic Relevance
                 # 1. Full Text Search Match (Morphology: ciąża = ciąży)
                 # We use @@ operator with websearch_to_tsquery('polish', q)
                 fts_match = models.Vote.search_vector.op('@@')(func.websearch_to_tsquery('polish', q))

@@ -1,32 +1,30 @@
-import React, { useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
-import { Search, User, FileText, ArrowRight, MessageSquare, BookOpen, Zap } from 'lucide-react';
-import { cleanSejmTitle } from '../utils/titleFormatter';
-import MpCard from '../components/features/sejm/MpCard';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { Search, Mic, FileText, Vote as VoteIcon, User, Layers, Calendar, ChevronRight } from 'lucide-react';
 import { useUnifiedSearch } from '../hooks/useUnifiedSearch';
+import { SearchResult } from '../types/domain';
 
-const SearchPage: React.FC = () => {
+export default function SearchPage() {
+    const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const query = searchParams.get('q') || '';
 
-    // Filters
-    const [selectedTerm, setSelectedTerm] = useState<string>('10');
-    const [selectedType, setSelectedType] = useState<string | null>(null);
+    // Filters could be expanded here if we want local state, but URL params are better for sharing
 
-    const { data, isLoading: loading } = useUnifiedSearch(
+    const { data, isLoading } = useUnifiedSearch(
         query,
-        selectedTerm,
-        selectedType,
+        searchParams.get('period') || 'all',
+        searchParams.get('type') || null,
         searchParams.get('expanded') || undefined
     );
 
-    const mps = data?.mps || [];
-    const results = data?.results || [];
+    // Provide default empty arrays if data is undefined
+    const mps = (data?.mps || []) as import('../types/domain').MP[];
+    const results: SearchResult[] = data?.results || [];
 
-    // Grouping results for UI
-    const processes = results.filter((r: any) => r.type === 'process');
-    const votes = results.filter((r: any) => r.type === 'vote');
-    const speeches = results.filter((r: any) => r.type === 'speech');
+    // Grouping results for UI using typed filter
+    const processes = results.filter((r) => r.type === 'process');
+    const votes = results.filter((r) => r.type === 'vote');
+    const speeches = results.filter((r) => r.type === 'speech');
 
     return (
         <div className="min-h-screen bg-page pt-32 pb-12 px-4 md:px-8 text-primary">
@@ -37,105 +35,67 @@ const SearchPage: React.FC = () => {
                     <h1 className="text-4xl md:text-6xl font-black tracking-tight text-primary">
                         Wyniki dla <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">"{query}"</span>
                     </h1>
-
-                    {/* Filter Controls */}
-                    <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-surface p-4 rounded-xl border border-border-base mt-8">
-                        <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
-                            {[
-                                { id: null, label: 'Wszystko' },
-                                { id: 'vote', label: 'Głosowania' },
-                                { id: 'process', label: 'Projekty' },
-                                { id: 'speech', label: 'Wypowiedzi' },
-                                { id: 'mp', label: 'Posłowie' },
-                            ].map((type: any) => (
-                                <button
-                                    key={type.id || 'all'}
-                                    onClick={() => setSelectedType(type.id)}
-                                    className={`px-4 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${selectedType === type.id
-                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                                        : 'bg-background hover:bg-surface-hover text-secondary border border-border-base'
-                                        }`}
-                                >
-                                    {type.label}
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="flex items-center gap-3 w-full md:w-auto">
-                            <span className="text-sm font-medium text-secondary whitespace-nowrap">Kadencja:</span>
-                            <select
-                                value={selectedTerm}
-                                onChange={(e) => setSelectedTerm(e.target.value)}
-                                className="bg-background border border-border-base text-primary text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                            >
-                                <option value="10">10. Kadencja (2023-)</option>
-                                <option value="9">9. Kadencja (2019-2023)</option>
-                                <option value="all">Wszystkie</option>
-                            </select>
-                        </div>
-                    </div>
+                    <p className="text-secondary text-lg">Znaleziono {mps.length + results.length} wyników w bazie danych</p>
                 </div>
 
-                {loading ? (
-                    <div className="text-center py-24 text-secondary text-lg font-medium animate-pulse">Przeszukiwanie bazy danych Sejmu...</div>
-                ) : (
+                {/* Quick Filters */}
+                <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                    {[
+                        { label: 'Wszystkie', icon: Layers, type: null },
+                        { label: 'Posłowie', icon: User, type: 'mp', count: mps.length },
+                        { label: 'Projekty', icon: FileText, type: 'process', count: processes.length },
+                        { label: 'Głosowania', icon: VoteIcon, type: 'vote', count: votes.length },
+                        { label: 'Wypowiedzi', icon: Mic, type: 'speech', count: speeches.length },
+                    ].map((type) => (
+                        <button
+                            key={type.label}
+                            onClick={() => {
+                                const newParams = new URLSearchParams(searchParams);
+                                if (type.type) newParams.set('type', type.type);
+                                else newParams.delete('type');
+                                navigate(`/search?${newParams.toString()}`);
+                            }}
+                            className={`flex items-center gap-2 px-6 py-3 rounded-xl border transition-all ${(type.type === searchParams.get('type') || (!type.type && !searchParams.get('type')))
+                                ? 'bg-primary text-page border-primary'
+                                : 'bg-surface text-secondary border-border-base hover:border-primary/30'
+                                }`}
+                        >
+                            <type.icon size={16} />
+                            <span className="text-sm font-bold uppercase tracking-wider">{type.label}</span>
+                            {type.count !== undefined && (
+                                <span className="ml-1 px-2 py-0.5 bg-black/10 dark:bg-white/10 rounded-md text-xs">{type.count}</span>
+                            )}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Loading State */}
+                {isLoading && (
+                    <div className="text-center py-24 text-secondary text-lg font-medium animate-pulse">
+                        Przeszukiwanie bazy danych Sejmu...
+                    </div>
+                )}
+
+                {!isLoading && (
                     <div className="space-y-16">
-
-                        {/* 1. MPs Section */}
-                        {mps.length > 0 && (
-                            <section>
-                                <div className="flex items-center gap-3 mb-8 border-b border-border-base pb-4">
-                                    <User className="w-6 h-6 text-blue-600" />
-                                    <h2 className="text-3xl font-black text-primary">Posłowie</h2>
+                        {/* MPs Section */}
+                        {mps.length > 0 && (!searchParams.get('type') || searchParams.get('type') === 'mp') && (
+                            <section className="space-y-6">
+                                <div className="flex items-center gap-4">
+                                    <User className="text-accent-blue" size={24} />
+                                    <h2 className="text-2xl font-black tracking-tight">Posłowie</h2>
                                 </div>
-                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                                    {mps.map((mp: any) => (
-                                        <MpCard key={mp.id} mp={mp} />
-                                    ))}
-                                </div>
-                            </section>
-                        )}
-
-                        {/* 2. Votes Section - Prioritized */}
-                        {votes.length > 0 && (
-                            <section>
-                                <div className="flex items-center gap-3 mb-6 border-b border-border-base pb-4">
-                                    <FileText className="w-5 h-5 text-blue-600" />
-                                    <h2 className="text-2xl font-bold text-primary">Głosowania</h2>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {votes.map((vote: any) => (
-                                        <Link key={vote.id} to={`/glosowanie/${vote.id}`} className="block bg-surface rounded-2xl border border-border-base p-6 hover:border-blue-500/30 transition-all duration-300 shadow-sm hover:shadow-lg h-full flex flex-col justify-between group">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                    {mps.map((mp) => (
+                                        <Link to={`/poslowie/${mp.id}`} key={mp.id} className="group bg-surface p-4 rounded-2xl border border-border-base hover:border-accent-blue/30 transition-all flex items-center gap-4">
+                                            <img
+                                                src={mp.photo_url}
+                                                className="w-12 h-12 rounded-full object-cover bg-page"
+                                                alt={mp.first_name + ' ' + mp.last_name}
+                                            />
                                             <div>
-                                                <div className="flex items-center gap-2 mb-4 flex-wrap">
-                                                    <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
-                                                        {vote.ux_category || 'Głosowanie'}
-                                                    </span>
-                                                    {vote.term && (
-                                                        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full border border-border-base bg-surface text-secondary">
-                                                            {vote.term}. Kadencja
-                                                        </span>
-                                                    )}
-                                                    {vote.sitting && typeof vote.sitting === 'number' && (
-                                                        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full border border-border-base bg-surface text-secondary">
-                                                            Posiedzenie {vote.sitting}
-                                                        </span>
-                                                    )}
-                                                    {vote.voting_number && typeof vote.voting_number === 'number' && (
-                                                        <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full border border-border-base bg-surface text-secondary">
-                                                            Głosowanie nr {vote.voting_number}
-                                                        </span>
-                                                    )}
-                                                    <span className="text-[10px] text-secondary font-bold uppercase tracking-tight">
-                                                        {new Date(vote.date).toLocaleDateString('pl-PL')}
-                                                    </span>
-                                                </div>
-                                                <h3 className="text-lg font-bold text-primary mb-4 line-clamp-3 group-hover:text-blue-600 transition-colors">
-                                                    {cleanSejmTitle(vote.title)}
-                                                </h3>
-                                            </div>
-                                            <div className="flex justify-end">
-                                                <ArrowRight className="w-5 h-5 text-secondary opacity-30 group-hover:opacity-100 group-hover:text-blue-500 transition-all" />
+                                                <div className="font-bold text-primary group-hover:text-accent-blue transition-colors">{mp.first_name} {mp.last_name}</div>
+                                                <div className="text-xs text-secondary font-medium uppercase tracking-wider">{mp.club}</div>
                                             </div>
                                         </Link>
                                     ))}
@@ -143,38 +103,45 @@ const SearchPage: React.FC = () => {
                             </section>
                         )}
 
-                        {/* 3. Processes (Laws) Section */}
-                        {processes.length > 0 && (
-                            <section>
-                                <div className="flex items-center gap-3 mb-6 border-b border-border-base pb-4">
-                                    <BookOpen className="w-6 h-6 text-amber-600" />
-                                    <h2 className="text-2xl font-bold text-primary">Projekty Ustaw i Uchwał</h2>
+                        {/* Votes Section */}
+                        {votes.length > 0 && (!searchParams.get('type') || searchParams.get('type') === 'vote') && (
+                            <section className="space-y-6">
+                                <div className="flex items-center gap-4">
+                                    <VoteIcon className="text-emerald-500" size={24} />
+                                    <h2 className="text-2xl font-black tracking-tight">Głosowania</h2>
                                 </div>
-                                <div className="grid grid-cols-1 gap-4">
-                                    {processes.map((proc: any) => (
-                                        <Link key={proc.id} to={`/projekty/${proc.id}`} className="block bg-surface p-6 rounded-xl border border-border-base hover:border-amber-500/30 hover:shadow-md transition-all group">
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <div className="flex gap-2 mb-3">
-                                                        <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest bg-amber-500/10 px-2 py-1 rounded inline-block">
-                                                            {proc.ux_category || 'Projekt'}
+                                <div className="grid gap-4">
+                                    {votes.map((vote) => (
+                                        <Link to={`/glosowania/${vote.id}`} key={vote.id} className="group block bg-surface p-6 rounded-2xl border border-border-base hover:border-emerald-500/30 transition-all">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                <div className="space-y-2">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <span className="px-2 py-1 bg-emerald-500/10 text-emerald-600 text-[10px] font-black uppercase tracking-wider rounded-md">
+                                                            {vote.ux_category || 'Głosowanie'}
                                                         </span>
-                                                        {proc.term && (
-                                                            <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full border border-border-base bg-surface text-secondary">
-                                                                {proc.term}. Kadencja
+                                                        <span className="flex items-center gap-1 text-xs text-secondary font-mono">
+                                                            <Calendar size={12} />
+                                                            {vote.date}
+                                                        </span>
+                                                        {vote.sitting && (
+                                                            <span className="px-2 py-1 bg-page border border-border-base text-secondary text-[10px] uppercase font-bold tracking-wider rounded-md">
+                                                                Posiedzenie {vote.sitting}
+                                                            </span>
+                                                        )}
+                                                        {vote.voting_number && (
+                                                            <span className="px-2 py-1 bg-page border border-border-base text-secondary text-[10px] uppercase font-bold tracking-wider rounded-md">
+                                                                Głosowanie nr {vote.voting_number}
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <h3 className="text-lg font-bold text-primary group-hover:text-amber-600 transition-colors">
-                                                        {cleanSejmTitle(proc.title)}
+                                                    <h3 className="text-lg font-bold group-hover:text-emerald-500 transition-colors line-clamp-2">
+                                                        {vote.title}
                                                     </h3>
-                                                    {proc.content_preview && (
-                                                        <p className="text-secondary mt-2 text-sm line-clamp-2">
-                                                            {proc.content_preview}
-                                                        </p>
+                                                    {vote.topic && (
+                                                        <p className="text-secondary text-sm line-clamp-1">{vote.topic}</p>
                                                     )}
                                                 </div>
-                                                <Zap className="text-amber-300 group-hover:text-amber-500 transition" />
+                                                <ChevronRight className="text-border-base group-hover:text-emerald-500 transition-colors" />
                                             </div>
                                         </Link>
                                     ))}
@@ -182,48 +149,85 @@ const SearchPage: React.FC = () => {
                             </section>
                         )}
 
-                        {/* 4. Speeches Section */}
-                        {speeches.length > 0 && (
-                            <section>
-                                <div className="flex items-center gap-3 mb-6 border-b border-border-base pb-4">
-                                    <MessageSquare className="w-5 h-5 text-indigo-600" />
-                                    <h2 className="text-2xl font-bold text-primary">Wypowiedzi</h2>
+                        {/* Processes Section */}
+                        {processes.length > 0 && (!searchParams.get('type') || searchParams.get('type') === 'process') && (
+                            <section className="space-y-6">
+                                <div className="flex items-center gap-4">
+                                    <FileText className="text-amber-500" size={24} />
+                                    <h2 className="text-2xl font-black tracking-tight">Projekty Ustaw</h2>
                                 </div>
-                                <div className="space-y-4">
-                                    {speeches.map((speech: any) => (
-                                        <div key={speech.id} className="p-6 bg-surface rounded-xl border border-border-base hover:border-indigo-500/30 transition-colors relative group">
-                                            {speech.term && (
-                                                <span className="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full border border-border-base bg-surface text-secondary">
-                                                    {speech.term}. Kadencja
-                                                </span>
-                                            )}
-                                            <p className="text-secondary text-sm line-clamp-3 italic mb-4 group-hover:text-primary transition-colors">
-                                                "{speech.content_preview}..."
-                                            </p>
-                                            <Link to={`/wypowiedzi/${speech.id}`} className="text-sm font-bold text-indigo-600 hover:underline flex items-center gap-1">
-                                                Czytaj całość <ArrowRight size={14} />
-                                            </Link>
-                                        </div>
+                                <div className="grid gap-4">
+                                    {processes.map((proc) => (
+                                        <Link to={`/projekty/${proc.id}`} key={proc.id} className="group block bg-surface p-6 rounded-2xl border border-border-base hover:border-amber-500/30 transition-all">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="px-2 py-1 bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase tracking-wider rounded-md">
+                                                            {proc.ux_category || 'Projekt'}
+                                                        </span>
+                                                        <span className="flex items-center gap-1 text-xs text-secondary font-mono">
+                                                            <Calendar size={12} />
+                                                            {proc.date}
+                                                        </span>
+                                                    </div>
+                                                    <h3 className="text-lg font-bold group-hover:text-amber-500 transition-colors line-clamp-2">
+                                                        {proc.title}
+                                                    </h3>
+                                                    {proc.topic && (
+                                                        <p className="text-secondary text-sm line-clamp-1">{proc.topic}</p>
+                                                    )}
+                                                </div>
+                                                <ChevronRight className="text-border-base group-hover:text-amber-500 transition-colors" />
+                                            </div>
+                                        </Link>
                                     ))}
                                 </div>
                             </section>
                         )}
 
-                        {mps.length === 0 && results.length === 0 && (
-                            <div className="text-center py-24 bg-surface rounded-2xl border border-border-base shadow-sm">
-                                <Search className="w-16 h-16 text-secondary opacity-20 mx-auto mb-6" />
-                                <h3 className="text-2xl font-bold text-primary mb-3">Brak wyników</h3>
-                                <p className="text-secondary max-w-md mx-auto">
-                                    Nie znaleźliśmy nic dla zapytania <span className="text-primary font-bold">"{query}"</span>. Spróbuj wpisać inne słowa kluczowe.
-                                </p>
-                            </div>
+                        {/* Speeches Section */}
+                        {speeches.length > 0 && (!searchParams.get('type') || searchParams.get('type') === 'speech') && (
+                            <section className="space-y-6">
+                                <div className="flex items-center gap-4">
+                                    <Mic className="text-purple-500" size={24} />
+                                    <h2 className="text-2xl font-black tracking-tight">Wypowiedzi</h2>
+                                </div>
+                                <div className="grid gap-4">
+                                    {speeches.map((speech) => (
+                                        <Link to={`/wypowiedzi/${speech.id}`} key={speech.id} className="group block bg-surface p-6 rounded-2xl border border-border-base hover:border-purple-500/30 transition-all">
+                                            <div className="space-y-3">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="px-2 py-1 bg-purple-500/10 text-purple-600 text-[10px] font-black uppercase tracking-wider rounded-md">
+                                                        Stenogram
+                                                    </span>
+                                                    <span className="flex items-center gap-1 text-xs text-secondary font-mono">
+                                                        <Calendar size={12} />
+                                                        {speech.date}
+                                                    </span>
+                                                </div>
+                                                <h3 className="text-lg font-bold group-hover:text-purple-500 transition-colors">
+                                                    {speech.title}
+                                                </h3>
+                                                <p className="text-secondary text-sm line-clamp-3 italic bg-page/50 p-3 rounded-lg border border-border-base">
+                                                    "{speech.content_preview}"
+                                                </p>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </section>
                         )}
 
+                        {mps.length === 0 && results.length === 0 && !isLoading && (
+                            <div className="text-center py-24 text-secondary">
+                                <Search size={48} className="mx-auto mb-4 opacity-20" />
+                                <h3 className="text-xl font-bold text-primary">Brak wyników</h3>
+                                <p>Spróbuj zmienić zapytanie lub filtry</p>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
         </div>
     );
-};
-
-export default SearchPage;
+}

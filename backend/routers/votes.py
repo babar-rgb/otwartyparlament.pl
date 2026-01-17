@@ -147,13 +147,26 @@ def read_votes(
             # Exclude vector_embedding and search_vector from serialization
             vote_dict = {}
             for c in vote.__table__.columns:
-                if c.name not in ['vector_embedding', 'search_vector']:
-                    value = getattr(vote, c.name)
-                    # Convert Date objects to string
-                    if hasattr(value, 'isoformat'):
-                        vote_dict[c.name] = value.isoformat()
-                    else:
-                        vote_dict[c.name] = value
+                if c.name in ['vector_embedding', 'search_vector']:
+                    continue
+                    
+                value = getattr(vote, c.name)
+                # Convert Date objects to string
+                if hasattr(value, 'isoformat'):
+                    vote_dict[c.name] = value.isoformat()
+                else:
+                    vote_dict[c.name] = value
+            
+            # Debugging check: ensure everything is serializable
+            # Debugging check: ensure everything is serializable
+            # try:
+            #     import json
+            #     json.dumps(vote_dict, default=str)
+            # except Exception as e:
+            #     print(f"Serialization Error for Vote {vote.id}: {e}")
+            #     print(f"Offending Keys: {vote_dict.keys()}")
+            #     print(f"Offending Values: {vote_dict}")
+                
             final_items.append(vote_dict)
             
         return {

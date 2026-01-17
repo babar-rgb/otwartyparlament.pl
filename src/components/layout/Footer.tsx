@@ -3,7 +3,7 @@ import { Heart, Github, Mail } from 'lucide-react';
 export default function Footer() {
   return (
     <footer className="bg-surface text-primary mt-16 border-t border-border-base">
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto max-w-screen-2xl px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
             <h3 className="font-bold text-lg mb-4">Otwarty Parlament</h3>

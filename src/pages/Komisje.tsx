@@ -36,80 +36,81 @@ export default function Komisje() {
     }
 
     return (
-        <div className="min-h-screen bg-page transition-colors duration-500 pb-16">
+        <>
             <SEO
                 title="Komisje Sejmowe - Skład i Aktywność"
-                description={`Pełna lista ${committees.length} komisji sejmowych. Sprawdź skład, harmonogram posiedzeń i aktywność parlamentarną.`}
-                url="/komisje"
+                description="Analiza prac komisji sejmowych. Zobacz składy, zaplanowane posiedzenia oraz statystyki aktywności poszczególnych komisji."
             />
+            <div className="min-h-screen bg-page text-primary pt-32 px-4 md:px-8 font-sans">
 
-            <CommitteeHero committeeCount={committees.length} />
+                <CommitteeHero committeeCount={committees.length} />
 
-            <div className="max-w-7xl mx-auto px-4 md:px-8">
-                {/* Filter & Search Section - Unified Style */}
-                <div className="bg-surface p-6 rounded-[2rem] border border-border-base shadow-2xl backdrop-blur-md -mt-8 mb-12 relative z-20">
-                    <div className="flex flex-col gap-6">
-                        <div className="flex flex-col md:flex-row gap-6">
-                            <div className="relative flex-1">
-                                <div className="relative flex items-center gap-4">
-                                    <Search className="text-secondary transition-colors" size={24} />
-                                    <input
-                                        type="text"
-                                        placeholder="Szukaj komisji..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full bg-transparent text-xl font-bold text-primary placeholder:text-slate-400 focus:outline-none"
-                                    />
-                                    {searchQuery && (
-                                        <button onClick={() => setSearchQuery('')} className="p-2 text-secondary hover:text-primary transition-colors">
-                                            <X size={20} />
-                                        </button>
-                                    )}
+                <div className="max-w-7xl mx-auto px-4 md:px-8">
+                    {/* Filter & Search Section - Unified Style */}
+                    <div className="bg-surface p-6 rounded-[2rem] border border-border-base shadow-2xl backdrop-blur-md -mt-8 mb-12 relative z-20">
+                        <div className="flex flex-col gap-6">
+                            <div className="flex flex-col md:flex-row gap-6">
+                                <div className="relative flex-1">
+                                    <div className="relative flex items-center gap-4">
+                                        <Search className="text-secondary transition-colors" size={24} />
+                                        <input
+                                            type="text"
+                                            placeholder="Szukaj komisji..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="w-full bg-transparent text-xl font-bold text-primary placeholder:text-slate-400 focus:outline-none"
+                                        />
+                                        {searchQuery && (
+                                            <button onClick={() => setSearchQuery('')} className="p-2 text-secondary hover:text-primary transition-colors">
+                                                <X size={20} />
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Committee Type Filters */}
-                        <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 border-t border-border-base/50 pt-6">
-                            {[
-                                { label: 'WSZYSTKIE', value: 'all' },
-                                { label: 'STAŁE', value: 'stala' },
-                                { label: 'NADZWYCZAJNE', value: 'nadzwyczajna' },
-                                { label: 'ŚLEDCZE', value: 'sledcza' }
-                            ].map((f) => (
-                                <button
-                                    key={f.value}
-                                    onClick={() => setFilterType(f.value)}
-                                    className={`px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-wider whitespace-nowrap transition-all border ${filterType === f.value
-                                        ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20'
-                                        : 'bg-white/50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-white hover:text-primary transition-colors'
-                                        }`}
-                                >
-                                    {f.label}
-                                </button>
-                            ))}
+                            {/* Committee Type Filters */}
+                            <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 border-t border-border-base/50 pt-6">
+                                {[
+                                    { label: 'WSZYSTKIE', value: 'all' },
+                                    { label: 'STAŁE', value: 'stala' },
+                                    { label: 'NADZWYCZAJNE', value: 'nadzwyczajna' },
+                                    { label: 'ŚLEDCZE', value: 'sledcza' }
+                                ].map((f) => (
+                                    <button
+                                        key={f.value}
+                                        onClick={() => setFilterType(f.value)}
+                                        className={`px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-wider whitespace-nowrap transition-all border ${filterType === f.value
+                                            ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20'
+                                            : 'bg-white/50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-white hover:text-primary transition-colors'
+                                            }`}
+                                    >
+                                        {f.label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {filteredCommittees.map((committee: Committee) => (
-                        <Link
-                            key={committee.code}
-                            to={`/komisje/${committee.code}`}
-                            className="bg-surface rounded-[var(--radius-card-md)] border border-border-base p-6 hover:border-accent-blue/50 hover:bg-hover transition-all group shadow-sm hover:shadow-xl hover:-translate-y-1"
-                        >
-                            <h3 className="font-bold text-primary mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
-                                {committee.name}
-                            </h3>
-                            <div className="flex gap-4 text-xs font-bold text-secondary uppercase opacity-80">
-                                <span className="flex items-center gap-1"><Users size={12} /> {committee.member_count}</span>
-                                <span className="flex items-center gap-1"><Calendar size={12} /> {committee.sitting_count}</span>
-                            </div>
-                        </Link>
-                    ))}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {filteredCommittees.map((committee: Committee) => (
+                            <Link
+                                key={committee.code}
+                                to={`/komisje/${committee.code}`}
+                                className="bg-surface rounded-[var(--radius-card-md)] border border-border-base p-6 hover:border-accent-blue/50 hover:bg-hover transition-all group shadow-sm hover:shadow-xl hover:-translate-y-1"
+                            >
+                                <h3 className="font-bold text-primary mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
+                                    {committee.name}
+                                </h3>
+                                <div className="flex gap-4 text-xs font-bold text-secondary uppercase opacity-80">
+                                    <span className="flex items-center gap-1"><Users size={12} /> {committee.member_count}</span>
+                                    <span className="flex items-center gap-1"><Calendar size={12} /> {committee.sitting_count}</span>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 }

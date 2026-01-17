@@ -15,7 +15,7 @@ export default function OpenSource() {
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-700 to-slate-900">Demokracji</span>
                     </h1>
                     <p className="text-xl text-slate-600 mb-8 leading-relaxed">
-                        Wierzymy, że narzędzia kontroli obywatelskiej powinny być transparentne tak samo, jak władza, którą kontrolują. Dlatego nasz kod jest otwarty.
+                        Wierzę, że narzędzia kontroli obywatelskiej powinny być transparentne tak samo, jak władza, którą kontrolują. Dlatego kod tego projektu jest otwarty.
                     </p>
                     <a
                         href="https://github.com/yourusername/otwartyparlament"
@@ -89,7 +89,7 @@ export default function OpenSource() {
                     <GitBranch size={48} className="text-white mx-auto mb-6 opacity-80" />
                     <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Dołącz do projektu</h2>
                     <p className="text-slate-300 max-w-2xl mx-auto mb-8 text-lg">
-                        Szukamy programistów, designerów i analityków danych. Każdy Pull Request przybliża nas do bardziej świadomego społeczeństwa.
+                        Szukam programistów, designerów i analityków danych. Każdy Pull Request przybliża mnie do celu jakim jest bardziej świadome społeczeństwo.
                     </p>
                     <div className="flex flex-col sm:flex-row justify-center gap-4">
                         <a

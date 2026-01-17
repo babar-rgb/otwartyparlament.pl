@@ -14,14 +14,14 @@ export default function OProjekcie() {
         <div className="mb-20">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-accent-blue/10 text-accent-blue rounded-full font-bold text-[10px] uppercase tracking-wider mb-6 border border-accent-blue/20">
             <Target size={14} />
-            <span>Nasza Misja</span>
+            <span>Moja Misja</span>
           </div>
           <h1 className="text-4xl md:text-6xl font-black text-primary mb-6 tracking-tight leading-tight">
             O projekcie <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500 underline decoration-blue-500/20 underline-offset-8">Otwarty Parlament.</span>
           </h1>
           <p className="text-lg md:text-xl text-secondary max-w-2xl leading-relaxed">
-            Ta strona powstała, żebyś nie musiał sam przebijać się przez tysiące dokumentów na oficjalnych stronach Sejmu. Zbieramy je w jednym miejscu i pokazujemy w czytelny sposób, bez politycznego komentarza.
+            Ta strona powstała, żebyś nie musiał sam przebijać się przez tysiące dokumentów na oficjalnych stronach Sejmu. Zbieram je w jednym miejscu i pokazuję w czytelny sposób, bez politycznego komentarza.
           </p>
         </div>
 
@@ -33,7 +33,7 @@ export default function OProjekcie() {
             </div>
             <h3 className="text-xl font-bold text-primary mb-3">Informacje dla każdego</h3>
             <p className="text-secondary leading-relaxed text-sm">
-              Sejmowe dokumenty bywają trudne. My je upraszczamy – używamy technologii, by każdy mógł szybko zrozumieć, o czym jest dany projekt ustawy, bez czytania setek stron prawniczego żargonu.
+              Sejmowe dokumenty bywają trudne. Ja je upraszczam – używam technologii, by każdy mógł szybko zrozumieć, o czym jest dany projekt ustawy, bez czytania setek stron prawniczego żargonu.
             </p>
           </div>
 
@@ -43,7 +43,7 @@ export default function OProjekcie() {
             </div>
             <h3 className="text-xl font-bold text-primary mb-3">Twoja prywatność</h3>
             <p className="text-secondary leading-relaxed text-sm">
-              Wierzymy, że sprawdzanie polityków nie powinno wiązać się ze śledzeniem Ciebie. Nie mamy reklam ani skryptów, które zbierają Twoje dane. To, co u nas robisz, zostaje u Ciebie.
+              Wierzę, że sprawdzanie polityków nie powinno wiązać się ze śledzeniem Ciebie. Nie mam reklam ani skryptów, które zbierają Twoje dane. To, co tutaj robisz, zostaje u Ciebie.
             </p>
           </div>
 
@@ -53,7 +53,7 @@ export default function OProjekcie() {
             </div>
             <h3 className="text-xl font-bold text-primary mb-3">Pełna niezależność</h3>
             <p className="text-secondary leading-relaxed text-sm">
-              Jako projekt społeczny, nie słuchamy żadnej partii ani korporacji. Nasz kod jest otwarty (open-source), więc każdy może sprawdzić, że nasze algorytmy nie są stronnicze.
+              Jako projekt społeczny, nie słucham żadnej partii ani korporacji. Kod jest otwarty (open-source), więc każdy może sprawdzić, że moje algorytmy nie są stronnicze.
             </p>
           </div>
 
@@ -63,7 +63,7 @@ export default function OProjekcie() {
             </div>
             <h3 className="text-xl font-bold text-primary mb-3">Dane z samego źródła</h3>
             <p className="text-secondary leading-relaxed text-sm">
-              Wszystkie nasze liczby i statystyki pochodzą prosto z serwerów Sejmu RP. Dzięki temu nie ma tu pomyłek ani fałszywych informacji – pokazujemy tylko to, co faktycznie się wydarzyło.
+              Wszystkie liczby i statystyki pochodzą prosto z serwerów Sejmu RP. Dzięki temu nie ma tu pomyłek ani fałszywych informacji – pokazuję tylko to, co faktycznie się wydarzyło.
             </p>
           </div>
         </div>
@@ -71,14 +71,14 @@ export default function OProjekcie() {
         {/* Process Section */}
         <div className="mb-24 bg-surface rounded-[2.5rem] p-8 md:p-12 border border-border-base">
           <div className="text-center mb-16">
-            <h2 className="text-2xl md:text-3xl font-bold text-primary italic">Jak pracujemy z danymi?</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-primary italic">Jak pracuję z danymi?</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="space-y-4">
               <div className="text-accent-blue font-black text-4xl opacity-20">01</div>
-              <h4 className="font-bold text-primary">Zbieramy dane</h4>
+              <h4 className="font-bold text-primary">Pokazuję czytelnie</h4>
               <p className="text-xs text-secondary leading-relaxed">
-                Nasz system codziennie pobiera kompletną historię głosowań, wystąpień i projektów ustaw prosto od źródła.
+                System codziennie pobiera kompletną historię głosowań, wystąpień i projektów ustaw prosto od źródła.
               </p>
             </div>
             <div className="space-y-4">
@@ -90,9 +90,9 @@ export default function OProjekcie() {
             </div>
             <div className="space-y-4">
               <div className="text-accent-blue font-black text-4xl opacity-20">03</div>
-              <h4 className="font-bold text-primary">Pokazujemy czytelnie</h4>
+              <h4 className="font-bold text-primary">Analizuję treść</h4>
               <p className="text-xs text-secondary leading-relaxed">
-                Zamiast nudnych tabel, tworzymy rankingi i przejrzyste profile posłów, byś mógł łatwo wyrobić sobie własne zdanie.
+                Zamiast nudnych tabel, tworzę rankingi i przejrzyste profile posłów, byś mógł łatwo wyrobić sobie własne zdanie.
               </p>
             </div>
           </div>
@@ -120,7 +120,7 @@ export default function OProjekcie() {
             <div className="p-6 bg-surface border border-border-base rounded-2xl opacity-60">
               <h3 className="font-bold text-primary mb-4 flex items-center gap-2">
                 <Calendar size={18} className="text-secondary" />
-                Co przed nami
+                Co przede mną
               </h3>
               <ul className="space-y-3">
                 {['Aplikacja na telefon', 'Lepsze porównywanie poglądów', 'Łatwiejsze kontaktowanie się z posłami'].map((item, i) => (
@@ -142,7 +142,7 @@ export default function OProjekcie() {
               Podstawy prawne
             </h4>
             <div className="space-y-2 text-xs text-secondary leading-relaxed">
-              <p>Wszystkie dane na stronie pochodzą z oficjalnych systemów Sejmu i są publicznie dostępne dla każdego obywatela. My po prostu pomagamy w ich przeglądaniu.</p>
+              <p>Wszystkie dane na stronie pochodzą z oficjalnych systemów Sejmu i są publicznie dostępne dla każdego obywatela. Ja po prostu pomagam w ich przeglądaniu.</p>
               <p>Analizy generowane przez AI są tylko wsparciem – nie zastępują oficjalnej wykładni prawa ani stanowisk państwowych.</p>
             </div>
           </div>
@@ -158,7 +158,7 @@ export default function OProjekcie() {
               rel="noopener noreferrer"
               className="mt-4 block text-center py-2 bg-primary text-page rounded-xl text-xs font-bold hover:opacity-90 transition-opacity"
             >
-              Nasz GitHub
+              GitHub Projektu
             </a>
           </div>
         </div>

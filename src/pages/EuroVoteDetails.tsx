@@ -2,26 +2,27 @@ import React, { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useEuroVoteDetails } from '../hooks/useEuroVoteDetails';
 import { ArrowLeft, Calendar } from 'lucide-react';
+import { EuroVoteResult } from '../types/domain';
 
 const EuroVoteDetails: React.FC = () => {
     const { id } = useParams();
     const { data, isLoading: loading } = useEuroVoteDetails(id);
 
     const vote = data?.vote;
-    const results = data?.results || [];
+    const results: EuroVoteResult[] = data?.results || [];
 
     // Calculate stats
     const stats = {
-        for: results.filter((r: any) => r.vote === 'For').length,
-        against: results.filter((r: any) => r.vote === 'Against').length,
-        abstain: results.filter((r: any) => r.vote === 'Abstain').length,
-        absent: results.filter((r: any) => r.vote === 'Absent').length,
+        for: results.filter((r) => r.vote === 'For').length,
+        against: results.filter((r) => r.vote === 'Against').length,
+        abstain: results.filter((r) => r.vote === 'Abstain').length,
+        absent: results.filter((r) => r.vote === 'Absent').length,
     };
 
     const partyStats = useMemo(() => {
         const acc: Record<string, { for: number; against: number; abstain: number; absent: number; total: number }> = {};
 
-        results.forEach((r: any) => {
+        results.forEach((r) => {
             const party = r.mep?.national_party || 'Inne';
             if (!acc[party]) acc[party] = { for: 0, against: 0, abstain: 0, absent: 0, total: 0 };
 
@@ -251,7 +252,7 @@ const EuroVoteDetails: React.FC = () => {
                                         );
                                     }
 
-                                    return rebels.map((r: any) => (
+                                    return rebels.map((r) => (
                                         <Link to={`/europarlament/${r.mep?.id}`} key={r.mep?.id || Math.random()} className="flex items-center gap-3 p-3 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-colors group">
                                             <img src={r.mep?.photo_url || ''} alt={r.mep?.full_name} className="w-10 h-10 rounded-full object-cover" />
                                             <div>
@@ -313,7 +314,7 @@ const EuroVoteDetails: React.FC = () => {
                             <div>
                                 <h3 className="font-bold text-xl mb-6">Wyniki imienne (Polska delegacja)</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                    {(results as any[]).map((r: any) => (
+                                    {results.map((r) => (
                                         <div key={r.id} className="flex items-center gap-3 p-3 rounded-2xl bg-black/5 dark:bg-white/5 border border-border-base hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
                                             <div className={`w-2 h-2 rounded-full ${r.vote === 'For' ? 'bg-green-500' :
                                                 r.vote === 'Against' ? 'bg-red-500' :

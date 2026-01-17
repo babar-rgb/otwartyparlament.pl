@@ -98,16 +98,7 @@ export interface SejmPrint {
     document_type?: string;
 }
 
-export interface RankingMP {
-    id: number;
-    first_name: string;
-    last_name: string;
-    club: string;
-    district: string;
-    photo_url: string;
-    stats_attendance: number;
-    stats_rebellion: number;
-}
+
 
 export interface EuroVote {
     id: string;
@@ -134,11 +125,27 @@ export interface EuroMEP {
 
 export interface Interpellation {
     id: number;
+    term: number;
     title: string;
     sent_date: string;
     last_modified?: string;
-    raw_data?: Record<string, unknown>;
-    authors?: { mp_id: number; mp?: MP }[];
+    content?: string;
+    reply_content?: string;
+    raw_data?: {
+        content?: string;
+        key?: string;
+        num?: number;
+        from?: string[] | string;
+        to?: string[];
+        [key: string]: any;
+    };
+    // Support both potential API structures: explicit join or flat object
+    authors?: Array<{
+        mp_id?: number;
+        mp?: MP;
+        first_name?: string;
+        last_name?: string;
+    }>;
 }
 
 export interface Committee {
@@ -182,3 +189,81 @@ export interface MPRelation {
     relation_type: string;
     mp_target?: MP;
 }
+
+export type SearchResultType = 'mp' | 'vote' | 'process' | 'speech';
+
+export interface SearchResult {
+    type: SearchResultType;
+    id: string;
+    title: string;
+    date?: string;
+    term?: number;
+
+    // MP specific
+    data?: Partial<MP>; // The backend sends a dictionary of MP fields
+
+    // Vote specific
+    topic?: string;
+    ux_category?: string;
+    sitting?: number;
+    voting_number?: number;
+
+    // Speech specific
+    content_preview?: string;
+    mp_id?: string;
+}
+
+export interface RankingEntry extends MP {
+    rank: number;
+    value: number;
+    unit: string;
+}
+
+export interface EuroVoteResult {
+    vote: 'For' | 'Against' | 'Abstain' | 'Absent';
+    mep?: {
+        id: string;
+        name: string; // generic name
+        full_name: string; // Used in EuroVoteDetails
+        national_party?: string;
+        eu_group?: string;
+        country?: string;
+    };
+}
+
+export interface AssetDeclaration {
+    id: number;
+    year: string;
+    pdf_url: string;
+    file_path: string;
+    parsed_content?: {
+        income?: number;
+        savings?: number;
+        currency?: string;
+    };
+    summary?: string;
+}
+
+export interface TopPriority {
+    topic: string;
+    count: number;
+}
+
+export interface MPStatsExtended {
+    badges?: string[];
+    top_priorities?: TopPriority[];
+    activity_score?: number;
+    function_gov?: string;
+}
+
+export interface Category {
+    id: number;
+    name_pl: string;
+    name_citizen: string;
+    vote_count: number;
+    ux_category?: string;
+    level: number;
+    children?: Category[];
+}
+
+

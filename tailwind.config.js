@@ -4,6 +4,10 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      screens: {
+        'xs': '375px',  // Small mobile (iPhone SE)
+        '3xl': '1920px', // Full HD / 4K starts
+      },
       colors: {
         // 1. Semantic Colors mapped to CSS variables
         background: 'rgb(var(--bg-page) / <alpha-value>)',

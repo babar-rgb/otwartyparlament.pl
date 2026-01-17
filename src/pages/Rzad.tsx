@@ -106,7 +106,7 @@ const Rzad = () => {
                             </h4>
                             <p className="text-[10px] text-secondary leading-relaxed">
                                 Dane pochodzą z miesięcznych sprawozdań budżetowych Ministerstwa Finansów.
-                                Analizujemy odchylenia od planu rocznego oraz sezonowość.
+                                Analiza odchyleń od planu rocznego oraz sezonowość.
                             </p>
                         </div>
                     </div>

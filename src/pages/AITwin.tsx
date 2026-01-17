@@ -42,7 +42,7 @@ export default function AITwin() {
                         </span>
                     </h1>
                     <p className="text-secondary text-lg max-w-2xl mx-auto leading-relaxed">
-                        Opisz swoje poglądy lub problem, który Cię nurtuje. Nasza AI sprawdzi tysiące rzeczywistych głosowań,
+                        Opisz swoje poglądy lub problem, który Cię nurtuje. AI sprawdzi tysiące rzeczywistych głosowań,
                         aby pokazać Ci, kto naprawdę reprezentuje Twoje interesy w Sejmie.
                     </p>
                 </div>
@@ -129,7 +129,7 @@ export default function AITwin() {
                             <div className="space-y-4">
                                 <h3 className="font-bold text-primary">Jak to obliczyliśmy?</h3>
                                 <p className="text-secondary text-sm leading-relaxed">
-                                    Nasza AI odnalazła <strong>{results.matched_votes?.length || 0} najważniejsze głosowania</strong>,
+                                    AI odnalazła <strong>{results.matched_votes?.length || 0} najważniejsze głosowania</strong>,
                                     które semantycznie najlepiej pasują do Twojego zapytania. Następnie przeanalizowaliśmy
                                     rzeczywiste wyniki tych głosowań dla każdego klubu parlamentarnego. Wynik % pokazuje,
                                     jak często dany klub głosował "ZA" w sprawach, które Cię interesują.

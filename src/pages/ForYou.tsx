@@ -18,6 +18,8 @@ const PERSONAS = [
 export default function ForYou() {
     const [selectedPersona, setSelectedPersona] = useState<string | null>(null);
 
+
+
     const { data: votes, isLoading } = usePersonasFeed(selectedPersona);
 
     const activePersona = PERSONAS.find(p => p.id === selectedPersona);
@@ -38,7 +40,7 @@ export default function ForYou() {
                         </h1>
                         <p className="text-xl text-text-secondary leading-relaxed">
                             Nie trać czasu na czytanie tysięcy stron ustaw.
-                            Nasza sztuczna inteligencja analizuje każde głosowanie i wyciąga tylko to,
+                            Sztuczna inteligencja analizuje każde głosowanie i wyciąga tylko to,
                             co <span className="text-primary font-bold">realnie wpływa na Twoje życie</span>.
                         </p>
                         <p className="mt-8 text-sm font-bold uppercase tracking-widest text-text-secondary/50">

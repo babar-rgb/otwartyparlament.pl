@@ -199,7 +199,7 @@ const EuroMPProfile = () => {
                         ))}
                     </div>
                 ) : (
-                    <p className="text-secondary font-medium">Brak zarejestrowanych głosowań dla tego posła w naszej bazie.</p>
+                    <p className="text-secondary font-medium">Brak zarejestrowanych głosowań dla tego posła w bazie.</p>
                 )}
             </div>
         </div>

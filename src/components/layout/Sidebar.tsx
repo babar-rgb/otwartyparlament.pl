@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { X, Github, Mail, BookOpen, Database, Heart, Search, Users, Briefcase, CheckSquare, BarChart3, FileText, Globe, Radio, Wallet, Building2, Sparkles, Eye, Minimize2, Maximize2, HelpCircle } from 'lucide-react';
+import { X, Github, Mail, BookOpen, Database, Heart, Search, Users, Briefcase, CheckSquare, BarChart3, FileText, Globe, Wallet, Building2, Eye, Minimize2, Maximize2, HelpCircle, Activity } from 'lucide-react';
 import { useAccessibility } from '../../context/AccessibilityContext';
 
 interface SidebarProps {
@@ -92,10 +92,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                 </Link>
 
                                 <div className="border-t border-slate-100 dark:border-white/5 my-1 mx-3" />
-                                <Link to="/live" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 font-bold text-slate-900 dark:text-white group">
+                                {/* <Link to="/live" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 font-bold text-slate-900 dark:text-white group">
                                     <Radio size={20} className="text-red-500 animate-pulse" />
                                     Live
-                                </Link>
+                                </Link> */}
                             </nav>
 
 
@@ -111,7 +111,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                 >
                                     <Heart size={20} className="text-blue-600 group-hover:scale-110 transition-transform" />
                                     <div>
-                                        <div className="font-bold text-slate-900">O Projekcie / Nasza Misja</div>
+                                        <div className="font-bold text-slate-900">O Projekcie / Misja</div>
                                         <div className="text-sm text-slate-600">Model non-profit i cele</div>
                                     </div>
                                 </Link>
@@ -236,23 +236,27 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         </div>
                         <div className="mt-8">
                             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-4">
-                                Nowe Funkcje <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full ml-2">BETA</span>
+                                Beta Funkcje <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full ml-2">BETA</span>
                             </h3>
                             <nav className="space-y-2 mb-8">
+                                <Link to="/procesy" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 font-bold text-slate-900 dark:text-white group">
+                                    <Activity size={20} className="text-slate-400 group-hover:text-amber-500 transition-colors" />
+                                    Procesy
+                                </Link>
                                 <Link to="/transfery" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 font-bold text-slate-900 dark:text-white group">
-                                    <Wallet size={20} className="text-slate-400 group-hover:text-emerald-500 transition-colors" />
+                                    <Wallet size={20} className="text-slate-400 group-hover:text-amber-500 transition-colors" />
                                     Mapa Transferów
                                 </Link>
                                 <Link to="/rzad" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 font-bold text-slate-900 dark:text-white group">
                                     <Building2 size={20} className="text-slate-400 group-hover:text-blue-500 transition-colors" />
                                     Efektywność Rządu
                                 </Link>
-                                <Link to="/ai-twin" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 font-bold text-slate-900 dark:text-white group">
+                                {/* <Link to="/ai-twin" onClick={onClose} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 font-bold text-slate-900 dark:text-white group">
                                     <Sparkles size={20} className="text-accent-blue group-hover:scale-110 transition-transform" />
                                     AI Polityczny Bliźniak
-                                </Link>
+                                </Link> */}
                                 <Link to="/europarlament" onClick={onClose} className="flex items-center gap-3 p-3 rounded-xl hover:bg-page font-bold text-primary group transition-all">
-                                    <Globe size={18} className="text-secondary group-hover:text-accent-blue transition-colors" />
+                                    <Globe size={18} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
                                     Europarlament
                                 </Link>
                             </nav>

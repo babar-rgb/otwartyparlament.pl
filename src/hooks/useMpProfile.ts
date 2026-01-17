@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { fetchMP, fetchSpeeches, fetchVotes, fetchInterpellations, fetchMPStats, fetchMPAlignment, fetchMPDeclarations } from '../api';
-import { MP, MPRelation } from '../types/domain';
+import { MP, MPRelation, AssetDeclaration, MPStatsExtended } from '../types/domain';
 
 export interface VoteHistoryItem {
     vote: string;
@@ -41,7 +41,7 @@ export function useMpProfile(idOrSlug?: string) {
             ]);
 
             // 3. Data Mapping
-            const voteHistory = votesData.items.map((v: any) => ({
+            const voteHistory: VoteHistoryItem[] = votesData.items.map((v: any) => ({
                 vote: (v.mpVote === 'YES' || v.mpVote === 'Za') ? 'YES' :
                     (v.mpVote === 'NO' || v.mpVote === 'Przeciw') ? 'NO' :
                         (v.mpVote === 'ABSTAIN' || v.mpVote === 'Wstrzymał się') ? 'ABSTAIN' :
@@ -61,11 +61,11 @@ export function useMpProfile(idOrSlug?: string) {
 
             return {
                 mp: mpData,
-                recentSpeeches: speeches.items,
+                recentSpeeches: speeches.items as import('../types/domain').Speech[],
                 interpellationCount: interps.length,
-                stats: mpStats,
+                stats: mpStats as MPStatsExtended,
                 relations: mpRelations as MPRelation[],
-                digitizedDeclarations: mpDeclarations,
+                digitizedDeclarations: mpDeclarations as AssetDeclaration[],
                 voteHistory,
                 keyVotes: voteHistory.slice(0, 5)
             };

@@ -161,7 +161,7 @@ export default function InterpellationDetails() {
                         </div>
                     ) : (
                         <p className="text-secondary/40 italic text-sm text-center py-8">
-                            Treść niedostępna z powodu błędu po stronie API Sejmu (błąd zewnętrzny). Prosimy spróbować otworzyć oryginał.
+                            Treść niedostępna z powodu błędu po stronie API Sejmu (błąd zewnętrzny). Spróbuj otworzyć oryginał.
                         </p>
                     )}
                 </div>

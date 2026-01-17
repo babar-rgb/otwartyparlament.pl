@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Swords, TrendingDown, AlertTriangle, ScrollText, ArrowRight, Info, Activity, HandCoins, Mic } from 'lucide-react';
 import Comparator from './Comparator';
 import { useRankings } from '../hooks/useRankings';
+import { RankingEntry } from '../types/domain';
 
 export default function Rankingi() {
   const [activeTab, setActiveTab] = useState<'attendance_high' | 'attendance_low' | 'rebellion' | 'comparator' | 'legislation'>('attendance_high');
@@ -20,7 +21,7 @@ export default function Rankingi() {
     );
   }
 
-  const rankings = {
+  const rankings: Record<string, RankingEntry[]> = {
     attendance_high: [...mps]
       .sort((a, b) => b.stats_attendance - a.stats_attendance)
       .slice(0, 50)
@@ -40,7 +41,7 @@ export default function Rankingi() {
     comparator: []
   };
 
-  const currentRanking = (activeTab === 'comparator' || activeTab === 'legislation') ? [] : rankings[activeTab];
+  const currentRanking: RankingEntry[] = (activeTab === 'comparator' || activeTab === 'legislation') ? [] : rankings[activeTab];
 
   const tabs = [
     { id: 'attendance_high', label: 'Dyscyplina', icon: Activity },
@@ -185,8 +186,9 @@ export default function Rankingi() {
                 </div>
 
                 <div className="space-y-3">
-                  {currentRanking.map((entry: any, idx) => {
-                    const progress = (entry.value / Math.max(...currentRanking.map((e: any) => e.value))) * 100;
+                  {currentRanking.map((entry, idx) => {
+                    const maxVal = Math.max(...currentRanking.map((e) => e.value));
+                    const progress = (entry.value / (maxVal || 1)) * 100;
                     return (
                       <Link
                         key={entry.id}

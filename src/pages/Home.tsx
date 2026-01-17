@@ -103,7 +103,7 @@ export default function Home() {
   const { term, setTerm } = useTerm();
   const [termDropdownOpen, setTermDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [viewMode, setViewMode] = useState<'vote' | 'party'>('vote');
+  const [hemicycleMode, setHemicycleMode] = useState<'vote' | 'party'>('party');
   const { isSimpleMode } = useAccessibility();
 
   // Custom hook handles all data fetching
@@ -132,7 +132,7 @@ export default function Home() {
       {isSimpleMode ? (
         <SeniorDashboard />
       ) : (
-        <div className="container mx-auto max-w-7xl">
+        <div className="container mx-auto max-w-screen-2xl">
           {/* Header Section */}
           <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div className="flex items-center gap-3">
@@ -251,25 +251,40 @@ export default function Home() {
                     <h2 className="text-3xl font-black text-primary m-0">Sala Plenarna</h2>
                     <p className="text-secondary dark:text-white/40 text-sm mt-1 uppercase tracking-widest font-bold">Rozkład głosów (Kadencja {term})</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex bg-surface p-1 rounded-xl border border-border-base relative">
+                    <motion.div
+                      layoutId="viewModeBg"
+                      className="absolute inset-1 w-[calc(50%-4px)] bg-black dark:bg-white rounded-lg"
+                      initial={false}
+                      animate={{
+                        x: hemicycleMode === 'party' ? '0%' : '100%'
+                      }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
                     <button
-                      onClick={() => setViewMode('vote')}
-                      className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border ${viewMode === 'vote' ? 'bg-black/5 dark:bg-white/20 border-border-base text-primary' : 'bg-transparent border-border-base hover:bg-black/5 dark:hover:bg-white/10 text-secondary'}`}
-                    >
-                      Głosowanie
-                    </button>
-                    <button
-                      onClick={() => setViewMode('party')}
-                      className={`px-4 py-2 rounded-lg text-xs font-bold transition-all border ${viewMode === 'party' ? 'bg-black/5 dark:bg-white/20 border-border-base text-primary' : 'bg-transparent border-border-base hover:bg-black/5 dark:hover:bg-white/10 text-secondary'}`}
+                      onClick={() => setHemicycleMode('party')}
+                      className={`relative z-10 px-4 py-2 text-sm font-bold rounded-lg transition-colors w-24 ${hemicycleMode === 'party'
+                        ? 'text-white dark:text-black'
+                        : 'text-secondary hover:text-primary'
+                        }`}
                     >
                       Partie
+                    </button>
+                    <button
+                      onClick={() => setHemicycleMode('vote')}
+                      className={`relative z-10 px-4 py-2 text-sm font-bold rounded-lg transition-colors w-24 ${hemicycleMode === 'vote'
+                        ? 'text-white dark:text-black'
+                        : 'text-secondary hover:text-primary'
+                        }`}
+                    >
+                      Głosy
                     </button>
                   </div>
                 </div>
 
                 <div className="relative min-h-[400px] flex items-center justify-center">
                   <SejmHemicycle
-                    mode={viewMode}
+                    mode={hemicycleMode}
                     data={topVote?.results?.map((r: any) => ({
                       id: r.mps?.id || r.mp_id,
                       name: r.mps?.first_name || 'Nieznany',

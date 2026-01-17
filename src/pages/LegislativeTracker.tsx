@@ -61,7 +61,7 @@ const LegislativeTracker: React.FC = () => {
                 ) : processes.length === 0 ? (
                     <div className="text-center py-20 text-secondary">
                         <p className="text-xl font-bold mb-2">Brak wyników</p>
-                        <p className="text-sm">Nasze crawlery wciąż pracują nad indeksowaniem starszych ustaw.</p>
+                        <p className="text-sm">Crawlery wciąż pracują nad indeksowaniem starszych ustaw.</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

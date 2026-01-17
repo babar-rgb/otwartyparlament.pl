@@ -6,23 +6,7 @@ import { formatPolishDate } from '../utils/dateUtils';
 import { useInterpellationsList } from '../hooks/useInterpellationsList';
 import SEO from '../components/SEO';
 
-interface Interpellation {
-    id: number;
-    term: number;
-    title: string;
-    sent_date: string;
-    last_modified: string;
-    content: string;
-    reply_content: string;
-    raw_data: {
-        content?: string;
-        key?: string;
-        num?: number;
-        from?: string[];
-        to?: string[];
-        [key: string]: any;
-    };
-}
+
 
 const highlightText = (text: string, highlight: string) => {
     if (!text) return '';
@@ -142,10 +126,15 @@ export default function InterpellationsList() {
                                     icon="file"
                                 />
                             )}
-                            {interpellations.map((item: Interpellation) => {
+                            {interpellations.map((item: import('../types/domain').Interpellation) => {
                                 const authorList = item.raw_data?.from || [];
-                                const authorName = (item as any).authors?.length > 0
-                                    ? (item as any).authors.map((a: any) => `${a.first_name} ${a.last_name}`).join(', ')
+                                // Fix type safe access to authors
+                                const authorName = item.authors && item.authors.length > 0
+                                    ? item.authors.map(a => {
+                                        if (a.mp) return `${a.mp.first_name} ${a.mp.last_name}`;
+                                        if (a.first_name && a.last_name) return `${a.first_name} ${a.last_name}`;
+                                        return 'Poseł';
+                                    }).join(', ')
                                     : (Array.isArray(authorList) ? (authorList[0] || 'Nieznany poseł') : authorList);
 
                                 const contentText = item.content || item.raw_data?.content || item.title;

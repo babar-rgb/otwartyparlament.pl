@@ -41,7 +41,7 @@ export default class ErrorBoundary extends Component<Props, State> {
 
                         <p className="text-slate-600 dark:text-slate-400 mb-8">
                             Wystąpił nieoczekiwany błąd aplikacji. Przepraszamy za utrudnienia.
-                            Prosimy odświeżyć stronę lub spróbować ponownie później.
+                            Proszę odświeżyć stronę lub spróbować ponownie później.
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">

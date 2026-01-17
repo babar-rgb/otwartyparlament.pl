@@ -11,15 +11,15 @@ export default function Metodologia() {
             details: [
                 {
                     label: 'Oficjalne dane z Sejmu',
-                    content: 'Wszystkie informacje pobieramy bezpośrednio z oficjalnych systemów informatycznych Sejmu RP (API). Dzięki temu masz pewność, że to co widzisz u nas, jest dokładnie tym, co widnieje w rejestrach państwowych.'
+                    content: 'Wszystkie informacje pobieram bezpośrednio z oficjalnych systemów informatycznych Sejmu RP (API). Dzięki temu masz pewność, że to co widzisz tutaj, jest dokładnie tym, co widnieje w rejestrach państwowych.'
                 },
                 {
                     label: 'Automatyczne sprawdzanie',
-                    content: 'Nasz system co kilkanaście minut zagląda do Sejmu i sprawdza, czy coś się nie zmieniło. Jeśli pojawi się nowe głosowanie lub poprawka, strona aktualizuje się automatycznie.'
+                    content: 'System co kilkanaście minut zagląda do Sejmu i sprawdza, czy coś się nie zmieniło. Jeśli pojawi się nowe głosowanie lub poprawka, strona aktualizuje się automatycznie.'
                 },
                 {
                     label: 'Dane „tylko do odczytu”',
-                    content: 'Gdy raz pobierzemy wynik głosowania, nikt nie może go u nas ręcznie edytować. Każda zmiana statusu ustawy jest zapisywana jako nowe zdarzenie, więc zawsze możemy wrócić do tego, jak dana sprawa wyglądała wcześniej.'
+                    content: 'Gdy raz zostanie pobrany wynik głosowania, nikt nie może go tutaj ręcznie edytować. Każda zmiana statusu ustawy jest zapisywana jako nowe zdarzenie, więc zawsze można wrócić do tego, jak dana sprawa wyglądała wcześniej.'
                 }
             ]
         },
@@ -67,7 +67,7 @@ export default function Metodologia() {
                 },
                 {
                     label: 'Tematy ustaw (AI)',
-                    content: 'Używamy sztucznej inteligencji, by "przeczytała" tytuł każdej ustawy i zrozumiała, o czym ona jest. Dzięki temu projekty o podatkach trafiają do finansów, a te o parkach narodowych do ekologii – bez ręcznego przepisywania.'
+                    content: 'Używam sztucznej inteligencji, by "przeczytała" tytuł każdej ustawy i zrozumiała, o czym ona jest. Dzięki temu projekty o podatkach trafiają do finansów, a te o parkach narodowych do ekologii – bez ręcznego przepisywania.'
                 }
             ]
         },
@@ -79,7 +79,7 @@ export default function Metodologia() {
             details: [
                 {
                     label: 'Czytanie skanów',
-                    content: 'Posłowie często wypełniają oświadczenia ręcznie na kartce. Nasze programy analizują te skany i zamieniają pismo odręczne na liczby, które można łatwo filtrować i porównywać.'
+                    content: 'Posłowie często wypełniają oświadczenia ręcznie na kartce. Moje programy analizują te skany i zamieniają pismo odręczne na liczby, które można łatwo filtrować i porównywać.'
                 },
                 {
                     label: 'Sprawdzanie błędów',
@@ -89,21 +89,21 @@ export default function Metodologia() {
         },
         {
             id: 'stack',
-            title: 'Technologie, których używamy',
+            title: 'Technologie, których używam',
             icon: <Sparkles className="w-6 h-6" />,
             description: 'Na czym postawiony jest projekt?',
             details: [
                 {
                     label: 'Baza danych',
-                    content: 'Korzystamy ze standardowej bazy PostgreSQL, która pozwala nam szybko wyszukiwać informacje i liczyć podobieństwa między tysiącami głosowań.'
+                    content: 'Korzystam ze standardowej bazy PostgreSQL, która pozwala mi szybko wyszukiwać informacje i liczyć podobieństwa między tysiącami głosowań.'
                 },
                 {
                     label: 'Bezpieczne AI',
-                    content: 'Nasze modele AI działają na naszych serwerach, a nie w chmurze gigantów z USA. To oznacza, że Twoje dane (np. odpowiedzi w teście) nie są wysyłane do zewnętrznych firm.'
+                    content: 'Modele AI działają na prywatnych serwerach, a nie w chmurze gigantów z USA. To oznacza, że Twoje dane (np. odpowiedzi w teście) nie są wysyłane do zewnętrznych firm.'
                 },
                 {
                     label: 'Szybkość działania',
-                    content: 'Używamy nowoczesnych narzędzi (FastAPI i React), by strona ładowała się szybko nawet przy dużej liczbie danych o głosowaniach.'
+                    content: 'Używam nowoczesnych narzędzi (FastAPI i React), by strona ładowała się szybko nawet przy dużej liczbie danych o głosowaniach.'
                 }
             ]
         },
@@ -119,7 +119,7 @@ export default function Metodologia() {
                 },
                 {
                     label: 'Otwarty kod',
-                    content: 'Nasz kod jest publiczny. Każdy programista może wejść na GitHub, zobaczyć jak działają nasze algorytmy i upewnić się, że nie ma w nich żadnych ukrytych "sztuczek" czy stronniczości.'
+                    content: 'Kod projektu jest publiczny. Każdy programista może wejść na GitHub, zobaczyć jak działają zastosowane algorytmy i upewnić się, że nie ma w nich żadnych ukrytych "sztuczek" czy stronniczości.'
                 }
             ]
         }
@@ -129,7 +129,7 @@ export default function Metodologia() {
         <div className="min-h-screen bg-page pt-32 pb-24 px-4 md:px-8 font-sans transition-all duration-500">
             <SEO
                 title="Metodologia i Weryfikacja Danych"
-                description="Dowiedz się, jak zbieramy i sprawdzamy dane z Sejmu RP, byś mógł nam ufać."
+                description="Dowiedz się, jak zbieram i sprawdzam dane z Sejmu RP, byś mógł zaufać tej platformie."
             />
 
             <div className="max-w-6xl mx-auto">
@@ -143,7 +143,7 @@ export default function Metodologia() {
                         Jak <span className="italic font-serif text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-indigo-500">Działamy.</span>
                     </h1>
                     <p className="text-xl text-secondary max-w-3xl mx-auto leading-relaxed font-medium">
-                        Otwarty Parlament to projekt oparty na faktach. Nie interpretujemy polityki – pokazujemy twarde dane. Poniżej wyjaśniamy po ludzku, skąd je bierzemy i jak dbamy o ich rzetelność.
+                        Otwarty Parlament to projekt oparty na faktach. Nie interpretuję polityki – pokazuję twarde dane. Poniżej wyjaśniam po ludzku, skąd je biorę i jak dbam o ich rzetelność.
                     </p>
                 </div>
 
@@ -202,7 +202,7 @@ export default function Metodologia() {
                             <div>
                                 <h4 className="text-lg font-bold text-primary mb-4 italic">Jak łączycie różne fakty w jedną całość?</h4>
                                 <p className="text-secondary leading-relaxed font-medium pl-6 border-l border-border-base">
-                                    Każde głosowanie, wystąpienie czy interpelacja ma swój unikalny numer w systemie sejmowym. Nasze algorytmy dbają o to, by przypisać te działania do właściwej osoby i właściwego projektu ustawy. Co noc uruchamiamy testy, które sprawdzają, czy wszystkie te "puzzle" do siebie pasują.
+                                    Każde głosowanie, wystąpienie czy interpelacja ma swój unikalny numer w systemie sejmowym. Algorytmy dbają o to, by przypisać te działania do właściwej osoby i właściwego projektu ustawy. Co noc uruchamiam testy, które sprawdzają, czy wszystkie te "puzzle" do siebie pasują.
                                 </p>
                             </div>
                         </div>

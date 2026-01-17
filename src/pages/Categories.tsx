@@ -28,7 +28,7 @@ export default function Categories() {
 
     const [view, setView] = useState<'chart' | 'grid'>('chart');
 
-    const maxVotes = Math.max(...categories.map((c: any) => c.vote_count), 1);
+    const maxVotes = Math.max(...(categories as import('../types/domain').Category[]).map((c) => c.vote_count), 1);
     const coveragePercent = totalVotes > 0 ? Math.round((classifiedVotes / totalVotes) * 100) : 0;
 
     if (loading) {
@@ -41,6 +41,8 @@ export default function Categories() {
             </div>
         );
     }
+
+    const categoryList = categories as import('../types/domain').Category[];
 
     return (
         <div className="min-h-screen bg-page transition-colors duration-500 pb-24">
@@ -154,7 +156,7 @@ export default function Categories() {
                         </h2>
 
                         <div className="space-y-12">
-                            {categories.map((domain: any) => (
+                            {categoryList.map((domain) => (
                                 <div key={domain.id} className="space-y-4">
                                     <Link
                                         to={`/glosowania?category_id=${domain.id}&term=${termParam}`}
@@ -183,7 +185,7 @@ export default function Categories() {
                                     {/* Subcategories */}
                                     {domain.children && domain.children.length > 0 && (
                                         <div className="ml-8 space-y-4 border-l border-border-base pl-8 py-2">
-                                            {domain.children.slice(0, 6).map((sub: any) => (
+                                            {domain.children.slice(0, 6).map((sub) => (
                                                 <Link
                                                     key={sub.id}
                                                     to={`/glosowania?category_id=${sub.id}&term=${termParam}`}
@@ -212,7 +214,7 @@ export default function Categories() {
                 {/* Grid View */}
                 {view === 'grid' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {categories.map((domain: any) => (
+                        {categoryList.map((domain) => (
                             <Link
                                 key={domain.id}
                                 to={`/glosowania?category_id=${domain.id}&term=${termParam}`}
@@ -236,7 +238,7 @@ export default function Categories() {
 
                                 {/* Mini summary */}
                                 <div className="mt-auto space-y-3 pt-6 border-t border-border-base">
-                                    {domain.children?.slice(0, 3).map((area: any) => (
+                                    {domain.children?.slice(0, 3).map((area) => (
                                         <div key={area.id} className="flex items-center gap-3">
                                             <div className="flex-1 h-1 bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
                                                 <div
@@ -250,7 +252,7 @@ export default function Categories() {
                                         </div>
                                     ))}
                                 </div>
-                                <div className="mt-6 pt-6 border-t border-border-base/50">
+                                <div className="mt-6 pt-6 border-border-base/50 border-t">
                                     <div className="flex items-center justify-between text-sm font-bold text-accent-blue">
                                         <span>Przeglądaj kategorię</span>
                                         <ArrowLeft className="rotate-180 group-hover:translate-x-1 transition-transform" size={16} />

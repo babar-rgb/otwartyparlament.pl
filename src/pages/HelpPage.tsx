@@ -25,7 +25,7 @@ const FAQ_ITEMS = [
     },
     {
         question: "Jak liczona jest frekwencja?",
-        answer: "Frekwencja obliczana jest na podstawie oficjalnych wyników głosowań dla X Kadencji Sejmu. Wzór to: (Liczba głosów oddanych / Całkowita liczba głosowań) * 100%. Za głosy oddane uznajemy: 'Za', 'Przeciw', 'Wstrzymał się' oraz 'Obecny'. Głosy 'Nieobecny' obniżają frekwencję. Nasz system automatycznie pobiera te dane każdej nocy i przelicza statystyki na nowo, eliminując błędy historyczne (głosowania z poprzednich kadencji nie są wliczane)."
+        answer: "Frekwencja obliczana jest na podstawie oficjalnych wyników głosowań dla X Kadencji Sejmu. Wzór to: (Liczba głosów oddanych / Całkowita liczba głosowań) * 100%. Za głosy oddane uznajemy: 'Za', 'Przeciw', 'Wstrzymał się' oraz 'Obecny'. Głosy 'Nieobecny' obniżają frekwencję. System automatycznie pobiera te dane każdej nocy i przelicza statystyki na nowo, eliminując błędy historyczne (głosowania z poprzednich kadencji nie są wliczane)."
     },
     {
         question: "Co oznaczają statusy 404 w logach głosowań?",
@@ -195,12 +195,12 @@ export default function HelpPage() {
                     <Info className="w-12 h-12 text-accent-blue mx-auto mb-6" />
                     <h2 className="text-2xl font-black mb-4">Nadal potrzebujesz pomocy?</h2>
                     <p className="text-secondary max-w-xl mx-auto mb-8">
-                        Jeśli masz pytania dotyczące działania serwisu, znalazłeś błąd lub chcesz zgłosić sugestię – skontaktuj się z nami.
+                        Jeśli masz pytania dotyczące działania serwisu, znalazłeś błąd lub chcesz zgłosić sugestię – skontaktuj się ze mną.
                     </p>
                     <div className="flex flex-wrap justify-center gap-4">
                         <a
                             href="/kontakt"
-                            className="inline-flex items-center gap-2 bg-accent-blue hover:bg-accent-blue/90 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20"
+                            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20"
                         >
                             <Mail size={18} />
                             Napisz do nas

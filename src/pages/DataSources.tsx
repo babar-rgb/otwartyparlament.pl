@@ -14,7 +14,7 @@ export default function DataSources() {
                         Jak to <span className="inline-block italic font-serif text-transparent bg-clip-text bg-gradient-to-r from-accent-blue via-indigo-400 to-cyan-400 pb-2">działa?</span>
                     </h1>
                     <p className="text-xl text-secondary max-w-3xl mx-auto leading-relaxed font-medium border-x border-border-base px-12">
-                        Nasza platforma łączy oficjalne dane sejmowe z nowoczesną analizą AI, aby dostarczyć Ci obiektywny obraz polskiej polityki w czasie rzeczywistym.
+                        Platforma łączy oficjalne dane sejmowe z nowoczesną analizą AI, aby dostarczyć Ci obiektywny obraz polskiej polityki w czasie rzeczywistym.
                     </p>
                 </div>
 
@@ -41,7 +41,7 @@ export default function DataSources() {
                                 </div>
                                 <h3 className="text-2xl font-black text-primary mb-4 tracking-tight">2. Przetwarzanie & AI</h3>
                                 <p className="text-secondary text-sm leading-relaxed font-medium">
-                                    Nasze algorytmy czyszczą dane, a modele językowe (Ollama/LLM) generują bezstronne podsumowania.
+                                    Algorytmy czyszczą dane, a modele językowe (Ollama/LLM) generują bezstronne podsumowania.
                                 </p>
                             </div>
 

@@ -65,7 +65,7 @@ const MpProfile = () => {
         image={mp.photo_url}
       />
 
-      <div className="max-w-5xl mx-auto">
+      <div className="container mx-auto max-w-screen-2xl">
         {/* Back Button */}
         <Link
           to="/poslowie"
@@ -408,8 +408,8 @@ const MpProfile = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  {topPriorities.map((item: any, idx: number) => (
-                    <div key={idx} className="flex justify-between items-center p-2.5 bg-black/5 dark:bg-white/5 rounded-lg border border-border-base">
+                  {topPriorities.map((item) => (
+                    <div key={item.topic} className="flex justify-between items-center p-2.5 bg-black/5 dark:bg-white/5 rounded-lg border border-border-base">
                       <span className="text-xs font-bold text-primary">{item.topic}</span>
                       <span className="text-[10px] font-black text-secondary bg-black/5 dark:bg-white/10 px-1.5 py-0.5 rounded">{item.count}</span>
                     </div>
@@ -530,7 +530,7 @@ const MpProfile = () => {
                   Oświadczenia Majątkowe
                 </h3>
                 <div className="space-y-3">
-                  {digitizedDeclarations.map((decl: any) => (
+                  {digitizedDeclarations.map((decl) => (
                     <div key={decl.id} className="p-3 bg-page/50 rounded-xl border border-border-base transition-colors hover:bg-page">
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-black text-primary">{decl.year?.substring(0, 4)}</span>

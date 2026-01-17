@@ -45,6 +45,24 @@ def read_processes(
         
     return {"items": result, "total": total}
 
+@router.get("/count")
+def count_processes(
+    term: Optional[int] = None, # Models don't have term yet, but frontend sends it
+    status: Optional[str] = None,
+    db: Session = Depends(database.get_db)
+):
+    query = db.query(models.LegislativeProcess)
+    if status:
+        query = query.filter(models.LegislativeProcess.status == status)
+    
+    # Note: LegislativeProcess currently doesn't have a 'term' column.
+    # If added in future, filter here:
+    # if term:
+    #     query = query.filter(models.LegislativeProcess.term == term)
+        
+    return {"count": query.count()}
+
+
 @router.get("/{process_id}")
 def read_process_details(process_id: str, db: Session = Depends(database.get_db)):
     process = db.query(models.LegislativeProcess).filter(models.LegislativeProcess.id == process_id).first()

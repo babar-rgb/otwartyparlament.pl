@@ -21,10 +21,10 @@ export default function Contact() {
                         <span>Kontakt & Wsparcie</span>
                     </div>
                     <h1 className="text-5xl md:text-7xl font-black text-primary mb-6 tracking-tight leading-tight">
-                        Jesteśmy tu dla <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500 italic font-serif">Ciebie</span>
+                        Jestem tu dla <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500 italic font-serif">Ciebie</span>
                     </h1>
                     <p className="text-xl text-secondary max-w-2xl mx-auto leading-relaxed font-medium opacity-80">
-                        Masz pytania, sugestie lub znalazłeś błąd? Chcemy budować tę platformę razem z Tobą.
+                        Masz pytania, sugestie lub znalazłeś błąd? Chcę budować tę platformę razem z Tobą.
                     </p>
                 </div>
 
@@ -106,16 +106,16 @@ export default function Contact() {
                             <div className="absolute top-0 right-0 w-40 h-40 bg-purple-500 rounded-full blur-3xl opacity-10 -translate-y-1/2 translate-x-1/2 group-hover:opacity-20 transition-opacity"></div>
                             <h3 className="text-xl font-black text-primary mb-8 flex items-center gap-3">
                                 <MessageSquare size={20} className="text-purple-500" />
-                                Znajdź nas w sieci
+                                Znajdź mnie w sieci
                             </h3>
                             <div className="flex gap-4">
-                                <a href="#" className="w-14 h-14 bg-black/5 dark:bg-white/5 border border-border-base rounded-2xl flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 hover:scale-110 transition-all text-secondary hover:text-primary">
+                                <a href="https://x.com/OtwParlament" target="_blank" rel="noopener noreferrer" className="w-14 h-14 bg-black/5 dark:bg-white/5 border border-border-base rounded-2xl flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 hover:scale-110 transition-all text-secondary hover:text-primary">
                                     <Twitter size={24} />
                                 </a>
                                 <a href="#" className="w-14 h-14 bg-black/5 dark:bg-white/5 border border-border-base rounded-2xl flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 hover:scale-110 transition-all text-secondary hover:text-primary">
                                     <Facebook size={24} />
                                 </a>
-                                <a href="#" className="w-14 h-14 bg-black/5 dark:bg-white/5 border border-border-base rounded-2xl flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 hover:scale-110 transition-all text-secondary hover:text-primary">
+                                <a href="https://www.linkedin.com/company/otwartyparlament-pl/about/" target="_blank" rel="noopener noreferrer" className="w-14 h-14 bg-black/5 dark:bg-white/5 border border-border-base rounded-2xl flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 hover:scale-110 transition-all text-secondary hover:text-primary">
                                     <Linkedin size={24} />
                                 </a>
                             </div>
@@ -142,7 +142,7 @@ export default function Contact() {
                                         </span>
                                     </summary>
                                     <p className="text-secondary mt-4 text-sm leading-relaxed animate-in fade-in slide-in-from-top-1 pl-4 border-l-2 border-border-base">
-                                        Nie. OtwartyParlament.pl to niezależna inicjatywa obywatelska. Korzystamy z oficjalnych danych, ale nie jesteśmy powiązani z Kancelarią Sejmu.
+                                        Nie. OtwartyParlament.pl to niezależna inicjatywa obywatelska. Korzystam z oficjalnych danych, ale nie jestem powiązany z Kancelarią Sejmu.
                                     </p>
                                 </details>
                                 <div className="h-px bg-border-base"></div>
@@ -154,7 +154,7 @@ export default function Contact() {
                                         </span>
                                     </summary>
                                     <p className="text-secondary mt-4 text-sm leading-relaxed animate-in fade-in slide-in-from-top-1 pl-4 border-l-2 border-border-base">
-                                        Wszystkie dane pobieramy automatycznie z Systemu Informacyjnego Sejmu (API) oraz oficjalnych stron sejmowych. Są to dane publiczne.
+                                        Wszystkie dane pobieram automatycznie z Systemu Informacyjnego Sejmu (API) oraz oficjalnych stron sejmowych. Są to dane publiczne.
                                     </p>
                                 </details>
                                 <div className="h-px bg-border-base"></div>
@@ -166,7 +166,7 @@ export default function Contact() {
                                         </span>
                                     </summary>
                                     <p className="text-secondary mt-4 text-sm leading-relaxed animate-in fade-in slide-in-from-top-1 pl-4 border-l-2 border-border-base">
-                                        Tak! Projekt jest Open Source. Zapraszamy do zakładki "Kod Źródłowy" lub do kontaktu bezpośredniego.
+                                        Tak! Projekt jest Open Source. Zapraszam do zakładki "Kod Źródłowy" lub do kontaktu bezpośredniego.
                                     </p>
                                 </details>
                             </div>

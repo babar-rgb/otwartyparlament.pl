@@ -1,3 +1,4 @@
+
 import { Mail, Bell, ShieldCheck, Zap, ArrowRight } from 'lucide-react';
 import { useState } from 'react';
 
@@ -25,7 +26,7 @@ export default function Newsletter() {
                     Polityka w <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">pigułce</span>
                 </h1>
                 <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-                    Dołącz do 15,000+ obywateli, którzy otrzymują cotygodniowe podsumowania najważniejszych głosowań i wydarzeń z Sejmu. Bez spamu, tylko fakty.
+                    Dołącz do obywateli, którzy otrzymują cotygodniowe podsumowania najważniejszych głosowań i wydarzeń z Sejmu. Bez spamu, tylko fakty.
                 </p>
             </div>
 
@@ -38,7 +39,7 @@ export default function Newsletter() {
                         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 text-green-600">
                             <ShieldCheck size={40} />
                         </div>
-                        <h3 className="text-2xl font-bold text-slate-900 mb-2">Dziękujemy za zapis!</h3>
+                        <h3 className="text-2xl font-bold text-slate-900 mb-2">Dziękuję za zapis!</h3>
                         <p className="text-slate-600">Sprawdź swoją skrzynkę, aby potwierdzić subskrypcję.</p>
                         <button
                             onClick={() => setStatus('idle')}
@@ -110,7 +111,7 @@ export default function Newsletter() {
                     </div>
                     <h3 className="text-xl font-bold text-slate-900 mb-3">Niezależne Analizy</h3>
                     <p className="text-slate-600 leading-relaxed text-sm">
-                        Nasze treści są wolne od partyjnego przekazu. Opieramy się wyłącznie na danych i faktach legislacyjnych.
+                        Treści są wolne od partyjnego przekazu. Opieram się wyłącznie na danych i faktach legislacyjnych.
                     </p>
                 </div>
             </div>

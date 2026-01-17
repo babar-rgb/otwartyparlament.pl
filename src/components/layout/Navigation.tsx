@@ -50,7 +50,7 @@ export default function Navigation() {
             : 'bg-transparent'
           }`}
       >
-        <div className="container mx-auto px-6 md:px-12">
+        <div className="container mx-auto max-w-screen-2xl px-6 md:px-12">
           <div className="flex justify-between items-center">
             {/* Left: Logo */}
             <Link to="/" className="font-extrabold text-2xl text-primary tracking-tight flex items-center gap-2">
@@ -76,8 +76,8 @@ export default function Navigation() {
                     Głosowania
                   </Link>
 
-                  <Link to="/dla-ciebie" className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 hover:scale-105 transform duration-200">
-                    Dla Ciebie ✨
+                  <Link to="/dla-ciebie" className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-sm font-bold hover:bg-red-100 transition-colors">
+                    Dla Ciebie
                   </Link>
 
                   <Link to="/rankingi" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
@@ -89,9 +89,7 @@ export default function Navigation() {
                   <Link to="/projekty" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
                     Projekty
                   </Link>
-                  <Link to="/procesy" className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400 hover:scale-105 transform duration-200 animate-pulse">
-                    Procesy (Nowość)
-                  </Link>
+
                   <Link to="/o-projekcie" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
                     O Projekcie
                   </Link>

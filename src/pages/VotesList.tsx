@@ -123,10 +123,10 @@ const VotesList = () => {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 md:px-8 pt-12">
-
+            <div className="container mx-auto max-w-screen-2xl px-4 md:px-8 pt-12">
                 {/* Filter & Search Section */}
                 <div className="bg-surface p-6 rounded-[var(--radius-card-xl)] border border-border-base mb-10 shadow-2xl backdrop-blur-md">
+                    {/* ... (content stays same, just width wrapper changed) ... */}
                     <div className="flex flex-col gap-6">
                         <div className="flex flex-col md:flex-row gap-6">
                             <div className="relative flex-1">
@@ -228,7 +228,7 @@ const VotesList = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="grid gap-4">
+                    <div className="grid gap-4 3xl:grid-cols-2 3xl:gap-6">
                         {displayVotes.length > 0 ? (
                             displayVotes.map((vote) => (
                                 <Link
