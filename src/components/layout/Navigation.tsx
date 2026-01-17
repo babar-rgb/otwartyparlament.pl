@@ -76,7 +76,7 @@ export default function Navigation() {
                     Głosowania
                   </Link>
 
-                  <Link to="/dla-ciebie" className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-sm font-bold hover:bg-red-100 transition-colors">
+                  <Link to="/dla-ciebie" className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 text-sm font-bold hover:bg-blue-100 transition-colors">
                     Dla Ciebie
                   </Link>
 
@@ -90,7 +90,7 @@ export default function Navigation() {
                     Projekty
                   </Link>
 
-                  <Link to="/o-projekcie" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
+                  <Link to="/o-projekcie" className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-sm font-bold hover:bg-red-100 transition-colors">
                     O Projekcie
                   </Link>
                 </>

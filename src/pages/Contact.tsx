@@ -112,7 +112,7 @@ export default function Contact() {
                                 <a href="https://x.com/OtwParlament" target="_blank" rel="noopener noreferrer" className="w-14 h-14 bg-black/5 dark:bg-white/5 border border-border-base rounded-2xl flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 hover:scale-110 transition-all text-secondary hover:text-primary">
                                     <Twitter size={24} />
                                 </a>
-                                <a href="#" className="w-14 h-14 bg-black/5 dark:bg-white/5 border border-border-base rounded-2xl flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 hover:scale-110 transition-all text-secondary hover:text-primary">
+                                <a href="https://www.facebook.com/people/Otwartyparlamentpl/61586683622797/?locale=pl_PL" target="_blank" rel="noopener noreferrer" className="w-14 h-14 bg-black/5 dark:bg-white/5 border border-border-base rounded-2xl flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 hover:scale-110 transition-all text-secondary hover:text-primary">
                                     <Facebook size={24} />
                                 </a>
                                 <a href="https://www.linkedin.com/company/otwartyparlament-pl/about/" target="_blank" rel="noopener noreferrer" className="w-14 h-14 bg-black/5 dark:bg-white/5 border border-border-base rounded-2xl flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 hover:scale-110 transition-all text-secondary hover:text-primary">

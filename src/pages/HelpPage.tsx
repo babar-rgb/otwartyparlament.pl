@@ -33,7 +33,7 @@ const FAQ_ITEMS = [
     },
     {
         question: "Czy projekt jest związany z rządem?",
-        answer: "Nie. Otwarty Parlament to niezależny projekt społecznościowy (non-profit/open-source). Nie reprezentujemy żadnej partii politycznej ani instytucji państwowej."
+        answer: "Nie. Otwarty Parlament to niezależny projekt (open-source). Nie reprezentuję żadnej partii. Dostęp dla obywateli jest i pozostanie bezpłatny."
     }
 ];
 

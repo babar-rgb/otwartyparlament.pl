@@ -35,7 +35,7 @@ export default function ForYou() {
                     <div className="max-w-3xl mx-auto text-center mb-16">
                         <h1 className="text-4xl md:text-5xl font-extrabold mb-6">
                             <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-                                Sejm, który Cię rozumie.
+                                Ustawy, które Cię dotyczą.
                             </span>
                         </h1>
                         <p className="text-xl text-text-secondary leading-relaxed">

@@ -112,7 +112,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                     <Heart size={20} className="text-blue-600 group-hover:scale-110 transition-transform" />
                                     <div>
                                         <div className="font-bold text-slate-900">O Projekcie / Misja</div>
-                                        <div className="text-sm text-slate-600">Model non-profit i cele</div>
+                                        <div className="text-sm text-slate-600">Cele projektu</div>
                                     </div>
                                 </Link>
 
@@ -266,7 +266,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     {/* Footer */}
                     <div className="p-6 border-t border-border-base bg-page/50">
                         <p className="text-xs text-secondary text-center font-medium leading-relaxed">
-                            Projekt non-profit dla transparentności demokracji
+                            Transparentna, niekomercyjna platforma stworzona dla demokracji
                         </p>
                     </div>
                 </div>

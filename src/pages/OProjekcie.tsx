@@ -18,7 +18,7 @@ export default function OProjekcie() {
           </div>
           <h1 className="text-4xl md:text-6xl font-black text-primary mb-6 tracking-tight leading-tight">
             O projekcie <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500 underline decoration-blue-500/20 underline-offset-8">Otwarty Parlament.</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-rose-500 underline decoration-red-500/20 underline-offset-8">Otwarty Parlament.</span>
           </h1>
           <p className="text-lg md:text-xl text-secondary max-w-2xl leading-relaxed">
             Ta strona powstała, żebyś nie musiał sam przebijać się przez tysiące dokumentów na oficjalnych stronach Sejmu. Zbieram je w jednym miejscu i pokazuję w czytelny sposób, bez politycznego komentarza.
@@ -53,7 +53,7 @@ export default function OProjekcie() {
             </div>
             <h3 className="text-xl font-bold text-primary mb-3">Pełna niezależność</h3>
             <p className="text-secondary leading-relaxed text-sm">
-              Jako projekt społeczny, nie słucham żadnej partii ani korporacji. Kod jest otwarty (open-source), więc każdy może sprawdzić, że moje algorytmy nie są stronnicze.
+              Jako niezależny twórca, nie słucham żadnej partii ani korporacji. Kod jest otwarty (open-source), więc każdy może sprawdzić, że moje algorytmy nie są stronnicze.
             </p>
           </div>
 

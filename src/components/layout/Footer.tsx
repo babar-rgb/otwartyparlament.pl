@@ -8,7 +8,7 @@ export default function Footer() {
           <div>
             <h3 className="font-bold text-lg mb-4">Otwarty Parlament</h3>
             <p className="text-sm text-secondary leading-relaxed">
-              Transparentna, niekomercyjna platforma dla demokracji i odpowiedzialności politycznej.
+              Transparentna, niekomercyjna platforma stworzona dla demokracji.
             </p>
           </div>
 
@@ -50,7 +50,7 @@ export default function Footer() {
         <div className="border-t border-slate-800 pt-8">
           <div className="flex items-center justify-center gap-2 text-sm text-slate-400 mb-4">
             <Heart size={16} className="text-red-500" />
-            <span>Projekt non-profit dedykowany przejrzystości i demokracji</span>
+            <span>Platforma ułatwiająca dostęp do danych publicznych</span>
           </div>
           <div className="text-center text-xs text-slate-500">
             © 2025 Otwarty Parlament. Wszystkie dane są publiczne i otwarte.

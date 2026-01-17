@@ -56,7 +56,7 @@ export default function SearchPage() {
                                 navigate(`/search?${newParams.toString()}`);
                             }}
                             className={`flex items-center gap-2 px-6 py-3 rounded-xl border transition-all ${(type.type === searchParams.get('type') || (!type.type && !searchParams.get('type')))
-                                ? 'bg-primary text-page border-primary'
+                                ? 'bg-primary text-background border-primary'
                                 : 'bg-surface text-secondary border-border-base hover:border-primary/30'
                                 }`}
                         >

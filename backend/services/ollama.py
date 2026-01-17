@@ -54,9 +54,13 @@ class OllamaService:
         Zasady:
         1. ODPOWIADAJ WYŁĄCZNIE W JĘZYKU POLSKIM. Nie używaj chińskiego, angielskiego ani żadnego innego języka.
         2. Używaj trybu przypuszczającego dla projektów ("Projekt zakłada...").
-        3. Bądź merytoryczny i neutralny.
-        4. Importance: 1-10 (10 to kluczowe zmiany ustrojowe/budżetowe).
-        5. NIE HALUCYNUJ. Opieraj się tylko na dostarczonym tekście.
+        3. Bądź ekstremalnie merytoryczny i cyniczny w analizie kosztów.
+        4. JEŚLI USTAW ZWIĘKSZA PODATKI/OPŁATY (np. ZUS, składki):
+           - Napisz to WPROST w polu "cons" i "impact".
+           - NIE PISZ o "szansach na rozwój" czy "lepszej przyszłości" jeśli rosną koszty.
+           - Skup się na portfelu obywatela.
+        5. Importance: 1-10 (10 to kluczowe zmiany ustrojowe/budżetowe).
+        6. NIE HALUCYNUJ. Opieraj się tylko na dostarczonym tekście. Nie wymyślaj zalet na siłę.
         """
 
         try:
@@ -103,9 +107,10 @@ class OllamaService:
         
         Zasady:
         1. ODPOWIADAJ WYŁĄCZNIE W JĘZYKU POLSKIM. Zero chińskich znaków.
-        2. Bądź merytoryczny i neutralny.
-        3. Kategoria "Proceduralne" jest dla głosowań technicznych (przerwy, odroczenia, zmiany w komisjach).
-        4. Wyjaśnij prostym językiem znaczenie tego głosowania dla obywatela.
+        2. Bądź chłodny i analityczny. Unikaj nowomowy politycznej.
+        3. Jeśli głosowanie dotyczyło nałożenia nowych obowiązków lub podatków, napisz to wprost w "summary" i "cons".
+        4. Kategoria "Proceduralne" jest dla głosowań technicznych (przerwy, odroczenia, zmiany w komisjach).
+        5. Wyjaśnij prostym językiem znaczenie tego głosowania dla obywatela, bez owijania w bawełnę.
         """
 
         try:
