@@ -10,13 +10,7 @@ logger = get_logger("db")
 
 class Database:
     def __init__(self):
-        self.conn_params = {
-            "dbname": config.DB_NAME,
-            "user": config.DB_USER,
-            "password": config.DB_PASSWORD,
-            "host": config.DB_HOST,
-            "port": config.DB_PORT
-        }
+        self.dsn = config.get_db_uri()
         self.pool = None
         self._init_pool()
 
@@ -29,7 +23,7 @@ class Database:
                 self.pool = psycopg2.pool.ThreadedConnectionPool(
                     minconn=1,
                     maxconn=20,
-                    **self.conn_params
+                    dsn=self.dsn
                 )
                 logger.info("Database connection pool initialized")
                 return
