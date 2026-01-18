@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from backend.core.config import config
 
 # Construct PostgreSQL URL from config
-SQLALCHEMY_DATABASE_URL = f"postgresql://{config.DB_USER}:{config.DB_PASSWORD}@{config.DB_HOST}:{config.DB_PORT}/{config.DB_NAME}"
+SQLALCHEMY_DATABASE_URL = config.get_db_uri()
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL
