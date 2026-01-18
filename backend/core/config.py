@@ -16,6 +16,10 @@ class Config:
 
     @classmethod
     def get_db_uri(cls):
+        # Support cloud providers that set DATABASE_URL
+        if os.getenv("DATABASE_URL"):
+            return os.getenv("DATABASE_URL")
+
         if cls.DB_PASSWORD:
             return f"postgresql://{cls.DB_USER}:{cls.DB_PASSWORD}@{cls.DB_HOST}:{cls.DB_PORT}/{cls.DB_NAME}"
         return f"postgresql://{cls.DB_USER}@{cls.DB_HOST}:{cls.DB_PORT}/{cls.DB_NAME}"
