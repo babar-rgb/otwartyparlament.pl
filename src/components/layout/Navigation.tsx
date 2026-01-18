@@ -60,37 +60,37 @@ export default function Navigation() {
             {/* Spacer for better separation */}
             <div className="hidden xl:block w-8 2xl:w-16" />
 
-            {/* Center: Main Links (Desktop) */}
-            <div className="hidden xl:flex items-center gap-6 2xl:gap-8">
+            {/* Center: Main Links (Desktop - Universal Adjustment) */}
+            <div className="hidden lg:flex items-center gap-3 xl:gap-6 2xl:gap-8">
               {!isSimpleMode && (
                 <>
-                  <Link to="/poslowie" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
+                  <Link to="/poslowie" className="text-xs xl:text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200 whitespace-nowrap">
                     Posłowie
                   </Link>
 
-                  <Link to="/komisje" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
+                  <Link to="/komisje" className="text-xs xl:text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200 whitespace-nowrap">
                     Komisje
                   </Link>
 
-                  <Link to="/glosowania" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
+                  <Link to="/glosowania" className="text-xs xl:text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200 whitespace-nowrap">
                     Głosowania
                   </Link>
 
-                  <Link to="/dla-ciebie" className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 text-sm font-bold hover:bg-blue-100 transition-colors">
+                  <Link to="/dla-ciebie" className="px-2 xl:px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 text-xs xl:text-sm font-bold hover:bg-blue-100 transition-colors whitespace-nowrap">
                     Dla Ciebie
                   </Link>
 
-                  <Link to="/rankingi" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
+                  <Link to="/rankingi" className="text-xs xl:text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200 whitespace-nowrap">
                     Rankingi
                   </Link>
-                  <Link to="/interpelacje" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
+                  <Link to="/interpelacje" className="text-xs xl:text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200 whitespace-nowrap">
                     Interpelacje
                   </Link>
-                  <Link to="/projekty" className="text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200">
+                  <Link to="/projekty" className="text-xs xl:text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200 whitespace-nowrap">
                     Projekty
                   </Link>
 
-                  <Link to="/o-projekcie" className="px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-sm font-bold hover:bg-red-100 transition-colors">
+                  <Link to="/o-projekcie" className="px-2 xl:px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-xs xl:text-sm font-bold hover:bg-red-100 transition-colors whitespace-nowrap">
                     O Projekcie
                   </Link>
                 </>
