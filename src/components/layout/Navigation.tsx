@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Menu, X, Search, MessageSquareQuote, Activity, Sparkles, Home } from 'lucide-react';
+import { Menu, X, Search, MessageSquareQuote, Activity, Sparkles, Home, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import SearchOverlay from '../ui/SearchOverlay';
@@ -146,9 +146,9 @@ export default function Navigation() {
             <div className="p-1 rounded-full bg-white/5"><Home size={20} className="w-5 h-5" /></div>
             <span>Start</span>
           </Link>
-          <Link to="/procesy" className="flex flex-col items-center gap-1 text-xs font-medium text-secondary hover:text-primary p-2">
-            <Activity size={20} className="text-emerald-400" />
-            <span>Procesy</span>
+          <Link to="/poslowie" className="flex flex-col items-center gap-1 text-xs font-medium text-secondary hover:text-primary p-2">
+            <Users size={20} className="text-blue-500" />
+            <span>Posłowie</span>
           </Link>
 
           {/* Center Search - Floating? No, standard. */}

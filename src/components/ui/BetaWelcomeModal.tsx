@@ -70,6 +70,9 @@ const BetaWelcomeModal = () => {
                                         Mam do Ciebie prośbę: po zapoznaniu się z serwisem, wypełnij proszę krótką ankietę.
                                         Znajdziesz ją w <strong>prawym górnym rogu</strong> ekranu (przycisk "Twoja Opinia").
                                     </p>
+                                    <p className="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                                        💡 PS. Serwis najlepiej wygląda na komputerze – tam znajdziesz pełne analizy i wykresy!
+                                    </p>
                                     <p className="text-xs opacity-70">
                                         Twój feedback pomoże mi dostosować user experience i poprawić wszelkie błędy. Z góry dziękuję!
                                     </p>

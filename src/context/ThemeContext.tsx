@@ -14,10 +14,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         const saved = localStorage.getItem('theme');
         if (saved === 'light' || saved === 'dark') return saved;
         // Check system preference
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-            return 'light';
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return 'dark';
         }
-        return 'dark'; // Default back to dark for this app's aesthetic
+        return 'light'; // Default to light as requested
     });
 
     useEffect(() => {
