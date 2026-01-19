@@ -73,6 +73,9 @@ const BetaWelcomeModal = () => {
                                     <p className="text-sm font-semibold text-purple-600 dark:text-purple-400">
                                         💡 PS. Serwis najlepiej wygląda na komputerze – tam znajdziesz pełne analizy i wykresy!
                                     </p>
+                                    <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                                        � PS. Wiem, że strona może momentami zamulać – to wersja Beta na serwerze za 5 dolarów. Niedługo będę ulepszał całą architekturę!
+                                    </p>
                                     <p className="text-xs opacity-70">
                                         Twój feedback pomoże mi dostosować user experience i poprawić wszelkie błędy. Z góry dziękuję!
                                     </p>
