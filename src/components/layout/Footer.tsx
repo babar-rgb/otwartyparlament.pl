@@ -16,7 +16,8 @@ export default function Footer() {
             <h4 className="font-bold mb-4">Nawigacja</h4>
             <ul className="space-y-2 text-sm">
               <li><a href="/" className="text-slate-400 hover:text-white transition">Strona główna</a></li>
-              <li><a href="/poslowie" className="text-slate-400 hover:text-white transition">Posłowie</a></li>
+              <li className="hidden md:block"><a href="/poslowie" className="text-slate-400 hover:text-white transition">Posłowie</a></li>
+              <li className="block md:hidden"><a href="/o-projekcie" className="text-slate-400 hover:text-white transition font-bold text-white">O projekcie</a></li>
               <li><a href="/glosowania" className="text-slate-400 hover:text-white transition">Głosowania</a></li>
               <li><a href="/partie" className="text-slate-400 hover:text-white transition">Partie</a></li>
             </ul>
