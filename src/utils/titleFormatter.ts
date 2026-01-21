@@ -8,15 +8,15 @@ export function cleanSejmTitle(rawTitle: string): string {
 
     // 2. STRIP BUREAUCRATIC PREFIXES
     const prefixesToRemove = [
-        /\s*^(Pkt\.|Punkt)\s*\d+\.?\s*/gi,
-        /\s*^Sprawozdanie Komisji o\s*/gi,
-        /\s*^Rządowy projekt ustawy\s*/gi,
-        /\s*^Poselski projekt ustawy\s*/gi,
-        /\s*^Obywatelski projekt ustawy\s*/gi,
-        /\s*^Pilny rządowy projekt ustawy\s*/gi,
-        /\s*^Uchwała Senatu w sprawie\s*/gi,
-        /\s*^Pierwsze czytanie\s*/gi,
-        /\s*^Rozstrzygnięcie przez Sejm wniosku.*?:/gi
+        /^\s*(Pkt\.|Punkt)\s*\d+\.?\s*/gi,
+        /^\s*Sprawozdanie Komisji o\s*/gi,
+        /^\s*Rządowy projekt ustawy\s*/gi,
+        /^\s*Poselski projekt ustawy\s*/gi,
+        /^\s*Obywatelski projekt ustawy\s*/gi,
+        /^\s*Pilny rządowy projekt ustawy\s*/gi,
+        /^\s*Uchwała Senatu w sprawie\s*/gi,
+        /^\s*Pierwsze czytanie\s*/gi,
+        /^\s*Rozstrzygnięcie przez Sejm wniosku.*?:/gi
     ];
 
     prefixesToRemove.forEach(prefix => {

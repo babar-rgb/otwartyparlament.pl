@@ -43,7 +43,7 @@ class Vote(Base):
     term = Column(Integer, index=True)
     voting_number = Column(Integer)
     date = Column(Date, index=True)
-    name_citizen = Column(String)
+    title_raw = Column(String)
     title_clean = Column(String)
     verdict = Column(String)
     details_json = Column(JSONB)
@@ -76,7 +76,7 @@ class Bill(Base):
     __tablename__ = "bills"
 
     id = Column(Integer, primary_key=True, index=True)
-    process_id = Column(String, unique=True, index=True) # e.g. RPS-123
+    process_id = Column(String, index=True) # e.g. RPS-123
     number = Column(String, index=True) # print number
     title = Column(Text)
     description = Column(Text, nullable=True)
@@ -89,6 +89,7 @@ class Bill(Base):
     importance = Column(Integer, default=0) # AI calculated 1-10
     vector_embedding = Column(Vector(384), nullable=True) # 384-dim vector
     content = Column(Text, nullable=True) # Full text extraction from PDF
+    term = Column(Integer, index=True, default=10) # Sejm Term
     created_at = Column(DateTime, server_default=func.now())
 
     mp = relationship("MP", back_populates="bills")
@@ -166,6 +167,7 @@ class CommitteeSitting(Base):
     video_url = Column(String)
     agenda = Column(JSONB)
     term = Column(Integer)
+    summary = Column(Text, nullable=True) # AI generated narrative summary
     created_at = Column(DateTime, server_default=func.now())
 
 class AssetDeclaration(Base):
@@ -197,11 +199,13 @@ class VoteAnalysis(Base):
     __tablename__ = "vote_analyses"
     
     vote_id = Column(Integer, ForeignKey("votes.id"), primary_key=True)
-    summary = Column(Text)
+    summary = Column(Text) # Simple summary for citizens
+    summary_expert = Column(Text, nullable=True) # Detailed summary with citations
     pros = Column(JSONB)
     cons = Column(JSONB)
+    analysis_metadata = Column(JSONB, nullable=True) # Confidence score, expert comments, etc.
     mind_map = Column(Text, nullable=True)
-    procedural_context = Column(Text, nullable=True) # AI generated context about the legislative stage & legal consequences
+    procedural_context = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     
     vote = relationship("Vote", back_populates="analysis")
@@ -311,6 +315,8 @@ class LegislativeProcess(Base):
     __tablename__ = "legislative_processes"
 
     id = Column(String, primary_key=True) # UUID
+    term = Column(Integer, index=True, default=10) # Sejm Term
+    base_number = Column(String, index=True, nullable=True) # Primary print number
     title = Column(String, index=True)
     description = Column(Text, nullable=True)
     status = Column(String) # IN_PROGRESS, SIGNED, REJECTED, VETO
@@ -353,3 +359,26 @@ class LegislativeLink(Base):
     target_bill = Column(String, index=True) # Print Number
     relation_type = Column(String) # AMENDS, REPORTS_ON, MERGES_INTO
     created_at = Column(DateTime, server_default=func.now())
+
+class SittingAgenda(Base):
+    __tablename__ = "sitting_agendas"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    sitting_number = Column(Integer, index=True)
+    point_number = Column(Integer)
+    title = Column(Text)
+    description = Column(Text, nullable=True)
+    print_number = Column(String, nullable=True)
+    date = Column(Date, index=True)
+    term = Column(Integer, default=10)
+    created_at = Column(DateTime, server_default=func.now())
+
+class SittingSummary(Base):
+    __tablename__ = "sitting_summaries"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    term = Column(Integer)
+    sitting_number = Column(Integer, unique=True)
+    summary_md = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())

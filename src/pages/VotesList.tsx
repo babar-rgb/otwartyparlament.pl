@@ -8,6 +8,8 @@ import SEO from '../components/SEO';
 import { fetchMP } from '../api';
 import Skeleton from '../components/ui/Skeleton';
 import { formatPolishDate } from '../utils/dateUtils';
+import VoteConnections from '../components/VoteConnections';
+import { UpcomingSittings } from '../components/features/UpcomingSittings';
 
 const VotesList = () => {
     const [searchParams] = useSearchParams();
@@ -124,6 +126,7 @@ const VotesList = () => {
             </div>
 
             <div className="container mx-auto max-w-screen-2xl px-4 md:px-8 pt-12">
+                <UpcomingSittings />
                 {/* Filter & Search Section */}
                 <div className="bg-surface p-6 rounded-[var(--radius-card-xl)] border border-border-base mb-10 shadow-2xl backdrop-blur-md">
                     {/* ... (content stays same, just width wrapper changed) ... */}
@@ -269,6 +272,8 @@ const VotesList = () => {
                                                     {vote.verdict}
                                                 </div>
 
+                                                <VoteConnections voteId={vote.id} />
+
                                                 {/* Mini Results Bar (if available) */}
                                                 {(vote.for !== undefined && (vote.for > 0 || (vote.against || 0) > 0)) && (
                                                     <div className="flex items-center gap-2">
@@ -324,7 +329,7 @@ const VotesList = () => {
                 {hasMore && !loading && filteredVotes.length > 0 && (
                     <div className="mt-12 text-center">
                         <button
-                            onClick={() => setPage(p => p + 1)}
+                            onClick={() => setPage()}
                             className="bg-surface hover:bg-black/5 dark:hover:bg-white/5 border border-border-base px-8 py-4 rounded-2xl font-bold text-primary transition-all hover:scale-105 active:scale-95 shadow-sm"
                         >
                             Wczytaj więcej głosowań
