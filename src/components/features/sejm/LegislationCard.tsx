@@ -116,7 +116,7 @@ export default function LegislationCard({
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {tldr?.pros && tldr.pros.length > 0 && (
                                     <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
-                                        <div className="text-sm font-bold text-emerald-700 dark:text-emerald-400 mb-2">👍 Plusy</div>
+                                        <div className="text-sm font-bold text-emerald-700 dark:text-emerald-400 mb-2">👍 Argumenty ZA</div>
                                         <ul className="space-y-1">
                                             {tldr.pros.map((pro, i) => (
                                                 <li key={i} className="text-sm text-emerald-800 dark:text-emerald-300">• {pro}</li>
@@ -126,7 +126,7 @@ export default function LegislationCard({
                                 )}
                                 {tldr?.cons && tldr.cons.length > 0 && (
                                     <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl">
-                                        <div className="text-sm font-bold text-red-700 dark:text-red-400 mb-2">👎 Minusy</div>
+                                        <div className="text-sm font-bold text-red-700 dark:text-red-400 mb-2">👎 Argumenty PRZECIW</div>
                                         <ul className="space-y-1">
                                             {tldr.cons.map((con, i) => (
                                                 <li key={i} className="text-sm text-red-800 dark:text-red-300">• {con}</li>

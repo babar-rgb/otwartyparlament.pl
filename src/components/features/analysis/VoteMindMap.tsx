@@ -125,8 +125,8 @@ export default function VoteMindMap({ summary, pros, cons, title, voteId, proced
                                 <ThumbsUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-black text-primary">Korzyści</h3>
-                                <p className="text-[10px] text-secondary font-bold uppercase tracking-wider">Potencjalne zalety</p>
+                                <h3 className="text-lg font-black text-primary">Argumenty ZA</h3>
+                                <p className="text-[10px] text-secondary font-bold uppercase tracking-wider">Potencjalne korzyści</p>
                             </div>
                         </div>
 
@@ -156,8 +156,8 @@ export default function VoteMindMap({ summary, pros, cons, title, voteId, proced
                                 <ThumbsDown className="w-5 h-5 text-rose-600 dark:text-rose-400" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-black text-primary">Zagrożenia</h3>
-                                <p className="text-[10px] text-secondary font-bold uppercase tracking-wider">Potencjalne wady</p>
+                                <h3 className="text-lg font-black text-primary">Argumenty PRZECIW</h3>
+                                <p className="text-[10px] text-secondary font-bold uppercase tracking-wider">Ryzyka i wady</p>
                             </div>
                         </div>
 
@@ -178,8 +178,8 @@ export default function VoteMindMap({ summary, pros, cons, title, voteId, proced
             </div>
 
             <div className="text-center pt-4">
-                <p className="text-[10px] text-secondary opacity-30 uppercase tracking-widest font-bold">
-                    Powered by Gemini Pro • Dane wygenerowane automatycznie
+                <p className="text-[10px] text-secondary opacity-30 uppercase tracking-widest font-black">
+                    Analiza AI (Gemini Pro) • Dane wygenerowane automatycznie
                 </p>
             </div>
 

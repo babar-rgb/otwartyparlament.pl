@@ -205,6 +205,12 @@ export const fetchVoteResultsDetailed = async (voteId: number | string) => {
   return await response.json();
 };
 
+export const fetchVoteConnections = async (voteId: number | string) => {
+  const response = await fetch(`${API_URL}/votes/${voteId}/connections`);
+  if (!response.ok) throw new Error('Failed to fetch vote connections');
+  return await response.json();
+};
+
 export const fetchCommittees = async (term?: number) => {
   const params = new URLSearchParams();
   if (term) params.append('term', term.toString());
@@ -297,6 +303,17 @@ export const unifiedSearch = async (options: { q: string; type?: string; period?
   const response = await fetch(`${API_URL}/search?${params.toString()}`);
   if (!response.ok) throw new Error('Search failed');
   return await response.json();
+};
+
+export const fetchUpcomingSittings = async (): Promise<any[]> => {
+  try {
+    const response = await fetch(`${API_URL}/sejm/upcoming-sittings`);
+    if (!response.ok) return [];
+    return await response.json();
+  } catch (e) {
+    console.error("Error fetching upcoming sittings:", e);
+    return [];
+  }
 };
 
 export const fetchProcess = async (id: string) => {

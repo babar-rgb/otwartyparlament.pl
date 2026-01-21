@@ -106,7 +106,7 @@ const LegislativeProcessTimeline: React.FC<LegislativeProcessTimelineProps> = ({
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-4">
                                     <div className="flex items-center gap-3">
                                         <div className={`text-[10px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded bg-white/5 border border-white/10 ${isPast ? 'text-secondary opacity-50' : 'text-indigo-400'}`}>
-                                            Stage {index + 1}
+                                            Etap {index + 1}
                                         </div>
                                         <div className="font-mono text-xs text-secondary/60">
                                             {format(new Date(stage.date), 'dd.MM.yyyy', { locale: pl })}
@@ -134,7 +134,7 @@ const LegislativeProcessTimeline: React.FC<LegislativeProcessTimelineProps> = ({
                                     <div className="mt-4 flex items-center gap-2">
                                         <div className="h-2 w-2 rounded-full bg-indigo-500 animate-ping" />
                                         <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">
-                                            {currentVoteId ? 'Current Interaction' : 'LATEST STATUS'}
+                                            {currentVoteId ? 'Obecny Etap' : 'OSTATNI STATUS'}
                                         </span>
                                     </div>
                                 )}

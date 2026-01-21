@@ -13,3 +13,4 @@ torch
 pgvector
 apscheduler
 alembic
+google-generativeai

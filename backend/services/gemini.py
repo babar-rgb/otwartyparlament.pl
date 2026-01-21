@@ -23,12 +23,64 @@ class GeminiService:
         self.model_lite = 'gemini-2.0-flash-lite'
         
         # Re-configure to be safe
-        key = os.getenv("GEMINI_API_KEY")
-        if key:
-            genai.configure(api_key=key)
+        self.api_key = os.getenv("GEMINI_API_KEY")
+        if self.api_key:
+            genai.configure(api_key=self.api_key)
+            self.model = genai.GenerativeModel(self.model_flash)
+        else:
+            self.model = None
 
     def _get_model(self, model_name: str):
+        if not self.api_key: return None
         return genai.GenerativeModel(model_name)
+
+    def generate_simple_title(self, original_title: str, description: str = "", bill_content: str = "") -> str:
+        """
+        Generates a simplified, human-readable title for a vote using Gemini.
+        """
+        if not self.model:
+            return original_title
+
+        try:
+            # Construct the prompt
+            base_prompt = (
+                "Jesteś analitykiem prawnym i redaktorem w serwisie 'Otwarty Parlament'. "
+                "Twoim zadaniem jest przetłumaczenie biurokratycznego tytułu głosowania na ZROZUMIAŁY JĘZYK DLA ZWYKŁEGO OBYWATELA.\n\n"
+            )
+
+            context_part = ""
+            if bill_content:
+                # Truncate content if too long (Gemini Free tier limits, though 1.5 is generous)
+                # Let's keep it safe at ~20k chars for now ensures speed and relevance
+                truncated_content = bill_content[:20000]
+                context_part = f"Oto PEŁNA TREŚĆ USTAWY (fragment):\n---\n{truncated_content}\n---\n\n"
+            elif description:
+                context_part = f"Oto opis głosowania:\n---\n{description}\n---\n\n"
+
+            instruction_part = (
+                f"Oryginalny tytuł biurokratyczny: '{original_title}'\n\n"
+                "Instrukcja:\n"
+                "1. Napisz KRÓTKI tytuł (maksymalnie 10 słów).\n"
+                "2. BEZWZGLĘDNIE POMIŃ numery punktów (np. 'Pkt. 21', 'Punkt 5') oraz techniczne nagłówki (np. 'Sprawozdanie Komisji', 'Piersze czytanie').\n"
+                "3. Pomiń słowa 'głosowanie nad...', 'ustawa o zmianie ustawy...', 'rządowy projekt...'.\n"
+                "4. Napisz SEDNO zmiany. Co to zmienia w życiu ludzi? Np. 'Podwyżka 800+', 'Wakacje kredytowe', 'Nowe zasady wycinki drzew'.\n"
+                "5. Jeśli to techniczna/proceduralna zmiana, napisz to wprost, np. 'Zmiany w procedurze sądowej'.\n"
+                "6. NIE używaj cudzysłowów w wyniku.\n\n"
+                "Wynik (tylko tytuł):"
+            )
+
+            full_prompt = base_prompt + context_part + instruction_part
+            
+            model = self._get_model(self.model_flash)
+            response = model.generate_content(full_prompt)
+            
+            if response.text:
+                 return response.text.strip().replace('"', '').replace("'", "")
+            return original_title
+            
+        except Exception as e:
+            logger.error(f"Error generating title with Gemini: {e}")
+            return original_title
 
     def analyze_expert(self, title: str, description: str, bill_text: Optional[str] = None, doc_type: str = "vote") -> Dict[str, Any]:
         """
@@ -121,22 +173,22 @@ class GeminiService:
         OPIS: {{description}}
         TREŚĆ: {{bill_text}}
         
-        Zwróć JSON (Wartosci w JSON muszą być po POLSKU):
-        {{{{
-            "summary": "Analiza merytoryczna (MINIMUM 10 zdań). Użyj myślników (-) do wylistowania kluczowych punktów. STRUKTURA: 1. Kontekst. 2. LISTA ZMIAN (-). 3. Skutki.",
+        Zwróć JSON (Wartości w JSON muszą być po POLSKU):
+        {{
+            "summary": "Analiza merytoryczna (MINIMUM 10 zdań). Użyj myślników (-) do wylistowania kluczowych punktów. STRUKTURA: 1. Kontekst. 2. LISTA ZMIAN (-). 3. SKUTKI I WNIOSKI.",
             "category": "Jedna z: Gospodarka, Zdrowie, Obronność, Edukacja, Ustrój, Inne",
-            "importance_score": 1-10 (10=Kluczowa Refoma, 1=Korekta techniczna),
-            "pros": ["Zaleta 1", "Zaleta 2"],
-            "cons": ["Wada 1", "Wada 2"],
-            "personas": {{{{
+            "importance_score": 1-10 (10=Kluczowa Reforma, 1=Korekta techniczna),
+            "pros": ["Argument ZA 1", "Argument ZA 2"],
+            "cons": ["Argument PRZECIW 1", "Argument PRZECIW 2"],
+            "personas": {{
                 "Przedsiębiorca": "Wpływ.",
                 "Pracownik": "Wpływ.",
                 "Rolnik": "Wpływ.",
                 "Emeryt": "Wpływ.",
                 "Student": "Wpływ.",
                 "Rodzic": "Wpływ."
-            }}}}
-        }}}}
+            }}
+        }}
         """
 
         if doc_type == "process_context":
@@ -174,5 +226,69 @@ class GeminiService:
         bill_text_safe = bill_text[:100000] if bill_text else "BRAK - Analizuj tylko na podstawie tytułu i opisu."
             
         return base_prompt.format(context_word=context_word, title=title, description=description, bill_text=bill_text_safe)
+
+    def generate_summary(self, bill_content: str, title: str = "") -> Dict[str, str]:
+        """
+        Generates dual-layer summary (Simple + Expert).
+        """
+        if not self.model: return {"simple": "Brak.", "expert": "Brak."}
+        try:
+            prompt = (
+                "Jesteś ekspertem legislacyjnym. Przeanalizuj ustawę i stwórz DWA podsumowania.\n\n"
+                "1. PODSUMOWANIE PROSTE (Dla obywatela):\n"
+                "- 2-3 zdania prostym językiem.\n"
+                "- Bez cytatów, bez technicznego żargonu.\n"
+                "- Skup się na tym: 'Co to dla mnie zmienia?'\n\n"
+                "2. PODSUMOWANIE EKSPERCKIE (Dla profesjonalisty):\n"
+                "- Styl punktowy (myślniki).\n"
+                "- Konkretne odnośniki do artykułów (np. 'zgodnie z art. 15').\n"
+                "- Kontekst prawny i polityczny.\n\n"
+                f"Tytuł: {title}\n"
+                f"Treść ustawy (fragment):\n{bill_content[:30000]}\n\n"
+                "Zwróć wynik wyłącznie jako JSON (pola 'simple' i 'expert' muszą być zwykłymi tekstami/stringami):\n"
+                "{\n"
+                "  \"simple\": \"podsumowanie dla obywatela...\",\n"
+                "  \"expert\": \"szczegółowa analiza z myślnikami (-)...\"\n"
+                "}"
+            )
+            model = self._get_model(self.model_flash)
+            response = model.generate_content(
+                prompt,
+                generation_config={"response_mime_type": "application/json"}
+            )
+            return json.loads(response.text)
+        except Exception as e:
+            logger.error(f"Gemini Dual Summary Error: {e}")
+            return {"simple": "Błąd.", "expert": "Błąd."}
+
+    def generate_pros_cons(self, bill_content: str) -> Dict[str, Any]:
+        """
+        Expert Pros & Cons with 'Confidence Score' and 'Source Citation'.
+        """
+        if not self.model: return {"pros": [], "cons": []}
+        try:
+            prompt = (
+                "Jesteś bezstronnym analitykiem. Przeanalizuj treść ustawy i podaj 3 argumenty ZA oraz 3 argumenty PRZECIW.\n"
+                "Dla każdego argumentu podaj KRÓTKIE uzasadnienie oparte na konkretnym zapisie ustawy.\n"
+                "Dodatkowo oceń swój stopień pewności co do tej analizy (confidence_score 0-100) na podstawie "
+                "jasności zapisów prawnych.\n\n"
+                "Zwróć wynik wyłącznie jako JSON:\n"
+                "{\n"
+                "  \"pros\": [\"Argument ZA: Opis (na podst. art. X)\"],\n"
+                "  \"cons\": [\"Argument PRZECIW: Opis (ryzyko Y)\"],\n"
+                "  \"confidence_score\": 95,\n"
+                "  \"expert_comment\": \"Krótki komentarz o stopniu skomplikowania aktu.\"\n"
+                "}\n\n"
+                f"Treść ustawy:\n{bill_content[:30000]}"
+            )
+            model = self._get_model(self.model_flash)
+            response = model.generate_content(
+                prompt,
+                generation_config={"response_mime_type": "application/json"}
+            )
+            return json.loads(response.text)
+        except Exception as e:
+            logger.error(f"Gemini Pros/Cons Error: {e}")
+            return {"pros": [], "cons": []}
 
 gemini_service = GeminiService()

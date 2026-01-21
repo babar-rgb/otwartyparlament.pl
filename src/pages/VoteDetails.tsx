@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, CheckCircle2, XCircle, PieChart, Users, Sparkles, Network, ExternalLink, Search, FileText, Share2 } from 'lucide-react';
+import { ArrowLeft, Calendar, CheckCircle2, XCircle, PieChart, Users, Sparkles, ExternalLink, Search, FileText, Share2 } from 'lucide-react';
 
 import SocialShareCard from '../components/SocialShareCard';
 import { cleanSejmTitle } from '../utils/titleFormatter';
@@ -13,6 +13,7 @@ import VoteMindMap from '../components/features/analysis/VoteMindMap';
 import { useVoteDetails } from '../hooks/useVoteDetails';
 import DataPendingState from '../components/DataPendingState';
 import { formatPolishDate } from '../utils/dateUtils';
+import VoteConnections from '../components/VoteConnections';
 
 const VoteDetails: React.FC = () => {
     const { term, sitting, votingNumber, id } = useParams();
@@ -22,7 +23,6 @@ const VoteDetails: React.FC = () => {
         partyStats,
         loading,
         analysis,
-        linkedProcessId,
         linkedPrint,
         projectContext,
         generateAnalysis
@@ -144,21 +144,12 @@ const VoteDetails: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* 2. Mind Map Card */}
-                        <Link to={linkedProcessId ? `/mapa/${linkedProcessId}` : '#'} className={`bg-surface p-6 rounded-2xl border border-border-base  transition-all group shadow-sm relative overflow-hidden ${linkedProcessId ? 'hover:border-purple-500/30 cursor-pointer' : 'opacity-60 grayscale cursor-not-allowed'}`}>
-                            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                                <Network size={64} />
-                            </div>
-                            <div className="flex items-center gap-4 relative z-10">
-                                <div className="p-3 bg-purple-500/10 text-purple-600 rounded-xl">
-                                    <Network size={20} />
-                                </div>
-                                <div>
-                                    <div className="font-bold text-primary">Mapa Ustawy</div>
-                                    <div className="text-xs text-secondary">{linkedProcessId ? 'Zobacz wizualizację powiązań' : 'Niedostępne dla tego głosu'}</div>
-                                </div>
-                            </div>
-                        </Link>
+                        {/* 2. Connections Card */}
+                        <VoteConnections
+                            voteId={vote.id}
+                            voteTitle={cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
+                            variant="card"
+                        />
                     </div>
 
                     {/* Source Links (De-emphasized) */}
@@ -240,6 +231,7 @@ const VoteDetails: React.FC = () => {
                                 {vote.verdict === 'PRZYJĘTO' ? <CheckCircle2 className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
                                 {vote.verdict}
                             </div>
+
 
                             {/* Vote Progress Bar */}
                             <div className="flex-grow">

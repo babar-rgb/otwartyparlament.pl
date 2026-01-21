@@ -23,7 +23,7 @@ export default function ProcessTLDR({ data }: ProcessTLDRProps) {
                     <Zap size={24} fill="currentColor" />
                 </div>
                 <div>
-                    <h2 className="text-xl font-bold text-amber-900">Szybkie Podsumowanie (TL;DR)</h2>
+                    <h2 className="text-xl font-bold text-amber-900">Szybkie Podsumowanie (w pigułce)</h2>
                     <p className="text-sm text-amber-700">Wygenerowane przez AI</p>
                 </div>
             </div>
@@ -60,7 +60,7 @@ export default function ProcessTLDR({ data }: ProcessTLDRProps) {
             <div className="grid md:grid-cols-2 gap-4">
                 <div className="bg-white/60 rounded-xl p-5 border border-amber-100">
                     <h3 className="font-bold text-emerald-700 mb-3 flex items-center gap-2">
-                        <ThumbsUp size={16} /> Potencjalne Plusy
+                        <ThumbsUp size={16} /> Argumenty ZA
                     </h3>
                     <ul className="space-y-2">
                         {data.pros && data.pros.map((pro, i) => (
@@ -73,7 +73,7 @@ export default function ProcessTLDR({ data }: ProcessTLDRProps) {
                 </div>
                 <div className="bg-white/60 rounded-xl p-5 border border-amber-100">
                     <h3 className="font-bold text-rose-700 mb-3 flex items-center gap-2">
-                        <ThumbsDown size={16} /> Potencjalne Ryzyka
+                        <ThumbsDown size={16} /> Argumenty PRZECIW
                     </h3>
                     <ul className="space-y-2">
                         {data.cons && data.cons.map((con, i) => (

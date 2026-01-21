@@ -285,28 +285,70 @@ def generate_vote_analysis(vote_id: int, db: Session = Depends(database.get_db))
     
     return analysis
 
-@router.get("/{vote_id}/legislative_process")
-def read_legislative_process_for_vote(vote_id: int, db: Session = Depends(database.get_db)):
+@router.get("/{vote_id}/connections")
+def read_vote_connections(vote_id: int, db: Session = Depends(database.get_db)):
     """
-    Returns the full timeline (Metro Map) for a given vote.
-    Finds the LegislativeProcess via the Vote's stage.
+    Returns all connections for a vote: Unified Process, Related Bills/Prints, and Committee Sittings.
     """
-    # 1. Find the stage corresponding to this vote
-    from backend.models import LegislativeStage, LegislativeProcess
+    from backend.models import LegislativeStage, LegislativeProcess, Bill, CommitteeSitting
+    from sqlalchemy import or_, cast, String
     
-    current_stage = db.query(LegislativeStage).filter(LegislativeStage.vote_id == vote_id).first()
+    # 1. Find the process via stage
+    stage = db.query(LegislativeStage).filter(LegislativeStage.vote_id == vote_id).first()
     
-    if not current_stage:
-        # Fallback: Maybe the Bill linked to this vote has a process?
+    process = None
+    if stage:
+        process = db.query(LegislativeProcess).filter(LegislativeProcess.id == stage.process_id).first()
+    
+    if not process:
+        # Fallback: maybe the vote title has a print number?
         vote = db.query(models.Vote).filter(models.Vote.id == vote_id).first()
-        if vote and vote.bill:
-             current_stage = db.query(LegislativeStage).filter(LegislativeStage.bill_number == vote.bill.number).first()
-        
-        if not current_stage:
-            # No process found, return empty structure (Frontend will handle gracefull)
-            return None
+        if vote:
+            import re
+            match = re.search(r'druk[iu]? nr (\d+)', (vote.title_raw or ""), re.IGNORECASE)
+            if match:
+                print_nr = match.group(1)
+                stage = db.query(LegislativeStage).filter(LegislativeStage.bill_number == print_nr).first()
+                if stage:
+                    process = db.query(LegislativeProcess).filter(LegislativeProcess.id == stage.process_id).first()
 
-    # 2. Fetch the process
-    process = db.query(LegislativeProcess).filter(LegislativeProcess.id == current_stage.process_id).first()
-    return process
+    if not process:
+        return {"process": None, "bills": [], "committees": []}
+
+    # 2. Get all bills in this process
+    all_stages = db.query(LegislativeStage).filter(LegislativeStage.process_id == process.id).all()
+    bill_numbers = list(set([s.bill_number for s in all_stages if s.bill_number]))
+    
+    bills = []
+    if bill_numbers:
+        bills = db.query(Bill).filter(Bill.number.in_(bill_numbers)).all()
+
+    # 3. Get committee sittings mentioning these bills
+    committees = []
+    if bill_numbers:
+        # Search in JSONB agenda. We use the ->> operator or just cast to string for simplicity in a broad search
+        # Or better: search for the bill number as part of the text in agenda
+        search_clauses = [cast(CommitteeSitting.agenda, String).ilike(f"%druk%nr {bn}%") for bn in bill_numbers]
+        committees = db.query(CommitteeSitting).filter(or_(*search_clauses)).order_by(CommitteeSitting.date.desc()).limit(10).all()
+
+    return {
+        "process": {
+            "id": process.id,
+            "title": process.title,
+            "description": process.description,
+            "status": process.status
+        },
+        "bills": [
+            {"number": b.number, "title": b.title, "type": b.type, "status": b.status} for b in bills
+        ],
+        "committees": [
+            {
+                "id": c.id,
+                "sitting_number": c.sitting_number,
+                "date": c.date.isoformat() if c.date else None,
+                "committee_code": c.committee_code,
+                "summary": c.summary
+            } for c in committees
+        ]
+    }
 

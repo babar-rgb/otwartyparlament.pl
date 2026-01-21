@@ -428,3 +428,32 @@ def read_speeches(
         "items": final_items,
         "total": total
     }
+@router.get("/sejm/upcoming-sittings")
+def get_upcoming_sittings():
+    """Fetch future sittings directly from Sejm API."""
+    import requests
+    from datetime import date
+    try:
+        r = requests.get("https://api.sejm.gov.pl/sejm/term10/proceedings", timeout=5)
+        if r.status_code != 200:
+            return []
+        
+        data = r.json()
+        today = date.today().isoformat()
+        
+        upcoming = []
+        for sitting in data:
+            # Check if any date in the sitting is today or in the future
+            dates = sitting.get('dates', [])
+            if any(d >= today for d in dates):
+                upcoming.append({
+                    "number": sitting.get('number'),
+                    "title": sitting.get('title'),
+                    "dates": dates,
+                    "is_current": sitting.get('current', False)
+                })
+        
+        return upcoming
+    except Exception as e:
+        print(f"Error fetching upcoming sittings: {e}")
+        return []

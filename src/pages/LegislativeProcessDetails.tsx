@@ -67,7 +67,7 @@ const LegislativeProcessDetails: React.FC = () => {
                     </Link>
 
                     <div className="hidden md:flex items-center gap-4 text-[10px] font-black text-secondary tracking-[0.3em] uppercase opacity-40">
-                        Legislative Intelligence System v2.0
+                        Otwarty Parlament v2.1
                     </div>
                 </motion.div>
 
@@ -113,13 +113,33 @@ const LegislativeProcessDetails: React.FC = () => {
                             </h1>
 
                             <div className="flex flex-wrap gap-4">
-                                <button className="px-8 py-4 rounded-2xl bg-indigo-500 text-white font-black text-sm hover:bg-indigo-600 hover:shadow-lg hover:shadow-indigo-500/20 transition-all flex items-center gap-3">
-                                    <FileText size={18} />
-                                    Dokumenty Źródłowe
-                                </button>
-                                <button className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-primary font-black text-sm hover:bg-white/10 transition-all flex items-center gap-3">
+                                {(() => {
+                                    // Try to find a bill number from stages for a cleaner link,
+                                    // or fallback to the cleaned GUID for PrzebiegProc.xsp
+                                    const firstBill = process.stages?.find((s: any) => s.bill_number)?.bill_number;
+                                    const cleanId = id?.replace(/-/g, '').toUpperCase();
+                                    const sejmUrl = firstBill
+                                        ? `https://www.sejm.gov.pl/Sejm10.nsf/PrzebiegProc.xsp?nr=${firstBill}`
+                                        : `https://www.sejm.gov.pl/Sejm10.nsf/PrzebiegProc.xsp?id=${cleanId}`;
+
+                                    return (
+                                        <a
+                                            href={sejmUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="px-8 py-4 rounded-2xl bg-indigo-500 text-white font-black text-sm hover:bg-indigo-600 hover:shadow-lg hover:shadow-indigo-500/20 transition-all flex items-center gap-3"
+                                        >
+                                            <FileText size={18} />
+                                            Dokumenty Źródłowe
+                                        </a>
+                                    );
+                                })()}
+                                <button
+                                    onClick={() => document.getElementById('podsumowanie')?.scrollIntoView({ behavior: 'smooth' })}
+                                    className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-primary font-black text-sm hover:bg-white/10 transition-all flex items-center gap-3"
+                                >
                                     <Sparkles size={18} className="text-indigo-400" />
-                                    Analiza AI
+                                    Podsumowanie
                                 </button>
                             </div>
                         </div>
@@ -176,24 +196,21 @@ const LegislativeProcessDetails: React.FC = () => {
 
                         {/* Summary / AI Narrative (Placeholder till real data is backfilled) */}
                         <motion.section
+                            id="podsumowanie"
                             initial={{ opacity: 0, scale: 0.95 }}
                             whileInView={{ opacity: 1, scale: 1 }}
                             viewport={{ once: true }}
                             className="bg-indigo-500/5 border border-indigo-500/20 rounded-[2.5rem] p-8 relative overflow-hidden"
                         >
-                            <div className="absolute top-0 right-0 p-6 opacity-20">
-                                <Sparkles size={24} className="text-indigo-400" />
-                            </div>
                             <h3 className="text-sm font-black text-indigo-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                Analiza Proceduralna AI
-                                <span className="text-[9px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded border border-indigo-500/30">BETA</span>
+                                Podsumowanie
                             </h3>
                             <p className="text-sm leading-relaxed text-secondary/80 italic">
-                                "{process.description || 'System Gemini obecnie analizuje wzajemne powiązania między drukami oraz skutki prawne tego etapu. Pełny raport narracyjny pojawi się wkrótce (trwa backfill danych historycznych).'}"
+                                "{process.description || 'Obecnie analizujemy wzajemne powiązania między drukami oraz skutki prawne tego etapu. Pełny raport narracyjny pojawi się wkrótce.'}"
                             </p>
                             <div className="mt-6 pt-6 border-t border-indigo-500/10 flex items-center gap-2 text-[10px] font-bold text-secondary uppercase tracking-widest">
                                 <div className="w-1 h-1 rounded-full bg-emerald-500" />
-                                Weryfikacja treści: Gemini 2.0 (Preview)
+                                Weryfikacja merytoryczna: System Gemini
                             </div>
                         </motion.section>
 
@@ -205,8 +222,8 @@ const LegislativeProcessDetails: React.FC = () => {
                                         <Network size={24} />
                                     </div>
                                     <div>
-                                        <h2 className="text-xl font-black text-white leading-none mb-1">Graf Powiązań</h2>
-                                        <p className="text-[10px] text-secondary/60 font-mono tracking-wider uppercase">Relational Document Mapping</p>
+                                        <h2 className="text-xl font-black text-white leading-none mb-1">Mapa Powiązań</h2>
+                                        <p className="text-[10px] text-secondary/60 font-mono tracking-wider uppercase">Dokumenty i Druki</p>
                                     </div>
                                 </div>
 
@@ -216,9 +233,8 @@ const LegislativeProcessDetails: React.FC = () => {
                             </section>
                         )}
 
-                        {/* Quick Stats / Info */}
                         <section className="p-8 rounded-[2rem] bg-white/[0.02] border border-white/5">
-                            <h3 className="text-xs font-black text-secondary/40 uppercase tracking-[0.2em] mb-6">Archiwum Metadanych</h3>
+                            <h3 className="text-xs font-black text-secondary/40 uppercase tracking-[0.2em] mb-6">Metadane</h3>
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer group">
                                     <span className="text-xs font-bold text-secondary">Identyfikator Procesu</span>
