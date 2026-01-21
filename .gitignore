@@ -27,3 +27,4 @@ venv/
 .venv/
 backend/etl/.etl_state.json
 backups/
+scripts/deploy_db.sh
