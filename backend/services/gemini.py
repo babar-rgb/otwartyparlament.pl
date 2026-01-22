@@ -291,4 +291,46 @@ class GeminiService:
             logger.error(f"Gemini Pros/Cons Error: {e}")
             return {"pros": [], "cons": []}
 
+    def generate_seo_metadata(self, title: str, description: str, bill_content: str = "") -> Dict[str, Any]:
+        """
+        Generates SEO metadata (Street Title, Meta Description, Keywords) for Programmatic SEO.
+        "Language of the Street" Prompt.
+        """
+        if not self.model: return {"street_title": title, "meta_description": "", "keywords": []}
+        
+        try:
+            prompt = (
+                "Jesteś ekspertem SEO i redaktorem serwisu 'Otwarty Parlament'. "
+                "Twoim zadaniem jest przetłumaczenie języka urzędniczego na 'Język Ulicy' (to, co ludzie wpisują w Google).\n\n"
+                
+                "DANE WEJŚCIOWE:\n"
+                f"Tytuł oryginalny: {title}\n"
+                f"Opis: {description}\n"
+                f"Treść (fragment): {bill_content[:15000]}\n\n"
+                
+                "ZASADY (Semantic Bridge):\n"
+                "1. STREET TITLE: Zapomnij o 'ustawie o zmianie ustawy'. Napisz to tak, jak nagłówek w Fakcie lub na Onecie, ale BEZ clickbaitu (tylko prawda). Np. 'Wakacje Kredytowe 2024 - Zasady'.\n"
+                "2. META DESCRIPTION: 150-160 znaków. Musi odpowiadać na pytanie 'Co to zmienia dla mnie?'. Zachęć do kliknięcia.\n"
+                "3. KEYWORDS: 5-8 fraz, które ludzie wpisują w Google szukając tego tematu (synonimy potoczne).\n\n"
+                
+                "Zwróć JSON:\n"
+                "{\n"
+                "  \"street_title\": \"Human-Readable Title (krótki, mocny)\",\n"
+                "  \"meta_description\": \"SEO Meta Description (<160 chars)\",\n"
+                "  \"keywords\": [\"fraza 1\", \"fraza 2\", \"..\"],\n"
+                "  \"topic_category\": \"Ogólna kategoria (np. Zdrowie, Finanse)\"\n"
+                "}"
+            )
+            
+            model = self._get_model(self.model_flash)
+            response = model.generate_content(
+                prompt,
+                generation_config={"response_mime_type": "application/json"}
+            )
+            return json.loads(response.text)
+            
+        except Exception as e:
+            logger.error(f"Generate SEO Metadata Error: {e}")
+            return {"street_title": title, "meta_description": "", "keywords": []}
+
 gemini_service = GeminiService()

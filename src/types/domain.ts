@@ -67,6 +67,11 @@ export interface Vote {
     title_raw?: string;
     verdict?: string;
     term?: number;
+
+    // SEO Data (Added Jan 2026)
+    street_title?: string;
+    meta_description?: string;
+    seo_keywords?: string[];
 }
 
 export interface Speech {

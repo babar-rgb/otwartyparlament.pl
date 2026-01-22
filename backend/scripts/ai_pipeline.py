@@ -125,6 +125,24 @@ def run_pipeline(limit=10, force=False, term=10):
                     session.add(analysis)
                 else:
                     print("   ⏩ Skipping analysis (missing/short content).")
+                # STEP 4: SEO Metadata (Language of the Street)
+                print("   Generating SEO metadata...")
+                seo_data = gemini_service.generate_seo_metadata(
+                    vote.title_clean or vote.title_raw, 
+                    vote.description or "", 
+                    content
+                )
+                
+                # Check if it returned a list or dict (handle strict JSON parsing issues)
+                if isinstance(seo_data, list) and len(seo_data) > 0:
+                    seo_data = seo_data[0]
+                    
+                if isinstance(seo_data, dict):
+                    vote.street_title = seo_data.get("street_title")
+                    vote.meta_description = seo_data.get("meta_description")
+                    vote.seo_keywords = seo_data.get("keywords")
+                    print(f"   [SEO] {vote.street_title}")
+                
                 session.commit()
                 success_count += 1
                 print(f"   ✅ Saved. [CS] {pc.get('confidence_score')}%")

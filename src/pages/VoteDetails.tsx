@@ -14,6 +14,7 @@ import { useVoteDetails } from '../hooks/useVoteDetails';
 import DataPendingState from '../components/DataPendingState';
 import { formatPolishDate } from '../utils/dateUtils';
 import VoteConnections from '../components/VoteConnections';
+import { SchemaMarkup } from '../components/seo/SchemaMarkup';
 
 const VoteDetails: React.FC = () => {
     const { term, sitting, votingNumber, id } = useParams();
@@ -78,9 +79,21 @@ const VoteDetails: React.FC = () => {
     return (
         <div className="min-h-screen bg-page text-primary">
             <SEO
-                title={cleanSejmTitle(vote.title_clean || vote.title_raw || "Szczegóły Głosowania")}
-                description={`Wynik: ${vote.verdict}. ${vote.for || 0} za, ${vote.against || 0} przeciw. Posiedzenie ${vote.sitting}, głosowanie ${vote.voting_number}. Data: ${formatPolishDate(vote.date)}.`}
+                title={vote.street_title || cleanSejmTitle(vote.title_clean || vote.title_raw || "Szczegóły Głosowania")}
+                description={vote.meta_description || `Wynik: ${vote.verdict}. ${vote.for || 0} za, ${vote.against || 0} przeciw. Posiedzenie ${vote.sitting}, głosowanie ${vote.voting_number}. Data: ${formatPolishDate(vote.date)}.`}
                 url={`/glosowania/${vote.term}/${vote.sitting}/${vote.voting_number}`}
+            />
+
+            {/* Structured Data (Schema.org) */}
+            <SchemaMarkup
+                type="Legislation"
+                data={{
+                    title: vote.street_title || cleanSejmTitle(vote.title_clean || vote.title_raw || ''),
+                    description: vote.meta_description || vote.description || '',
+                    date: vote.date,
+                    contentSnippet: (analysis?.summary || vote.description || '').substring(0, 200),
+                    keywords: vote.seo_keywords
+                }}
             />
 
             {/* Hero Section - Full Width Dark */}

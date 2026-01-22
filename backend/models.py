@@ -55,6 +55,12 @@ class Vote(Base):
     search_vector = Column(TSVECTOR, nullable=True) # Postgres Full Text Search
     print_number = Column(String, index=True, nullable=True) # Extracted from title or API
     bill_id = Column(Integer, ForeignKey("bills.id"), nullable=True, index=True)
+    
+    # SEO Fields (Added Jan 2026)
+    street_title = Column(String, nullable=True)
+    meta_description = Column(String, nullable=True)
+    seo_keywords = Column(JSONB, nullable=True)
+    
     created_at = Column(DateTime, server_default=func.now())
 
     results = relationship("VoteResult", back_populates="vote")
