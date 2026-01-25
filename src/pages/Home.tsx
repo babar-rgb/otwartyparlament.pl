@@ -287,7 +287,7 @@ export default function Home() {
                     mode={hemicycleMode}
                     data={topVote?.results?.map((r: any) => ({
                       id: r.mps?.id || r.mp_id,
-                      name: r.mps?.first_name || 'Nieznany',
+                      name: r.mps ? `${r.mps.first_name} ${r.mps.last_name}` : 'Nieznany',
                       party: r.mps?.club || 'Niezrzeszony',
                       photo_url: r.mps?.photo_url || '',
                       vote: r.vote,

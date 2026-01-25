@@ -43,6 +43,10 @@ type FetchVotesOptions = {
   date_from?: string;
   date_to?: string;
   verdict?: string;
+  q?: string;
+  hide_procedural?: boolean;
+  grouped?: boolean;
+  category?: string;
 };
 
 export const fetchVotes = async (options: FetchVotesOptions = {}): Promise<{ items: any[]; total: number }> => {
@@ -61,6 +65,10 @@ export const fetchVotes = async (options: FetchVotesOptions = {}): Promise<{ ite
   if (options.date_from) params.append('date_from', options.date_from);
   if (options.date_to) params.append('date_to', options.date_to);
   if (options.verdict) params.append('verdict', options.verdict);
+  if (options.q) params.append('q', options.q);
+  if (options.hide_procedural !== undefined) params.append('hide_procedural', options.hide_procedural.toString());
+  if (options.grouped !== undefined) params.append('grouped', options.grouped.toString());
+  if (options.category) params.append('category', options.category);
 
   const response = await fetch(`${API_URL}/votes?${params.toString()}`);
   if (!response.ok) {
@@ -468,6 +476,8 @@ const mapBackendVote = (data: any): Vote => {
     sitting: data.sitting,
     voting_number: data.voting_number,
     term: data.term,
-    mpVote: data.mp_vote // Mapped from backend augmented response
+    mpVote: data.mp_vote, // Mapped from backend augmented response
+    is_procedural: data.is_procedural,
+    parent_vote_id: data.parent_vote_id
   } as Vote;
 };

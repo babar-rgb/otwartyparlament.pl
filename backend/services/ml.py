@@ -104,4 +104,76 @@ class VoteIntelligenceService:
             "is_key_vote": score_100 >= 65
         }
 
+    def is_vote_procedural(self, title: str) -> bool:
+        """
+        Determines if a vote is procedural (minor) or substantive.
+        """
+        title = title.lower()
+        procedural_keywords = [
+            "przerw", "odroczenie", "zmiana sposobu prowadzenia", 
+            "zamknięcie posiedzenia", "wniosek formalny", 
+            "uzupełnienie porządku", "porządek dzienny",
+            "wybór sekretarzy", "powołanie komisji",
+            "rozstrzygnięcie przez sejm wniosku", # Procedural internal motions
+            "odesłanie do komisji", # Often procedural, though implies delay
+            "skierowanie do komisji" 
+        ]
+        
+        # Hard check for 'break' or 'adjournment'
+        if any(kw in title for kw in procedural_keywords):
+            return True
+            
+        # Check for "wniosek o..." unless it's "wniosek o odrzucenie" (which is strong)
+        if "wniosek o" in title and "odrzucenie" not in title and "uchwalenie" not in title:
+            return True
+            
+        return False
+
+    def determine_vote_hierarchy(self, votes_in_sitting: list):
+        """
+        Groups votes by Print Number and identifies the 'Main Vote'.
+        Returns a dict mapping {vote_id: parent_id}.
+        """
+        hierarchy_updates = {} # vote_id -> parent_id
+        
+        # Group by Print Number
+        by_print = {}
+        for v in votes_in_sitting:
+            if v.print_number:
+                if v.print_number not in by_print:
+                    by_print[v.print_number] = []
+                by_print[v.print_number].append(v)
+        
+        # Process Groups
+        for p_nr, group in by_print.items():
+            if len(group) < 2:
+                continue
+                
+            # Find the ROOT/MAIN vote
+            # Hierarchy of importance keywords
+            main_vote = None
+            
+            # 1. "uchwalenie ustawy" / "w całości" (Final Passage)
+            candidates = [v for v in group if "uchwalenie" in v.title_clean.lower() or "w całości" in v.title_clean.lower()]
+            if candidates:
+                main_vote = candidates[-1] # Usually the last one is the final one
+            else:
+                # 2. "przyjęcie" (Acceptance)
+                candidates = [v for v in group if "przyjęcie" in v.title_clean.lower()]
+                if candidates:
+                    main_vote = candidates[-1]
+                else:
+                    # 3. Third Reading (Trzecie czytanie)
+                    candidates = [v for v in group if "trzecie czytanie" in v.title_clean.lower()]
+                    if candidates:
+                        main_vote = candidates[-1]
+
+            if main_vote:
+                # Link others to this main_vote
+                for v in group:
+                    if v.id != main_vote.id:
+                        hierarchy_updates[v.id] = main_vote.id
+                        
+        return hierarchy_updates
+
 vote_intelligence = VoteIntelligenceService()

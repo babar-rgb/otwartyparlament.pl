@@ -23,13 +23,38 @@ def read_votes(
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
     verdict: Optional[str] = None,
+    q: Optional[str] = None,
+    category: Optional[str] = None, # LAWS, RESOLUTIONS, PERSONAL, PROCEDURAL
+    hide_procedural: bool = False,
+    grouped: bool = False,
     db: Session = Depends(database.get_db)
 ):
-    from sqlalchemy.orm import defer
+    from sqlalchemy.orm import defer, subqueryload
     query = db.query(models.Vote).options(
         defer(models.Vote.vector_embedding),
-        defer(models.Vote.search_vector)
+        defer(models.Vote.search_vector),
+        subqueryload(models.Vote.children)
     )
+    # Semantic Search Logic
+    if q:
+        from backend.services.embedding import embedding_service
+        # We need to temporarily instantiate model here or use service if available.
+        # For Simplicity (Blitz), we assume embedding_service works or we failover to text.
+        try:
+            query_vector = embedding_service.get_embedding(q)
+            if query_vector:
+                query = query.order_by(models.Vote.vector_embedding.cosine_distance(query_vector))
+            else:
+                query = query.filter(models.Vote.title_raw.ilike(f"%{q}%"))
+        except:
+             query = query.filter(models.Vote.title_raw.ilike(f"%{q}%"))
+
+    # Grouping & Clarity Logic
+    if hide_procedural and category != 'PROCEDURAL': # Allow procedural if explicitly requested
+        query = query.filter(models.Vote.is_procedural == False)
+    if grouped:
+        query = query.filter(models.Vote.parent_vote_id == None)
+
     if term is not None:
         query = query.filter(models.Vote.term == term)
     if sitting is not None:
@@ -46,6 +71,43 @@ def read_votes(
         # Frontend might send 'Uchwalono', 'Odrzucono' etc.
         # DB stores exact strings. We use ilike for flexibility
         query = query.filter(models.Vote.verdict.ilike(f"%{verdict}%"))
+        
+    if category:
+        from sqlalchemy import or_
+        if category == 'LAWS':
+            query = query.filter(or_(
+                models.Vote.kind.ilike('%ustaw%'),
+                models.Vote.title_raw.ilike('%o zmianie ustawy%'),
+                models.Vote.title_raw.ilike('%projekt ustawy%'),
+                models.Vote.title_clean.ilike('%ustawa%')
+            ))
+        elif category == 'RESOLUTIONS':
+            query = query.filter(or_(
+                models.Vote.kind.ilike('%uchwał%'),
+                models.Vote.title_raw.ilike('%projekt uchwały%'),
+                models.Vote.title_raw.ilike('%w sprawie uchwały%'),
+                models.Vote.title_clean.ilike('%uchwała%')
+            ))
+        elif category == 'PERSONAL':
+            query = query.filter(or_(
+                models.Vote.topic.ilike('%wybór%'),
+                models.Vote.topic.ilike('%powołan%'),
+                models.Vote.topic.ilike('%odwołan%'),
+                models.Vote.title_raw.ilike('%powołan%'),
+                models.Vote.title_raw.ilike('%odwołan%'),
+                models.Vote.title_raw.ilike('%wybór%'),
+                models.Vote.title_clean.ilike('%powołanie%'),
+                models.Vote.title_clean.ilike('%odwołanie%')
+            ))
+        elif category == 'PROCEDURAL':
+            # Strict procedural filter (the flag OR keywords)
+            query = query.filter(or_(
+                models.Vote.is_procedural == True,
+                models.Vote.title_raw.ilike('%porządek dzienny%'),
+                models.Vote.title_raw.ilike('%przerw%'),
+                models.Vote.title_raw.ilike('%odroczen%'),
+                models.Vote.title_raw.ilike('%wniosek o%')
+            ))
 
     if has_results is True:
         query = query.filter(exists().where(models.VoteResult.vote_id == models.Vote.id))
@@ -157,16 +219,12 @@ def read_votes(
                 else:
                     vote_dict[c.name] = value
             
-            # Debugging check: ensure everything is serializable
-            # Debugging check: ensure everything is serializable
-            # try:
-            #     import json
-            #     json.dumps(vote_dict, default=str)
-            # except Exception as e:
-            #     print(f"Serialization Error for Vote {vote.id}: {e}")
-            #     print(f"Offending Keys: {vote_dict.keys()}")
-            #     print(f"Offending Values: {vote_dict}")
-                
+            # Grouping Info
+            if grouped:
+                vote_dict['child_count'] = len(vote.children)
+            else:
+                vote_dict['child_count'] = 0
+
             final_items.append(vote_dict)
             
         return {

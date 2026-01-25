@@ -19,6 +19,8 @@ export interface VoteItem {
     for?: number;
     against?: number;
     abstained?: number;
+    child_count?: number;
+    is_procedural?: boolean;
 }
 
 const PAGE_SIZE = 100;
@@ -29,6 +31,9 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
     const [dateFrom, setDateFrom] = useState<string>('');
     const [dateTo, setDateTo] = useState<string>('');
     const [verdict, setVerdict] = useState<string>('');
+    const [showProcedural, setShowProcedural] = useState(false);
+    const [groupVotes, setGroupVotes] = useState(true);
+    const [filterCategory, setFilterCategory] = useState<'ALL' | 'LAWS' | 'RESOLUTIONS' | 'PERSONAL' | 'PROCEDURAL'>('ALL');
 
     const {
         data,
@@ -38,7 +43,7 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
         isLoading: loading,
         error
     } = useInfiniteQuery({
-        queryKey: ['votesList', term, mpId, rebellion, dateFrom, dateTo, verdict],
+        queryKey: ['votesList', term, mpId, rebellion, dateFrom, dateTo, verdict, showProcedural, groupVotes, filterCategory],
         queryFn: async ({ pageParam = 1 }) => {
             const skip = (pageParam - 1) * PAGE_SIZE;
             const res = await apiFetchVotes({
@@ -49,7 +54,11 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
                 limit: PAGE_SIZE,
                 date_from: dateFrom || undefined,
                 date_to: dateTo || undefined,
-                verdict: verdict || undefined
+                verdict: verdict || undefined,
+                q: searchQuery || undefined,
+                hide_procedural: !showProcedural,
+                grouped: groupVotes,
+                category: filterCategory === 'ALL' ? undefined : filterCategory
             });
             return {
                 items: res.items,
@@ -120,6 +129,12 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
         dateTo,
         setDateTo,
         verdict,
-        setVerdict
+        setVerdict,
+        showProcedural,
+        setShowProcedural,
+        groupVotes,
+        setGroupVotes,
+        filterCategory,
+        setFilterCategory
     };
 }

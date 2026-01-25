@@ -61,11 +61,19 @@ class Vote(Base):
     meta_description = Column(String, nullable=True)
     seo_keywords = Column(JSONB, nullable=True)
     
+    # Clarity & Grouping (Added Jan 2026 Blitz)
+    is_procedural = Column(Boolean, server_default='false', nullable=False)
+    parent_vote_id = Column(Integer, ForeignKey("votes.id"), nullable=True)
+    
     created_at = Column(DateTime, server_default=func.now())
 
     results = relationship("VoteResult", back_populates="vote")
     analysis = relationship("VoteAnalysis", uselist=False, back_populates="vote")
     bill = relationship("Bill", back_populates="votes")
+    
+    # Self-referential relationship for grouping (Adjacency List)
+    # This automatically adds 'children' to the mapped class due to backref
+    parent = relationship("Vote", remote_side=[id], backref="children")
 
 class VoteResult(Base):
     __tablename__ = "vote_results"
