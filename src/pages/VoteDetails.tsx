@@ -134,6 +134,20 @@ const VoteDetails: React.FC = () => {
                         </span>
                     </div>
 
+                    {/* AI Tags - Stage 11 */}
+                    {vote.ai_tags && vote.ai_tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-6">
+                            {vote.ai_tags.map((tag, idx) => (
+                                <span
+                                    key={idx}
+                                    className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[10px] font-black uppercase tracking-widest text-secondary hover:text-primary hover:border-blue-500/50 transition-all cursor-default"
+                                >
+                                    #{tag}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+
                     {/* Main Title */}
                     <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-primary leading-snug mb-8 max-w-4xl tracking-tight">
                         {cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
@@ -168,7 +182,7 @@ const VoteDetails: React.FC = () => {
                     {/* Source Links (De-emphasized) */}
                     <div className="flex flex-wrap gap-6 mb-8 text-xs font-bold text-secondary uppercase tracking-wider">
                         {linkedPrint && (
-                            <a href={`https://www.sejm.gov.pl/Sejm10.nsf/druk.xsp?nr=${linkedPrint.number}`} target="_blank" rel="noreferrer" className="hover:text-amber-600 transition-colors flex items-center gap-2">
+                            <a href={`https://www.sejm.gov.pl/Sejm${vote.term || 10}.nsf/druk.xsp?nr=${linkedPrint.number}`} target="_blank" rel="noreferrer" className="hover:text-amber-600 transition-colors flex items-center gap-2">
                                 <ExternalLink size={12} /> Tekst Źródłowy RP
                             </a>
                         )}
@@ -199,9 +213,14 @@ const VoteDetails: React.FC = () => {
                                 </div>
                                 <div className="flex-grow space-y-3">
                                     <div className="flex items-center gap-3">
-                                        <span className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+                                        <a
+                                            href={`https://www.sejm.gov.pl/Sejm${vote.term || 10}.nsf/druk.xsp?nr=${linkedPrint.number}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-700 transition-colors cursor-pointer"
+                                        >
                                             Druk Sejmowy {linkedPrint.number}
-                                        </span>
+                                        </a>
                                         <div className="h-px bg-border-base flex-grow" />
                                     </div>
                                     <h3 className="text-xl md:text-2xl font-black text-primary leading-tight">
@@ -229,6 +248,26 @@ const VoteDetails: React.FC = () => {
                                     </p>
                                 </div>
                             )}
+                        </div>
+                    )}
+
+                    {/* AI TL;DR - Stage 11 */}
+                    {vote.ai_summary && (
+                        <div className="mb-8 p-6 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-[2rem] border border-blue-500/20 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <Sparkles size={32} />
+                            </div>
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
+                                        <Sparkles size={16} />
+                                    </div>
+                                    <span className="text-xs font-black uppercase tracking-[0.2em] text-blue-400">Podsumowanie AI (TL;DR)</span>
+                                </div>
+                                <p className="text-lg font-medium text-primary leading-relaxed">
+                                    {vote.ai_summary}
+                                </p>
+                            </div>
                         </div>
                     )}
 
@@ -300,6 +339,7 @@ const VoteDetails: React.FC = () => {
                         <VoteMindMap
                             title={cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
                             summary={analysis.summary}
+                            summary_expert={analysis.summary_expert}
                             pros={analysis.pros || []}
                             cons={analysis.cons || []}
                             voteId={vote.id}

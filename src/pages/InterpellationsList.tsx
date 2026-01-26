@@ -144,8 +144,20 @@ export default function InterpellationsList() {
                                         <div className="absolute top-0 left-0 w-1.5 h-full bg-accent-blue opacity-0 group-hover:opacity-100 transition-opacity" />
                                         <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-accent-blue border border-border-base/50">
-                                                    <FileText size={22} />
+                                                <div className="w-12 h-12 rounded-xl bg-black/5 dark:bg-white/5 flex items-center justify-center text-accent-blue border border-border-base/50 overflow-hidden shrink-0">
+                                                    {item.authors && item.authors.length > 0 && item.authors[0].photo_url ? (
+                                                        <img
+                                                            src={item.authors[0].photo_url.replace('http://', 'https://')}
+                                                            alt={authorName}
+                                                            className="w-full h-full object-cover"
+                                                            onError={(e) => {
+                                                                e.currentTarget.style.display = 'none';
+                                                                e.currentTarget.parentElement?.classList.add('fallback-icon');
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <FileText size={22} />
+                                                    )}
                                                 </div>
                                                 <div>
                                                     <p className="font-bold text-primary text-lg leading-tight">{authorName}</p>

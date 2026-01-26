@@ -24,29 +24,137 @@ def read_votes(
     date_to: Optional[str] = None,
     verdict: Optional[str] = None,
     q: Optional[str] = None,
+    vector_str: Optional[str] = Query(None, alias="vector"), # Expect comma-separated floats
     category: Optional[str] = None, # LAWS, RESOLUTIONS, PERSONAL, PROCEDURAL
     hide_procedural: bool = False,
     grouped: bool = False,
     db: Session = Depends(database.get_db)
 ):
     from sqlalchemy.orm import defer, subqueryload
+    import math
+
     query = db.query(models.Vote).options(
         defer(models.Vote.vector_embedding),
         defer(models.Vote.search_vector),
         subqueryload(models.Vote.children)
     )
-    # Semantic Search Logic
-    if q:
-        from backend.services.embedding import embedding_service
-        # We need to temporarily instantiate model here or use service if available.
-        # For Simplicity (Blitz), we assume embedding_service works or we failover to text.
+
+    # 1. Client-Side Semantic Search (Edge AI)
+    # If frontend sends a vector, we use it directly. Zero Server CPU.
+    if vector_str:
         try:
-            query_vector = embedding_service.get_embedding(q)
-            if query_vector:
-                query = query.order_by(models.Vote.vector_embedding.cosine_distance(query_vector))
-            else:
-                query = query.filter(models.Vote.title_raw.ilike(f"%{q}%"))
+            # Parse comma-separated string to floats
+            vector = [float(x) for x in vector_str.split(',')]
+            if len(vector) == 384: # Validate dimension
+                query = query.order_by(models.Vote.vector_embedding.cosine_distance(vector))
+        except ValueError:
+            pass # Invalid vector format, ignore
+
+    # 2. FTS & Synonym Logic (Fallback / Warm-up)
+    # Used when model is not yet loaded on client or for strict keyword matches
+    if q and not vector_str:
+    # Synonyms Dictionary (Unified - Level 5 "Evergreen")
+        POLITICAL_SYNONYMS = {
+            # Economic / Everyday (Kasa & Rachunki)
+            'drożyzna': ['inflacja', 'ceny', 'vat', 'koszyk', 'akcyza', 'tarcza'],
+            'podatki': ['danin', 'pit', 'cit', 'akcyza', 'kwota wolna', 'ryczałt'],
+            'małpki': ['wychowaniu w trzeźwości', 'napojów alkoholowych', 'opakowaniach', 'alkohol'],
+            'piec': ['czyste powietrze', 'termomoderniz', 'źródła ciepła', 'węgiel', 'palenisk'],
+            'praca': ['zatrudnienie', 'bezrobocie', 'płaca', 'minimalna', 'umowa', 'kodeks pracy', 'zus', 'zasiłek'],
+            'zakaz gotówki': ['limit płatności', 'obrót bezgotówkowy', 'pieniądz cyfrowy', 'prawo przedsiębiorców'],
+            'babciowe': ['aktywny rodzic', 'świadczenie rodzicielskie', 'aktywni w pracy', 'opiece nad dzieckiem'],
+            'wakacje od zus': ['zwolnienie z opłacania', 'składek na ubezpieczenia', 'ubezpieczeń społecznych'],
+            'bon energetyczny': ['dodatek osłonowy', 'ceny energii', 'rekompensata', 'taryfy', 'mrożenie cen'],
+            'ceny paliw': ['opłata paliwowa', 'opłata emisyjna', 'benzyna', 'orlen', 'akcyza'],
+            'test przedsiębiorcy': ['działalność gospodarcza', 'uszczelnienie', 'podatki', 'b2b', 'samozatrudnienie'],
+            'lex uber': ['transport drogowy', 'przewóz osób', 'pośrednictwo', 'licencja', 'taksówki', 'aplikację'],
+
+            # Social / Election Promises / Health
+            'kwota wolna': ['podatku dochodowym', 'pit', 'zwiększenie kwoty', 'podatek'],
+            'kredyt 0': ['pierwsze mieszkanie', 'mieszkanie na start', 'wspieraniu budownictwa', 'bezpieczny kredyt', 'dopłaty'],
+            'dobrowolny zus': ['wakacje składkowe', 'system ubezpieczeń', 'zus', 'przedsiębiorc'],
+            'renta wdowia': ['emeryturach i rentach', 'fundusz ubezpieczeń', 'wdowi', 'obywatelski projekt'],
+            '800 plus': ['wychowywaniu dzieci', 'świadczenie wychowawcze', 'rodzina 800'],
+            'porodówki': ['restrukturyzacja szpitali', 'sieć szpitali', 'oddziały położnicze', 'mapa potrzeb', 'likwidacja'],
+            'składka zdrowotna': ['świadczenia opieki', 'finansowanie', 'ryczałt', 'liniowy', 'nfz'],
+            'druga waloryzacja': ['emeryturach i rentach', 'fus', 'inflacja', 'waloryzacja', 'wypłata'],
+
+            # Worldview / Bioethical / Lifestyle
+            'aborcja': ['ciąż', 'płód', 'życie poczęte', 'terminacja', 'przerywanie'],
+            'in vitro': ['leczenie niepłodności', 'zapłodnienie', 'procedury medycznej'],
+            'tabletka dzień po': ['antykoncepcja', 'awaryjna', 'pigułka', 'prawo farmaceutyczne', 'recept', 'octan uliprystalu'],
+            'fundusz kościelny': ['wyznaniowe', 'związki wyznaniowe', 'finansowanie kościoła'],
+            'związki partnerskie': ['równość', 'osoby najbliższej', 'wspólne pożycie', 'małżeństw', 'tęczow'],
+            'rejestr ciąż': ['system informacji medycznej', 'zdarzenia medyczne', 'minister zdrowia'],
+            'robaki': ['nowa żywność', 'novel food', 'białko owadzie', 'mąka ze świerszczy'],
+            'indoktrynacja': ['historia i teraźniejszość', 'czarnek', 'podstawa programowa', 'kurator oświaty'],
+            'alkohol na stacjach': ['wychowanie w trzeźwości', 'godziny sprzedaży', 'sprzedaż nocna', 'stacja benzynowa'],
+            'zakaz telefonów': ['prawo oświatowe', 'higiena cyfrowa', 'rzecznik praw dziecka', 'statut szkoły'],
+            'prace domowe': ['ocenianie', 'klasyfikowanie', 'promowanie', 'zadawanie prac', 'brak zadań'],
+
+            # Housing / Ecology / City
+            'pustostan': ['nieruchomości', 'czynności cywilnoprawnych', 'lokal niezamieszkany', 'flipperzy', 'pcc'],
+            'willa plus': ['dotacj', 'organizacjom', 'edukacyjn', 'inwestycje', 'czarnek'],
+            'lex deweloper': ['ułatwieniach', 'inwestycji mieszkaniowych', 'planowania przestrzennego'],
+            'patodeweloperka': ['warunki techniczne', 'prawo budowlane', 'nasłonecznienie', 'metraż', 'balkony'],
+            'eksmisja': ['ochrona praw lokatorów', 'lokal socjalny', 'okres ochronny', 'na bruk'],
+            'kaucja': ['gospodarka opakowaniami', 'system kaucyjny', 'recyklerzy', 'odpady', 'butelkomaty', 'zwrot butelek'],
+            'deszczówka': ['prawo wodne', 'retencja', 'zabetonowane', 'podatek od deszczu'],
+            'betonoza': ['powierzchnia biologicznie czynna', 'zagospodarowanie przestrzenne', 'tereny zielone', 'wycinka drzew'],
+
+            # Afery / Media Slang / Justice
+            'lex tvn': ['radiofoni', 'telewizji', 'krajowa rada', 'krrit', 'kapitał'],
+            'piątka dla zwierząt': ['ochronie zwierząt', 'futerkow', 'ubój rytualny'],
+            'weto': ['prezydent', 'odrzucenie', 'ponowne rozpatrzenie'],
+            'koryto': ['wynagrodz', 'uposażeń', 'spółk', 'rad nadzorczych'],
+            'afera wizowa': ['wizy', 'konsularne', 'pośrednictwo wizowe', 'komisja śledcza', 'badania legalności'],
+            'wybory kopertowe': ['korespondencyjne', 'szczególnych zasadach', 'poczta polska'],
+            'pegasus': ['kontrola operacyjna', 'inwigilacja', 'szpiegowskie', 'służb'],
+            'wycinka puszczy': ['lasy państwowe', 'gospodarka leśna', 'plan urządzenia lasu', 'puszcza białowieska'],
+            'neosędziowie': ['krajowa rada sądownictwa', 'powołania sędziowskie', 'status sędziego', 'krs', 'uchwała'],
+            'sądy': ['wymiar sprawiedliwości', 'krs', 'sędzi', 'wyrok', 'trybunał'],
+
+            # Security / Investments / Cars
+            'zbrojenia': ['obrona', 'wojsko', 'armia', 'modernizacja', 'szpej'],
+            'mur': ['bariera', 'zapora', 'ochrona granicy', 'drogowa', 'przymusowej', 'straż graniczna'],
+            'zboże': ['ukrai', 'import', 'rolne', 'ekoport', 'embargo', 'produktów rolnych'],
+            'imigranci': ['cudzoziem', 'granic', 'uchodź', 'zapora'],
+            'cpk': ['centralny port komunikacyjny', 'baranów', 'lotnisko', 'pełnomocnik rządu'],
+            'elektrownia atomowa': ['jądrowa', 'choczewo', 'kopalino', 'energetyka jądrowa'],
+            'auta': ['konfiskat', 'kodeks karny', 'pojazd', 'nietrzeźw', 'pijanym', 'elektromobilność', 'strefa czystego transportu'],
+            'konfiskata aut': ['przepadek pojazdu', 'kodeks karny', 'prowadzenie w stanie nietrzeźwości'],
+            'zakaz diesla': ['elektromobilność', 'strefa czystego transportu', 'normy emisji', 'euro', 'sct'],
+            'mandaty': ['prawo o ruchu drogowym', 'wysokość grzywien', 'taryfikator', 'prędkość'],
+            'wezwania do wojska': ['kwalifikacja wojskowa', 'ćwiczenia rezerwy', 'obrona ojczyzny', 'wcr', 'pobór'],
+            'schrony': ['ochrona ludności', 'obrona cywilna', 'budowle ochronne', 'syreny'],
+            'dyrektywa inwigilacyjna': ['chat control', 'prywatność', 'komunikacja elektroniczna', 'szyfrowanie', 'inwigilacja'],
+            'podatek od smartfona': ['opłata reprograficzna', 'prawo autorskie', 'rekompensata', 'artystów'],
+            
+            # People / Specifics
+            'nawrocki': ['ipn', 'instytut pamięci'],
+            'pielęgniark': ['wynagrodz', 'lecznicz', 'medycz', 'system zdrowia'],
+            'nauczyciel': ['karta nauczyciela', 'oświat', 'szkoł', 'czarnek'],
+            'mentzen': ['podatki', 'pit', 'konfederacja', 'stereotyp'],
+        }
+        
+        # Query Expansion
+        search_terms = [q]
+        q_lower = q.lower()
+        
+        for key, values in POLITICAL_SYNONYMS.items():
+            if key in q_lower:
+                search_terms.extend(values)
+        
+        if len(search_terms) > 1:
+            expanded_query = " OR ".join([f'"{t}"' for t in search_terms]) 
+        else:
+            expanded_query = q
+
+        try:
+             # Fast PostgreSQL Full Text Search
+             query = query.filter(models.Vote.search_vector.match(expanded_query))
         except:
+             # Fallback
              query = query.filter(models.Vote.title_raw.ilike(f"%{q}%"))
 
     # Grouping & Clarity Logic
@@ -307,37 +415,69 @@ def generate_vote_analysis(vote_id: int, db: Session = Depends(database.get_db))
     if not vote:
         raise HTTPException(status_code=404, detail="Vote not found")
 
-    # 3. Call Ollama Service
-    from backend.services.ollama import ollama_service
+    # 3. Call Gemini Service
+    from backend.services.gemini import gemini_service
     from backend.models import Bill
     import re
 
     # Prepare context
     title = vote.title_clean or vote.title_raw
-    context = f"Tytuł: {title}\nOpis: {vote.description or ''}"
+    description = vote.description or ""
+    bill_content = ""
     
     # Try to find print number in title for extra context
     match = re.search(r'druki? nr (\d+)', title, re.IGNORECASE)
-    if match:
+    if not match and vote.print_number:
+        # Fallback to printer number if it's already in the DB
+        bill = db.query(Bill).filter(Bill.number == vote.print_number).first()
+    elif match:
         print_nr = match.group(1)
         bill = db.query(Bill).filter(Bill.number == print_nr).first()
-        if bill:
-            context += f"\n\nPowiązany Projekt Ustawy (Druk {print_nr}): {bill.title}\nUzasadnienie projektu: {bill.description or ''}"
+    else:
+        bill = None
 
-    analysis_data = ollama_service.analyze_vote(title, context)
+    if bill:
+        bill_content = bill.content or bill.description or ""
+
+    # Expert Analysis (Stage 18 "Deep Intelligence")
+    analysis_data = gemini_service.analyze_expert(title, description, bill_content, doc_type="vote")
     
     if not analysis_data:
-        raise HTTPException(status_code=500, detail="AI Analysis failed")
+        raise HTTPException(status_code=500, detail="Gemini AI Analysis failed")
 
     # 4. Save result
-    analysis = models.VoteAnalysis(
-        vote_id=vote.id,
-        summary=analysis_data.get("summary"),
-        pros=analysis_data.get("pros", []),
-        cons=analysis_data.get("cons", []),
-        mind_map=analysis_data.get("mind_map")
-    )
-    db.add(analysis)
+    if not existing:
+        analysis = models.VoteAnalysis(
+            vote_id=vote.id,
+            summary=analysis_data.get("summary_citizen"),
+            summary_expert=analysis_data.get("summary_expert"),
+            pros=analysis_data.get("pros", []),
+            cons=analysis_data.get("cons", []),
+            analysis_metadata={
+                "importance_score": analysis_data.get("importance_score"),
+                "personas": analysis_data.get("personas")
+            }
+        )
+        db.add(analysis)
+    else:
+        # Update existing
+        existing.summary = analysis_data.get("summary_citizen")
+        existing.summary_expert = analysis_data.get("summary_expert")
+        existing.pros = analysis_data.get("pros", [])
+        existing.cons = analysis_data.get("cons", [])
+        existing.analysis_metadata = {
+            "importance_score": analysis_data.get("importance_score"),
+            "personas": analysis_data.get("personas")
+        }
+        analysis = existing
+
+    # Mirror citizen summary to Vote table for fast listing (Stage 11/18)
+    vote.ai_summary = analysis_data.get("summary_citizen")
+    if analysis_data.get("importance_score"):
+        vote.importance = analysis_data.get("importance_score")
+    if analysis_data.get("category"):
+        vote.topic = analysis_data.get("category")
+
     db.commit()
     db.refresh(analysis)
     

@@ -174,21 +174,22 @@ class GeminiService:
         TREŚĆ: {{bill_text}}
         
         Zwróć JSON (Wartości w JSON muszą być po POLSKU):
-        {{
-            "summary": "Analiza merytoryczna (MINIMUM 10 zdań). Użyj myślników (-) do wylistowania kluczowych punktów. STRUKTURA: 1. Kontekst. 2. LISTA ZMIAN (-). 3. SKUTKI I WNIOSKI.",
+        {{{{
+            "summary_citizen": "Podsumowanie dla obywatela (MINIMUM 6-8 DŁUGICH, TREŚCIWYCH ZDAŃ). Opisz dokładnie mechanizm zmiany i jej wpływ na życie. Unikaj ogólników.",
+            "summary_expert": "Głęboka analiza ekspercka (MINIMUM 25-30 ROZBUDOWANYCH ZDAŃ). Styl analityczny, bogaty w terminologię prawniczą. STRUKTURA: 1. Geneza i kontekst prawny. 2. SZCZEGÓŁOWA LISTA ZMIAN (-). 3. ANALIZA BUDŻETOWA I GOSPODARCZA. 4. SKUTKI DŁUGOFALOWE. MUSI BYĆ BARDZO OBSZERNE.",
             "category": "Jedna z: Gospodarka, Zdrowie, Obronność, Edukacja, Ustrój, Inne",
-            "importance_score": 1-10 (10=Kluczowa Reforma, 1=Korekta techniczna),
-            "pros": ["Argument ZA 1", "Argument ZA 2"],
-            "cons": ["Argument PRZECIW 1", "Argument PRZECIW 2"],
-            "personas": {{
-                "Przedsiębiorca": "Wpływ.",
-                "Pracownik": "Wpływ.",
-                "Rolnik": "Wpływ.",
-                "Emeryt": "Wpływ.",
-                "Student": "Wpływ.",
-                "Rodzic": "Wpływ."
-            }}
-        }}
+            "importance_score": 1-10,
+            "pros": ["Argument ZA 1 (konkretny)", "Argument ZA 2 (konkretny)"],
+            "cons": ["Argument PRZECIW 1 (konkretny)", "Argument PRZECIW 2 (konkretny)"],
+            "personas": {{{{
+                "Przedsiębiorca": "Wpływ szczegółowy.",
+                "Pracownik": "Wpływ szczegółowy.",
+                "Rolnik": "Wpływ szczegółowy.",
+                "Emeryt": "Wpływ szczegółowy.",
+                "Student": "Wpływ szczegółowy.",
+                "Rodzic": "Wpływ szczegółowy."
+            }}}}
+        }}}}
         """
 
         if doc_type == "process_context":
@@ -332,5 +333,53 @@ class GeminiService:
         except Exception as e:
             logger.error(f"Generate SEO Metadata Error: {e}")
             return {"street_title": title, "meta_description": "", "keywords": []}
+
+    def generate_mp_bio(self, mp_data: Dict[str, Any], stats_summary: str = "") -> str:
+        """
+        Generates a neutral, factual biography for an MP.
+        """
+        if not self.model: return ""
+        
+        name = f"{mp_data.get('first_name', '')} {mp_data.get('last_name', '')}"
+        club = mp_data.get('club', '')
+        
+        prompt = f"""
+        Jesteś obiektywnym biograferem parlamentarnym. Twoim zadaniem jest napisanie krótkiej, neutralnej notki biograficznej ("życiorysu") dla posła na Sejm RP.
+        
+        DANE OSOBOWE:
+        - Imię i nazwisko: {name}
+        - Klub/Ugrupowanie: {club}
+        - Data urodzenia: {mp_data.get('birth_date')}
+        - Miejsce urodzenia: {mp_data.get('birth_location')}
+        - Wykształcenie: {mp_data.get('education_level')} (szczegóły: {mp_data.get('education_history')})
+        - Zawód: {mp_data.get('profession')}
+        
+        DANE O AKTYWNOŚCI:
+        {stats_summary}
+        
+        WYTYCZNE (TON: ENCYKLOPEDYCZNY, NEUTRALNY):
+        1. JĘZYK: Polski. Pisz poprawną polszczyzną.
+        2. KLUBU/PARTIE: Używaj pełnych nazw (Koalicja Obywatelska, Prawo i Sprawiedliwość, Trzecia Droga, Polska 2050, Polskie Stronnictwo Ludowe, Konfederacja, Nowa Lewica).
+        3. Struktura:
+           - Akapit 1: Urodzenie, wykształcenie, polityczne zakorzenienie.
+           - Akapit 2: Główne pola aktywności i statystyki.
+        4. NIE HALUCYNUJ. Jeśli czegoś nie wiesz, napisz "Brak szczegółowych danych".
+        
+        Zwróć wynik jako JSON:
+        {{
+            "biography": "Treść biogramu..."
+        }}
+        """
+        
+        try:
+            model = self._get_model(self.model_flash)
+            response = model.generate_content(
+                prompt,
+                generation_config={"response_mime_type": "application/json"}
+            )
+            return json.loads(response.text).get("biography", "")
+        except Exception as e:
+            logger.error(f"Generate MP Bio Error: {e}")
+            return ""
 
 gemini_service = GeminiService()

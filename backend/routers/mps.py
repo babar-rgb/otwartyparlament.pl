@@ -41,9 +41,15 @@ def read_asset_declarations(db: Session = Depends(database.get_db)):
         
     return final_items
 
-@router.get("/{mp_id}")
-def read_mp(mp_id: int, db: Session = Depends(database.get_db)):
-    mp = db.query(models.MP).filter(models.MP.id == mp_id).first()
+@router.get("/{id_or_slug}")
+def read_mp(id_or_slug: str, db: Session = Depends(database.get_db)):
+    # Try ID first if it's a number
+    if id_or_slug.isdigit():
+        mp = db.query(models.MP).filter(models.MP.id == int(id_or_slug)).first()
+    else:
+        # Try Slug
+        mp = db.query(models.MP).filter(models.MP.slug == id_or_slug).first()
+        
     if mp is None:
         raise HTTPException(status_code=404, detail="MP not found")
     

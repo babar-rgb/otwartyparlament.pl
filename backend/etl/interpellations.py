@@ -6,6 +6,8 @@ import time
 from backend.core.db import db
 from backend.core.logger import get_logger
 from backend.utils.http import http_session
+import re
+import html
 
 logger = get_logger("etl.interpellations")
 
@@ -61,14 +63,35 @@ class InterpellationsETL:
                     i_id = item['num']
                     term = item.get('term', 10) # Default to 10 if missing
                     title = item.get('title', '')
-                    sent_date = item.get('sentDate')
+                    sent_date = item.get('sentDate') or item.get('receiptDate')
                     last_modified = item.get('lastModified')
                     raw_json = json.dumps(item)
 
                     try:
                         body_url = f"{SEJM_API_URL}/interpellations/{i_id}/body"
                         body_resp = http_session.get(body_url, timeout=5)
-                        content = body_resp.text if body_resp.status_code == 200 else None
+                        if body_resp.status_code == 200:
+                            raw_html = body_resp.text
+                            # Simple clean similar to fix script
+                            if "<!DOCTYPE" in raw_html or "<html" in raw_html:
+                                # Extract body content
+                                body_match = re.search(r'<body[^>]*>(.*?)</body>', raw_html, re.DOTALL | re.IGNORECASE)
+                                content = body_match.group(1) if body_match else raw_html
+                                # Remove scripts/styles
+                                content = re.sub(r'<(script|style)[^>]*>.*?</\1>', '', content, flags=re.DOTALL | re.IGNORECASE)
+                                # Replace <br>
+                                content = re.sub(r'<br\s*/?>', '\n', content, flags=re.IGNORECASE)
+                                content = re.sub(r'</p>', '\n\n', content, flags=re.IGNORECASE)
+                                # Strip tags
+                                content = re.sub(r'<[^>]+>', '', content)
+                                # Fix entities
+                                content = html.unescape(content)
+                                # Collapse whitespace
+                                content = re.sub(r'\n{3,}', '\n\n', content).strip()
+                            else:
+                                content = raw_html
+                        else:
+                            content = None
                     except:
                         content = None # Fallback
 

@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { fetchVotes as apiFetchVotes } from '../api';
 import { useTerm } from '../context/TermContext';
+import { browserAI } from '../services/BrowserAI';
 
 export interface VoteItem {
     id: number;
@@ -28,12 +29,30 @@ const PAGE_SIZE = 100;
 export function useVotesList(mpId?: string | null, rebellion?: boolean) {
     const { term } = useTerm();
     const [searchQuery, setSearchQuery] = useState('');
+    const [vector, setVector] = useState<number[] | undefined>(undefined);
+    const [isAiLoading, setIsAiLoading] = useState(false);
+
     const [dateFrom, setDateFrom] = useState<string>('');
     const [dateTo, setDateTo] = useState<string>('');
     const [verdict, setVerdict] = useState<string>('');
     const [showProcedural, setShowProcedural] = useState(false);
     const [groupVotes, setGroupVotes] = useState(true);
     const [filterCategory, setFilterCategory] = useState<'ALL' | 'LAWS' | 'RESOLUTIONS' | 'PERSONAL' | 'PROCEDURAL'>('ALL');
+
+    // Debounce and Generate Embeddings
+    useEffect(() => {
+        const timer = setTimeout(async () => {
+            if (searchQuery.length >= 3) {
+                setIsAiLoading(true);
+                const vec = await browserAI.getEmbedding(searchQuery);
+                if (vec) setVector(vec);
+                setIsAiLoading(false);
+            } else {
+                setVector(undefined);
+            }
+        }, 500); // 500ms debounce
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
 
     const {
         data,
@@ -43,7 +62,8 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
         isLoading: loading,
         error
     } = useInfiniteQuery({
-        queryKey: ['votesList', term, mpId, rebellion, dateFrom, dateTo, verdict, showProcedural, groupVotes, filterCategory],
+        // Include vector in queryKey so it refetches when vector changes
+        queryKey: ['votesList', term, mpId, rebellion, dateFrom, dateTo, verdict, showProcedural, groupVotes, filterCategory, searchQuery, vector], // Added vector and searchQuery
         queryFn: async ({ pageParam = 1 }) => {
             const skip = (pageParam - 1) * PAGE_SIZE;
             const res = await apiFetchVotes({
@@ -56,6 +76,7 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
                 date_to: dateTo || undefined,
                 verdict: verdict || undefined,
                 q: searchQuery || undefined,
+                vector: vector, // Pass vector to API
                 hide_procedural: !showProcedural,
                 grouped: groupVotes,
                 category: filterCategory === 'ALL' ? undefined : filterCategory
@@ -71,41 +92,16 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
         staleTime: 1000 * 60 * 5, // 5 minutes cache
     });
 
-    const expandSearchQuery = (query: string): string[] => {
-        const synonyms: Record<string, string[]> = {
-            'aborcja': ['terminacja', 'ciąż', 'płód', 'życie poczęte'],
-            'podatki': ['danin', 'akcyza', 'vat', 'pit', 'cit'],
-            'rolnictwo': ['zboż', 'ukrai', 'pasz', 'nawoz'],
-            'klimat': ['węgiel', 'ets', 'ozon', 'odnawial'],
-            'prawo': ['kodeks', 'sąd', 'trybunał', 'wyrok'],
-            'zdrowie': ['szpital', 'lek', 'medycz', 'pacjent'],
-            'edukacja': ['szkoł', 'nauczyciel', 'uczeń', 'oświat'],
-        };
-        const lowerQuery = query.toLowerCase();
-        const expanded = [lowerQuery];
-        Object.keys(synonyms).forEach(key => {
-            if (lowerQuery.includes(key)) expanded.push(...synonyms[key]);
-        });
-        return expanded;
-    };
+
 
     // Flatten pages and filter
     const allVotes = useMemo(() => data?.pages.flatMap(page => page.items) || [], [data]);
 
     const { filteredVotes, isContextualSearch } = useMemo(() => {
-        if (!searchQuery.trim()) {
-            return { filteredVotes: allVotes, isContextualSearch: false };
-        }
-
-        const terms = expandSearchQuery(searchQuery);
-        const filtered = allVotes.filter(vote => {
-            const title = (vote.title || '').toLowerCase();
-            const topic = (vote.topic || '').toLowerCase();
-            const kind = (vote.kind || '').toLowerCase();
-            return terms.some(t => title.includes(t) || topic.includes(t) || kind.includes(t));
-        });
-
-        return { filteredVotes: filtered, isContextualSearch: terms.length > 1 };
+        // Semantic Search is handled by Backend (pgvector)
+        // We just verify if we are in search mode for UI styling
+        const isSearch = searchQuery.trim().length > 0;
+        return { filteredVotes: allVotes, isContextualSearch: isSearch };
     }, [searchQuery, allVotes]);
 
     if (error) {

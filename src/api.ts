@@ -2,6 +2,13 @@ import { MP, Vote, VoteAnalysis } from './types/domain';
 
 export const API_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+export const fetchRecommendations = async (interests: string) => {
+  const params = new URLSearchParams({ interests });
+  const response = await fetch(`${API_URL}/api/recommendations?${params.toString()}`);
+  if (!response.ok) throw new Error('Failed to fetch recommendations');
+  return await response.json();
+};
+
 export type { MP, Vote };
 
 export const fetchMPs = async (options?: { term?: number; active?: boolean; skip?: number; limit?: number }): Promise<MP[]> => {
@@ -44,6 +51,7 @@ type FetchVotesOptions = {
   date_to?: string;
   verdict?: string;
   q?: string;
+  vector?: number[];
   hide_procedural?: boolean;
   grouped?: boolean;
   category?: string;
@@ -66,6 +74,7 @@ export const fetchVotes = async (options: FetchVotesOptions = {}): Promise<{ ite
   if (options.date_to) params.append('date_to', options.date_to);
   if (options.verdict) params.append('verdict', options.verdict);
   if (options.q) params.append('q', options.q);
+  if (options.vector) params.append('vector', options.vector.join(','));
   if (options.hide_procedural !== undefined) params.append('hide_procedural', options.hide_procedural.toString());
   if (options.grouped !== undefined) params.append('grouped', options.grouped.toString());
   if (options.category) params.append('category', options.category);

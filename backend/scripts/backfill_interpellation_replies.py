@@ -53,13 +53,18 @@ def clean_html(html_content):
 def backfill_replies():
     db = SessionLocal()
     try:
-        print("Fetching interpellations with replies in raw_data...")
-        # Get records that have replies in raw_data
-        # We process ALL that have replies, to ensure we get the text content even if reply_content is already set with just a URL
-        query = text("SELECT id, raw_data, reply_content FROM interpellations WHERE raw_data::text LIKE '%replies%'")
+        print("Fetching interpellations WITHOUT replies...")
+        # Only get records that have replies in raw_data BUT no reply_content yet
+        query = text("""
+            SELECT id, raw_data, reply_content 
+            FROM interpellations 
+            WHERE raw_data::text LIKE '%replies%'
+            AND (reply_content IS NULL OR LENGTH(reply_content) < 100)
+            ORDER BY id DESC
+        """)
         results = db.execute(query).fetchall()
         
-        print(f"Found {len(results)} candidates. Processing...")
+        print(f"Found {len(results)} interpellations needing replies. Processing...")
         
         count = 0
         updated = 0
@@ -98,7 +103,7 @@ def backfill_replies():
                             
                 if body_url:
                     try:
-                        resp = requests.get(body_url, timeout=5)
+                        resp = requests.get(body_url, timeout=15)
                         if resp.status_code == 200:
                             cleaned = clean_html(resp.text)
                             if cleaned:
@@ -125,7 +130,7 @@ def backfill_replies():
             if count % 10 == 0:
                 print(f"Processed {count}/{len(results)} | Updated: {updated}", end='\r')
                 db.commit()
-                time.sleep(0.1) # Be nice to API
+                # Removed delay for faster fetching
                     
         db.commit()
         print(f"\nFinished! Processed {count}, Updated {updated} records.")

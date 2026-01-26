@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, func, text, case, literal
 from sqlalchemy.sql import func
 from typing import Optional
+import os
+import google.generativeai as genai
 from backend import models
 from backend.core import orm_db as database
 
@@ -15,36 +17,271 @@ def search_all(
     period: Optional[str] = None, 
     controversial: bool = False, 
     expanded: Optional[str] = None,
+    vector_str: Optional[str] = Query(None, alias="vector"),
     db: Session = Depends(database.get_db)
 ):
-    # This is a complex unified search. For now, we'll search basic entities.
-    from backend.services.embedding import embedding_service
+    # Sanitize period (handle 'all' or invalid strings)
+    if period and not period.isdigit():
+        period = None
+    
     results = []
     
     # helper to check if we should search a specific type
-    def should_search(t):
+    def should_search_type(t):
         return type is None or type == t
+
+    # 0. Global Query Expansion (FTS & Synonyms)
+    q_expanded = q
+    search_terms = [q]
+    
+    # Handle user-provided expanded keywords from frontend
+    if expanded:
+        extra_terms = [t.strip() for t in expanded.split(',') if t.strip()]
+        search_terms.extend(extra_terms)
+    
+    # Synonyms Dictionary (Unified - Level 5 "Evergreen")
+    POLITICAL_SYNONYMS = {
+        # Economic / Everyday (Kasa & Rachunki)
+        'drożyzna': ['inflacja', 'ceny', 'vat', 'koszyk', 'akcyza', 'tarcza'],
+        'podatki': ['danin', 'pit', 'cit', 'akcyza', 'kwota wolna', 'ryczałt'],
+        'małpki': ['wychowaniu w trzeźwości', 'napojów alkoholowych', 'opakowaniach', 'alkohol'],
+        'piec': ['czyste powietrze', 'termomoderniz', 'źródła ciepła', 'węgiel', 'palenisk'],
+        'praca': ['zatrudnienie', 'bezrobocie', 'płaca', 'minimalna', 'umowa', 'kodeks pracy', 'zus', 'zasiłek'],
+        'zakaz gotówki': ['limit płatności', 'obrót bezgotówkowy', 'pieniądz cyfrowy', 'prawo przedsiębiorców'],
+        'babciowe': ['aktywny rodzic', 'świadczenie rodzicielskie', 'aktywni w pracy', 'opiece nad dzieckiem'],
+        'wakacje od zus': ['zwolnienie z opłacania', 'składek na ubezpieczenia', 'ubezpieczeń społecznych'],
+        'bon energetyczny': ['dodatek osłonowy', 'ceny energii', 'rekompensata', 'taryfy', 'mrożenie cen'],
+        'ceny paliw': ['opłata paliwowa', 'opłata emisyjna', 'benzyna', 'orlen', 'akcyza'],
+        'test przedsiębiorcy': ['działalność gospodarcza', 'uszczelnienie', 'podatki', 'b2b', 'samozatrudnienie'],
+        'lex uber': ['transport drogowy', 'przewóz osób', 'pośrednictwo', 'licencja', 'taksówki', 'aplikację'],
+
+        # Social / Election Promises / Health
+        'kwota wolna': ['podatku dochodowym', 'pit', 'zwiększenie kwoty', 'podatek'],
+        'kredyt 0': ['pierwsze mieszkanie', 'mieszkanie na start', 'wspieraniu budownictwa', 'bezpieczny kredyt', 'dopłaty'],
+        'dobrowolny zus': ['wakacje składkowe', 'system ubezpieczeń', 'zus', 'przedsiębiorc'],
+        'renta wdowia': ['emeryturach i rentach', 'fundusz ubezpieczeń', 'wdowi', 'obywatelski projekt'],
+        '800 plus': ['wychowywaniu dzieci', 'świadczenie wychowawcze', 'rodzina 800'],
+        'porodówki': ['restrukturyzacja szpitali', 'sieć szpitali', 'oddziały położnicze', 'mapa potrzeb', 'likwidacja'],
+        'składka zdrowotna': ['świadczenia opieki', 'finansowanie', 'ryczałt', 'liniowy', 'nfz'],
+        'druga waloryzacja': ['emeryturach i rentach', 'fus', 'inflacja', 'waloryzacja', 'wypłata'],
+
+        # Worldview / Bioethical / Lifestyle
+        'aborcja': ['ciąż', 'płód', 'życie poczęte', 'terminacja', 'przerywanie'],
+        'in vitro': ['leczenie niepłodności', 'zapłodnienie', 'procedury medycznej'],
+        'tabletka dzień po': ['antykoncepcja', 'awaryjna', 'pigułka', 'prawo farmaceutyczne', 'recept', 'octan uliprystalu'],
+        'fundusz kościelny': ['wyznaniowe', 'związki wyznaniowe', 'finansowanie kościoła'],
+        'związki partnerskie': ['równość', 'osoby najbliższej', 'wspólne pożycie', 'małżeństw', 'tęczow'],
+        'rejestr ciąż': ['system informacji medycznej', 'zdarzenia medyczne', 'minister zdrowia'],
+        'robaki': ['nowa żywność', 'novel food', 'białko owadzie', 'mąka ze świerszczy'],
+        'indoktrynacja': ['historia i teraźniejszość', 'czarnek', 'podstawa programowa', 'kurator oświaty'],
+        'alkohol na stacjach': ['wychowanie w trzeźwości', 'godziny sprzedaży', 'sprzedaż nocna', 'stacja benzynowa'],
+        'zakaz telefonów': ['prawo oświatowe', 'higiena cyfrowa', 'rzecznik praw dziecka', 'statut szkoły'],
+        'prace domowe': ['ocenianie', 'klasyfikowanie', 'promowanie', 'zadawanie prac', 'brak zadań'],
+
+        # Housing / Ecology / City
+        'pustostan': ['nieruchomości', 'czynności cywilnoprawnych', 'lokal niezamieszkany', 'flipperzy', 'pcc'],
+        'willa plus': ['dotacj', 'organizacjom', 'edukacyjn', 'inwestycje', 'czarnek'],
+        'lex deweloper': ['ułatwieniach', 'inwestycji mieszkaniowych', 'planowania przestrzennego'],
+        'patodeweloperka': ['warunki techniczne', 'prawo budowlane', 'nasłonecznienie', 'metraż', 'balkony'],
+        'eksmisja': ['ochrona praw lokatorów', 'lokal socjalny', 'okres ochronny', 'na bruk'],
+        'kaucja': ['gospodarka opakowaniami', 'system kaucyjny', 'recyklerzy', 'odpady', 'butelkomaty', 'zwrot butelek'],
+        'deszczówka': ['prawo wodne', 'retencja', 'zabetonowane', 'podatek od deszczu'],
+        'betonoza': ['powierzchnia biologicznie czynna', 'zagospodarowanie przestrzenne', 'tereny zielone', 'wycinka drzew'],
+
+        # Afery / Media Slang / Justice
+        'lex tvn': ['radiofoni', 'telewizji', 'krajowa rada', 'krrit', 'kapitał'],
+        'piątka dla zwierząt': ['ochronie zwierząt', 'futerkow', 'ubój rytualny'],
+        'weto': ['prezydent', 'odrzucenie', 'ponowne rozpatrzenie'],
+        'koryto': ['wynagrodz', 'uposażeń', 'spółk', 'rad nadzorczych'],
+        'afera wizowa': ['wizy', 'konsularne', 'pośrednictwo wizowe', 'komisja śledcza', 'badania legalności'],
+        'wybory kopertowe': ['korespondencyjne', 'szczególnych zasadach', 'poczta polska'],
+        'pegasus': ['kontrola operacyjna', 'inwigilacja', 'szpiegowskie', 'służb'],
+        'wycinka puszczy': ['lasy państwowe', 'gospodarka leśna', 'plan urządzenia lasu', 'puszcza białowieska'],
+        'neosędziowie': ['krajowa rada sądownictwa', 'powołania sędziowskie', 'status sędziego', 'krs', 'uchwała'],
+        'sądy': ['wymiar sprawiedliwości', 'krs', 'sędzi', 'wyrok', 'trybunał'],
+
+        # Security / Investments / Cars
+        'zbrojenia': ['obrona', 'wojsko', 'armia', 'modernizacja', 'szpej'],
+        'mur': ['bariera', 'zapora', 'ochrona granicy', 'drogowa', 'przymusowej', 'straż graniczna'],
+        'zboże': ['ukrai', 'import', 'rolne', 'ekoport', 'embargo', 'produktów rolnych'],
+        'imigranci': ['cudzoziem', 'granic', 'uchodź', 'zapora'],
+        'cpk': ['centralny port komunikacyjny', 'baranów', 'lotnisko', 'pełnomocnik rządu'],
+        'elektrownia atomowa': ['jądrowa', 'choczewo', 'kopalino', 'energetyka jądrowa'],
+        'auta': ['konfiskat', 'kodeks karny', 'pojazd', 'nietrzeźw', 'pijanym', 'elektromobilność', 'strefa czystego transportu'],
+        'konfiskata aut': ['przepadek pojazdu', 'kodeks karny', 'prowadzenie w stanie nietrzeźwości'],
+        'zakaz diesla': ['elektromobilność', 'strefa czystego transportu', 'normy emisji', 'euro', 'sct'],
+        'mandaty': ['prawo o ruchu drogowym', 'wysokość grzywien', 'taryfikator', 'prędkość'],
+        'wezwania do wojska': ['kwalifikacja wojskowa', 'ćwiczenia rezerwy', 'obrona ojczyzny', 'wcr', 'pobór'],
+        'schrony': ['ochrona ludności', 'obrona cywilna', 'budowle ochronne', 'syreny'],
+        'dyrektywa inwigilacyjna': ['chat control', 'prywatność', 'komunikacja elektroniczna', 'szyfrowanie', 'inwigilacja'],
+        'podatek od smartfona': ['opłata reprograficzna', 'prawo autorskie', 'rekompensata', 'artystów'],
+        
+        # People / Specifics
+        'nawrocki': ['ipn', 'instytut pamięci'],
+        'pielęgniark': ['wynagrodz', 'lecznicz', 'medycz', 'system zdrowia'],
+        'nauczyciel': ['karta nauczyciela', 'oświat', 'szkoł', 'czarnek'],
+        'mentzen': ['podatki', 'pit', 'konfederacja', 'stereotyp'],
+    }
+    
+    # Expand query
+    q_lower = q.lower()
+    for key, values in POLITICAL_SYNONYMS.items():
+        if key in q_lower:
+            search_terms.extend(values)
+            
+    if len(search_terms) > 1:
+        # Use " OR " for websearch_to_tsquery which handles mixed AND/OR logic
+        q_expanded = " OR ".join([f'"{t}"' for t in search_terms]) 
+    
+    # Client Vector Parsing (deprecated in favor of Gemini embedding)
+    query_vec = None
+    if vector_str and isinstance(vector_str, str):
+        try:
+            query_vec = [float(x) for x in vector_str.split(',')]
+            if len(query_vec) != 384:
+                query_vec = None
+        except ValueError:
+            pass
+
+    # --- SEMANTIC SEARCH ENHANCEMENT ---
+    semantic_results = []
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    
+    if GEMINI_API_KEY:
+        genai.configure(api_key=GEMINI_API_KEY)
+        
+        try:
+            # 1. Check Query Cache
+            cached = db.query(models.QueryEmbedding).filter(models.QueryEmbedding.query == q.lower()).first()
+            
+            if cached and cached.embedding is not None:
+                query_embedding = cached.embedding
+                # Lazy update search count
+                cached.search_count += 1
+                cached.last_searched_at = func.now()
+                db.commit()
+            else:
+                # 2. Generate new embedding
+                result = genai.embed_content(
+                    model="models/text-embedding-004",
+                    content=q,
+                    task_type="retrieval_query"
+                )
+                query_embedding = result['embedding']
+                
+                # Save to cache
+                new_cache = models.QueryEmbedding(
+                    query=q.lower(),
+                    embedding=query_embedding,
+                    search_count=1,
+                    last_searched_at=func.now()
+                )
+                db.add(new_cache)
+                db.commit()
+
+            # 3. Vector Search in Votes
+            if should_search_type('vote'):
+                sem_votes = db.query(models.Vote, models.Vote.vector_embedding.cosine_distance(query_embedding).label('distance'))\
+                    .filter(models.Vote.vector_embedding.isnot(None))
+                if period:
+                    sem_votes = sem_votes.filter(models.Vote.term == int(period))
+                
+                # Fetch more and filter by threshold
+                sem_votes_raw = sem_votes.order_by('distance').limit(50).all()
+                
+                for v, dist in sem_votes_raw:
+                    if dist > 0.37: continue # Cutoff for noisy results
+                    
+                    semantic_results.append({
+                        "type": "vote",
+                        "id": str(v.id),
+                        "title": v.title_clean,
+                        "date": str(v.date),
+                        "term": v.term,
+                        "topic": v.topic,
+                        "ux_category": v.kind or "Głosowanie",
+                        "is_semantic": True,
+                        "relevance_score": 1.0 - dist
+                    })
+
+            # 4. Vector Search in Bills
+            if should_search_type('process'):
+                sem_bills = db.query(models.Bill, models.Bill.vector_embedding.cosine_distance(query_embedding).label('distance'))\
+                    .filter(models.Bill.vector_embedding.isnot(None))
+                if period:
+                    p = int(period)
+                    if p == 10:
+                        sem_bills = sem_bills.filter(models.Bill.date >= '2023-11-13')
+                    elif p == 9:
+                        sem_bills = sem_bills.filter(models.Bill.date < '2023-11-13', models.Bill.date >= '2019-11-12')
+                
+                sem_bills_raw = sem_bills.order_by('distance').limit(30).all()
+                for b, dist in sem_bills_raw:
+                    if dist > 0.37: continue
+                    
+                    b_term = 10 if not b.date or str(b.date) >= '2023-11-13' else 9
+                    semantic_results.append({
+                        "type": "process",
+                        "id": b.process_id or str(b.id),
+                        "title": f"Druk nr {b.number}: {b.title}",
+                        "date": str(b.date),
+                        "term": b_term,
+                        "topic": b.topic,
+                        "ux_category": b.type or "Projekt",
+                        "is_semantic": True,
+                        "relevance_score": 1.0 - dist
+                    })
+
+            # 5. Vector Search in Interpellations
+            sem_inters = db.query(models.Interpellation, models.Interpellation.vector_embedding.cosine_distance(query_embedding).label('distance'))\
+                .filter(models.Interpellation.vector_embedding.isnot(None))
+            sem_inters_raw = sem_inters.order_by('distance').limit(20).all()
+            for i, dist in sem_inters_raw:
+                if dist > 0.37: continue
+                
+                semantic_results.append({
+                    "type": "interpellation",
+                    "id": str(i.id),
+                    "title": i.title,
+                    "date": str(i.sent_date),
+                    "topic": "Interpelacja",
+                    "ux_category": "Interpelacja",
+                    "is_semantic": True,
+                    "relevance_score": 1.0 - dist
+                })
+        except Exception as e:
+            print(f"Semantic enhancement failed: {e}")
+
+    # --- TRADITIONAL KEYWORD SEARCH ---
+    results = []
     
     # 1. Search across MPs (Traditional)
-    if should_search('mp') and not period:
-        # Postgres specific concat
+    if should_search_type('mp') and not period:
+        # ... logic for MPs remains largely the same ...
         full_name_normal = func.concat(models.MP.first_name, ' ', models.MP.last_name)
         full_name_reverse = func.concat(models.MP.last_name, ' ', models.MP.first_name)
-        
         mp_query = db.query(models.MP)
-        if period:
-             mp_query = mp_query.filter(models.MP.term == int(period))
-
-        mps = mp_query.filter(
-            or_(
-                models.MP.first_name.ilike(f"%{q}%"),
-                models.MP.last_name.ilike(f"%{q}%"),
-                full_name_normal.ilike(f"%{q}%"),
-                full_name_reverse.ilike(f"%{q}%")
-            )
-        ).limit(6).all()
+        mps_candidates = mp_query.filter(or_(
+            models.MP.first_name.ilike(f"%{q}%"), models.MP.last_name.ilike(f"%{q}%"),
+            full_name_normal.ilike(f"%{q}%"), full_name_reverse.ilike(f"%{q}%")
+        )).limit(5).all() # Reduced limit to 5 as per snippet
         
-        for mp in mps:
+        # Deduplicate by name (taking the most recent term) - Re-added original deduplication logic
+        unique_mps = {}
+        for mp in mps_candidates:
+            key = (mp.first_name, mp.last_name)
+            if key not in unique_mps:
+                unique_mps[key] = mp
+            else:
+                # If we have a duplicate, keep the one from the higher term
+                if mp.term > unique_mps[key].term:
+                    unique_mps[key] = mp
+        
+        # Sort by relevance (active first, then term desc) and limit
+        # Python sort is stable.
+        sorted_mps = sorted(unique_mps.values(), key=lambda x: (x.term, x.active), reverse=True)
+        
+        for mp in sorted_mps[:6]: # Keep original limit for MPs
             mp_dict = {c.name: getattr(mp, c.name) for c in mp.__table__.columns}
             results.append({
                 "type": "mp",
@@ -52,78 +289,28 @@ def search_all(
                 "title": f"{mp.first_name} {mp.last_name}",
                 "data": mp_dict
             })
-    
-    # 2. Search across Votes
-    if should_search('vote'):
-        # Base query
+
+    # 2. Add traditional Vote results (FTS)
+    if should_search_type('vote'):
         vote_query = db.query(models.Vote)
-        if q and len(q) > 3:
-            # Semantic search with optional period filtering
-            # Semantic search with optional period filtering
-            # OPTIMIZATION PHASE 2: PGVECTOR NATIVE SEARCH
-            query_vec = embedding_service.get_embedding(q)
+        if period: vote_query = vote_query.filter(models.Vote.term == int(period))
+        try:
+            # Use websearch_to_tsquery for "OR" support
+            trad_votes = vote_query.filter(models.Vote.search_vector.op('@@')(func.websearch_to_tsquery('simple', q_expanded))).limit(10).all()
+        except:
+            trad_votes = vote_query.filter(models.Vote.title_raw.ilike(f"%{q}%")).limit(10).all()
             
-            if query_vec:
-                # Use pgvector cosine distance
-                # Order by distance ASC (closest first)
-                votes_q = db.query(models.Vote).filter(models.Vote.vector_embedding != None)
-                
-                if period:
-                    votes_q = votes_q.filter(models.Vote.term == int(period))
-                
-                # NOISE FILTER: Exclude "Sprawy Regulaminowe" and "Posiedzenie Sejmu" unless user asks for it
-                if "regulamin" not in q.lower() and "posiedzenie" not in q.lower():
-                     votes_q = votes_q.filter(models.Vote.title_clean.notilike("%Sprawy Regulaminowe%"))
-                     votes_q = votes_q.filter(models.Vote.title_clean.notilike("%Posiedzenie Sejmu%"))
-
-                # HYBRID SORT: FTS Priority > Text Match > Semantic Relevance
-                # HYBRID SORT: FTS Priority > Text Match > Semantic Relevance
-                # 1. Full Text Search Match (Morphology: ciąża = ciąży)
-                # We use @@ operator with websearch_to_tsquery('polish', q)
-                fts_match = models.Vote.search_vector.op('@@')(func.websearch_to_tsquery('polish', q))
-
-                # 2. Simple Substring Match (Old school: "regul" matches "regulamin")
-                title_ilike = models.Vote.title_clean.ilike(f"%{q}%")
-                
-                # Priority: FTS (0) -> ILIKE (1) -> Vector (2)
-                rank_algo = case(
-                    (fts_match, 0),
-                    (title_ilike, 1),
-                    else_=2
-                )
-                
-                votes = votes_q.order_by(
-                    rank_algo.asc(),
-                    models.Vote.vector_embedding.cosine_distance(query_vec).asc()
-                ).limit(20).all()
-                    
-                # Fallback Smart Ranking if needed, or trust vector distance
-                # currently vector distance is primary.
-            else:
-                 votes = []
-            
-        else:
-            # Fallback to simple ILIKE
-            votes = vote_query.filter(models.Vote.title_clean.ilike(f"%{q}%")).order_by(models.Vote.importance.desc()).limit(20).all()
-
-        for vote in votes:
+        for vote in trad_votes:
             results.append({
-                "type": "vote",
-                "id": str(vote.id),
-                "title": vote.title_clean,
-                "date": str(vote.date),
-                "term": vote.term,
-                "topic": vote.topic,
-                "ux_category": vote.kind or "Głosowanie",
-                "sitting": vote.sitting,
-                "voting_number": vote.voting_number
+                "type": "vote", "id": str(vote.id), "title": vote.title_clean, "date": str(vote.date),
+                "term": vote.term, "topic": vote.topic, "ux_category": vote.kind or "Głosowanie",
+                "sitting": vote.sitting, # Re-added original fields
+                "voting_number": vote.voting_number # Re-added original fields
             })
 
-    # 3. Search across Bills (Projekty)
-    if should_search('process'):
-        # Date logic for terms: Term 10 start > 2023-11-13
+    # 3. Traditional Bills
+    if should_search_type('process'):
         bill_query = db.query(models.Bill)
-        
         if period:
             p = int(period)
             if p == 10:
@@ -131,62 +318,57 @@ def search_all(
             elif p == 9:
                 bill_query = bill_query.filter(models.Bill.date < '2023-11-13', models.Bill.date >= '2019-11-12')
         
-        if q and len(q) > 3:
-            # Semantic search for Bills
-            # Semantic search for Bills
-            # OPTIMIZATION PHASE 2: PGVECTOR NATIVE SEARCH
-            query_vec = embedding_service.get_embedding(q)
-            
-            if query_vec:
-                bills_q = db.query(models.Bill).filter(models.Bill.vector_embedding != None)
-                
-                if period:
-                    p = int(period)
-                    if p == 10:
-                        bills_q = bills_q.filter(models.Bill.date >= '2023-11-13')
-                    elif p == 9:
-                        bills_q = bills_q.filter(models.Bill.date < '2023-11-13', models.Bill.date >= '2019-11-12')
-                        
-                bills = bills_q.order_by(models.Bill.vector_embedding.cosine_distance(query_vec))\
-                    .limit(20).all()
-            else:
-                bills = []
-            
-            if not bills:
-                 bills = bill_query.filter(
-                    or_(
-                        models.Bill.title.ilike(f"%{q}%"),
-                        models.Bill.description.ilike(f"%{q}%"),
-                        models.Bill.number == q
-                    )
-                ).limit(20).all()
-        else:
-            bills = bill_query.filter(
-                or_(
-                    models.Bill.title.ilike(f"%{q}%"),
-                    models.Bill.description.ilike(f"%{q}%"),
-                    models.Bill.number == q
-                )
-            ).limit(20).all()
-
-        for bill in bills:
-            # Infer term for display
-            b_term = 10
-            if bill.date and str(bill.date) < '2023-11-13':
-                b_term = 9
-                
+        # NO, I will use OR ILIKE chain for synonyms.
+        conditions = [
+            models.Bill.title.ilike(f"%{t}%") for t in search_terms[:5] # Limit terms to avoid huge query
+        ]
+        trad_bills = bill_query.filter(or_(*conditions)).limit(10).all() # Reduced limit to 10 as per snippet
+        
+        for bill in trad_bills:
+            b_term = 10 if not bill.date or str(bill.date) >= '2023-11-13' else 9
             results.append({
-                "type": "process",
-                "id": str(bill.id),
-                "title": f"Druk nr {bill.number}: {bill.title}",
-                "date": str(bill.date),
-                "term": b_term,
-                "topic": bill.topic,
-                "ux_category": bill.type or "Projekt"
+                "type": "process", "id": bill.process_id or str(bill.id), "title": f"Druk nr {bill.number}: {bill.title}",
+                "date": str(bill.date), "term": b_term, "topic": bill.topic, "ux_category": bill.type or "Projekt"
             })
 
-    # 4. Search across Speeches (Wypowiedzi) - Text Match
-    if should_search('speech'):
+    # Combined results merging logic
+    final_results = []
+    
+    # 1. Collect all candidates
+    all_candidates = []
+    for r in results:
+        r['relevance_boost'] = 0.5 # Default for traditional matches
+        all_candidates.append(r)
+        
+    for r in semantic_results:
+        # Boost if keyword exists in title
+        title_lower = r['title'].lower()
+        boost = 0
+        
+        # Check for direct keyword matches (better for Polish declension)
+        for term in search_terms[:5]:
+            t_lower = term.lower()
+            # Basic Polish stemming: check first 7 chars for long words
+            if len(t_lower) > 3 and (t_lower in title_lower or (len(t_lower) > 7 and t_lower[:7] in title_lower)):
+                # Stronger boost for longer, more specific matches
+                boost = 0.5
+                break
+                
+        r['relevance_boost'] = r.get('relevance_score', 0.1) + boost
+        all_candidates.append(r)
+
+    # 2. Sort and deduplicate
+    all_candidates.sort(key=lambda x: x.get('relevance_boost', 0), reverse=True)
+    
+    seen_ids = set()
+    for r in all_candidates:
+        unique_key = f"{r['type']}_{r['id']}"
+        if unique_key not in seen_ids:
+            seen_ids.add(unique_key)
+            final_results.append(r)
+
+    # 4. Speeches (keep small for now)
+    if should_search_type('speech'):
         speech_query = db.query(models.Speech)
         if period:
             speech_query = speech_query.filter(models.Speech.term == int(period))
@@ -196,17 +378,34 @@ def search_all(
         ).limit(5).all()
         
         for s in speeches:
-            results.append({
-                "type": "speech",
-                "id": str(s.id),
-                "title": f"Wypowiedź: {s.speaker_name}",
-                "date": str(s.date),
-                "content_preview": s.content[:200] + "...",
-                "term": s.term,
-                "mp_id": str(s.mp_id)
+            # Ensure speeches are also deduplicated if they somehow overlap (unlikely for speeches)
+            unique_key = f"speech_{s.id}"
+            if unique_key not in seen_ids:
+                seen_ids.add(unique_key)
+                content_preview = (s.content[:200] + "...") if s.content else "Brak treści..."
+                final_results.append({
+                    "type": "speech", "id": str(s.id), "title": f"Wypowiedź: {s.speaker_name}",
+                    "date": str(s.date), "content_preview": content_preview, "term": s.term, "mp_id": str(s.mp_id)
+                })
+
+    # 5. Traditional Interpellations
+    inter_query = db.query(models.Interpellation)
+    trad_inters = inter_query.filter(models.Interpellation.title.ilike(f"%{q}%")).limit(10).all()
+    for i in trad_inters:
+        unique_key = f"interpellation_{i.id}"
+        if unique_key not in seen_ids:
+            seen_ids.add(unique_key)
+            final_results.append({
+                "type": "interpellation",
+                "id": str(i.id),
+                "title": i.title,
+                "date": str(i.sent_date),
+                "topic": "Interpelacja",
+                "ux_category": "Interpelacja"
             })
-    
-    return results
+
+    return final_results
+
 
 @router.get("/categories")
 def read_categories(db: Session = Depends(database.get_db)):
@@ -329,31 +528,37 @@ def read_interpellations(
     if mp_id:
         query = query.join(models.InterpellationAuthor).filter(models.InterpellationAuthor.mp_id == mp_id)
     
-    # Eager load authors
+    # Eager load authors to avoid N+1 and fix potential serialization issues
     interpellations = query.options(joinedload(models.Interpellation.authors))\
         .order_by(models.Interpellation.sent_date.desc()).offset(skip).limit(limit).all()
     
     final_items = []
     for i in interpellations:
-        i_dict = {c.name: getattr(i, c.name) for c in i.__table__.columns}
-        # Serialize authors
-        i_dict['authors'] = [{c.name: getattr(a, c.name) for c in a.__table__.columns} for a in i.authors]
+        # Robust serialization: exclude Vector types which crash JSON encoder
+        i_dict = {c.name: getattr(i, c.name) for c in i.__table__.columns if c.name != 'vector_embedding'}
+        # Serialize authors manually to be safe
+        i_dict['authors'] = [
+            {c.name: getattr(a, c.name) for c in a.__table__.columns} 
+            for a in i.authors
+        ]
         final_items.append(i_dict)
         
     return final_items
 
 @router.get("/interpellations/{id}")
 def read_interpellation(id: int, db: Session = Depends(database.get_db)):
-    interpellation = db.query(models.Interpellation).filter(models.Interpellation.id == id).first()
+    interpellation = db.query(models.Interpellation).options(joinedload(models.Interpellation.authors)).filter(models.Interpellation.id == id).first()
     if not interpellation:
         raise HTTPException(status_code=404, detail="Interpellation not found")
     
-    # Manually serialize + add raw_data if needed
-    i_dict = {c.name: getattr(interpellation, c.name) for c in interpellation.__table__.columns}
+    # Safe serialization
+    i_dict = {c.name: getattr(interpellation, c.name) for c in interpellation.__table__.columns if c.name != 'vector_embedding'}
     
-    # Get authors
-    authors = db.query(models.MP).join(models.InterpellationAuthor).filter(models.InterpellationAuthor.interpellation_id == id).all()
-    i_dict['authors'] = [{c.name: getattr(a, c.name) for c in a.__table__.columns} for a in authors]
+    # Serialize authors
+    i_dict['authors'] = [
+        {c.name: getattr(a, c.name) for c in a.__table__.columns} 
+        for a in interpellation.authors
+    ]
     
     return i_dict
 

@@ -25,6 +25,7 @@ export default function SearchPage() {
     const processes = results.filter((r) => r.type === 'process');
     const votes = results.filter((r) => r.type === 'vote');
     const speeches = results.filter((r) => r.type === 'speech');
+    const interpellations = results.filter((r) => r.type === 'interpellation');
 
     return (
         <div className="min-h-screen bg-page pt-32 pb-12 px-4 md:px-8 text-primary">
@@ -45,6 +46,7 @@ export default function SearchPage() {
                         { label: 'Posłowie', icon: User, type: 'mp', count: mps.length },
                         { label: 'Projekty', icon: FileText, type: 'process', count: processes.length },
                         { label: 'Głosowania', icon: VoteIcon, type: 'vote', count: votes.length },
+                        { label: 'Interpelacje', icon: Search, type: 'interpellation', count: results.filter(r => r.type === 'interpellation').length },
                         { label: 'Wypowiedzi', icon: Mic, type: 'speech', count: speeches.length },
                     ].map((type) => (
                         <button
@@ -112,7 +114,7 @@ export default function SearchPage() {
                                 </div>
                                 <div className="grid gap-4">
                                     {votes.map((vote) => (
-                                        <Link to={`/glosowania/${vote.id}`} key={vote.id} className="group block bg-surface p-6 rounded-2xl border border-border-base hover:border-emerald-500/30 transition-all">
+                                        <Link to={`/glosowanie/${vote.id}`} key={vote.id} className="group block bg-surface p-6 rounded-2xl border border-border-base hover:border-emerald-500/30 transition-all">
                                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                                 <div className="space-y-2">
                                                     <div className="flex flex-wrap items-center gap-2">
@@ -158,7 +160,7 @@ export default function SearchPage() {
                                 </div>
                                 <div className="grid gap-4">
                                     {processes.map((proc) => (
-                                        <Link to={`/projekty/${proc.id}`} key={proc.id} className="group block bg-surface p-6 rounded-2xl border border-border-base hover:border-amber-500/30 transition-all">
+                                        <Link to={`/ustawy/${proc.id}`} key={proc.id} className="group block bg-surface p-6 rounded-2xl border border-border-base hover:border-amber-500/30 transition-all">
                                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                                 <div className="space-y-2">
                                                     <div className="flex items-center gap-2">
@@ -211,6 +213,39 @@ export default function SearchPage() {
                                                 <p className="text-secondary text-sm line-clamp-3 italic bg-page/50 p-3 rounded-lg border border-border-base">
                                                     "{speech.content_preview}"
                                                 </p>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* Interpellations Section */}
+                        {interpellations.length > 0 && (!searchParams.get('type') || searchParams.get('type') === 'interpellation') && (
+                            <section className="space-y-6">
+                                <div className="flex items-center gap-4">
+                                    <Search className="text-blue-500" size={24} />
+                                    <h2 className="text-2xl font-black tracking-tight">Interpelacje</h2>
+                                </div>
+                                <div className="grid gap-4">
+                                    {interpellations.map((inter) => (
+                                        <Link to={`/interpelacje/${inter.id}`} key={inter.id} className="group block bg-surface p-6 rounded-2xl border border-border-base hover:border-blue-500/30 transition-all">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="px-2 py-1 bg-blue-500/10 text-blue-600 text-[10px] font-black uppercase tracking-wider rounded-md">
+                                                            {inter.ux_category || 'Interpelacja'}
+                                                        </span>
+                                                        <span className="flex items-center gap-1 text-xs text-secondary font-mono">
+                                                            <Calendar size={12} />
+                                                            {inter.date}
+                                                        </span>
+                                                    </div>
+                                                    <h3 className="text-lg font-bold group-hover:text-blue-500 transition-colors line-clamp-2">
+                                                        {inter.title}
+                                                    </h3>
+                                                </div>
+                                                <ChevronRight className="text-border-base group-hover:text-blue-500 transition-colors" />
                                             </div>
                                         </Link>
                                     ))}

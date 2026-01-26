@@ -103,6 +103,7 @@ export function useVoteDetails(id?: string, sitting?: string, votingNumber?: str
             // 4. Process Analysis
             const analysis = aiData ? {
                 summary: aiData.summary,
+                summary_expert: aiData.summary_expert,
                 pros: aiData.pros,
                 cons: aiData.cons,
                 procedural_context: aiData.procedural_context

@@ -56,6 +56,7 @@ const Contact = lazy(() => import('./pages/Contact'));
 const HelpPage = lazy(() => import('./pages/HelpPage'));
 const Comparator = lazy(() => import('./pages/Comparator'));
 const SearchPage = lazy(() => import('./pages/SearchPage'));
+const SemanticSearch = lazy(() => import('./pages/SemanticSearch'));
 const LiveAnalysis = lazy(() => import('./pages/LiveAnalysis'));
 const Transfery = lazy(() => import('./pages/Transfery'));
 const Rzad = lazy(() => import('./pages/Rzad'));
@@ -118,6 +119,7 @@ export default function App() {
                   <Route path="/pomoc" element={<HelpPage />} />
                   <Route path="/porownywarka" element={<Comparator />} />
                   <Route path="/szukaj" element={<SearchPage />} />
+                  <Route path="/szukaj-ai" element={<SemanticSearch />} />
                   <Route path="/live" element={<LiveAnalysis />} />
                   <Route path="/transfery" element={<Transfery />} />
                   <Route path="/rzad" element={<Rzad />} />

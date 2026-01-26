@@ -16,9 +16,9 @@ class EmbeddingService:
     
     def __init__(self):
         self._model = None
-        self._enabled = True
+        self._enabled = False # Disabled by default for low-resource environments (User request)
         self._lock = threading.Lock()  # Thread safety for lazy loading
-        logger.info("EmbeddingService initialized (model lazy-loading enabled)")
+        logger.info("EmbeddingService initialized (disabled by default)")
 
     def _load_model(self):
         """Internal method to load the model only when needed. Thread-safe."""

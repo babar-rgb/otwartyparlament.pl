@@ -5,7 +5,7 @@ export default function Metodologia() {
     const sections = [
         {
             id: 'weryfikacja',
-            title: 'Skąd bierzemy i jak sprawdzamy dane',
+            title: 'Skąd biorę i jak sprawdzam dane',
             icon: <ShieldCheck className="w-6 h-6" />,
             description: 'Oficjalne źródła i automatyczna kontrola',
             details: [
@@ -25,33 +25,33 @@ export default function Metodologia() {
         },
         {
             id: 'routing',
-            title: 'Jak łączymy fakty',
+            title: 'Jak łączę fakty',
             icon: <Link2 className="w-6 h-6" />,
             description: 'Logika łączenia ustaw, głosowań i posłów',
             details: [
                 {
                     label: 'Dobre dopasowanie',
-                    content: 'Ustawy i głosowania łączymy za pomocą ich unikalnych numerów id, a nie tylko po tytule. To wyklucza pomyłki, gdy dwa projekty mają bardzo podobne nazwy.'
+                    content: 'Ustawy i głosowania łączę za pomocą ich unikalnych numerów id, a nie tylko po tytule. To wyklucza pomyłki, gdy dwa projekty mają bardzo podobne nazwy.'
                 },
                 {
                     label: 'Kto jest kim',
-                    content: 'Każdy poseł ma swój profil, do którego przypisujemy jego głosowania i projekty. Sprawdzamy, czy w danym momencie poseł faktycznie brał udział w pracach danej komisji, by uniknąć błędnych powiązań.'
+                    content: 'Każdy poseł ma swój profil, do którego przypisuję jego głosowania i projekty. Sprawdzam, czy w danym momencie poseł faktycznie brał udział w pracach danej komisji, by uniknąć błędnych powiązań.'
                 }
             ]
         },
         {
             id: 'statystyki',
-            title: 'Jak liczymy statystyki',
+            title: 'Jak liczę statystyki',
             icon: <BarChart3 className="w-6 h-6" />,
             description: 'Zasady liczenia frekwencji i "rebelii"',
             details: [
                 {
                     label: 'Frekwencja',
-                    content: 'Liczymy po prostu: w ilu głosowaniach poseł wziął udział, a ile opuścił. Jeśli poseł był usprawiedliwiony (np. choroba), zaznaczamy to zgodnie z oficjalnym komunikatem Sejmu.'
+                    content: 'Liczę po prostu: w ilu głosowaniach poseł wziął udział, a ile opuścił. Jeśli poseł był usprawiedliwiony (np. choroba), zaznaczamy to zgodnie z oficjalnym komunikatem Sejmu.'
                 },
                 {
                     label: 'Głosowanie pod prąd',
-                    content: 'Sprawdzamy, jak głosowała większość członków danej partii. Jeśli poseł zagłosował inaczej niż reszta jego kolegów i koleżanek z klubu, system odnotowuje to jako głos "pod prąd" (tzw. rebelia).'
+                    content: 'Sprawdzam, jak głosowała większość członków danej partii. Jeśli poseł zagłosował inaczej niż reszta jego kolegów i koleżanek z klubu, system odnotowuje to jako głos "pod prąd" (tzw. rebelia).'
                 }
             ]
         },
@@ -59,7 +59,7 @@ export default function Metodologia() {
             id: 'ai-logic',
             title: 'Algorytmy i Bliźniak Ideowy',
             icon: <Cpu className="w-6 h-6" />,
-            description: 'Jak szukamy posłów o podobnych poglądach?',
+            description: 'Jak szukam posłów o podobnych poglądach?',
             details: [
                 {
                     label: 'Bliźniak Ideowy',
@@ -75,7 +75,7 @@ export default function Metodologia() {
             id: 'majatek',
             title: 'Pieniądze i oświadczenia (OCR)',
             icon: <Wallet className="w-6 h-6" />,
-            description: 'Skąd wiemy, ile majątku mają posłowie?',
+            description: 'Skąd wiem, ile majątku mają posłowie?',
             details: [
                 {
                     label: 'Czytanie skanów',
@@ -83,7 +83,7 @@ export default function Metodologia() {
                 },
                 {
                     label: 'Sprawdzanie błędów',
-                    content: 'System automatycznie flaguje dziwne sytuacje – np. gdy suma składników majątku nagle drastycznie się zmienia. Takie przypadki sprawdzamy dodatkowo ręcznie, by uniknąć pomyłek w bazie.'
+                    content: 'System automatycznie flaguje dziwne sytuacje – np. gdy suma składników majątku nagle drastycznie się zmienia. Takie przypadki sprawdzam dodatkowo ręcznie, by uniknąć pomyłek w bazie.'
                 }
             ]
         },
@@ -115,7 +115,7 @@ export default function Metodologia() {
             details: [
                 {
                     label: 'Zgłoś błąd',
-                    content: 'Każdy może się pomylić. Jeśli widzisz, że coś się nie zgadza, możesz to łatwo zgłosić. Sprawdzimy to z oficjalnym Dziennikiem Ustaw i poprawimy, jeśli faktycznie jest błąd.'
+                    content: 'Każdy może się pomylić. Jeśli widzisz, że coś się nie zgadza, możesz to łatwo zgłosić. Sprawdzę to z oficjalnym Dziennikiem Ustaw i poprawię, jeśli faktycznie jest błąd.'
                 },
                 {
                     label: 'Otwarty kod',
@@ -140,7 +140,7 @@ export default function Metodologia() {
                         Wersja Metodologii 1.1
                     </div>
                     <h1 className="text-5xl md:text-7xl font-black text-primary mb-8 tracking-tighter leading-tight">
-                        Jak <span className="italic font-serif text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-indigo-500">Działamy.</span>
+                        Jak <span className="italic font-serif text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-indigo-500">Działam.</span>
                     </h1>
                     <p className="text-xl text-secondary max-w-3xl mx-auto leading-relaxed font-medium">
                         Otwarty Parlament to projekt oparty na faktach. Nie interpretuję polityki – pokazuję twarde dane. Poniżej wyjaśniam po ludzku, skąd je biorę i jak dbam o ich rzetelność.
@@ -195,12 +195,12 @@ export default function Metodologia() {
                             <div>
                                 <h4 className="text-lg font-bold text-primary mb-4 italic">Skąd pewność, że poseł brał udział w danej ustawie?</h4>
                                 <p className="text-secondary leading-relaxed font-medium pl-6 border-l border-border-base">
-                                    Łączymy dane z oficjalnego systemu Sejmu. Jeśli poseł jest wymieniony jako autor (wnioskodawca) w druku sejmowym, to trafia on na jego profil. Obok każdego projektu znajdziesz link do oryginalnego PDF-a z Sejmu – możesz to sprawdzić samemu w dowolnym momencie.
+                                    Łączę dane z oficjalnego systemu Sejmu. Jeśli poseł jest wymieniony jako autor (wnioskodawca) w druku sejmowym, to trafia on na jego profil. Obok każdego projektu znajdziesz link do oryginalnego PDF-a z Sejmu – możesz to sprawdzić samemu w dowolnym momencie.
                                 </p>
                             </div>
 
                             <div>
-                                <h4 className="text-lg font-bold text-primary mb-4 italic">Jak łączycie różne fakty w jedną całość?</h4>
+                                <h4 className="text-lg font-bold text-primary mb-4 italic">Jak łączę różne fakty w jedną całość?</h4>
                                 <p className="text-secondary leading-relaxed font-medium pl-6 border-l border-border-base">
                                     Każde głosowanie, wystąpienie czy interpelacja ma swój unikalny numer w systemie sejmowym. Algorytmy dbają o to, by przypisać te działania do właściwej osoby i właściwego projektu ustawy. Co noc uruchamiam testy, które sprawdzają, czy wszystkie te "puzzle" do siebie pasują.
                                 </p>

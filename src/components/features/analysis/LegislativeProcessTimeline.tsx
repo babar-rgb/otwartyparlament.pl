@@ -2,16 +2,17 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
+import { Link } from 'react-router-dom';
 import {
     FileText,
-    MessageSquare,
     ArrowRightCircle,
     CheckCircle2,
     XCircle,
     ShieldCheck,
     Scale,
     Gavel,
-    History
+    History,
+    Layers
 } from 'lucide-react';
 
 interface Stage {
@@ -33,15 +34,19 @@ interface LegislativeProcessTimelineProps {
 const getStageIcon = (type: string) => {
     switch (type.toUpperCase()) {
         case 'SUBMISSION': return <FileText size={18} />;
-        case 'READING_1':
-        case 'READING_2':
-        case 'READING_3': return <MessageSquare size={18} />;
+        case 'READING_1': return <div className="text-[10px] font-black">I</div>;
+        case 'READING_2': return <div className="text-[10px] font-black">II</div>;
+        case 'READING_3': return <div className="text-[10px] font-black">III</div>;
+        case 'COMMISSION':
+        case 'COMMITTEE': return <Layers size={18} />;
         case 'SENATE': return <ArrowRightCircle size={18} />;
         case 'VOTE': return <Gavel size={18} />;
-        case 'SIGNATURE': return <ShieldCheck size={18} />;
+        case 'SIGNATURE':
+        case 'PRESIDENT': return <ShieldCheck size={18} />;
         case 'BILLS_AMENDED': return <Scale size={18} />;
         case 'REJECTED': return <XCircle size={18} />;
-        case 'SIGNED': return <CheckCircle2 size={18} />;
+        case 'SIGNED':
+        case 'PUBLISHED': return <CheckCircle2 size={18} />;
         default: return <History size={18} />;
     }
 };
@@ -113,10 +118,16 @@ const LegislativeProcessTimeline: React.FC<LegislativeProcessTimelineProps> = ({
                                         </div>
                                     </div>
                                     {stage.bill_number && (
-                                        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-[10px] font-mono text-secondary group-hover:text-primary transition-colors">
+                                        <a
+                                            href={`https://www.sejm.gov.pl/Sejm10.nsf/druk.xsp?nr=${stage.bill_number}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-[10px] font-mono text-secondary hover:text-accent-blue hover:bg-accent-blue/10 hover:border-accent-blue/30 transition-all z-20 relative"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
                                             <FileText size={10} />
                                             DRUK {stage.bill_number}
-                                        </div>
+                                        </a>
                                     )}
                                 </div>
 
@@ -125,19 +136,31 @@ const LegislativeProcessTimeline: React.FC<LegislativeProcessTimelineProps> = ({
                                 </h4>
 
                                 {stage.description && (
-                                    <p className={`text-sm leading-relaxed ${isPast ? 'text-secondary/60' : 'text-secondary/90'}`}>
+                                    <p className={`text-sm leading-relaxed mt-2 ${isPast ? 'text-secondary/60' : 'text-secondary/90'}`}>
                                         {stage.description}
                                     </p>
                                 )}
 
-                                {highlight && (
-                                    <div className="mt-4 flex items-center gap-2">
-                                        <div className="h-2 w-2 rounded-full bg-indigo-500 animate-ping" />
-                                        <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">
-                                            {currentVoteId ? 'Obecny Etap' : 'OSTATNI STATUS'}
-                                        </span>
-                                    </div>
-                                )}
+                                <div className="mt-4 flex flex-wrap gap-4 items-center">
+                                    {stage.vote_id && (
+                                        <Link
+                                            to={`/glosowanie/${stage.vote_id}`}
+                                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-lg border border-indigo-500/20 text-[10px] font-black uppercase tracking-wider transition-all"
+                                        >
+                                            <Gavel size={12} />
+                                            Zobacz Głosowanie
+                                        </Link>
+                                    )}
+
+                                    {highlight && (
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-2 w-2 rounded-full bg-indigo-500 animate-ping" />
+                                            <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">
+                                                {currentVoteId ? 'Obecny Etap' : 'OSTATNI STATUS'}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </motion.div>
                     );

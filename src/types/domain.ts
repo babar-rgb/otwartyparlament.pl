@@ -72,6 +72,10 @@ export interface Vote {
     street_title?: string;
     meta_description?: string;
     seo_keywords?: string[];
+
+    // AI Enrichment (Stage 11)
+    ai_summary?: string;
+    ai_tags?: string[];
 }
 
 export interface Speech {
@@ -101,6 +105,8 @@ export interface SejmPrint {
     cons?: string[];
     justification_text?: string;
     document_type?: string;
+    type?: string;
+    term?: number;
 }
 
 
@@ -150,6 +156,7 @@ export interface Interpellation {
         mp?: MP;
         first_name?: string;
         last_name?: string;
+        photo_url?: string;
     }>;
 }
 
@@ -171,6 +178,7 @@ export interface VoteHistoryItem {
 export interface VoteAnalysis {
     vote_id: number;
     summary: string;
+    summary_expert?: string;
     pros: string[];
     cons: string[];
     procedural_context?: string;
@@ -195,7 +203,7 @@ export interface MPRelation {
     mp_target?: MP;
 }
 
-export type SearchResultType = 'mp' | 'vote' | 'process' | 'speech';
+export type SearchResultType = 'mp' | 'vote' | 'process' | 'speech' | 'interpellation';
 
 export interface SearchResult {
     type: SearchResultType;
@@ -212,6 +220,8 @@ export interface SearchResult {
     ux_category?: string;
     sitting?: number;
     voting_number?: number;
+    ai_summary?: string;
+    ai_tags?: string[];
 
     // Speech specific
     content_preview?: string;

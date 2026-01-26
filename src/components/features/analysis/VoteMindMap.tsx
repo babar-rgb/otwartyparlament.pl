@@ -4,6 +4,7 @@ import { ThumbsUp, ThumbsDown, AlignLeft, ChevronRight, X, Maximize2 } from 'luc
 
 interface VoteMindMapProps {
     summary: string;
+    summary_expert?: string;
     pros: string[];
     cons: string[];
     title: string;
@@ -13,7 +14,7 @@ interface VoteMindMapProps {
 
 import LegislativeMetro from './LegislativeMetro';
 
-export default function VoteMindMap({ summary, pros, cons, title, voteId, procedural_context }: VoteMindMapProps) {
+export default function VoteMindMap({ summary, summary_expert, pros, cons, title, voteId, procedural_context }: VoteMindMapProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // Phase 3: Parse Procedural Context
@@ -102,7 +103,7 @@ export default function VoteMindMap({ summary, pros, cons, title, voteId, proced
                                     className="mt-6 flex items-center gap-2 px-5 py-3 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 transition-all font-bold text-sm uppercase tracking-wider group w-fit"
                                 >
                                     <Maximize2 size={16} />
-                                    Czytaj pełną analizę
+                                    {summary_expert ? 'Czytaj pełną analizę ekspertów' : 'Czytaj pełną analizę'}
                                     <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                 </button>
                             )}
@@ -227,7 +228,7 @@ export default function VoteMindMap({ summary, pros, cons, title, voteId, proced
                                 <div className="overflow-y-auto p-6 md:p-10">
                                     <div className="prose dark:prose-invert max-w-none">
                                         <p className="text-primary text-lg md:text-xl leading-relaxed whitespace-pre-wrap">
-                                            {summary}
+                                            {summary_expert || summary}
                                         </p>
                                     </div>
                                 </div>

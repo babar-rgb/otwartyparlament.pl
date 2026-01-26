@@ -1,70 +1,16 @@
 import { useParams, Link } from 'react-router-dom';
 import {
     ArrowLeft, Calendar, FileText, Download,
-    CheckCircle2, Circle, Clock, AlertTriangle,
+    CheckCircle2, Clock, AlertTriangle,
     Share2, Bookmark, Zap
 } from 'lucide-react';
 import SEO from '../components/SEO';
 import { useLegislativeProcessDetails } from '../hooks/useLegislativeProcessDetails';
+import LegislativeProcessTimeline from '../components/features/analysis/LegislativeProcessTimeline';
 
 
-const LegislativeTimeline = ({ status }: { status: string }) => {
-    // Simplified mapping of status to progress steps
-    const steps = [
-        { id: 'submitted', label: 'Wpłynął', keywords: ['wpłynął', 'wniesiony'] },
-        { id: '1st_reading', label: 'I Czytanie', keywords: ['pierwsze czytanie', 'skierowany do'] },
-        { id: 'committee', label: 'Prace Komisji', keywords: ['komisjach', 'prace', 'sprawozdanie'] },
-        { id: 'voting', label: 'Głosowanie', keywords: ['uchwalono', 'odrzucono', 'przyjęto'] },
-        { id: 'president', label: 'Prezydent', keywords: ['podpis', 'publikacja'] },
-    ];
+// Local LegislativeTimeline simplified regex version is removed in favor of the shared component
 
-    // Determine current index based on status string matching
-    const getCurrentStepIndex = () => {
-        const s = status.toLowerCase();
-        // Reverse check to find the furthest matching step
-        for (let i = steps.length - 1; i >= 0; i--) {
-            if (steps[i].keywords.some(k => s.includes(k))) return i;
-        }
-        return 0; // Default to first step
-    };
-
-    const currentIndex = getCurrentStepIndex();
-
-    return (
-        <div className="w-full py-8">
-            <div className="relative flex items-center justify-between">
-                {/* Connecting Line */}
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-border-base -z-10" />
-                <div
-                    className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-accent-blue transition-all duration-1000 -z-10"
-                    style={{ width: `${(currentIndex / (steps.length - 1)) * 100}%` }}
-                />
-
-                {steps.map((step, idx) => {
-                    const isCompleted = idx <= currentIndex;
-                    const isCurrent = idx === currentIndex;
-
-                    return (
-                        <div key={step.id} className="flex flex-col items-center gap-3 bg-page px-2">
-                            <div
-                                className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-500
-                                ${isCompleted
-                                        ? 'bg-accent-blue border-accent-blue text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]'
-                                        : 'bg-surface border-secondary/30 text-secondary/30'
-                                    }`}
-                            >
-                                {isCompleted ? <CheckCircle2 size={16} /> : <Circle size={12} />}
-                            </div>
-                            <span className={`text-[10px] font-bold uppercase tracking-widest transition-colors duration-300 ${isCurrent ? 'text-accent-blue' : 'text-secondary/60'}`}>
-                                {step.label}
-                            </span>
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
-};
 
 export default function ProjectDetails() {
     const { id } = useParams<{ id: string }>();
@@ -141,9 +87,14 @@ export default function ProjectDetails() {
 
                     {/* Project Badge Header */}
                     <div className="flex flex-wrap items-center gap-3 mb-8">
-                        <span className="px-4 py-1.5 rounded-full bg-accent-blue/10 text-accent-blue border border-accent-blue/20 text-[11px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+                        <a
+                            href={`https://www.sejm.gov.pl/Sejm${project.term || 10}.nsf/druk.xsp?nr=${project.number}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-4 py-1.5 rounded-full bg-accent-blue/10 text-accent-blue border border-accent-blue/20 text-[11px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:bg-accent-blue/20 transition-colors"
+                        >
                             Druk nr {project.number}
-                        </span>
+                        </a>
                         <span className="px-4 py-1.5 rounded-full bg-surface text-secondary border border-border-base text-[11px] font-bold uppercase tracking-widest">
                             {project.type}
                         </span>
@@ -161,9 +112,10 @@ export default function ProjectDetails() {
                     {/* Timeline */}
                     <div className="mb-16 p-8 rounded-[2rem] bg-surface/50 border border-border-base backdrop-blur-sm">
                         <h3 className="text-xs font-black text-secondary uppercase tracking-[0.2em] mb-6 flex items-center gap-2 opacity-70">
-                            <Clock size={14} /> Status Legislacyjny
+                            <Clock size={14} /> Przebieg Legislacyjny
                         </h3>
-                        <LegislativeTimeline status={project.status} />
+                        <LegislativeProcessTimeline stages={project.stages || []} variant="full" />
+
                     </div>
 
                     {/* AI Analysis Grid */}

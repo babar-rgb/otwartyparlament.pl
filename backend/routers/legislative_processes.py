@@ -12,12 +12,18 @@ def read_processes(
     skip: int = 0,
     limit: int = 20,
     status: Optional[str] = None, # 'IN_PROGRESS', 'COMPLETED'
+    type: Optional[str] = None,
     db: Session = Depends(database.get_db)
 ):
     query = db.query(models.LegislativeProcess)
     
     if status:
         query = query.filter(models.LegislativeProcess.status == status)
+        
+    if type:
+        # Join with Bill to filter by source type (e.g. 'Rządowy', 'Poselski')
+        query = query.join(models.Bill, models.Bill.process_id == models.LegislativeProcess.id)
+        query = query.filter(models.Bill.type == type)
         
     # Default sort: Most recent start_date
     query = query.order_by(desc(models.LegislativeProcess.start_date))
@@ -66,8 +72,41 @@ def count_processes(
 @router.get("/{process_id}")
 def read_process_details(process_id: str, db: Session = Depends(database.get_db)):
     process = db.query(models.LegislativeProcess).filter(models.LegislativeProcess.id == process_id).first()
+    
     if not process:
-         raise HTTPException(status_code=404, detail="Process not found")
+        # Fallback: Check if it's a Bill ID (RPS or PK)
+        bill = db.query(models.Bill).filter(models.Bill.process_id == process_id).first()
+        if not bill and process_id.isdigit():
+            bill = db.query(models.Bill).filter(models.Bill.id == int(process_id)).first()
+            
+        if not bill:
+            raise HTTPException(status_code=404, detail="Process or Bill not found")
+            
+        # Return a Bill-compatible format that the frontend can partially render
+        return {
+            "id": bill.process_id or str(bill.id),
+            "title": bill.title,
+            "status": "W toku", # Generic
+            "start_date": bill.date.isoformat() if bill.date else None,
+            "stages": [
+                {
+                    "id": 0,
+                    "stage_type": "Druk",
+                    "title": f"Druk nr {bill.number}",
+                    "description": bill.title,
+                    "date": bill.date.isoformat() if bill.date else None,
+                    "bill_number": bill.number
+                }
+            ],
+            "ai_analysis": {
+                "summary": bill.analysis.summary if bill.analysis else None,
+                "pros": bill.analysis.pros if bill.analysis else [],
+                "cons": bill.analysis.cons if bill.analysis else [],
+                "impact": bill.analysis.impact if bill.analysis else None,
+                "importance": bill.analysis.importance if bill.analysis else 5
+            } if bill.analysis else None,
+            "graph": {"nodes": [], "edges": []}
+        }
     
     # Return full object with stages sorted
     process.stages.sort(key=lambda x: x.date if x.date else "1900-01-01")
@@ -123,10 +162,29 @@ def read_process_details(process_id: str, db: Session = Depends(database.get_db)
                 "vote_id": s.vote_id
             })
 
+    # Fetch associated Bill to get content, analysis, number, etc.
+    bill = db.query(models.Bill).filter(models.Bill.process_id == process.id).first()
+    
+    analysis_data = None
+    if bill and bill.analysis:
+        analysis_data = {
+            "summary": bill.analysis.summary,
+            "pros": bill.analysis.pros,
+            "cons": bill.analysis.cons,
+            "impact": bill.analysis.impact,
+            "importance": bill.analysis.importance
+        }
+
     return {
         "id": process.id,
-        "title": process.title,
+        "title": bill.title if bill else process.title, # Bill title is often cleaner/more complete
         "status": process.status,
+        "type": bill.type if bill else None,
+        "number": bill.number if bill else None,
+        "term": bill.term if bill else process.term,
+        "url": bill.url if bill else None,
+        "content": bill.content if bill else None,
+        "ai_analysis": analysis_data,
         "start_date": process.start_date.isoformat() if process.start_date else None,
         "stages": stages_serialized,
         "graph": {

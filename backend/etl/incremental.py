@@ -45,13 +45,17 @@ except ImportError:
         from committees import CommitteesETL
         from declarations import DeclarationsETL
         from interpellations import InterpellationsETL
-        from speeches import SpeechesETL
-        from pdf_extractor import PDFReplyExtractor
+        from speeches import SpeechesETL as _SpeechesETL
+        from pdf_extractor import PDFReplyExtractor as _PDFReplyExtractor
         from bills_linker import BillVoteLinker
         from summarize_sitting import SittingSummarizer
         from socials import SocialsETL
         from europarl import EuroparlETL
         from stats import calculate_stats
+
+        # Re-assign to global names
+        SpeechesETL = _SpeechesETL
+        PDFReplyExtractor = _PDFReplyExtractor
 
 logger = get_logger("etl.incremental")
 

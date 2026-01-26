@@ -65,15 +65,22 @@ export const PRINT_CATEGORIES = {
     'projekt uchwały': { color: 'bg-pink-500/10 text-pink-400 border-pink-500/20', label: 'PROJEKT UCHWAŁY' },
     'ustawa budżetowa': { color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', label: 'USTAWA BUDŻETOWA' },
     'dokument / inny': { color: 'bg-slate-500/10 text-slate-400 border-slate-500/20', label: 'DOKUMENT / INNY' },
+    // Source mappings (lowercase for matching)
+    'rządowy': { color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', label: 'RZĄDOWY' },
+    'poselski': { color: 'bg-blue-500/10 text-blue-400 border-blue-500/20', label: 'POSELSKI' },
+    'obywatelski': { color: 'bg-orange-500/10 text-orange-400 border-orange-500/20', label: 'OBYWATELSKI' },
+    'senacki': { color: 'bg-purple-500/10 text-purple-400 border-purple-500/20', label: 'SENACKI' },
+    'komisyjny': { color: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20', label: 'KOMISYJNY' },
+    'prezydencki': { color: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20', label: 'PREZYDENCKI' },
 };
 
 export const DEFAULT_PRINT_STYLE = { color: 'bg-slate-500/10 text-slate-400 border-slate-500/20', label: 'DOKUMENT' };
 
 export const PRINT_SOURCE_FILTERS = [
     { label: 'Wszystkie', value: null },
-    { label: 'Rządowe', value: 'rządowy' },
-    { label: 'Poselskie', value: 'poselski' },
-    { label: 'Obywatelskie', value: 'obywatelski' },
-    { label: 'Senackie', value: 'senacki' },
+    { label: 'Rządowe', value: 'Rządowy' },
+    { label: 'Poselskie', value: 'Poselski' },
+    { label: 'Obywatelskie', value: 'Obywatelski' },
+    { label: 'Senackie', value: 'Senacki' },
 ];
 

@@ -1,177 +1,196 @@
-import { useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { TrendingUp, Home, DollarSign, ArrowRight } from 'lucide-react';
-import Badge from '../components/ui/Badge';
-import { useWealthRankings } from '../hooks/useWealthRankings';
+import { TrendingUp, Home, Car, Coins, Building2, ArrowUpDown } from 'lucide-react';
+
+interface MPWealth {
+    mp_id: number;
+    first_name: string;
+    last_name: string;
+    club: string;
+    photo_url: string;
+    income: number;
+    savings: number;
+    real_estate_count: number;
+    vehicles_count: number;
+    net_worth: number;
+    year: string;
+}
 
 export default function WealthRankings() {
-    const { data: rankings = [], isLoading: loading } = useWealthRankings();
+    const [rankings, setRankings] = useState<MPWealth[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [sortBy, setSortBy] = useState<'income' | 'net_worth' | 'savings'>('net_worth');
 
-    const topSavings = useMemo(() => [...rankings].sort((a, b) => b.savings - a.savings).slice(0, 10), [rankings]);
-    const topIncome = useMemo(() => [...rankings].sort((a, b) => b.income - a.income).slice(0, 10), [rankings]);
-    const topProperties = useMemo(() => [...rankings].sort((a, b) => b.properties_count - a.properties_count).slice(0, 10), [rankings]);
+    useEffect(() => {
+        fetch('/api/wealth-rankings')
+            .then(res => res.json())
+            .then(data => {
+                setRankings(data);
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error('Failed to load wealth rankings:', err);
+                setLoading(false);
+            });
+    }, []);
 
+    const sortedRankings = [...rankings].sort((a, b) => b[sortBy] - a[sortBy]);
+
+    const getPartyBadge = (party: string) => {
+        const p = party?.toUpperCase() || '';
+        if (p.includes('KONFEDERACJA')) return 'bg-slate-900 text-white border border-slate-700';
+        if (p.includes('KO')) return 'bg-orange-500/10 text-orange-600 border border-orange-500/20';
+        if (p.includes('PIS')) return 'bg-blue-600/10 text-blue-700 border border-blue-600/20';
+        if (p.includes('PL2050')) return 'bg-yellow-500/10 text-yellow-700 border border-yellow-500/20';
+        if (p.includes('LEWICA')) return 'bg-rose-500/10 text-rose-600 border border-rose-500/20';
+        if (p.includes('PSL')) return 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20';
+        return 'bg-surface text-secondary border border-border-base';
+    };
+
+    const formatCurrency = (amount: number) => {
+        if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
+        if (amount >= 1000) return `${(amount / 1000).toFixed(0)}K`;
+        return amount.toString();
+    };
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-page text-primary flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-accent-blue/20 border-t-accent-blue rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-secondary">Analizowanie oświadczeń majątkowych...</p>
+            <div className="flex flex-col items-center justify-center min-h-screen bg-page gap-6">
+                <div className="relative">
+                    <div className="w-16 h-16 border-4 border-border-base rounded-full"></div>
+                    <div className="absolute top-0 left-0 w-16 h-16 border-4 border-t-emerald-500 rounded-full animate-spin"></div>
                 </div>
+                <p className="text-xs font-black uppercase tracking-[0.4em] text-secondary">Ładowanie Danych Majątkowych</p>
             </div>
         );
     }
 
     return (
         <div className="min-h-screen bg-page dashboard-mesh text-primary pt-32 pb-24 px-4 md:px-8">
-            <div className="max-w-6xl mx-auto space-y-12 animate-fade-in">
-
-                <div className="text-center space-y-4 mb-16">
-                    <h1 className="text-4xl md:text-7xl font-black text-primary tracking-tighter">
-                        Rankingi <span className="italic font-serif text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500">Majątkowe</span>
+            <div className="max-w-7xl mx-auto">
+                {/* Header */}
+                <div className="mb-16">
+                    <h1 className="text-4xl md:text-7xl font-black tracking-tighter mb-6 flex flex-col md:flex-row md:items-baseline gap-4">
+                        Rankingi <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500 italic font-serif">Majątkowe</span>
                     </h1>
-                    <p className="text-xl text-secondary max-w-2xl mx-auto font-medium">
-                        Analiza oświadczeń majątkowych posłów wykonana przez sztuczną inteligencję.
-                    </p>
-                    <p className="text-xs text-secondary/40 font-bold uppercase tracking-widest">
-                        *Dane są szacunkowe i pochodzą z automatycznej analizy dokumentów PDF.
+                    <p className="text-secondary max-w-2xl text-lg font-medium leading-relaxed border-l-2 border-emerald-500/30 pl-8">
+                        Analiza oświadczeń majątkowych posłów wykonana przez sztuczną inteligencję. Dane z automatycznej analizy dokumentów PDF.
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-surface p-8 rounded-[2.5rem] border border-emerald-500/20 shadow-xl shadow-emerald-500/5 transition-all hover:-translate-y-1 hover:border-emerald-500/40">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="p-3 bg-emerald-500/10 rounded-2xl">
-                                <DollarSign size={28} className="text-emerald-600 dark:text-emerald-400" />
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Największe Oszczędności</p>
-                                <p className="text-xl font-black text-primary">{topSavings[0]?.name}</p>
-                            </div>
-                        </div>
-                        <p className="text-3xl md:text-4xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
-                            {topSavings[0]?.savings.toLocaleString()} <span className="text-sm">PLN</span>
-                        </p>
-                    </div>
+                {/* Sort Controls */}
+                <div className="mb-8 flex gap-4 flex-wrap">
+                    <button
+                        onClick={() => setSortBy('net_worth')}
+                        className={`px-6 py-3 rounded-2xl text-sm font-black uppercase tracking-wider transition-all ${sortBy === 'net_worth'
+                                ? 'bg-emerald-500 text-white shadow-lg'
+                                : 'bg-surface border border-border-base text-secondary hover:bg-emerald-500/10'
+                            }`}
+                    >
+                        <ArrowUpDown size={16} className="inline mr-2" />
+                        Majątek Netto
+                    </button>
+                    <button
+                        onClick={() => setSortBy('income')}
+                        className={`px-6 py-3 rounded-2xl text-sm font-black uppercase tracking-wider transition-all ${sortBy === 'income'
+                                ? 'bg-emerald-500 text-white shadow-lg'
+                                : 'bg-surface border border-border-base text-secondary hover:bg-emerald-500/10'
+                            }`}
+                    >
+                        <TrendingUp size={16} className="inline mr-2" />
+                        Dochody
+                    </button>
+                    <button
+                        onClick={() => setSortBy('savings')}
+                        className={`px-6 py-3 rounded-2xl text-sm font-black uppercase tracking-wider transition-all ${sortBy === 'savings'
+                                ? 'bg-emerald-500 text-white shadow-lg'
+                                : 'bg-surface border border-border-base text-secondary hover:bg-emerald-500/10'
+                            }`}
+                    >
+                        <Coins size={16} className="inline mr-2" />
+                        Oszczędności
+                    </button>
+                </div>
 
-                    <div className="bg-surface p-8 rounded-[2.5rem] border border-accent-blue/20 shadow-xl shadow-accent-blue/5 transition-all hover:-translate-y-1 hover:border-accent-blue/40">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="p-3 bg-accent-blue/10 rounded-2xl">
-                                <TrendingUp size={28} className="text-accent-blue" />
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-black text-accent-blue uppercase tracking-widest">Największy Dochód (Rok)</p>
-                                <p className="text-xl font-black text-primary">{topIncome[0]?.name}</p>
-                            </div>
-                        </div>
-                        <p className="text-3xl md:text-4xl font-black text-accent-blue font-mono">
-                            {topIncome[0]?.income.toLocaleString()} <span className="text-sm">PLN</span>
-                        </p>
-                    </div>
+                {/* Rankings List */}
+                <div className="bg-surface rounded-[3rem] border border-border-base shadow-2xl overflow-hidden">
+                    <div className="p-8 md:p-12 space-y-3">
+                        {sortedRankings.map((mp, idx) => (
+                            <Link
+                                key={mp.mp_id}
+                                to={`/poslowie/${mp.mp_id}`}
+                                className="grid grid-cols-12 items-center px-8 py-6 bg-page border border-border-base rounded-2xl hover:bg-emerald-500/5 hover:border-emerald-500/20 hover:shadow-xl transition-all group"
+                            >
+                                {/* Rank */}
+                                <div className="col-span-1">
+                                    <span className={`text-2xl font-black italic ${idx < 3 ? 'text-emerald-500' : 'text-secondary/20'}`}>
+                                        {(idx + 1).toString().padStart(2, '0')}
+                                    </span>
+                                </div>
 
-                    <div className="bg-surface p-8 rounded-[2.5rem] border border-amber-500/20 shadow-xl shadow-amber-500/5 transition-all hover:-translate-y-1 hover:border-amber-500/40">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="p-3 bg-amber-500/10 rounded-2xl">
-                                <Home size={28} className="text-amber-600 dark:text-amber-400" />
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Król Nieruchomości</p>
-                                <p className="text-xl font-black text-primary">{topProperties[0]?.name}</p>
-                            </div>
-                        </div>
-                        <p className="text-3xl md:text-4xl font-black text-amber-600 dark:text-amber-400 font-mono">
-                            {topProperties[0]?.properties_count} <span className="text-sm font-sans font-medium opacity-60">nieruchomości</span>
-                        </p>
+                                {/* MP Info */}
+                                <div className="col-span-6 flex items-center gap-6">
+                                    <img
+                                        src={mp.photo_url || `https://ui-avatars.com/api/?name=${mp.last_name}&background=111126&color=666`}
+                                        alt=""
+                                        className="w-14 h-14 rounded-full object-cover border border-border-base"
+                                    />
+                                    <div>
+                                        <div className="text-xl font-black text-primary group-hover:text-emerald-500 transition-colors flex items-center gap-4">
+                                            <span>{mp.first_name} {mp.last_name}</span>
+                                            <span className={`px-3 py-1 text-[9px] font-black rounded-lg uppercase tracking-widest ${getPartyBadge(mp.club)}`}>
+                                                {mp.club}
+                                            </span>
+                                        </div>
+                                        <div className="text-[10px] text-secondary uppercase tracking-widest mt-1 font-bold">
+                                            Oświadczenie {mp.year}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Stats */}
+                                <div className="col-span-5 grid grid-cols-4 gap-4">
+                                    <div className="flex flex-col items-center">
+                                        <TrendingUp size={16} className="text-emerald-500 mb-1" />
+                                        <span className="text-sm font-mono font-black text-primary">{formatCurrency(mp.income)}</span>
+                                        <span className="text-[8px] text-secondary uppercase tracking-wider">Dochód</span>
+                                    </div>
+                                    <div className="flex flex-col items-center">
+                                        <Coins size={16} className="text-amber-500 mb-1" />
+                                        <span className="text-sm font-mono font-black text-primary">{formatCurrency(mp.savings)}</span>
+                                        <span className="text-[8px] text-secondary uppercase tracking-wider">Oszczęd.</span>
+                                    </div>
+                                    <div className="flex flex-col items-center">
+                                        <Home size={16} className="text-blue-500 mb-1" />
+                                        <span className="text-sm font-mono font-black text-primary">{mp.real_estate_count}</span>
+                                        <span className="text-[8px] text-secondary uppercase tracking-wider">Nierucho.</span>
+                                    </div>
+                                    <div className="flex flex-col items-center">
+                                        <Car size={16} className="text-rose-500 mb-1" />
+                                        <span className="text-sm font-mono font-black text-primary">{mp.vehicles_count}</span>
+                                        <span className="text-[8px] text-secondary uppercase tracking-wider">Pojazdy</span>
+                                    </div>
+                                </div>
+                            </Link>
+                        ))}
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-                    <div className="bg-surface rounded-[2.5rem] border border-border-base overflow-hidden shadow-xl hover:border-accent-blue/20 transition-colors">
-                        <div className="p-8 border-b border-border-base flex items-center gap-4 bg-page/30">
-                            <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                                <DollarSign size={24} />
-                            </div>
-                            <h2 className="text-2xl font-black text-primary tracking-tight">Top 10: Oszczędności</h2>
-                        </div>
-                        <div className="divide-y divide-border-base/50">
-                            {topSavings.map((mp, idx) => (
-                                <Link
-                                    to={`/poslowie/${mp.mp_id}`}
-                                    key={mp.mp_id}
-                                    className="flex items-center gap-6 p-6 hover:bg-emerald-500/[0.02] dark:hover:bg-emerald-500/[0.05] transition-colors group"
-                                >
-                                    <div className="font-black text-secondary/20 w-8 text-center text-2xl group-hover:text-emerald-500 transition-colors italic">
-                                        {(idx + 1).toString().padStart(2, '0')}
-                                    </div>
-                                    <img
-                                        src={mp.photo_url}
-                                        alt={mp.name}
-                                        className="w-14 h-14 rounded-full object-cover border-2 border-border-base group-hover:border-emerald-500/50 transition-colors"
-                                    />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xl font-black text-primary group-hover:text-emerald-600 transition-colors truncate">{mp.name}</p>
-                                        <div className="mt-1">
-                                            <Badge variant="party" party={mp.party} size="xs">
-                                                {mp.party}
-                                            </Badge>
-                                        </div>
-                                    </div>
-                                    <div className="text-right shrink-0">
-                                        <p className="text-xl font-mono font-black text-primary">
-                                            {Math.round(mp.savings).toLocaleString()} <span className="text-[10px] text-secondary">PLN</span>
-                                        </p>
-                                    </div>
-                                    <ArrowRight size={18} className="text-secondary/20 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all shrink-0" />
-                                </Link>
-                            ))}
+                {/* Disclaimer */}
+                <div className="mt-12 p-8 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
+                    <div className="flex gap-4">
+                        <Building2 className="text-amber-500 shrink-0" size={24} />
+                        <div>
+                            <h3 className="font-black text-primary mb-2">Nota Metodologiczna</h3>
+                            <p className="text-sm text-secondary leading-relaxed">
+                                Dane wyekstrahowane automatycznie z oświadczeń majątkowych przy użyciu Gemini AI.
+                                Mogą zawierać błędy wynikające z jakości skanów PDF lub niejednoznaczności w dokumentach.
+                                Zawsze weryfikuj z oryginalnymi oświadczeniami na stronie Sejmu.
+                            </p>
                         </div>
                     </div>
-
-                    <div className="bg-surface rounded-[2.5rem] border border-border-base overflow-hidden shadow-xl hover:border-accent-blue/20 transition-colors">
-                        <div className="p-8 border-b border-border-base flex items-center gap-4 bg-page/30">
-                            <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-600 dark:text-amber-400">
-                                <Home size={24} />
-                            </div>
-                            <h2 className="text-2xl font-black text-primary tracking-tight">Top 10: Nieruchomości</h2>
-                        </div>
-                        <div className="divide-y divide-border-base/50">
-                            {topProperties.map((mp, idx) => (
-                                <Link
-                                    to={`/poslowie/${mp.mp_id}`}
-                                    key={mp.mp_id}
-                                    className="flex items-center gap-6 p-6 hover:bg-white/[0.02] border-l-4 border-l-transparent hover:border-l-emerald-500 transition-all group"
-                                >
-                                    <div className="font-black text-secondary/20 w-8 text-center text-2xl group-hover:text-amber-500 transition-colors italic">
-                                        {(idx + 1).toString().padStart(2, '0')}
-                                    </div>
-                                    <img
-                                        src={mp.photo_url}
-                                        alt={mp.name}
-                                        className="w-14 h-14 rounded-full object-cover border-2 border-border-base group-hover:border-amber-500/50 transition-colors"
-                                    />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xl font-black text-primary group-hover:text-amber-600 transition-colors truncate">{mp.name}</p>
-                                        <div className="mt-1">
-                                            <Badge variant="party" party={mp.party} size="xs">
-                                                {mp.party}
-                                            </Badge>
-                                        </div>
-                                    </div>
-                                    <div className="text-right shrink-0">
-                                        <p className="text-xl font-mono font-black text-primary">{mp.properties_count}</p>
-                                        <p className="text-[10px] text-secondary font-black uppercase tracking-widest">pozycji</p>
-                                    </div>
-                                    <ArrowRight size={18} className="text-secondary/20 group-hover:text-amber-500 group-hover:translate-x-1 transition-all shrink-0" />
-                                </Link>
-                            ))}
-                        </div>
-                    </div>
-
                 </div>
             </div>
         </div>
     );
 }
-

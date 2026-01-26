@@ -439,6 +439,17 @@ const VotesList = () => {
                                                                     }`}>
                                                                     {vote.topic || 'Inne'}
                                                                 </span>
+
+                                                                {/* AI Tags Preview */}
+                                                                {vote.ai_tags && vote.ai_tags.length > 0 && (
+                                                                    <div className="hidden sm:flex items-center gap-1.5 ml-2">
+                                                                        {vote.ai_tags.slice(0, 2).map((tag: string, idx: number) => (
+                                                                            <span key={idx} className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-blue-500/5 text-blue-500/60 border border-blue-500/10">
+                                                                                {tag}
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>

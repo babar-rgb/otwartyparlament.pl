@@ -1,8 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 from backend import models
 from backend.core import orm_db as database
-from backend.routers import mps, votes, general, processes, alignment, euro, personas, legislative_processes, sitemap
+from backend.routers import (
+    mps, votes, general, processes, alignment, euro, personas, 
+    legislative_processes, sitemap, wealth, semantic_search, recommendations
+)
+
+# Load environment variables
+load_dotenv()
 
 # Create DB tables
 models.Base.metadata.create_all(bind=database.engine)
@@ -21,12 +28,15 @@ app.add_middleware(
 # Include Routers
 app.include_router(mps.router, prefix="/mps", tags=["MPs"])
 app.include_router(votes.router, prefix="/votes", tags=["Votes"])
-app.include_router(processes.router, prefix="/processes", tags=["Processes"]) 
+app.include_router(processes.router, prefix="/processes", tags=["Processes"])
 app.include_router(legislative_processes.router, prefix="/legislative_processes", tags=["Legislative Processes"])
 app.include_router(sitemap.router, tags=["Sitemap"]) # Root level for sitemap.xml
 app.include_router(alignment.router, prefix="/alignment", tags=["Alignment"])
 app.include_router(euro.router, prefix="/euro", tags=["Euro"])
 app.include_router(personas.router, prefix="/personas", tags=["Personas"])
+app.include_router(wealth.router, tags=["Wealth"])
+app.include_router(semantic_search.router, prefix="/api", tags=["Semantic Search"])
+app.include_router(recommendations.router, prefix="/api", tags=["Personalization"])
 app.include_router(general.router, tags=["General"])
 
 @app.get("/")
