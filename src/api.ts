@@ -469,7 +469,7 @@ const mapBackendVote = (data: any): Vote => {
   return {
     id: data.id,
     date: data.date,
-    title: data.title_clean || data.title_raw,
+    title: data.street_title || data.title_clean || data.title_raw,
     title_clean: data.title_clean,
     title_raw: data.title_raw,
     description: data.description,
@@ -487,6 +487,11 @@ const mapBackendVote = (data: any): Vote => {
     term: data.term,
     mpVote: data.mp_vote, // Mapped from backend augmented response
     is_procedural: data.is_procedural,
-    parent_vote_id: data.parent_vote_id
+    parent_vote_id: data.parent_vote_id,
+    street_title: data.street_title,
+    ai_summary: data.ai_summary,
+    children: data.children ? data.children.map(mapBackendVote) : undefined,
+    isGroupHeader: !!(data.children && data.children.length > 0)
   } as Vote;
+
 };

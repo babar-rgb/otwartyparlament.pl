@@ -177,6 +177,7 @@ class GeminiService:
         {{{{
             "summary_citizen": "Podsumowanie dla obywatela (MINIMUM 6-8 DŁUGICH, TREŚCIWYCH ZDAŃ). Opisz dokładnie mechanizm zmiany i jej wpływ na życie. Unikaj ogólników.",
             "summary_expert": "Głęboka analiza ekspercka (MINIMUM 25-30 ROZBUDOWANYCH ZDAŃ). Styl analityczny, bogaty w terminologię prawniczą. STRUKTURA: 1. Geneza i kontekst prawny. 2. SZCZEGÓŁOWA LISTA ZMIAN (-). 3. ANALIZA BUDŻETOWA I GOSPODARCZA. 4. SKUTKI DŁUGOFALOWE. MUSI BYĆ BARDZO OBSZERNE.",
+            "street_title": "Krótki, chwytliwy tytuł (max 10 słów, bez numerów druków). Np. 'Wakacje Kredytowe 2024'.",
             "category": "Jedna z: Gospodarka, Zdrowie, Obronność, Edukacja, Ustrój, Inne",
             "importance_score": 1-10,
             "pros": ["Argument ZA 1 (konkretny)", "Argument ZA 2 (konkretny)"],

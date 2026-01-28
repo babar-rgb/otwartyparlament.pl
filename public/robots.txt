@@ -1,4 +1,11 @@
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /szukaj*
+Disallow: /szukaj-ai*
+Disallow: /admin/
+Disallow: /*?*
+Allow: /*?id=*
+Allow: /*?slug=*
 
 Sitemap: https://otwartyparlament.pl/sitemap.xml

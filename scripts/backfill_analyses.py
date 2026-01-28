@@ -23,7 +23,7 @@ if key:
 else:
     logger.error("❌ API Key NOT found in environment after load_dotenv!")
 
-def backfill_analyses(limit=127):
+def backfill_analyses(limit=1000):
     db = SessionLocal()
     gemini = GeminiService()
     
@@ -120,7 +120,7 @@ def backfill_analyses(limit=127):
             # 2. Call Gemini
             analysis_json = gemini.analyze_vote_expert(
                 title=vote.title_clean,
-                description=vote.description or "",
+                description=vote.ai_summary or "",
                 bill_text=bill_context
             )
             
@@ -135,14 +135,16 @@ def backfill_analyses(limit=127):
                 existing_analysis = db.query(VoteAnalysis).filter_by(vote_id=vote.id).first()
                 if existing_analysis:
                     logger.info(f"   ⚠️ Analysis already exists for Vote {vote.id}. Updating...")
-                    existing_analysis.summary = analysis_json.get("summary")
+                    existing_analysis.summary = analysis_json.get("summary_citizen") or analysis_json.get("summary")
+                    existing_analysis.summary_expert = analysis_json.get("summary_expert")
                     existing_analysis.pros = analysis_json.get("pros") or []
                     existing_analysis.cons = analysis_json.get("cons") or []
                     existing_analysis.mind_map = json.dumps(analysis_json.get("personas"), ensure_ascii=False) if analysis_json.get("personas") else None
                 else:
                     analysis = VoteAnalysis(
                         vote_id=vote.id,
-                        summary=analysis_json.get("summary"),
+                        summary=analysis_json.get("summary_citizen") or analysis_json.get("summary"),
+                        summary_expert=analysis_json.get("summary_expert"),
                         pros=analysis_json.get("pros") or [],
                         cons=analysis_json.get("cons") or [],
                         mind_map=json.dumps(analysis_json.get("personas"), ensure_ascii=False) if analysis_json.get("personas") else None
@@ -150,9 +152,14 @@ def backfill_analyses(limit=127):
                     db.add(analysis)
                 
                 # 2. Update Vote Metadata
-                vote.description = analysis_json.get("summary")
+                vote.ai_summary = analysis_json.get("summary_citizen") or analysis_json.get("summary")
                 vote.importance = analysis_json.get("importance_score") or 0
                 vote.topic = analysis_json.get("category")
+                
+                # Update Titles if AI proposed a better one
+                if analysis_json.get("street_title"):
+                    vote.street_title = analysis_json.get("street_title")
+                    vote.title_clean = analysis_json.get("street_title") # Also update clean title for UI consistency
                 
                 # --- LEGISLATIVE NETWORK LINKING (IDENTITY LINKER) ---
                 # This logic groups related bills/votes into a single Process

@@ -76,7 +76,19 @@ export interface Vote {
     // AI Enrichment (Stage 11)
     ai_summary?: string;
     ai_tags?: string[];
+
+    // Grouping
+    parent_vote_id?: number;
+    children?: Vote[];
+    isGroupHeader?: boolean;
 }
+
+export interface GroupedVote extends Vote {
+    children: Vote[];
+    isGroupHeader: boolean;
+}
+
+
 
 export interface Speech {
     id: number;

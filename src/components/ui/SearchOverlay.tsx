@@ -121,6 +121,18 @@ export default function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                             </button>
                         );
                     })}
+
+                    {/* Semantic Search Link */}
+                    <button
+                        onClick={() => {
+                            onClose();
+                            navigate('/szukaj-ai');
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold bg-gradient-to-r from-indigo-500/10 to-purple-500/10 text-indigo-500 hover:text-indigo-400 border border-indigo-500/20 hover:border-indigo-500/50 transition-all ml-auto hover:shadow-[0_0_15px_rgba(99,102,241,0.2)]"
+                    >
+                        <Sparkles className="w-4 h-4" />
+                        Szukaj z AI
+                    </button>
                 </div>
 
                 {/* Smart Suggestions */}

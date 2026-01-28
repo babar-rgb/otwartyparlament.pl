@@ -21,7 +21,7 @@ def show_examples():
         for vote in votes:
             print(f"🗳️  Vote ID: {vote.id}")
             print(f"📌 Title: {vote.title_clean[:80]}...")
-            print(f"📝 AI Description: {vote.description}")
+            print(f"📝 AI Description: {vote.ai_summary}")
             if vote.analysis:
                  print(f"✅ Pros: {vote.analysis.pros}")
                  print(f"⚠️ Cons: {vote.analysis.cons}")

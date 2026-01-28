@@ -251,25 +251,7 @@ const VoteDetails: React.FC = () => {
                         </div>
                     )}
 
-                    {/* AI TL;DR - Stage 11 */}
-                    {vote.ai_summary && (
-                        <div className="mb-8 p-6 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-[2rem] border border-blue-500/20 relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                                <Sparkles size={32} />
-                            </div>
-                            <div className="relative z-10">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
-                                        <Sparkles size={16} />
-                                    </div>
-                                    <span className="text-xs font-black uppercase tracking-[0.2em] text-blue-400">Podsumowanie AI (TL;DR)</span>
-                                </div>
-                                <p className="text-lg font-medium text-primary leading-relaxed">
-                                    {vote.ai_summary}
-                                </p>
-                            </div>
-                        </div>
-                    )}
+
 
                     {/* Vote Result Card */}
                     <div className="bg-surface rounded-3xl p-8 border border-border-base shadow-sm">
