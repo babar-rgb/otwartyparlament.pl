@@ -155,7 +155,7 @@ def search_all(
             cached = db.query(models.QueryEmbedding).filter(models.QueryEmbedding.query == q.lower()).first()
             
             if cached and cached.embedding is not None:
-                query_embedding = cached.embedding
+                query_embedding = list(cached.embedding) if hasattr(cached.embedding, 'tolist') else cached.embedding
                 # Lazy update search count
                 cached.search_count += 1
                 cached.last_searched_at = func.now()

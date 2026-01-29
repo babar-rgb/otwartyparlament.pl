@@ -422,7 +422,7 @@ def generate_vote_analysis(vote_id: int, db: Session = Depends(database.get_db))
 
     # Prepare context
     title = vote.title_clean or vote.title_raw
-    description = vote.description or ""
+    description = vote.meta_description or ""
     bill_content = ""
     
     # Try to find print number in title for extra context

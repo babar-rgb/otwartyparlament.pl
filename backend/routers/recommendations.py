@@ -86,7 +86,7 @@ def get_recommendations(
             "type": "interpellation",
             "id": i.id,
             "title": i.title,
-            "date": i.date.isoformat() if i.date else None,
+            "date": i.sent_date.isoformat() if i.sent_date else None,
             "score": 4,
             "category": "Interpelacja"
         })

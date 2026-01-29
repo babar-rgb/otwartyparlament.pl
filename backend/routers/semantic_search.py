@@ -114,10 +114,10 @@ async def semantic_search(
                     id,
                     title_clean as title,
                     description,
-                    1 - (vector_embedding <=> :embedding::vector) as similarity
+                    1 - (vector_embedding <=> CAST(:embedding AS vector)) as similarity
                 FROM votes
                 WHERE vector_embedding IS NOT NULL
-                ORDER BY vector_embedding <=> :embedding::vector
+                ORDER BY vector_embedding <=> CAST(:embedding AS vector)
                 LIMIT :limit
             """), {"embedding": embedding_str, "limit": limit * 2}).fetchall()  # Get 2x limit
             
@@ -139,10 +139,10 @@ async def semantic_search(
                     id,
                     title,
                     SUBSTRING(content, 1, 200) as description,
-                    1 - (vector_embedding <=> :embedding::vector) as similarity
+                    1 - (vector_embedding <=> CAST(:embedding AS vector)) as similarity
                 FROM bills
                 WHERE vector_embedding IS NOT NULL
-                ORDER BY vector_embedding <=> :embedding::vector
+                ORDER BY vector_embedding <=> CAST(:embedding AS vector)
                 LIMIT :limit
             """), {"embedding": embedding_str, "limit": limit * 2}).fetchall()
             
@@ -164,10 +164,10 @@ async def semantic_search(
                     id,
                     title,
                     SUBSTRING(content, 1, 200) as description,
-                    1 - (vector_embedding <=> :embedding::vector) as similarity
+                    1 - (vector_embedding <=> CAST(:embedding AS vector)) as similarity
                 FROM interpellations
                 WHERE vector_embedding IS NOT NULL
-                ORDER BY vector_embedding <=> :embedding::vector
+                ORDER BY vector_embedding <=> CAST(:embedding AS vector)
                 LIMIT :limit
             """), {"embedding": embedding_str, "limit": limit * 2}).fetchall()
             
@@ -245,11 +245,11 @@ async def find_similar(
             SELECT 
                 id,
                 {'title_clean' if type == 'vote' else 'title'} as title,
-                1 - (vector_embedding <=> :embedding::vector) as similarity
+                1 - (vector_embedding <=> CAST(:embedding AS vector)) as similarity
             FROM {table}
             WHERE id != :id
             AND vector_embedding IS NOT NULL
-            ORDER BY vector_embedding <=> :embedding::vector
+            ORDER BY vector_embedding <=> CAST(:embedding AS vector)
             LIMIT :limit
         """), {"embedding": embedding_str, "id": id, "limit": limit}).fetchall()
         
