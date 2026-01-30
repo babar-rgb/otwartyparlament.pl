@@ -92,6 +92,15 @@ const VoteGroupCard = ({ vote }: VoteGroupCardProps) => {
                     <div className="text-[10px] font-bold uppercase text-secondary tracking-widest mb-2 pl-2">
                         Głosowania Składowe (Poprawki)
                     </div>
+
+                    {/* Final Vote Link */}
+                    <Link
+                        to={`/glosowania/${vote.term}/${vote.sitting}/${vote.voting_number}`}
+                        className="block mb-4 text-center py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs uppercase tracking-widest transition-colors shadow-lg shadow-blue-600/20"
+                    >
+                        Zobacz finałowe głosowanie i szczegóły
+                    </Link>
+
                     {children.map((child: Vote) => (
                         <Link
                             key={child.id}
@@ -116,14 +125,6 @@ const VoteGroupCard = ({ vote }: VoteGroupCardProps) => {
                             </div>
                         </Link>
                     ))}
-
-                    {/* Final Vote Link */}
-                    <Link
-                        to={`/glosowania/${vote.term}/${vote.sitting}/${vote.voting_number}`}
-                        className="block mt-4 text-center py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs uppercase tracking-widest transition-colors shadow-lg shadow-blue-600/20"
-                    >
-                        Zobacz finałowe głosowanie i szczegóły
-                    </Link>
                 </div>
             )}
         </div>

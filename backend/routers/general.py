@@ -187,10 +187,16 @@ def search_all(
                     sem_votes = sem_votes.filter(models.Vote.term == int(period))
                 
                 # Fetch more and filter by threshold
+                # Threshold relaxed from 0.37 to 0.65 based on empirical testing (e.g. 'ciąża' <-> 'in vitro' is ~0.64 distance)
                 sem_votes_raw = sem_votes.order_by('distance').limit(50).all()
                 
                 for v, dist in sem_votes_raw:
-                    if dist > 0.37: continue # Cutoff for noisy results
+                    if dist > 0.65: continue # Relaxed cutoff
+                    
+                    # Convert distance to similarity (approximate)
+                    # Cosine distance is 1 - Cosine Similarity. So Sim = 1 - Dist.
+                    # Dist 0.65 => Sim 0.35
+                    relevance = 1.0 - dist
                     
                     semantic_results.append({
                         "type": "vote",
@@ -201,7 +207,7 @@ def search_all(
                         "topic": v.topic,
                         "ux_category": v.kind or "Głosowanie",
                         "is_semantic": True,
-                        "relevance_score": 1.0 - dist
+                        "relevance_score": relevance
                     })
 
             # 4. Vector Search in Bills
@@ -217,7 +223,9 @@ def search_all(
                 
                 sem_bills_raw = sem_bills.order_by('distance').limit(30).all()
                 for b, dist in sem_bills_raw:
-                    if dist > 0.37: continue
+                    if dist > 0.65: continue # Relaxed cutoff
+                    
+                    relevance = 1.0 - dist
                     
                     b_term = 10 if not b.date or str(b.date) >= '2023-11-13' else 9
                     semantic_results.append({
@@ -229,7 +237,7 @@ def search_all(
                         "topic": b.topic,
                         "ux_category": b.type or "Projekt",
                         "is_semantic": True,
-                        "relevance_score": 1.0 - dist
+                        "relevance_score": relevance
                     })
 
             # 5. Vector Search in Interpellations
@@ -237,7 +245,9 @@ def search_all(
                 .filter(models.Interpellation.vector_embedding.isnot(None))
             sem_inters_raw = sem_inters.order_by('distance').limit(20).all()
             for i, dist in sem_inters_raw:
-                if dist > 0.37: continue
+                if dist > 0.65: continue # Relaxed cutoff
+                
+                relevance = 1.0 - dist
                 
                 semantic_results.append({
                     "type": "interpellation",
@@ -247,7 +257,7 @@ def search_all(
                     "topic": "Interpelacja",
                     "ux_category": "Interpelacja",
                     "is_semantic": True,
-                    "relevance_score": 1.0 - dist
+                    "relevance_score": relevance
                 })
         except Exception as e:
             print(f"Semantic enhancement failed: {e}")
@@ -346,11 +356,25 @@ def search_all(
         boost = 0
         
         # Check for direct keyword matches (better for Polish declension)
+        # Check for direct keyword matches with Naive Polish Stemming
         for term in search_terms[:5]:
             t_lower = term.lower()
-            # Basic Polish stemming: check first 7 chars for long words
-            if len(t_lower) > 3 and (t_lower in title_lower or (len(t_lower) > 7 and t_lower[:7] in title_lower)):
-                # Stronger boost for longer, more specific matches
+            t_len = len(t_lower)
+            
+            # 1. Exact match
+            if t_lower in title_lower:
+                boost = 0.5
+                break
+            
+            # 2. Naive Stemming (remove last char if > 3, last 2 if > 6)
+            # e.g. "ciąża" (5) -> "ciąż" matches "ciąż-y"
+            # "Nawrocki" (8) -> "Nawroc" (matches "Nawroc-kiego"?) No, "Nawrocki" -> "Nawrock" matches "Nawrock-iego"
+            
+            stem = None
+            if t_len > 3:
+                stem = t_lower[:-1] # Remove 1 char
+                
+            if stem and stem in title_lower:
                 boost = 0.5
                 break
                 

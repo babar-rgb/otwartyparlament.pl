@@ -1,12 +1,55 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional, List
+from sqlalchemy import case
 from backend import models
 from backend.core import orm_db as database
 
 router = APIRouter()
 
 from sqlalchemy import exists
+
+@router.get("/timeline")
+def get_vote_timeline(
+    term: Optional[int] = None,
+    db: Session = Depends(database.get_db)
+):
+    from sqlalchemy import func
+    
+    # query: sitting, date, count, adopted, rejected
+    # We group by sitting. Date can be min(date) for that sitting.
+    
+    query = db.query(
+        models.Vote.sitting,
+        func.min(models.Vote.date).label('date'),
+        func.count(models.Vote.id).label('count'),
+        func.sum(case((models.Vote.verdict == 'PRZYJĘTO', 1), else_=0)).label('adopted'),
+        func.sum(case((models.Vote.verdict == 'ODRZUCONO', 1), else_=0)).label('rejected')
+    )
+    
+    if term:
+        query = query.filter(models.Vote.term == term)
+        
+    # Exclude procedural children from the main count? 
+    # The plan says "Legislative Activity". 
+    # If we show ALL votes, the bars will be huge for "spam" sittings.
+    # Maybe it's better to show 'Main Votes' vs 'Procedural'?
+    # For now, let's count ALL to show the "workload", or just parents?
+    # Let's count ALL for "Activity", but maybe split them?
+    # For now simple aggregation:
+    
+    rows = query.group_by(models.Vote.sitting).order_by(models.Vote.sitting).all()
+    
+    return [
+        {
+            "sitting": r.sitting,
+            "date": r.date.isoformat() if r.date else None,
+            "count": r.count,
+            "adopted": r.adopted or 0,
+            "rejected": r.rejected or 0
+        } 
+        for r in rows
+    ]
 
 @router.get("")
 def read_votes(
@@ -330,6 +373,20 @@ def read_votes(
             # Grouping Info
             if grouped:
                 vote_dict['child_count'] = len(vote.children)
+                # Serialize children for the frontend
+                children_data = []
+                for child in vote.children:
+                    child_dict = {}
+                    for c in child.__table__.columns:
+                        if c.name in ['vector_embedding', 'search_vector']:
+                            continue
+                        val = getattr(child, c.name)
+                        if hasattr(val, 'isoformat'):
+                            child_dict[c.name] = val.isoformat()
+                        else:
+                            child_dict[c.name] = val
+                    children_data.append(child_dict)
+                vote_dict['children'] = children_data
             else:
                 vote_dict['child_count'] = 0
 

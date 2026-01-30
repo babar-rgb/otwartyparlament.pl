@@ -35,6 +35,7 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
     const [dateFrom, setDateFrom] = useState<string>('');
     const [dateTo, setDateTo] = useState<string>('');
     const [verdict, setVerdict] = useState<string>('');
+    const [sitting, setSitting] = useState<number | undefined>(undefined);
     const [showProcedural, setShowProcedural] = useState(false);
     const [groupVotes, setGroupVotes] = useState(true);
     const [filterCategory, setFilterCategory] = useState<'ALL' | 'LAWS' | 'RESOLUTIONS' | 'PERSONAL' | 'PROCEDURAL'>('ALL');
@@ -63,7 +64,8 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
         error
     } = useInfiniteQuery({
         // Include vector in queryKey so it refetches when vector changes
-        queryKey: ['votesList', term, mpId, rebellion, dateFrom, dateTo, verdict, showProcedural, groupVotes, filterCategory, searchQuery, vector], // Added vector and searchQuery
+        queryKey: ['votesList', term, mpId, rebellion, dateFrom, dateTo, verdict, sitting, showProcedural, groupVotes, filterCategory, searchQuery, vector], // Added vector and searchQuery
+
         queryFn: async ({ pageParam = 1 }) => {
             const skip = (pageParam - 1) * PAGE_SIZE;
             const res = await apiFetchVotes({
@@ -75,6 +77,7 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
                 date_from: dateFrom || undefined,
                 date_to: dateTo || undefined,
                 verdict: verdict || undefined,
+                sitting: sitting,
                 q: searchQuery || undefined,
                 vector: vector, // Pass vector to API
                 hide_procedural: !showProcedural,
@@ -126,6 +129,8 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
         setDateTo,
         verdict,
         setVerdict,
+        sitting,
+        setSitting,
         showProcedural,
         setShowProcedural,
         groupVotes,

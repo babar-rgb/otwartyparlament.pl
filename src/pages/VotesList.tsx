@@ -12,6 +12,7 @@ import { formatPolishDate } from '../utils/dateUtils';
 import VoteConnections from '../components/VoteConnections';
 import { UpcomingSittings } from '../components/features/UpcomingSittings';
 import VoteGroupCard from '../components/VoteGroupCard';
+import VotingTimeline from '../components/VotingTimeline';
 import { getCategoryStyles } from '../utils/voteStyles';
 
 const VotesList = () => {
@@ -45,7 +46,9 @@ const VotesList = () => {
         groupVotes,
         setGroupVotes,
         filterCategory,
-        setFilterCategory
+        setFilterCategory,
+        sitting,
+        setSitting
     } = useVotesList(mpId, rebellion);
 
 
@@ -128,6 +131,15 @@ const VotesList = () => {
 
                     {/* SEARCH & VOTES LIST */}
                     <div className={`flex flex-col transition-all duration-500 ease-spring ${isCalendarOpen ? 'w-full xl:w-2/3' : 'w-full xl:w-[calc(100%-100px)]'}`}>
+                        {/* Voting Timeline (Collapsible or always visible? Always visible for context) */}
+                        <div className="mb-6">
+                            <VotingTimeline
+                                term={term}
+                                onSittingSelect={(s) => setSitting(sitting === s ? undefined : s)}
+                                currentSitting={sitting || null}
+                            />
+                        </div>
+
                         <div className="bg-surface rounded-[var(--radius-card-xl)] border border-border-base shadow-2xl backdrop-blur-md overflow-hidden flex flex-col">
 
                             {/* Top Row: Search + Main Toggles */}

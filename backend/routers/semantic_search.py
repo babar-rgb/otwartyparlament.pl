@@ -103,7 +103,7 @@ async def semantic_search(
         if types:
             search_types = [t.strip() for t in types.split(',')]
         else:
-            search_types = ['vote', 'bill', 'interpellation']
+            search_types = ['vote', 'bill', 'interpellation', 'speech']
         
         results = []
         
@@ -181,6 +181,37 @@ async def semantic_search(
                         similarity=float(interp[3]),
                         url=f"/interpelacje/{interp[0]}"
                     ))
+
+        # Search speeches
+        if 'speech' in search_types:
+            speeches = db.execute(text("""
+                SELECT 
+                    id,
+                    topic,
+                    SUBSTRING(content, 1, 200) as description,
+                    1 - (vector_embedding <=> CAST(:embedding AS vector)) as similarity,
+                    speaker_name,
+                    date
+                FROM speeches
+                WHERE vector_embedding IS NOT NULL
+                ORDER BY vector_embedding <=> CAST(:embedding AS vector)
+                LIMIT :limit
+            """), {"embedding": embedding_str, "limit": limit * 2}).fetchall()
+            
+            for speech in speeches:
+                if speech[3] > 0.3:
+                    title = f"Wypowiedź: {speech[4]}"
+                    if speech[1]:
+                        title += f" - {speech[1]}"
+                    
+                    results.append(SearchResult(
+                        id=speech[0],
+                        type='speech',
+                        title=title,
+                        description=f"{speech[5]}: {speech[2]}...",
+                        similarity=float(speech[3]),
+                        url=f"/wypowiedzi/{speech[0]}" # Frontend routing needs to support this
+                    ))
         
         # Sort by similarity and limit
         results.sort(key=lambda x: x.similarity, reverse=True)
@@ -219,7 +250,8 @@ async def find_similar(
     table_map = {
         'vote': 'votes',
         'bill': 'bills',
-        'interpellation': 'interpellations'
+        'interpellation': 'interpellations',
+        'speech': 'speeches'
     }
     
     if type not in table_map:
@@ -244,7 +276,11 @@ async def find_similar(
         similar = db.execute(text(f"""
             SELECT 
                 id,
-                {'title_clean' if type == 'vote' else 'title'} as title,
+                CASE 
+                    WHEN :type = 'vote' THEN title_clean 
+                    WHEN :type = 'speech' THEN topic 
+                    ELSE title 
+                END as title,
                 1 - (vector_embedding <=> CAST(:embedding AS vector)) as similarity
             FROM {table}
             WHERE id != :id

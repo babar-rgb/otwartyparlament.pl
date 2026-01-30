@@ -99,6 +99,15 @@ export const fetchVote = async (id: string): Promise<Vote> => {
   return mapBackendVote(data);
 };
 
+export const fetchVoteTimeline = async (term?: number) => {
+  const params = new URLSearchParams();
+  if (term) params.append('term', term.toString());
+
+  const response = await fetch(`${API_URL}/votes/timeline?${params.toString()}`);
+  if (!response.ok) throw new Error('Failed to fetch timeline');
+  return await response.json();
+};
+
 export const fetchVoteAnalysis = async (voteId: string): Promise<VoteAnalysis | null> => {
   try {
     const response = await fetch(`${API_URL}/votes/${voteId}/analysis`);

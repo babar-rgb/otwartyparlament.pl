@@ -383,4 +383,44 @@ class GeminiService:
             logger.error(f"Generate MP Bio Error: {e}")
             return ""
 
+    def compare_titles(self, title1: str, title2: str) -> bool:
+        """
+        Determines if two titles refer to the same legislative project/act/process.
+        Handles variations like "Zmiana ustawy..." vs "Nowelizacja ustawy...".
+        """
+        if not self.model: return False
+        
+        for attempt in range(3):
+            try:
+                prompt = (
+                    "Jesteś ekspertem legislacyjnym. Twoim zadaniem jest ocena, czy dwa tytuły głosowań dotyczą TEGO SAMEGO procesu legislacyjnego (tzn. tej samej nowelizacji/ustawy).\n\n"
+                    f"Tytuł 1: {title1}\n"
+                    f"Tytuł 2: {title2}\n\n"
+                    "ZASADY:\n"
+                    "1. Ignoruj różnice proceduralne (np. 'Wniosek o odrzucenie' vs 'Całość projektu').\n"
+                    "2. Ignoruj synonimy (np. 'Zmiana' = 'Nowelizacja').\n"
+                    "3. Ignoruj drobne różnice w formacie.\n"
+                    "4. Jeśli dotyczą RÓŻNYCH ustaw (np. 'Ustawa o podatku VAT' vs 'Ustawa o podatku PIT'), zwróć FAŁSZ.\n\n"
+                    "Zwróć TYLKO słowo 'TAK' lub 'NIE'."
+                )
+                
+                model = self._get_model(self.model_flash)
+                response = model.generate_content(prompt)
+                text = response.text.strip().upper()
+                
+                # Success - return result
+                return "TAK" in text
+            
+            except Exception as e:
+                if "429" in str(e):
+                    wait_time = (attempt + 1) * 2 # 2s, 4s, 6s
+                    logger.warning(f"Gemini Rate Limit (429). Retrying in {wait_time}s...")
+                    import time
+                    time.sleep(wait_time)
+                else:
+                    logger.error(f"Gemini Compare Titles Error: {e}")
+                    return False
+        
+        return False
+
 gemini_service = GeminiService()

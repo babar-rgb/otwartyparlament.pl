@@ -279,6 +279,7 @@ class Speech(Base):
     topic = Column(String, nullable=True)
     statement_num = Column(Integer)
     term = Column(Integer)
+    vector_embedding = Column(Vector(768), nullable=True) # 768-dim vector for semantic search
     created_at = Column(DateTime, server_default=func.now())
     
     mp = relationship("MP")
