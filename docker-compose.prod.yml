@@ -1,53 +1,73 @@
 version: '3.8'
 
 services:
-  # Caddy handles SSL certificates automatically and acts as a reverse proxy
-  caddy:
-    image: caddy:latest
+  # 1. Baza Danych (Postgres + pgvector)
+  db:
+    image: ankane/pgvector:latest
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - parlament_net
+    # Port 5432 nie jest wystawiony na świat (zalecone w raporcie)
+    # Dostęp przez sieć wewnętrzną Dockera lub tunel SSH
+
+  # 2. Twój Backend (FastAPI)
+  backend:
+    build: .
+    restart: always
+    depends_on:
+      - db
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    networks:
+      - parlament_net
+
+  # 3. Automatyzacja (n8n)
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    restart: always
+    privileged: true
+    ports:
+      - "127.0.0.1:5678:5678" # Tylko localhost, Nginx zrobi proxy
+    environment:
+      - N8N_HOST=n8n.otwartyparlament.pl
+      - WEBHOOK_URL=https://n8n.otwartyparlament.pl/
+      - GENERIC_TIMEZONE=Europe/Warsaw
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - parlament_net
+
+  # 4. Bramkarz (Nginx Reverse Proxy)
+  nginx:
+    image: nginx:latest
     restart: always
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
     depends_on:
       - backend
-      - frontend
+      - n8n
+    networks:
+      - parlament_net
 
-  # Backend API (FastAPI)
-  backend:
-    build: ./backend
-    restart: always
-    env_file: .env.prod
-    environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-    depends_on:
-      - db
-
-  # Frontend (Vite/Nginx)
-  # In a strict production setup, you would verify this builds to static files
-  # hosted by Nginx or Caddy directly. For simplicity, we use the container.
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    restart: always
-    environment:
-      # Ensure this matches your domain
-      - VITE_API_BASE_URL=https://api.twojadomena.pl 
-
-  # Database
-  db:
-    image: postgres:15
-    restart: always
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    env_file: .env.prod
+networks:
+  parlament_net:
 
 volumes:
-  caddy_data:
-  caddy_config:
   postgres_data:
+  n8n_data:
