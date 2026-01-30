@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, X, Calendar, FileText, Flame } from 'lucide-react';
+import { Search, X, Calendar, FileText, Flame, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SmartSuggestions from '../features/analysis/SmartSuggestions';
 import { expandSearchQuery, handleSearchNavigation } from '../../utils/searchContext';
