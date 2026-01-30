@@ -1,16 +1,27 @@
-# Backend Dockerfile
 FROM python:3.11-slim
 
 WORKDIR /app
 
+# Install system dependencies (needed for psycopg2, etc)
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install Python dependencies
-# Install Python dependencies
-COPY requirements.txt .
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code into backend package directory to support relative imports
-COPY . backend/
+# Copy the entire project code
+# Note: We copy valid python packages. 
+# It's better to mount or copy specific dirs, but for simplicity we copy root to /app
+COPY . .
+
+# Set PYTHONPATH to verify imports work
 ENV PYTHONPATH=/app
 
-# Run application as a package, listening on $PORT (default 8000)
-CMD uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Expose port
+EXPOSE 8000
+
+# Run Uvicorn
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

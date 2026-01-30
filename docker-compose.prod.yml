@@ -16,9 +16,11 @@ services:
     # Port 5432 nie jest wystawiony na świat (zalecone w raporcie)
     # Dostęp przez sieć wewnętrzną Dockera lub tunel SSH
 
-  # 2. Twój Backend (FastAPI)
+    # 2. Twój Backend (FastAPI)
   backend:
-    build: .
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     restart: always
     depends_on:
       - db
@@ -67,6 +69,7 @@ services:
 
 networks:
   parlament_net:
+
 
 volumes:
   postgres_data:
