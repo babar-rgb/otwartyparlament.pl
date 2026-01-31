@@ -14,16 +14,37 @@ echo "ℹ️  Method: Streaming (No temp files)"
 
 # Check and Find Container
 echo "🔍 Searching for DB container on VPS..."
-REMOTE_CONTAINER_ID=$(ssh -o ConnectTimeout=5 $VPS_USER@$VPS_IP "docker ps -qf name=db | head -n 1")
+echo "👉 Please enter VPS password when prompted to find the container ID:"
+SSH_OUTPUT=$(ssh -o ConnectTimeout=10 $VPS_USER@$VPS_IP "docker ps -qf name=db | head -n 1" 2>&1)
+SSH_EXIT_CODE=$?
 
-if [ -z "$REMOTE_CONTAINER_ID" ]; then
-    echo "❌ Error: Could not find any running container with 'db' in name on VPS."
-    echo "   Please check if the deployment on GitHub is 'Green' (Active)."
+if [ $SSH_EXIT_CODE -ne 0 ]; then
+    echo "❌ SSH Connection Failed:"
+    echo "$SSH_OUTPUT"
+    echo "💡 Check your password and internet connection."
     exit 1
 fi
 
+REMOTE_CONTAINER_ID=$(echo "$SSH_OUTPUT" | tr -d '\r')
+
+if [ -z "$REMOTE_CONTAINER_ID" ]; then
+    echo "⚠️  Running container not found. Checking stopped containers..."
+    REMOTE_CONTAINER_ID=$(ssh $VPS_USER@$VPS_IP "docker ps -aqf name=db | head -n 1" | tr -d '\r')
+    
+    if [ -z "$REMOTE_CONTAINER_ID" ]; then
+        echo "❌ Error: Could not find ANY container (running or stopped) with 'db' in name."
+        echo "   Debug info: $(ssh $VPS_USER@$VPS_IP 'docker ps -a')"
+        exit 1
+    else
+        echo "⚠️  Found STOPPED container: $REMOTE_CONTAINER_ID. Creating dump anyway (might fail if specific DB is needed running)..."
+        # Actually usually we need it running to psql into it.
+        echo "❌ Error: Database container is STOPPED. Please restart it via GitHub Actions (Deploy) or SSH."
+        exit 1
+    fi
+fi
+
 echo "✅ Found Container ID: $REMOTE_CONTAINER_ID"
-echo "🔐 You will be asked for VPS Password ($VPS_USER@$VPS_IP) TWICE (once for ID, once for transfer)"
+echo "🔐 You will be asked for VPS Password AGAIN for the data transfer pipeline."
 
 # The Magic Pipeline
 # 1. pg_dump local stats
