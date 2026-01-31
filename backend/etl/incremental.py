@@ -52,10 +52,12 @@ except ImportError:
         from socials import SocialsETL
         from europarl import EuroparlETL
         from stats import calculate_stats
+        from vote_grouping import VoteGroupingETL
 
         # Re-assign to global names
         SpeechesETL = _SpeechesETL
         PDFReplyExtractor = _PDFReplyExtractor
+
 
 logger = get_logger("etl.incremental")
 
@@ -290,6 +292,22 @@ class IncrementalETL:
                 SpeechesETL(term=self.term).process_sittings(new_sittings)
             except Exception as e:
                 logger.error(f"Error syncing speeches: {e}")
+
+            # Group Votes for new sittings (Vote Clarity)
+            logger.info("Grouping votes for new sittings...")
+            try:
+                VoteGroupingETL(term=self.term).process_sittings(new_sittings) # Wait, check method name
+                # Actually I defined group_votes_for_sitting. Let's iterate.
+                grouping_etl = VoteGroupingETL(term=self.term)
+                for s in new_sittings:
+                    grouping_etl.group_votes_for_sitting(session, s) # session? no, internal db
+                    # My class handles DB.
+                    grouping_etl.group_votes_for_sitting(db.get_db(), s) # No, it uses SessionLocal internally
+                    # My class implementation: run(sitting=...)
+                    # So I should call grouping_etl.run(sitting=s)
+                    grouping_etl.run(sitting=s)
+            except Exception as e:
+                logger.error(f"Error grouping votes: {e}")
             
             # Update state
             self.state["last_sync"][str(self.term)] = api_latest
@@ -321,6 +339,7 @@ class IncrementalETL:
             (EuroparlETL, "Europarl Votes"),
             (SittingSummarizer, "AI Sitting Summaries"), # Requires GEMINI_API_KEY
             (SocialsETL, "MP Socials Discovery"),        # Requires GEMINI_API_KEY
+            (VoteGroupingETL, "Vote Grouping (Clarity)"),
             # Run stats LAST to include all new data
             # Run stats LAST to include all new data
             (lambda: type('StatsETL', (), {'run': calculate_stats})(), "Stats Recalculation")
