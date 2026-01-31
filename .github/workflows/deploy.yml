@@ -20,8 +20,19 @@ jobs:
           port: 22
           script_stop: true
           script: |
-            # Navigate to project directory (try common names or find it)
-            cd ~/parlament || cd ~/OtwartyParlament || { echo "Project directory not found"; exit 1; }
+            # Find the project directory by looking for docker-compose.yml
+            # We look in /root (since user is root) or standard paths
+            PROJECT_DIR=$(dirname $(find ~/ -maxdepth 3 -name docker-compose.yml | grep -v "node_modules" | head -n 1))
+            
+            if [ -z "$PROJECT_DIR" ]; then
+              echo "❌ Could not find docker-compose.yml in ~/"
+              echo "Listing directories in ~:"
+              ls -F ~/
+              exit 1
+            fi
+            
+            echo "📂 Found project at: $PROJECT_DIR"
+            cd "$PROJECT_DIR"
             
             echo "🚀 Starting Deployment..."
             
@@ -34,7 +45,7 @@ jobs:
             docker compose down
             docker compose up -d --build --remove-orphans
             
-            # Cleanup unused images to save disk space
+            # Cleanup unused images
             docker system prune -f
             
             echo "✅ Deployment Complete!"
