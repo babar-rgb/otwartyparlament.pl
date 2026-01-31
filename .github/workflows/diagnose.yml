@@ -18,15 +18,12 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
           script: |
-            echo "🔍 --- FINAL DATA CHECK ---"
+            echo "🔍 --- FILE SYSTEM SEARCH ---"
             
-            echo "📦 Checking .git size (Is this the 4.3GB?):"
-            du -sh ./app/.git || echo "No .git folder"
+            echo "🕵️‍♂️ Searching for Postgres Data (PG_VERSION files) in /root directory..."
+            find /root -name "PG_VERSION" 2>/dev/null || echo "No PG_VERSION found in /root"
             
-            echo "🗄️ Checking for SQL dumps in project:"
-            find . -name "*.sql" -o -name "*.dump" -o -name "*.tar"
-            
-            echo "🏠 Checking for common data locations:"
-            ls -la /var/lib/postgresql/data || echo "No host /var/lib/postgresql/data"
+            echo "🐳 Docker volumes detailed list:"
+            docker volume ls
             
             echo "🏁 --- END ---"
