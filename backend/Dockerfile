@@ -12,16 +12,15 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire project code
-# Note: We copy valid python packages. 
-# It's better to mount or copy specific dirs, but for simplicity we copy root to /app
-COPY . .
+# Copy the entire project code into 'backend' folder
+# This matches the local structure where 'backend' is the package
+COPY . /app/backend
 
-# Set PYTHONPATH to verify imports work
+# Set PYTHONPATH to /app so 'import backend.main' works
 ENV PYTHONPATH=/app
 
 # Expose port
 EXPOSE 8000
 
-# Run Uvicorn
+# Run Uvicorn - now 'backend.main' is valid because backend is a subdir of /app
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
