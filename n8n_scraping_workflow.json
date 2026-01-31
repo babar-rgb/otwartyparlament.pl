@@ -1,0 +1,57 @@
+{
+    "name": "Sejm Scraper & AI Analysis (Auto)",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "hours",
+                            "hoursInterval": 2
+                        }
+                    ]
+                }
+            },
+            "id": "schedule-trigger",
+            "name": "Every 2 Hours",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1,
+            "position": [
+                460,
+                340
+            ]
+        },
+        {
+            "parameters": {
+                "command": "CONTAINER=$(docker ps -qf name=backend | head -n1)\necho \"Running ETL in container: $CONTAINER\"\ndocker exec $CONTAINER python backend/etl/incremental.py"
+            },
+            "id": "ssh-run-etl",
+            "name": "SSH: Run Incremental ETL",
+            "type": "n8n-nodes-base.ssh",
+            "typeVersion": 1,
+            "position": [
+                680,
+                340
+            ],
+            "credentials": {
+                "sshPassword": {
+                    "id": "ssh-vps",
+                    "name": "VPS Root"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Every 2 Hours": {
+            "main": [
+                [
+                    {
+                        "node": "SSH: Run Incremental ETL",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}
