@@ -28,19 +28,13 @@ fi
 REMOTE_CONTAINER_ID=$(echo "$SSH_OUTPUT" | tr -d '\r')
 
 if [ -z "$REMOTE_CONTAINER_ID" ]; then
-    echo "⚠️  Running container not found. Checking stopped containers..."
-    REMOTE_CONTAINER_ID=$(ssh $VPS_USER@$VPS_IP "docker ps -aqf name=db | head -n 1" | tr -d '\r')
-    
-    if [ -z "$REMOTE_CONTAINER_ID" ]; then
-        echo "❌ Error: Could not find ANY container (running or stopped) with 'db' in name."
-        echo "   Debug info: $(ssh $VPS_USER@$VPS_IP 'docker ps -a')"
-        exit 1
-    else
-        echo "⚠️  Found STOPPED container: $REMOTE_CONTAINER_ID. Creating dump anyway (might fail if specific DB is needed running)..."
-        # Actually usually we need it running to psql into it.
-        echo "❌ Error: Database container is STOPPED. Please restart it via GitHub Actions (Deploy) or SSH."
-        exit 1
-    fi
+    echo "❌ Error: Could not find DB container."
+    echo ""
+    echo "🐛 DEBUG MODE: Listing ALL containers on server:"
+    ssh $VPS_USER@$VPS_IP "docker ps -a"
+    echo ""
+    echo "☝️ Do you see 'app-db-1' or similar in the list above?"
+    exit 1
 fi
 
 echo "✅ Found Container ID: $REMOTE_CONTAINER_ID"
