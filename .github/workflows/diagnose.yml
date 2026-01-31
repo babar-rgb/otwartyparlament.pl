@@ -1,0 +1,42 @@
+name: Diagnose VPS Data
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/diagnose.yml'
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH Diagnostics
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          script: |
+            echo "🔍 --- DIAGNOSIS START ---"
+            
+            echo "📂 PWD:"
+            pwd
+            
+            echo "📂 List Project Dir:"
+            ls -la
+            
+            echo "🐳 Docker Containers:"
+            docker ps -a
+            
+            echo "💾 Docker Volumes:"
+            docker volume ls
+            
+            echo "💾 Inspect Current Volume (postgres_data):"
+            docker volume inspect parlament_postgres_data || echo "Volume parlament_postgres_data not found"
+            docker volume inspect postgres_data || echo "Volume postgres_data not found"
+            
+            echo "🕵️‍♂️ Searching for large files (DB dumps/folders):"
+            du -h -d 1 . | grep 'G' || echo "No Huge folders found in ."
+            
+            echo "🏁 --- DIAGNOSIS END ---"
