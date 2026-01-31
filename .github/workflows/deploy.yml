@@ -19,6 +19,7 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
           script_stop: true
+          command_timeout: 30m
           script: |
             # Find the project directory by looking for docker-compose.yml
             # We look in /root (since user is root) or standard paths
