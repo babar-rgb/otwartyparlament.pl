@@ -1,0 +1,114 @@
+{
+    "name": "Daily Database Backup",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "hours",
+                            "hours": 3
+                        }
+                    ]
+                }
+            },
+            "id": "schedule-trigger",
+            "name": "Every Day at 3AM",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.1,
+            "position": [
+                460,
+                340
+            ]
+        },
+        {
+            "parameters": {
+                "command": "docker exec app-db-1 pg_dump -U postgres otwartyparlament | gzip -c"
+            },
+            "id": "ssh-dump",
+            "name": "SSH: Dump & Gzip",
+            "type": "n8n-nodes-base.ssh",
+            "typeVersion": 1,
+            "position": [
+                680,
+                340
+            ],
+            "credentials": {
+                "sshPassword": {
+                    "id": "ssh-vps",
+                    "name": "VPS Root"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "options": {}
+            },
+            "id": "date-time",
+            "name": "Format Date",
+            "type": "n8n-nodes-base.dateTime",
+            "typeVersion": 2,
+            "position": [
+                900,
+                340
+            ]
+        },
+        {
+            "parameters": {
+                "authentication": "oAuth2",
+                "fileName": "={{ 'backup_otwartyparlament_' + $node[\"Format Date\"].json.formatted + '.sql.gz' }}",
+                "binaryData": true,
+                "binaryPropertyName": "data"
+            },
+            "id": "google-drive",
+            "name": "Upload to Drive",
+            "type": "n8n-nodes-base.googleDrive",
+            "typeVersion": 3,
+            "position": [
+                1120,
+                340
+            ],
+            "credentials": {
+                "googleDriveOAuth2Api": {
+                    "id": "google-drive",
+                    "name": "Google Drive account"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Every Day at 3AM": {
+            "main": [
+                [
+                    {
+                        "node": "SSH: Dump & Gzip",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "SSH: Dump & Gzip": {
+            "main": [
+                [
+                    {
+                        "node": "Format Date",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Format Date": {
+            "main": [
+                [
+                    {
+                        "node": "Upload to Drive",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

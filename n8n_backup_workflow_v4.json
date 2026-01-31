@@ -1,0 +1,114 @@
+{
+    "name": "Daily Database Backup (V4 - Direct Binary)",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "hours",
+                            "hours": 3
+                        }
+                    ]
+                }
+            },
+            "id": "schedule",
+            "name": "Every Day at 3AM",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.1,
+            "position": [
+                460,
+                340
+            ]
+        },
+        {
+            "parameters": {
+                "command": "docker exec $(docker ps -qf \"name=db\" | head -n 1) pg_dump -U postgres otwartyparlament | gzip | base64 -w 0"
+            },
+            "id": "ssh-base64",
+            "name": "SSH: Dump & Encode",
+            "type": "n8n-nodes-base.ssh",
+            "typeVersion": 1,
+            "position": [
+                680,
+                340
+            ],
+            "credentials": {
+                "sshPassword": {
+                    "id": "ssh-vps",
+                    "name": "VPS Root"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "jsCode": "const base64Data = items[0].json.stdout;\n\nreturn [\n  {\n    json: {},\n    binary: {\n      data: {\n        data: base64Data,\n        mimeType: 'application/gzip',\n        fileName: 'backup.sql.gz'\n      }\n    }\n  }\n];"
+            },
+            "id": "convert-binary",
+            "name": "Convert to File",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                900,
+                340
+            ]
+        },
+        {
+            "parameters": {
+                "authentication": "oAuth2",
+                "fileName": "={{ 'backup_parlament_' + $now.toFormat('yyyy-MM-dd') + '.sql.gz' }}",
+                "binaryData": true,
+                "binaryPropertyName": "data"
+            },
+            "id": "google-drive",
+            "name": "Upload to Drive",
+            "type": "n8n-nodes-base.googleDrive",
+            "typeVersion": 3,
+            "position": [
+                1120,
+                340
+            ],
+            "credentials": {
+                "googleDriveOAuth2Api": {
+                    "id": "google-drive",
+                    "name": "Google Drive account"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Every Day at 3AM": {
+            "main": [
+                [
+                    {
+                        "node": "SSH: Dump & Encode",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "SSH: Dump & Encode": {
+            "main": [
+                [
+                    {
+                        "node": "Convert to File",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Convert to File": {
+            "main": [
+                [
+                    {
+                        "node": "Upload to Drive",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

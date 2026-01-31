@@ -1,0 +1,40 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          script_stop: true
+          script: |
+            # Navigate to project directory (try common names or find it)
+            cd ~/parlament || cd ~/OtwartyParlament || { echo "Project directory not found"; exit 1; }
+            
+            echo "🚀 Starting Deployment..."
+            
+            # Pull latest changes
+            git fetch --all
+            git reset --hard origin/main
+            
+            # Restart Services
+            echo "🔄 Rebuilding Docker Containers..."
+            docker compose down
+            docker compose up -d --build --remove-orphans
+            
+            # Cleanup unused images to save disk space
+            docker system prune -f
+            
+            echo "✅ Deployment Complete!"

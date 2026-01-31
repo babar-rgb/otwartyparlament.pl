@@ -1,0 +1,273 @@
+{
+    "name": "Full Backup (DB + Files) - V7",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "hours",
+                            "hours": 3
+                        }
+                    ]
+                }
+            },
+            "id": "schedule",
+            "name": "Every Day at 3AM",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.1,
+            "position": [
+                200,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "command": "CONTAINER=$(docker ps --format '{{.Names}}' | grep -E 'db|postgres' | grep -v 'backup' | head -n1)\ndocker exec $CONTAINER pg_dumpall -U postgres --clean | gzip > /tmp/backup_full.sql.gz"
+            },
+            "id": "ssh-dump-db",
+            "name": "SSH: Dump DB",
+            "type": "n8n-nodes-base.ssh",
+            "typeVersion": 1,
+            "position": [
+                420,
+                200
+            ],
+            "credentials": {
+                "sshPassword": {
+                    "id": "ssh-vps",
+                    "name": "VPS Root"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "protocol": "sftp",
+                "operation": "download",
+                "path": "/tmp/backup_full.sql.gz",
+                "binaryPropertyName": "data"
+            },
+            "id": "sftp-db",
+            "name": "SFTP: Download DB",
+            "type": "n8n-nodes-base.ftp",
+            "typeVersion": 1,
+            "position": [
+                640,
+                200
+            ],
+            "credentials": {
+                "sftp": {
+                    "id": "ssh-vps",
+                    "name": "VPS Root"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "authentication": "oAuth2",
+                "fileName": "={{ 'backup_parlament_DB_' + $now.toFormat('yyyy-MM-dd') + '.sql.gz' }}",
+                "binaryData": true,
+                "binaryPropertyName": "data"
+            },
+            "id": "drive-db",
+            "name": "Drive: Upload DB",
+            "type": "n8n-nodes-base.googleDrive",
+            "typeVersion": 3,
+            "position": [
+                860,
+                200
+            ],
+            "credentials": {
+                "googleDriveOAuth2Api": {
+                    "id": "google-drive",
+                    "name": "Google Drive account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "command": "rm /tmp/backup_full.sql.gz"
+            },
+            "id": "ssh-clean-db",
+            "name": "SSH: Clean DB",
+            "type": "n8n-nodes-base.ssh",
+            "typeVersion": 1,
+            "position": [
+                1080,
+                200
+            ],
+            "credentials": {
+                "sshPassword": {
+                    "id": "ssh-vps",
+                    "name": "VPS Root"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "command": "PROJECT_DIR=$(dirname $(find /root -maxdepth 3 -name docker-compose.yml | head -n 1))\necho \"Backing up: $PROJECT_DIR\"\ntar -czf /tmp/backup_files.tar.gz --exclude='node_modules' --exclude='venv' --exclude='.git' --exclude='__pycache__' -C $(dirname $PROJECT_DIR) $(basename $PROJECT_DIR)"
+            },
+            "id": "ssh-zip-files",
+            "name": "SSH: Zip Files",
+            "type": "n8n-nodes-base.ssh",
+            "typeVersion": 1,
+            "position": [
+                420,
+                450
+            ],
+            "credentials": {
+                "sshPassword": {
+                    "id": "ssh-vps",
+                    "name": "VPS Root"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "protocol": "sftp",
+                "operation": "download",
+                "path": "/tmp/backup_files.tar.gz",
+                "binaryPropertyName": "data"
+            },
+            "id": "sftp-files",
+            "name": "SFTP: Download Files",
+            "type": "n8n-nodes-base.ftp",
+            "typeVersion": 1,
+            "position": [
+                640,
+                450
+            ],
+            "credentials": {
+                "sftp": {
+                    "id": "ssh-vps",
+                    "name": "VPS Root"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "authentication": "oAuth2",
+                "fileName": "={{ 'backup_parlament_CODE_' + $now.toFormat('yyyy-MM-dd') + '.tar.gz' }}",
+                "binaryData": true,
+                "binaryPropertyName": "data"
+            },
+            "id": "drive-files",
+            "name": "Drive: Upload Files",
+            "type": "n8n-nodes-base.googleDrive",
+            "typeVersion": 3,
+            "position": [
+                860,
+                450
+            ],
+            "credentials": {
+                "googleDriveOAuth2Api": {
+                    "id": "google-drive",
+                    "name": "Google Drive account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "command": "rm /tmp/backup_files.tar.gz"
+            },
+            "id": "ssh-clean-files",
+            "name": "SSH: Clean Files",
+            "type": "n8n-nodes-base.ssh",
+            "typeVersion": 1,
+            "position": [
+                1080,
+                450
+            ],
+            "credentials": {
+                "sshPassword": {
+                    "id": "ssh-vps",
+                    "name": "VPS Root"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Every Day at 3AM": {
+            "main": [
+                [
+                    {
+                        "node": "SSH: Dump DB",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "SSH: Zip Files",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "SSH: Dump DB": {
+            "main": [
+                [
+                    {
+                        "node": "SFTP: Download DB",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "SFTP: Download DB": {
+            "main": [
+                [
+                    {
+                        "node": "Drive: Upload DB",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Drive: Upload DB": {
+            "main": [
+                [
+                    {
+                        "node": "SSH: Clean DB",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "SSH: Zip Files": {
+            "main": [
+                [
+                    {
+                        "node": "SFTP: Download Files",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "SFTP: Download Files": {
+            "main": [
+                [
+                    {
+                        "node": "Drive: Upload Files",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Drive: Upload Files": {
+            "main": [
+                [
+                    {
+                        "node": "SSH: Clean Files",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

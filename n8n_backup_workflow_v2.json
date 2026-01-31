@@ -1,0 +1,177 @@
+{
+    "name": "Daily Database Backup (SFTP Fix)",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "hours",
+                            "hours": 3
+                        }
+                    ]
+                }
+            },
+            "id": "schedule",
+            "name": "Every Day at 3AM",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.1,
+            "position": [
+                380,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "command": "docker exec app-db-1 pg_dump -U postgres otwartyparlament | gzip > /tmp/backup_latest.sql.gz"
+            },
+            "id": "ssh-dump",
+            "name": "SSH: Create Dump on Server",
+            "type": "n8n-nodes-base.ssh",
+            "typeVersion": 1,
+            "position": [
+                600,
+                300
+            ],
+            "credentials": {
+                "sshPassword": {
+                    "id": "ssh-vps",
+                    "name": "VPS Root"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "protocol": "sftp",
+                "operation": "download",
+                "path": "/tmp/backup_latest.sql.gz",
+                "binaryPropertyName": "data"
+            },
+            "id": "sftp-download",
+            "name": "SFTP: Download to n8n",
+            "type": "n8n-nodes-base.ftp",
+            "typeVersion": 1,
+            "position": [
+                820,
+                300
+            ],
+            "credentials": {
+                "sftp": {
+                    "id": "ssh-vps",
+                    "name": "VPS Root"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "options": {}
+            },
+            "id": "date-time",
+            "name": "Get Date",
+            "type": "n8n-nodes-base.dateTime",
+            "typeVersion": 2,
+            "position": [
+                1040,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "authentication": "oAuth2",
+                "fileName": "={{ 'backup_parlament_' + $node[\"Get Date\"].json.formatted + '.sql.gz' }}",
+                "binaryData": true,
+                "binaryPropertyName": "data"
+            },
+            "id": "google-drive",
+            "name": "Upload to Drive",
+            "type": "n8n-nodes-base.googleDrive",
+            "typeVersion": 3,
+            "position": [
+                1260,
+                300
+            ],
+            "credentials": {
+                "googleDriveOAuth2Api": {
+                    "id": "google-drive",
+                    "name": "Google Drive account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "command": "rm /tmp/backup_latest.sql.gz"
+            },
+            "id": "ssh-cleanup",
+            "name": "SSH: Cleanup",
+            "type": "n8n-nodes-base.ssh",
+            "typeVersion": 1,
+            "position": [
+                1480,
+                300
+            ],
+            "credentials": {
+                "sshPassword": {
+                    "id": "ssh-vps",
+                    "name": "VPS Root"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Every Day at 3AM": {
+            "main": [
+                [
+                    {
+                        "node": "SSH: Create Dump on Server",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "SSH: Create Dump on Server": {
+            "main": [
+                [
+                    {
+                        "node": "SFTP: Download to n8n",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "SFTP: Download to n8n": {
+            "main": [
+                [
+                    {
+                        "node": "Get Date",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Date": {
+            "main": [
+                [
+                    {
+                        "node": "Upload to Drive",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Upload to Drive": {
+            "main": [
+                [
+                    {
+                        "node": "SSH: Cleanup",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}
