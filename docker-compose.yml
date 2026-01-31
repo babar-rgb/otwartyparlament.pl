@@ -1,22 +1,32 @@
 version: '3.8'
 
 services:
-  # db service removed to fallback to local Postgres on host
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-kajtek}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-otwarty_parlament}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
 
   backend:
     build: ./backend
     restart: always
     environment:
-      # Use host.docker.internal to access host's localhost
-      DB_HOST: host.docker.internal
+      DB_HOST: db
       DB_PORT: 5432
       DB_USER: ${POSTGRES_USER:-kajtek}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-password}
       DB_NAME: ${POSTGRES_DB:-otwarty_parlament}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
     ports:
       - "8000:8000"
+    depends_on:
+      - db
 
   frontend:
     build:
@@ -28,3 +38,6 @@ services:
       - "80:80"
     depends_on:
       - backend
+
+volumes:
+  postgres_data:
