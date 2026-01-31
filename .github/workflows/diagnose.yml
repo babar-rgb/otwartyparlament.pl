@@ -18,25 +18,13 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
           script: |
-            echo "🔍 --- DIAGNOSIS START ---"
+            echo "🔍 --- DEEP INSPECT ---"
             
-            echo "📂 PWD:"
-            pwd
+            echo "📂 Checking what is inside 4.3GB ./app folder:"
+            # List 2 levels deep, excluding huge dirs
+            find ./app -maxdepth 2 -not -path '*/.*' -not -path '*/node_modules' -not -path '*/.git' | sort
             
-            echo "📂 List Project Dir:"
-            ls -la
+            echo "🔥 Checking Backend Logs (Why is it restarting?):"
+            docker logs --tail 50 $(docker ps -a -qf name=app-backend)
             
-            echo "🐳 Docker Containers:"
-            docker ps -a
-            
-            echo "💾 Docker Volumes:"
-            docker volume ls
-            
-            echo "💾 Inspect Current Volume (postgres_data):"
-            docker volume inspect parlament_postgres_data || echo "Volume parlament_postgres_data not found"
-            docker volume inspect postgres_data || echo "Volume postgres_data not found"
-            
-            echo "🕵️‍♂️ Searching for large files (DB dumps/folders):"
-            du -h -d 1 . | grep 'G' || echo "No Huge folders found in ."
-            
-            echo "🏁 --- DIAGNOSIS END ---"
+            echo "🏁 --- END ---"
