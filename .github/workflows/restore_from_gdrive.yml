@@ -48,14 +48,27 @@ jobs:
             
             # Auto-start if missing
             if [ -z "$CONTAINER_ID" ]; then
-                echo "⚠️  DB not running. Starting..."
-                cd app && docker-compose up -d db
-                sleep 15
+                echo "⚠️  DB not running. searching for project dir..."
+                
+                # Find dir with docker-compose.yml
+                PROJECT_DIR=$(find /root -maxdepth 3 -name docker-compose.yml -exec dirname {} \; | head -n 1)
+                
+                if [ -n "$PROJECT_DIR" ]; then
+                    echo "📂 Found project in: $PROJECT_DIR"
+                    cd $PROJECT_DIR
+                    echo "🚀 Starting DB..."
+                    docker-compose up -d db
+                    sleep 15
+                else
+                    echo "❌ Could not find docker-compose.yml in /root"
+                fi
+                
                 CONTAINER_ID=$(docker ps -qf name=db | head -n 1)
             fi
             
             if [ -z "$CONTAINER_ID" ]; then
                 echo "❌ Error: Could not start DB container."
+                docker ps -a
                 exit 1
             fi
             
