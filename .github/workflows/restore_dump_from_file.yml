@@ -24,21 +24,28 @@ jobs:
                 exit 1
             fi
             
+            echo "💽 Checking Disk Space:"
+            df -h
+            
             echo "🔍 Finding Database Container..."
             echo "   (Debug: listing all containers)"
             docker ps -a
             
-            # Try 1: Exact name
+            # Find ID
             CONTAINER_ID=$(docker ps -qf name=app-db-1)
-            
-            # Try 2: Generic 'db' name
             if [ -z "$CONTAINER_ID" ]; then
                 CONTAINER_ID=$(docker ps -qf name=db | head -n 1)
             fi
-            
-            # Try 3: Image name 'postgres'
+
             if [ -z "$CONTAINER_ID" ]; then
-                CONTAINER_ID=$(docker ps -qf ancestor=postgres:15 | head -n 1)
+                echo "⚠️  Database container not found running! Attempting to start it..."
+                # Try finding project dir (usually 'app' or current dir)
+                if [ -d "app" ]; then
+                    cd app
+                fi
+                docker-compose up -d db
+                sleep 10 # Wait for DB to init
+                CONTAINER_ID=$(docker ps -qf name=db | head -n 1)
             fi
 
             if [ -z "$CONTAINER_ID" ]; then
