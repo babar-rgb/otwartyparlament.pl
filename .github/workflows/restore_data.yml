@@ -1,0 +1,40 @@
+name: Restore Data (Seed API)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH & Run Seeding
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          script: |
+            echo "🌱 --- STARTING DATA SEEDING ---"
+            echo "🚀 Launching incremental ETL inside backend container..."
+            
+            # Find the running backend container
+            CONTAINER_ID=$(docker ps -qf name=backend | head -n 1)
+            
+            if [ -z "$CONTAINER_ID" ]; then
+              echo "❌ Error: Backend container not found!"
+              exit 1
+            fi
+            
+            echo "✅ Found Container: $CONTAINER_ID"
+            
+            # Run the script. 
+            # Note: We use 'python3 -m backend.etl.incremental' or file path depending on structure.
+            # In Dockerfile we set PYTHONPATH=/app and WORKDIR=/app. 
+            # The file is at /app/backend/etl/incremental.py
+            
+            echo "⏳ Running ETL (This may take a while)..."
+            docker exec $CONTAINER_ID python3 /app/backend/etl/incremental.py
+            
+            echo "✅ Data Seeding Completed!"
+            echo "🏁 --- END ---"
