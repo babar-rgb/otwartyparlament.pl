@@ -108,6 +108,12 @@ jobs:
                  echo "✅ Connection OK."
             fi
             
+            # --- EMERGENCY FIX: Force-Create 'kajtek' if missing ---
+            echo "🔧 Ensuring user 'kajtek' exists (via postgres superuser)..."
+            docker exec -i $CONTAINER_ID psql -U postgres -c "CREATE USER kajtek WITH SUPERUSER PASSWORD 'password';" 2>/dev/null || echo "   (User kajtek might already exist or postgres role unavailable, continuing...)"
+            docker exec -i $CONTAINER_ID psql -U postgres -d otwarty_parlament -c "GRANT ALL PRIVILEGES ON DATABASE otwarty_parlament TO kajtek;" 2>/dev/null || true
+            # --------------------------------------------------------
+
             echo "⏳ Restoring Database (This may take 15-30 minutes)..."
             
             # CLEAR DB FIRST (Safety for re-runs)
