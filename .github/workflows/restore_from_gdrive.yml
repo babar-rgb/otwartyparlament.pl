@@ -1,0 +1,82 @@
+name: Restore DB from Google Drive
+
+on:
+  workflow_dispatch:
+
+jobs:
+  restore_gdrive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH Download & Restore
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          command_timeout: 120m
+          script: |
+            echo "🚀 STARTING GOOGLE DRIVE RESTORE..."
+            
+            # 1. Install gdown (best tool for Drive files)
+            echo "🛠️ Installing gdown..."
+            apt-get update && apt-get install -y python3-pip
+            pip3 install gdown --break-system-packages || pip3 install gdown
+            
+            # 2. Download File
+            FILE_ID="1NQ8tMBhMfs_h4WI95s5UoGvZb0dom0c1"
+            OUTPUT="/root/dump_gdrive.sql.gz"
+            
+            echo "⬇️ Downloading file (ID: $FILE_ID)..."
+            rm -f $OUTPUT # Clear previous attempts
+            gdown --id $FILE_ID -O $OUTPUT
+            
+            if [ ! -f "$OUTPUT" ]; then
+                echo "❌ Error: Download failed!"
+                exit 1
+            fi
+            
+            SIZE=$(du -h $OUTPUT | cut -f1)
+            echo "✅ Downloaded: $SIZE"
+            
+            # 3. Find Container
+            echo "🔍 Finding Database Container..."
+            CONTAINER_ID=$(docker ps -qf name=app-db-1)
+            if [ -z "$CONTAINER_ID" ]; then
+                CONTAINER_ID=$(docker ps -qf name=db | head -n 1)
+            fi
+            
+            # Auto-start if missing
+            if [ -z "$CONTAINER_ID" ]; then
+                echo "⚠️  DB not running. Starting..."
+                cd app && docker-compose up -d db
+                sleep 15
+                CONTAINER_ID=$(docker ps -qf name=db | head -n 1)
+            fi
+            
+            if [ -z "$CONTAINER_ID" ]; then
+                echo "❌ Error: Could not start DB container."
+                exit 1
+            fi
+            
+            # 4. Restore
+            echo "⏳ Restoring Database (This may take 15-30 minutes)..."
+            echo "   Container: $CONTAINER_ID"
+            
+            # Stop backend to prevent locks/conflicts? Ideally yes, but let's try live first or just restart after.
+            
+            gunzip -c $OUTPUT | docker exec -i $CONTAINER_ID psql -U kajtek -d otwarty_parlament
+            
+            if [ $? -eq 0 ]; then
+                echo "✅ RESTORE SUCCESSFUL!"
+                echo "🧹 Cleaning up dump file..."
+                rm $OUTPUT
+                
+                echo "🔄 Restarting Backend to refresh connections..."
+                cd app && docker-compose restart backend
+            else
+                echo "❌ Restore Failed during PSQL import."
+                exit 1
+            fi
+            
+            echo "🏁 --- DONE ---"
