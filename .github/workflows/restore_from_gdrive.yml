@@ -89,19 +89,27 @@ jobs:
             echo "⏳ Restoring Database (This may take 15-30 minutes)..."
             echo "   Container: $CONTAINER_ID"
             
-            # Stop backend to prevent locks/conflicts? Ideally yes, but let's try live first or just restart after.
+            # CLEAR DB FIRST (Safety for re-runs)
+            echo "🧹 Clearing existing schema to avoid conflicts..."
+            docker exec -i $CONTAINER_ID psql -U kajtek -d otwarty_parlament -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
             
-            gunzip -c $OUTPUT | docker exec -i $CONTAINER_ID psql -U kajtek -d otwarty_parlament
+            # Stream with Log Capture
+            gunzip -c $OUTPUT | docker exec -i $CONTAINER_ID psql -U kajtek -d otwarty_parlament > restore.log 2>&1
             
-            if [ $? -eq 0 ]; then
+            EXIT_CODE=$?
+            
+            if [ $EXIT_CODE -eq 0 ]; then
                 echo "✅ RESTORE SUCCESSFUL!"
                 echo "🧹 Cleaning up dump file..."
                 rm $OUTPUT
+                rm restore.log
                 
                 echo "🔄 Restarting Backend to refresh connections..."
                 cd app && docker-compose restart backend
             else
                 echo "❌ Restore Failed during PSQL import."
+                echo "📜 ERROR LOG (Last 50 lines):"
+                tail -n 50 restore.log
                 exit 1
             fi
             
