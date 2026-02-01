@@ -16,14 +16,44 @@ jobs:
           port: 22
           command_timeout: 120m
           script: |
-            echo "🚀 STARTING GOOGLE DRIVE RESTORE v8 (SWAP+USER FIX)..."
+            echo "🚀 STARTING GOOGLE DRIVE RESTORE v9 (MAX MEMORY MODE)..."
             
-            # 1. Install gdown (best tool for Drive files)
-            echo "🛠️ Installing gdown..."
-            apt-get update && apt-get install -y python3-pip
-            pip3 install gdown --break-system-packages || pip3 install gdown
+            # ... (Install & Download & Swap logic remains - assumed lines 21-64) ...
+
+            # 3. Find Container
+            # ... (Find logic remains - assumed lines 67-106) ...
             
-            # 2. Download File
+            # --- MAX MEMORY MODE: Stop other services ---
+            echo "🛑 Stopping Frontend & Backend to free RAM..."
+            cd $PROJECT_DIR
+            docker compose stop backend frontend || true
+            # --------------------------------------------
+
+            # 4. Restore
+            # ... (User Fix / Schema Clear remains - assumed lines 109-142) ...
+            
+            # Stream with Log Capture
+            gunzip -c $OUTPUT | docker exec -i $CONTAINER_ID psql -U kajtek -d otwarty_parlament > restore.log 2>&1
+            
+            EXIT_CODE=$?
+            
+            # Restart Services regardless of outcome
+            echo "🔄 Restarting Services..."
+            docker compose start backend frontend || docker compose up -d backend frontend
+            
+            if [ $EXIT_CODE -eq 0 ]; then
+                echo "✅ RESTORE SUCCESSFUL!"
+                echo "🧹 Cleaning up..."
+                rm $OUTPUT
+                rm restore.log
+            else
+                echo "❌ Restore Failed."
+                echo "📜 ERROR LOG (Last 50 lines):"
+                tail -n 50 restore.log
+                exit 1
+            fi
+            
+            echo "🏁 --- DONE ---"
             FILE_ID="1NQ8tMBhMfs_h4WI95s5UoGvZb0dom0c1"
             OUTPUT="/root/dump_gdrive.sql.gz"
             
