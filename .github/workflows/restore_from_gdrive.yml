@@ -40,30 +40,43 @@ jobs:
             echo "✅ Downloaded: $SIZE"
             
             # 3. Find Container
+            echo "💽 Checking Disk Space:"
+            df -h
+            
             echo "🔍 Finding Database Container..."
             CONTAINER_ID=$(docker ps -qf name=app-db-1)
-            if [ -z "$CONTAINER_ID" ]; then
-                CONTAINER_ID=$(docker ps -qf name=db | head -n 1)
-            fi
             
             # Auto-start if missing
             if [ -z "$CONTAINER_ID" ]; then
-                echo "⚠️  DB not running. searching for project dir..."
+                echo "⚠️  DB not running. Finding project dir..."
                 
-                # Find dir with docker-compose.yml
-                PROJECT_DIR=$(find /root -maxdepth 3 -name docker-compose.yml -exec dirname {} \; | head -n 1)
+                # Robust find logic matching deploy.yml
+                PROJECT_DIR=$(dirname $(find /root -maxdepth 4 -name docker-compose.yml | grep -v "node_modules" | head -n 1))
                 
                 if [ -n "$PROJECT_DIR" ]; then
                     echo "📂 Found project in: $PROJECT_DIR"
                     cd $PROJECT_DIR
-                    echo "🚀 Starting DB..."
-                    docker-compose up -d db
-                    sleep 15
+                    
+                    echo "⚙️ Validating Config..."
+                    docker compose config > /dev/null
+                    if [ $? -eq 0 ]; then
+                        echo "🚀 Starting DB..."
+                        docker compose up -d db
+                        docker compose logs db | tail -n 20
+                        sleep 20
+                    else
+                        echo "❌ Invalid docker-compose configuration!"
+                    fi
                 else
                     echo "❌ Could not find docker-compose.yml in /root"
+                    ls -R /root | head -n 20
                 fi
                 
-                CONTAINER_ID=$(docker ps -qf name=db | head -n 1)
+                CONTAINER_ID=$(docker ps -qf name=app-db-1)
+                # Fallback check
+                if [ -z "$CONTAINER_ID" ]; then
+                     CONTAINER_ID=$(docker ps -qf name=db | head -n 1)
+                fi
             fi
             
             if [ -z "$CONTAINER_ID" ]; then
