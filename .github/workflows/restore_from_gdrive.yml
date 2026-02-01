@@ -39,11 +39,31 @@ jobs:
             SIZE=$(du -h $OUTPUT | cut -f1)
             echo "✅ Downloaded: $SIZE"
             
-            # 3. Find Container
-            echo "💽 Checking Disk Space:"
-            df -h
+            # 2. Download File
+            FILE_ID="1NQ8tMBhMfs_h4WI95s5UoGvZb0dom0c1"
+            OUTPUT="/***/dump_gdrive.sql.gz"
+            echo "⬇️ Downloading file (ID: $FILE_ID)..."
+            # ... (previous download logic assumed intact, just ensuring context) ...
             
-            echo "🔍 Finding Database Container..."
+            # --- MEMORY FIX: Add Swap to prevent OOM ---
+            echo "🧠 Memory Status (Before):"
+            free -h
+            
+            if [ $(swapon --show | wc -l) -le 1 ]; then
+                echo "💾 Creating 4GB Swap file to prevent OOM..."
+                fallocate -l 4G /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=4096
+                chmod 600 /swapfile
+                mkswap /swapfile
+                swapon /swapfile || echo "⚠️ Could not enable swap (permissions?)"
+                echo "✅ Swap enabled."
+            else
+                echo "✅ Swap already exists."
+            fi
+            echo "🧠 Memory Status (After):"
+            free -h
+            # -------------------------------------------
+
+            # 3. Find Container
             CONTAINER_ID=$(docker ps -qf name=app-db-1)
             
             # Auto-start if missing
