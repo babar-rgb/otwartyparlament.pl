@@ -86,8 +86,29 @@ jobs:
             fi
             
             # 4. Restore
+            echo "🕵️ Checking Database Connection (User: kajtek)..."
+            docker exec -i $CONTAINER_ID psql -U kajtek -d otwarty_parlament -c "\q" 2>/dev/null
+            
+            if [ $? -ne 0 ]; then
+                echo "⚠️ Connection Failed! Role 'kajtek' missing or DB mismatch."
+                echo "💥 PERFORMING FACTORY RESET of Database Volume..."
+                
+                cd $PROJECT_DIR
+                docker compose down -v
+                
+                echo "🚀 Starting Fresh Database (Initializing 'kajtek' user)..."
+                docker compose up -d db
+                
+                echo "⏳ Waiting 20s for initialization..."
+                sleep 20
+                
+                CONTAINER_ID=$(docker ps -qf name=app-db-1)
+                echo "✅ New Container: $CONTAINER_ID"
+            else
+                 echo "✅ Connection OK."
+            fi
+            
             echo "⏳ Restoring Database (This may take 15-30 minutes)..."
-            echo "   Container: $CONTAINER_ID"
             
             # CLEAR DB FIRST (Safety for re-runs)
             echo "🧹 Clearing existing schema to avoid conflicts..."
