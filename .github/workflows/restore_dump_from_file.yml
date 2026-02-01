@@ -25,8 +25,22 @@ jobs:
             fi
             
             echo "🔍 Finding Database Container..."
-            CONTAINER_ID=$(docker ps -qf name=db | head -n 1)
+            echo "   (Debug: listing all containers)"
+            docker ps -a
             
+            # Try 1: Exact name
+            CONTAINER_ID=$(docker ps -qf name=app-db-1)
+            
+            # Try 2: Generic 'db' name
+            if [ -z "$CONTAINER_ID" ]; then
+                CONTAINER_ID=$(docker ps -qf name=db | head -n 1)
+            fi
+            
+            # Try 3: Image name 'postgres'
+            if [ -z "$CONTAINER_ID" ]; then
+                CONTAINER_ID=$(docker ps -qf ancestor=postgres:15 | head -n 1)
+            fi
+
             if [ -z "$CONTAINER_ID" ]; then
                 echo "❌ Error: Database container not found!"
                 exit 1
