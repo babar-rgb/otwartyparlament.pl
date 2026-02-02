@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   db:
-    image: pgvector/pgvector:pg15
+    image: postgres:15
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-kajtek}
@@ -17,11 +17,11 @@ services:
     build: ./backend
     restart: always
     environment:
-      POSTGRES_HOST: db
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: ${POSTGRES_USER:-kajtek}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
-      POSTGRES_DB: ${POSTGRES_DB:-otwarty_parlament}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER:-kajtek}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      DB_NAME: ${POSTGRES_DB:-otwarty_parlament}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
     ports:
       - "8000:8000"
@@ -36,10 +36,6 @@ services:
         VITE_API_ANON_KEY: ${VITE_API_ANON_KEY}
     ports:
       - "80:80"
-      - "443:443"
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-      - ./nginx_root/.well-known/acme-challenge:/usr/share/nginx/html/.well-known/acme-challenge
     depends_on:
       - backend
 
