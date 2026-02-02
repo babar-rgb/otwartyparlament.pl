@@ -1,0 +1,19 @@
+name: Emergency Clean Up
+on: [workflow_dispatch]
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clean Up VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          script: |
+            echo "🧹 Cleaning up Docker resources..."
+            docker system prune -af
+            docker volume prune -f
+            echo "✅ Disk space after cleanup:"
+            df -h
