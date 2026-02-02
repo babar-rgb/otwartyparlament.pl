@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchVotes, fetchVoteAnalysis, fetchVoteResults, fetchProcessesCount } from '../api';
+import { fetchVotes, fetchVoteAnalysis, fetchVoteResults, fetchProcessesCount, fetchVoteResultsDetailed } from '../api';
 import { useTerm } from '../context/TermContext';
 
 export interface DashboardStats {
@@ -57,18 +57,25 @@ export function useDashboardData() {
             let topVote: TopVote | null = null;
             if (recentVotes.length > 0) {
                 const topV = recentVotes[0];
-                const [analysis, results] = await Promise.all([
+                const [analysis, rawResults] = await Promise.all([
                     fetchVoteAnalysis(topV.id.toString()),
-                    (async () => {
-                        const batchSize = 200;
-                        const [batch1, batch2, batch3] = await Promise.all([
-                            fetchVoteResults({ vote_id: topV.id, limit: batchSize, skip: 0 }),
-                            fetchVoteResults({ vote_id: topV.id, limit: batchSize, skip: 200 }),
-                            fetchVoteResults({ vote_id: topV.id, limit: batchSize, skip: 400 })
-                        ]);
-                        return [...(batch1 || []), ...(batch2 || []), ...(batch3 || [])];
-                    })()
+                    // Use detailed endpoint which returns all results (no limit)
+                    fetchVoteResultsDetailed(topV.id).catch(() => [])
                 ]);
+
+                // Map raw results (nested objects) to dashboard format
+                const results = Array.isArray(rawResults) ? rawResults.map((r: any) => ({
+                    mp_id: r.mp_id,
+                    vote: r.result,
+                    mps: {
+                        id: r.mp?.id || r.mp_id,
+                        first_name: r.mp?.first_name || 'Unknown',
+                        last_name: r.mp?.last_name || 'MP',
+                        club: r.mp?.club || 'N/A',
+                        photo_url: r.mp?.photo_url || `/assets/mps/${r.mp_id}.jpg`,
+                        seat_number: r.mp?.seat_number
+                    }
+                })) : [];
 
                 topVote = {
                     id: topV.id,
