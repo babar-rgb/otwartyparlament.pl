@@ -17,11 +17,11 @@ services:
     build: ./backend
     restart: always
     environment:
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_USER: ${POSTGRES_USER:-kajtek}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-password}
-      DB_NAME: ${POSTGRES_DB:-otwarty_parlament}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-kajtek}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-otwarty_parlament}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
     ports:
       - "8000:8000"
