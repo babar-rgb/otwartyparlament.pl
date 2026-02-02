@@ -15,8 +15,9 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
           command_timeout: 120m
+          command_timeout: 120m
           script: |
-            echo "🚀 STARTING GOOGLE DRIVE RESTORE v10 (CORRECTED CODE)..."
+            echo "🚀 STARTING GOOGLE DRIVE RESTORE v11 (FILE BASED STRATEGY)..."
             
             # 1. Install gdown (best tool for Drive files)
             echo "🛠️ Installing gdown..."
@@ -143,14 +144,24 @@ jobs:
             docker exec -i $CONTAINER_ID psql -U postgres -d otwarty_parlament -c "GRANT ALL PRIVILEGES ON DATABASE otwarty_parlament TO kajtek;" 2>/dev/null || true
             # --------------------------------------------------------
 
-            echo "⏳ Restoring Database (This may take 15-30 minutes)..."
+            echo "⏳ Restoring Database (File-Based Strategy)..."
             
-            # CLEAR DB FIRST (Safety for re-runs)
-            echo "🧹 Clearing existing schema to avoid conflicts..."
+            # CLEAR DB FIRST
+            echo "🧹 Clearing existing schema..."
             docker exec -i $CONTAINER_ID psql -U kajtek -d otwarty_parlament -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
             
-            # Stream with Log Capture
-            gunzip -c $OUTPUT | docker exec -i $CONTAINER_ID psql -U kajtek -d otwarty_parlament > restore.log 2>&1
+            # 1. Unzip to Disk (Avoid Pipe OOM)
+            echo "📦 Unzipping file to disk (Filesystem)..."
+            gunzip -k $OUTPUT
+            DUMP_FILE="${OUTPUT%.gz}" # /root/dump_gdrive.sql
+            
+            # 2. Copy to Container
+            echo "🚚 Copying dump to container..."
+            docker cp $DUMP_FILE $CONTAINER_ID:/dump.sql
+            
+            # 3. Restore from File
+            echo "▶️ Executing Import..."
+            docker exec -i $CONTAINER_ID psql -U kajtek -d otwarty_parlament -f /dump.sql > restore.log 2>&1
             
             EXIT_CODE=$?
             
