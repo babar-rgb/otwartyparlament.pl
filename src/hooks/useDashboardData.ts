@@ -59,7 +59,15 @@ export function useDashboardData() {
                 const topV = recentVotes[0];
                 const [analysis, results] = await Promise.all([
                     fetchVoteAnalysis(topV.id.toString()),
-                    fetchVoteResults({ vote_id: topV.id, limit: 460 })
+                    (async () => {
+                        const batchSize = 200;
+                        const [batch1, batch2, batch3] = await Promise.all([
+                            fetchVoteResults({ vote_id: topV.id, limit: batchSize, skip: 0 }),
+                            fetchVoteResults({ vote_id: topV.id, limit: batchSize, skip: 200 }),
+                            fetchVoteResults({ vote_id: topV.id, limit: batchSize, skip: 400 })
+                        ]);
+                        return [...(batch1 || []), ...(batch2 || []), ...(batch3 || [])];
+                    })()
                 ]);
 
                 topVote = {

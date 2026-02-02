@@ -9,7 +9,7 @@ router = APIRouter()
 @router.get("", response_model=List[models.MP] if hasattr(models, 'MPSchema') else None)
 def read_mps(
     skip: int = 0, 
-    limit: int = 100, 
+    limit: int = 1000, 
     term: Optional[int] = None,
     active: Optional[bool] = None,
     db: Session = Depends(database.get_db)

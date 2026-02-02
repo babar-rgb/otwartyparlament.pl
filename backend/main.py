@@ -26,18 +26,19 @@ app.add_middleware(
 )
 
 # Include Routers
-app.include_router(mps.router, prefix="/mps", tags=["MPs"])
-app.include_router(votes.router, prefix="/votes", tags=["Votes"])
-app.include_router(processes.router, prefix="/processes", tags=["Processes"])
-app.include_router(legislative_processes.router, prefix="/legislative_processes", tags=["Legislative Processes"])
+# Include Routers
+app.include_router(mps.router, prefix="/api/mps", tags=["MPs"])
+app.include_router(votes.router, prefix="/api/votes", tags=["Votes"])
+app.include_router(processes.router, prefix="/api/processes", tags=["Processes"])
+app.include_router(legislative_processes.router, prefix="/api/legislative_processes", tags=["Legislative Processes"])
 app.include_router(sitemap.router, tags=["Sitemap"]) # Root level for sitemap.xml
-app.include_router(alignment.router, prefix="/alignment", tags=["Alignment"])
-app.include_router(euro.router, prefix="/euro", tags=["Euro"])
-app.include_router(personas.router, prefix="/personas", tags=["Personas"])
-app.include_router(wealth.router, tags=["Wealth"])
+app.include_router(alignment.router, prefix="/api/alignment", tags=["Alignment"])
+app.include_router(euro.router, prefix="/api/euro", tags=["Euro"])
+app.include_router(personas.router, prefix="/api/personas", tags=["Personas"])
+app.include_router(wealth.router, prefix="/api", tags=["Wealth"])
 app.include_router(semantic_search.router, prefix="/api", tags=["Semantic Search"])
 app.include_router(recommendations.router, prefix="/api", tags=["Personalization"])
-app.include_router(general.router, tags=["General"])
+app.include_router(general.router, prefix="/api", tags=["General"])
 
 @app.get("/")
 def read_root():

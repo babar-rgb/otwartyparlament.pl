@@ -402,7 +402,7 @@ def read_votes_results_v2(
     mp_id: Optional[int] = Query(None),
     vote_id: Optional[int] = Query(None),
     mp_ids: Optional[List[int]] = Query(None),
-    limit: int = 1000,
+    limit: int = 2000,
     db: Session = Depends(database.get_db)
 ):
     query = db.query(models.VoteResult)

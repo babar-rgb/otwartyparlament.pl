@@ -213,11 +213,12 @@ export const fetchInterpellation = async (id: string | number) => {
   return await response.json();
 };
 
-export const fetchVoteResults = async (options?: { mp_id?: number | string; vote_id?: number | string; mp_ids?: (number | string)[]; limit?: number }) => {
+export const fetchVoteResults = async (options?: { mp_id?: number | string; vote_id?: number | string; mp_ids?: (number | string)[]; limit?: number; skip?: number }) => {
   const params = new URLSearchParams();
   if (options?.mp_id) params.append('mp_id', options.mp_id.toString());
   if (options?.vote_id) params.append('vote_id', options.vote_id.toString());
   if (options?.limit) params.append('limit', options.limit.toString());
+  if (options?.skip) params.append('skip', options.skip.toString());
   if (options?.mp_ids) options.mp_ids.forEach(id => params.append('mp_ids', id.toString()));
 
   const response = await fetch(`${API_URL}/votes/results?${params.toString()}`);
