@@ -16,49 +16,18 @@ jobs:
           port: 22
           command_timeout: 120m
           script: |
-            echo "🚀 STARTING GOOGLE DRIVE RESTORE v9 (MAX MEMORY MODE)..."
+            echo "🚀 STARTING GOOGLE DRIVE RESTORE v10 (CORRECTED CODE)..."
             
-            # ... (Install & Download & Swap logic remains - assumed lines 21-64) ...
-
-            # 3. Find Container
-            # ... (Find logic remains - assumed lines 67-106) ...
+            # 1. Install gdown (best tool for Drive files)
+            echo "🛠️ Installing gdown..."
+            apt-get update && apt-get install -y python3-pip
+            pip3 install gdown --break-system-packages || pip3 install gdown
             
-            # --- MAX MEMORY MODE: Stop other services ---
-            echo "🛑 Stopping Frontend & Backend to free RAM..."
-            cd $PROJECT_DIR
-            docker compose stop backend frontend || true
-            # --------------------------------------------
-
-            # 4. Restore
-            # ... (User Fix / Schema Clear remains - assumed lines 109-142) ...
-            
-            # Stream with Log Capture
-            gunzip -c $OUTPUT | docker exec -i $CONTAINER_ID psql -U kajtek -d otwarty_parlament > restore.log 2>&1
-            
-            EXIT_CODE=$?
-            
-            # Restart Services regardless of outcome
-            echo "🔄 Restarting Services..."
-            docker compose start backend frontend || docker compose up -d backend frontend
-            
-            if [ $EXIT_CODE -eq 0 ]; then
-                echo "✅ RESTORE SUCCESSFUL!"
-                echo "🧹 Cleaning up..."
-                rm $OUTPUT
-                rm restore.log
-            else
-                echo "❌ Restore Failed."
-                echo "📜 ERROR LOG (Last 50 lines):"
-                tail -n 50 restore.log
-                exit 1
-            fi
-            
-            echo "🏁 --- DONE ---"
+            # 2. Download File
             FILE_ID="1NQ8tMBhMfs_h4WI95s5UoGvZb0dom0c1"
             OUTPUT="/root/dump_gdrive.sql.gz"
-            
             echo "⬇️ Downloading file (ID: $FILE_ID)..."
-            rm -f $OUTPUT # Clear previous attempts
+            rm -f $OUTPUT
             gdown --id $FILE_ID -O $OUTPUT
             
             if [ ! -f "$OUTPUT" ]; then
@@ -68,12 +37,6 @@ jobs:
             
             SIZE=$(du -h $OUTPUT | cut -f1)
             echo "✅ Downloaded: $SIZE"
-            
-            # 2. Download File
-            FILE_ID="1NQ8tMBhMfs_h4WI95s5UoGvZb0dom0c1"
-            OUTPUT="/***/dump_gdrive.sql.gz"
-            echo "⬇️ Downloading file (ID: $FILE_ID)..."
-            # ... (previous download logic assumed intact, just ensuring context) ...
             
             # --- MEMORY FIX: Add Swap to prevent OOM ---
             echo "🧠 Memory Status (Before):"
@@ -85,7 +48,6 @@ jobs:
                 chmod 600 /swapfile
                 mkswap /swapfile
                 swapon /swapfile || echo "⚠️ Could not enable swap (permissions?)"
-                echo "✅ Swap enabled."
             else
                 echo "✅ Swap already exists."
             fi
@@ -93,7 +55,7 @@ jobs:
             free -h
             # -------------------------------------------
 
-            # 3. Find Container
+            # 3. Find Container and Project
             CONTAINER_ID=$(docker ps -qf name=app-db-1)
             
             # Auto-start if missing
@@ -127,6 +89,13 @@ jobs:
                 if [ -z "$CONTAINER_ID" ]; then
                      CONTAINER_ID=$(docker ps -qf name=db | head -n 1)
                 fi
+            else
+               # If container found, we still need PROJECT_DIR for Stop/Start commands
+                PROJECT_DIR=$(dirname $(find /root -maxdepth 4 -name docker-compose.yml | grep -v "node_modules" | head -n 1))
+                 if [ -z "$PROJECT_DIR" ]; then
+                     # Fallback if find fails but container runs? Unlikely but safe defaults
+                     PROJECT_DIR="/root/parlament"
+                 fi
             fi
             
             if [ -z "$CONTAINER_ID" ]; then
@@ -135,6 +104,16 @@ jobs:
                 exit 1
             fi
             
+            # --- MAX MEMORY MODE: Stop other services ---
+            echo "🛑 Stopping Frontend & Backend to free RAM..."
+            if [ -n "$PROJECT_DIR" ]; then
+                cd $PROJECT_DIR
+                docker compose stop backend frontend || true
+            else
+                echo "⚠️ Warning: Project dir known, skipping services stop."
+            fi
+            # --------------------------------------------
+
             # 4. Restore
             echo "🕵️ Checking Database Connection (User: kajtek)..."
             docker exec -i $CONTAINER_ID psql -U kajtek -d otwarty_parlament -c "\q" 2>/dev/null
@@ -175,14 +154,21 @@ jobs:
             
             EXIT_CODE=$?
             
+            # Restart Services regardless of outcome
+            if [ -n "$PROJECT_DIR" ]; then
+                echo "🔄 Restarting Services..."
+                cd $PROJECT_DIR
+                docker compose start backend frontend || docker compose up -d backend frontend
+            fi
+            
             if [ $EXIT_CODE -eq 0 ]; then
                 echo "✅ RESTORE SUCCESSFUL!"
                 echo "🧹 Cleaning up dump file..."
                 rm $OUTPUT
                 rm restore.log
                 
-                echo "🔄 Restarting Backend to refresh connections..."
-                cd app && docker-compose restart backend
+                echo "🔄 Force Restarting Backend to refresh connections..."
+                cd $PROJECT_DIR && docker compose restart backend
             else
                 echo "❌ Restore Failed during PSQL import."
                 echo "📜 ERROR LOG (Last 50 lines):"
