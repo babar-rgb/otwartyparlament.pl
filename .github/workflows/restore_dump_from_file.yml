@@ -18,9 +18,10 @@ jobs:
           script: |
             echo "🚀 STARTING DATABASE RESTORE from /root/dump.sql.gz"
             
-            FILE="/root/dump.sql.gz"
+            FILE="/root/app/dump_parlament.backup"
             if [ ! -f "$FILE" ]; then
                 echo "❌ Error: Dump file $FILE not found on server!"
+                ls -lh /root/app/
                 exit 1
             fi
             
@@ -28,24 +29,13 @@ jobs:
             df -h
             
             echo "🔍 Finding Database Container..."
-            echo "   (Debug: listing all containers)"
-            docker ps -a
+            docker ps --format "table {{.ID}}\t{{.Names}}\t{{.Status}}"
             
             # Find ID
             CONTAINER_ID=$(docker ps -qf name=app-db-1)
             if [ -z "$CONTAINER_ID" ]; then
-                CONTAINER_ID=$(docker ps -qf name=db | head -n 1)
-            fi
-
-            if [ -z "$CONTAINER_ID" ]; then
-                echo "⚠️  Database container not found running! Attempting to start it..."
-                # Try finding project dir (usually 'app' or current dir)
-                if [ -d "app" ]; then
-                    cd app
-                fi
-                docker-compose up -d db
-                sleep 10 # Wait for DB to init
-                CONTAINER_ID=$(docker ps -qf name=db | head -n 1)
+                 echo "⚠️ Exact match 'app-db-1' not found, searching..."
+                 CONTAINER_ID=$(docker ps -qf name=db | head -n 1)
             fi
 
             if [ -z "$CONTAINER_ID" ]; then
@@ -54,16 +44,18 @@ jobs:
             fi
             echo "✅ Found Container: $CONTAINER_ID"
             
-            echo "⏳ Restoring Database (This may take 10-20 minutes)..."
-            # Gunzip and pipe to psql inside docker
-            gunzip -c $FILE | docker exec -i $CONTAINER_ID psql -U kajtek -d otwarty_parlament
+            echo "⏳ Restoring Database from $FILE ..."
+            
+            # Use cat | docker exec -i with pg_restore
+            # This handles the case where the file is on the host but not mounted in the container
+            cat "$FILE" | docker exec -i $CONTAINER_ID pg_restore -U kajtek -d otwarty_parlament -v --clean --if-exists --no-owner --role=kajtek
             
             if [ $? -eq 0 ]; then
                 echo "✅ RESTORE COMPLETE! Database is populated."
-                # Optional: Remove dump to save space? Let's keep it for now.
-                # rm $FILE
             else
-                echo "❌ Restore Failed."
+                echo "❌ Restore Failed. Checking if it's a text dump..."
+                # Fallback check - if it's just raw SQL
+                # cat "$FILE" | docker exec -i $CONTAINER_ID psql -U kajtek -d otwarty_parlament
                 exit 1
             fi
             
