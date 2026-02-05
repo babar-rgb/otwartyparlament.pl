@@ -64,6 +64,18 @@ services:
     depends_on:
       - backend
       - n8n
+      - frontend
+    networks:
+      - parlament_net
+
+  # 3. Frontend (React + Vite)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: https://api.otwartyparlament.pl
+    restart: always
     networks:
       - parlament_net
 
