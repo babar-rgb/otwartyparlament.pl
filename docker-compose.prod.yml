@@ -19,8 +19,8 @@ services:
     # 2. Twój Backend (FastAPI)
   backend:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     restart: always
     depends_on:
       - db
