@@ -18,7 +18,7 @@ export const fetchMPs = async (options?: { term?: number; active?: boolean; skip
   if (options?.skip) params.append('skip', options.skip.toString());
   if (options?.limit) params.append('limit', options.limit.toString());
 
-  const response = await fetch(`${API_URL}/mps?${params.toString()}`);
+  const response = await fetch(`${API_URL}/api/mps?${params.toString()}`);
   if (!response.ok) {
     throw new Error('Failed to fetch MPs');
   }
@@ -27,7 +27,7 @@ export const fetchMPs = async (options?: { term?: number; active?: boolean; skip
 };
 
 export const fetchMP = async (id: string): Promise<MP> => {
-  const response = await fetch(`${API_URL}/mps/${id}`);
+  const response = await fetch(`${API_URL}/api/mps/${id}`);
   if (!response.ok) {
     throw new Error('Failed to fetch MP');
   }
@@ -79,7 +79,7 @@ export const fetchVotes = async (options: FetchVotesOptions = {}): Promise<{ ite
   if (options.grouped !== undefined) params.append('grouped', options.grouped.toString());
   if (options.category) params.append('category', options.category);
 
-  const response = await fetch(`${API_URL}/votes?${params.toString()}`);
+  const response = await fetch(`${API_URL}/api/votes?${params.toString()}`);
   if (!response.ok) {
     throw new Error('Failed to fetch Votes');
   }
@@ -91,7 +91,7 @@ export const fetchVotes = async (options: FetchVotesOptions = {}): Promise<{ ite
 };
 
 export const fetchVote = async (id: string): Promise<Vote> => {
-  const response = await fetch(`${API_URL}/votes/${id}`);
+  const response = await fetch(`${API_URL}/api/votes/${id}`);
   if (!response.ok) {
     throw new Error('Failed to fetch Vote');
   }
@@ -103,14 +103,14 @@ export const fetchVoteTimeline = async (term?: number) => {
   const params = new URLSearchParams();
   if (term) params.append('term', term.toString());
 
-  const response = await fetch(`${API_URL}/votes/timeline?${params.toString()}`);
+  const response = await fetch(`${API_URL}/api/votes/timeline?${params.toString()}`);
   if (!response.ok) throw new Error('Failed to fetch timeline');
   return await response.json();
 };
 
 export const fetchVoteAnalysis = async (voteId: string): Promise<VoteAnalysis | null> => {
   try {
-    const response = await fetch(`${API_URL}/votes/${voteId}/analysis`);
+    const response = await fetch(`${API_URL}/api/votes/${voteId}/analysis`);
     if (!response.ok) {
       if (response.status === 404) return null;
       throw new Error('Failed to fetch Analysis');
@@ -130,7 +130,7 @@ export const fetchVoteAnalysis = async (voteId: string): Promise<VoteAnalysis | 
 
 export const generateVoteAnalysis = async (voteId: string): Promise<VoteAnalysis | null> => {
   try {
-    const response = await fetch(`${API_URL}/votes/${voteId}/analyze`, {
+    const response = await fetch(`${API_URL}/api/votes/${voteId}/analyze`, {
       method: 'POST'
     });
     if (!response.ok) {
@@ -151,7 +151,7 @@ export const generateVoteAnalysis = async (voteId: string): Promise<VoteAnalysis
 
 export const fetchMPStats = async (mpId: string | number): Promise<Record<string, any>> => {
   try {
-    const response = await fetch(`${API_URL}/mps/${mpId}/stats`);
+    const response = await fetch(`${API_URL}/api/mps/${mpId}/stats`);
     if (!response.ok) return {};
     const data = await response.json();
     // Parse JSON values if they are strings
@@ -171,7 +171,7 @@ export const fetchMPStats = async (mpId: string | number): Promise<Record<string
 
 export const fetchMPAlignment = async (mpId: string | number) => {
   try {
-    const response = await fetch(`${API_URL}/mps/${mpId}/alignment`);
+    const response = await fetch(`${API_URL}/api/mps/${mpId}/alignment`);
     if (!response.ok) return [];
     return await response.json();
   } catch (e) {
@@ -182,7 +182,7 @@ export const fetchMPAlignment = async (mpId: string | number) => {
 
 export const fetchMPDeclarations = async (mpId: string | number) => {
   try {
-    const response = await fetch(`${API_URL}/mps/${mpId}/declarations`);
+    const response = await fetch(`${API_URL}/api/mps/${mpId}/declarations`);
     if (!response.ok) return [];
     return await response.json();
   } catch (e) {
@@ -196,19 +196,19 @@ export const fetchInterpellations = async (options?: { mp_id?: number; skip?: nu
   if (options?.mp_id) params.append('mp_id', options.mp_id.toString());
   if (options?.skip) params.append('skip', options.skip.toString());
   if (options?.limit) params.append('limit', options.limit.toString());
-  const response = await fetch(`${API_URL}/interpellations?${params.toString()}`);
+  const response = await fetch(`${API_URL}/api/interpellations?${params.toString()}`);
   return await response.json();
 };
 
 export const fetchInterpellationsCount = async () => {
-  const response = await fetch(`${API_URL}/interpellations/count`);
+  const response = await fetch(`${API_URL}/api/interpellations/count`);
   if (!response.ok) throw new Error('Failed to fetch interpellations count');
   const data = await response.json();
   return data.count;
 };
 
 export const fetchInterpellation = async (id: string | number) => {
-  const response = await fetch(`${API_URL}/interpellations/${id}`);
+  const response = await fetch(`${API_URL}/api/interpellations/${id}`);
   if (!response.ok) throw new Error('Failed to fetch interpellation');
   return await response.json();
 };
@@ -221,19 +221,19 @@ export const fetchVoteResults = async (options?: { mp_id?: number | string; vote
   if (options?.skip) params.append('skip', options.skip.toString());
   if (options?.mp_ids) options.mp_ids.forEach(id => params.append('mp_ids', id.toString()));
 
-  const response = await fetch(`${API_URL}/votes/results?${params.toString()}`);
+  const response = await fetch(`${API_URL}/api/votes/results?${params.toString()}`);
   if (!response.ok) throw new Error('Failed to fetch vote results');
   return await response.json();
 };
 
 export const fetchVoteResultsDetailed = async (voteId: number | string) => {
-  const response = await fetch(`${API_URL}/votes/${voteId}/results`);
+  const response = await fetch(`${API_URL}/api/votes/${voteId}/results`);
   if (!response.ok) throw new Error('Failed to fetch detailed vote results');
   return await response.json();
 };
 
 export const fetchVoteConnections = async (voteId: number | string) => {
-  const response = await fetch(`${API_URL}/votes/${voteId}/connections`);
+  const response = await fetch(`${API_URL}/api/votes/${voteId}/connections`);
   if (!response.ok) throw new Error('Failed to fetch vote connections');
   return await response.json();
 };
@@ -241,13 +241,13 @@ export const fetchVoteConnections = async (voteId: number | string) => {
 export const fetchCommittees = async (term?: number) => {
   const params = new URLSearchParams();
   if (term) params.append('term', term.toString());
-  const response = await fetch(`${API_URL}/committees?${params.toString()}`);
+  const response = await fetch(`${API_URL}/api/committees?${params.toString()}`);
   if (!response.ok) throw new Error('Failed to fetch committees');
   return await response.json();
 };
 
 export const fetchCommittee = async (code: string) => {
-  const response = await fetch(`${API_URL}/committees/${code}`);
+  const response = await fetch(`${API_URL}/api/committees/${code}`);
   if (!response.ok) throw new Error('Failed to fetch committee');
   return await response.json();
 };
@@ -261,19 +261,19 @@ export const fetchEuroVotes = async (options?: { term?: number; tag?: string; ke
   if (options?.skip) params.append('skip', options.skip.toString());
   if (options?.limit) params.append('limit', options.limit.toString());
 
-  const response = await fetch(`${API_URL}/euro/votes?${params.toString()}`);
+  const response = await fetch(`${API_URL}/api/euro/votes?${params.toString()}`);
   if (!response.ok) throw new Error('Failed to fetch Euro votes');
   return await response.json();
 };
 
 export const fetchEuroVote = async (id: string) => {
-  const response = await fetch(`${API_URL}/euro/votes/${id}`);
+  const response = await fetch(`${API_URL}/api/euro/votes/${id}`);
   if (!response.ok) throw new Error('Failed to fetch Euro vote');
   return await response.json();
 };
 
 export const fetchEuroVoteResults = async (voteId: string) => {
-  const response = await fetch(`${API_URL}/euro/votes/${voteId}/results`);
+  const response = await fetch(`${API_URL}/api/euro/votes/${voteId}/results`);
   if (!response.ok) throw new Error('Failed to fetch Euro vote results');
   return await response.json();
 };
@@ -282,31 +282,31 @@ export const fetchEuroMPs = async (options?: { term?: number; active?: boolean }
   const params = new URLSearchParams();
   if (options?.term) params.append('term', options.term.toString());
   if (options?.active !== undefined) params.append('active', options.active.toString());
-  const response = await fetch(`${API_URL}/euro/mps?${params.toString()}`); // Backend still has /euro/mps, but I'll make sure it handles params
+  const response = await fetch(`${API_URL}/api/euro/mps?${params.toString()}`); // Backend still has /euro/mps, but I'll make sure it handles params
   if (!response.ok) throw new Error('Failed to fetch Euro MPs');
   return await response.json();
 };
 
 export const fetchEuroMP = async (id: string) => {
-  const response = await fetch(`${API_URL}/euro/mps/${id}`);
+  const response = await fetch(`${API_URL}/api/euro/mps/${id}`);
   if (!response.ok) throw new Error('Failed to fetch Euro MP');
   return await response.json();
 };
 
 export const fetchEuroMPHistory = async (apiId: number) => {
-  const response = await fetch(`${API_URL}/euro/mps/${apiId}/history`);
+  const response = await fetch(`${API_URL}/api/euro/mps/${apiId}/history`);
   if (!response.ok) throw new Error('Failed to fetch Euro MP history');
   return await response.json();
 };
 
 export const fetchCategories = async () => {
-  const response = await fetch(`${API_URL}/categories`);
+  const response = await fetch(`${API_URL}/api/categories`);
   if (!response.ok) throw new Error('Failed to fetch categories');
   return await response.json();
 };
 
 export const fetchParties = async () => {
-  const response = await fetch(`${API_URL}/mps?limit=1000`); // Simple hack for now to get party list from MPs or just return clubs
+  const response = await fetch(`${API_URL}/api/mps?limit=1000`); // Simple hack for now to get party list from MPs or just return clubs
   if (!response.ok) throw new Error('Failed to fetch parties');
   const mps = await response.json();
   const clubs = Array.from(new Set(mps.map((m: any) => m.club))).map(name => ({ id: name, name, logo_url: '', color: '#0355BF' }));
@@ -314,7 +314,7 @@ export const fetchParties = async () => {
 };
 
 export const fetchCategoryVoteCounts = async (term: number) => {
-  const response = await fetch(`${API_URL}/categories/vote_counts?term=${term}`);
+  const response = await fetch(`${API_URL}/api/categories/vote_counts?term=${term}`);
   if (!response.ok) throw new Error('Failed to fetch category vote counts');
   return await response.json();
 };
@@ -327,14 +327,14 @@ export const unifiedSearch = async (options: { q: string; type?: string; period?
   if (options.controversial) params.append('controversial', 'true');
   if (options.expanded) params.append('expanded', options.expanded);
 
-  const response = await fetch(`${API_URL}/search?${params.toString()}`);
+  const response = await fetch(`${API_URL}/api/search?${params.toString()}`);
   if (!response.ok) throw new Error('Search failed');
   return await response.json();
 };
 
 export const fetchUpcomingSittings = async (): Promise<any[]> => {
   try {
-    const response = await fetch(`${API_URL}/sejm/upcoming-sittings`);
+    const response = await fetch(`${API_URL}/api/sejm/upcoming-sittings`);
     if (!response.ok) return [];
     return await response.json();
   } catch (e) {
@@ -344,7 +344,7 @@ export const fetchUpcomingSittings = async (): Promise<any[]> => {
 };
 
 export const fetchProcess = async (id: string) => {
-  const response = await fetch(`${API_URL}/legislative_processes/${id}`);
+  const response = await fetch(`${API_URL}/api/legislative_processes/${id}`);
   if (!response.ok) throw new Error('Failed to fetch process');
   return await response.json();
 };
@@ -356,7 +356,7 @@ export const fetchProcesses = async (options?: { skip?: number; limit?: number; 
   if (options?.term) params.append('term', options.term.toString());
   if (options?.q) params.append('q', options.q);
   if (options?.type) params.append('type', options.type);
-  const response = await fetch(`${API_URL}/legislative_processes?${params.toString()}`);
+  const response = await fetch(`${API_URL}/api/legislative_processes?${params.toString()}`);
   if (!response.ok) throw new Error('Failed to fetch processes');
   return await response.json();
 };
@@ -364,20 +364,20 @@ export const fetchProcesses = async (options?: { skip?: number; limit?: number; 
 export const fetchProcessesCount = async (term?: number) => {
   const params = new URLSearchParams();
   if (term) params.append('term', term.toString());
-  const response = await fetch(`${API_URL}/legislative_processes/count?${params.toString()}`);
+  const response = await fetch(`${API_URL}/api/legislative_processes/count?${params.toString()}`);
   if (!response.ok) throw new Error('Failed to fetch processes count');
   const data = await response.json();
   return data.count;
 };
 
 export const fetchRelatedProcesses = async (processId: string, limit: number = 5) => {
-  const response = await fetch(`${API_URL}/processes/${processId}/related?limit=${limit}`);
+  const response = await fetch(`${API_URL}/api/processes/${processId}/related?limit=${limit}`);
   if (!response.ok) throw new Error('Failed to fetch related processes');
   return await response.json();
 };
 
 export const matchPoliticalTwin = async (query: string) => {
-  const response = await fetch(`${API_URL}/alignment/match`, {
+  const response = await fetch(`${API_URL}/api/alignment/match`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query })
@@ -387,13 +387,13 @@ export const matchPoliticalTwin = async (query: string) => {
 };
 
 export const fetchPersonasFeed = async (persona: string, limit: number = 20) => {
-  const response = await fetch(`${API_URL}/personas/feed?persona=${persona}&limit=${limit}`);
+  const response = await fetch(`${API_URL}/api/personas/feed?persona=${persona}&limit=${limit}`);
   if (!response.ok) throw new Error('Failed to fetch personas feed');
   return await response.json();
 };
 
 export const fetchSpeech = async (id: string) => {
-  const response = await fetch(`${API_URL}/speeches/${id}`);
+  const response = await fetch(`${API_URL}/api/speeches/${id}`);
   if (!response.ok) throw new Error('Failed to fetch speech');
   return await response.json();
 };
@@ -408,25 +408,25 @@ export const fetchSpeeches = async (options?: { skip?: number; limit?: number; m
   if (options?.date_to) params.append('date_to', options.date_to);
   if (options?.q) params.append('q', options.q);
 
-  const response = await fetch(`${API_URL}/speeches?${params.toString()}`);
+  const response = await fetch(`${API_URL}/api/speeches?${params.toString()}`);
   if (!response.ok) throw new Error('Failed to fetch speeches');
   return await response.json();
 };
 
 export const fetchSpeechesCount = async () => {
-  const response = await fetch(`${API_URL}/speeches/count`);
+  const response = await fetch(`${API_URL}/api/speeches/count`);
   if (!response.ok) throw new Error('Failed to fetch speeches count');
   const data = await response.json();
   return data.count;
 };
 export const fetchWealthRankings = async () => {
-  const response = await fetch(`${API_URL}/mps/asset_declarations`);
+  const response = await fetch(`${API_URL}/api/mps/asset_declarations`);
   if (!response.ok) throw new Error('Failed to fetch wealth rankings');
   return await response.json();
 };
 
 export const fetchCommitteeSitting = async (sittingId: string | number) => {
-  const response = await fetch(`${API_URL}/committees/sittings/${sittingId}`);
+  const response = await fetch(`${API_URL}/api/committees/sittings/${sittingId}`);
   if (!response.ok) throw new Error('Failed to fetch committee sitting');
   return await response.json();
 };
