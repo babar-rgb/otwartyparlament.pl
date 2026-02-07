@@ -1,6 +1,6 @@
 import { MP, Vote, VoteAnalysis } from './types/domain';
 
-export const API_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000';
+export const API_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '';
 
 export const fetchRecommendations = async (interests: string) => {
   const params = new URLSearchParams({ interests });
