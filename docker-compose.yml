@@ -34,8 +34,8 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_ANON_KEY: ${VITE_API_ANON_KEY}
-    ports:
-      - "80:80"
+    expose:
+      - "80"
     depends_on:
       - backend
 
