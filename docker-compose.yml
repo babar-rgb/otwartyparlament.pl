@@ -38,8 +38,14 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`api.otwartyparlament.pl`) || (Host(`otwartyparlament.pl`) && PathPrefix(`/api`))"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=myresolver"
+      - "traefik.http.services.backend.loadbalancer.server.port=8000"
     depends_on:
       db:
         condition: service_healthy
@@ -55,6 +61,11 @@ services:
         VITE_API_URL: https://api.otwartyparlament.pl
     expose:
       - "80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`otwartyparlament.pl`) || Host(`www.otwartyparlament.pl`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
     depends_on:
       backend:
         condition: service_healthy
@@ -86,31 +97,39 @@ services:
     networks:
       - parlament_net
 
-  # 4. Bramkarz (Nginx Reverse Proxy)
-  nginx:
-    image: nginx:latest
+  traefik:
+    image: traefik:v2.10
     restart: always
+    command:
+      - "--api.insecure=false"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=kajtek76@icloud.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx.prod.conf:/etc/nginx/nginx.conf:ro
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    depends_on:
-      - backend
-      - n8n
-      - frontend
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
     networks:
       - parlament_net
 
-  # 5. Automatyzacja (n8n)
   n8n:
     image: docker.n8n.io/n8nio/n8n
     restart: always
     privileged: true
-    ports:
-      - "127.0.0.1:5678:5678"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.n8n.rule=Host(`n8n.otwartyparlament.pl`)"
+      - "traefik.http.routers.n8n.entrypoints=websecure"
+      - "traefik.http.routers.n8n.tls.certresolver=myresolver"
+      - "traefik.http.services.n8n.loadbalancer.server.port=5678"
     environment:
       - N8N_HOST=n8n.otwartyparlament.pl
       - WEBHOOK_URL=https://n8n.otwartyparlament.pl/
@@ -120,10 +139,15 @@ services:
     networks:
       - parlament_net
 
-  # 6. Analytics (Umami)
   umami:
     image: ghcr.io/umami-software/umami:postgresql-latest
     restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.umami.rule=Host(`umami.otwartyparlament.pl`)"
+      - "traefik.http.routers.umami.entrypoints=websecure"
+      - "traefik.http.routers.umami.tls.certresolver=myresolver"
+      - "traefik.http.services.umami.loadbalancer.server.port=3000"
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-kajtek}:${POSTGRES_PASSWORD:-password}@umami-db:5432/umami
       DATABASE_TYPE: postgresql

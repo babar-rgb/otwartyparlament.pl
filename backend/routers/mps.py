@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 from backend import models
 from backend.core import orm_db as database
+from sqlalchemy import or_
 
 router = APIRouter()
 
@@ -19,7 +20,7 @@ def read_mps(
         query = query.filter(models.MP.term == term)
     if active is not None:
         if active:
-            query = query.filter((models.MP.active == True) | (models.MP.active == None))
+            query = query.filter(or_(models.MP.active == True, models.MP.active.is_(None)))
         else:
             query = query.filter(models.MP.active == False)
     

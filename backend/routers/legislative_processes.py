@@ -19,7 +19,8 @@ def read_processes(
     query = db.query(models.LegislativeProcess)
     
     if term:
-        query = query.filter(models.LegislativeProcess.term == term)
+        from sqlalchemy import or_
+        query = query.filter(or_(models.LegislativeProcess.term == term, models.LegislativeProcess.term.is_(None)))
 
     if status:
         query = query.filter(models.LegislativeProcess.status == status)
