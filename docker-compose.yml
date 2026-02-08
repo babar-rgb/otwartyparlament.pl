@@ -98,10 +98,10 @@ services:
       - parlament_net
 
   traefik:
-    image: traefik:v2.10
+    image: traefik:v3.3
     restart: always
     environment:
-      - DOCKER_API_VERSION=1.44
+      DOCKER_API_VERSION: "1.44"
     command:
       - "--api.insecure=false"
       - "--providers.docker=true"
@@ -111,8 +111,8 @@ services:
       - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
       - "--certificatesresolvers.myresolver.acme.email=kajtek76@icloud.com"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
-      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
-      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
     ports:
       - "80:80"
       - "443:443"
