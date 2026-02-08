@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Response
 from typing import List
-from backend.core.orm_db import SessionLocal
-from backend.models import Vote, MP
+from backend.models import Vote, MP, LegislativeProcess
 import logging
+from datetime import datetime
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -25,6 +25,9 @@ def get_sitemap_index():
         <sitemap>
             <loc>{DOMAIN}/sitemap-static.xml</loc>
         </sitemap>
+        <sitemap>
+            <loc>{DOMAIN}/sitemap-processes.xml</loc>
+        </sitemap>
     </sitemapindex>
     """
     return Response(content=xml_content, media_type="application/xml")
@@ -42,11 +45,11 @@ def get_sitemap_votes():
         
         urls = []
         for v in votes:
-            # TODO: Add priority based on 'importance' logic in future
+            lastmod = v.date.strftime('%Y-%m-%d') if v.date else ''
             url = f"""
     <url>
         <loc>{DOMAIN}/glosowania/{v.term}/{v.sitting}/{v.voting_number}</loc>
-        <lastmod>{v.date}</lastmod>
+        <lastmod>{lastmod}</lastmod>
         <changefreq>never</changefreq>
     </url>"""
             urls.append(url)
@@ -70,11 +73,9 @@ def get_sitemap_mps():
         
         urls = []
         for mp in mps:
-            # Slugify name if frontend uses slugs, fallback to ID
-            # Assuming /posel/ID structure for now, need to verify frontend routing
             url = f"""
     <url>
-        <loc>{DOMAIN}/posel/{mp.id}</loc>
+        <loc>{DOMAIN}/poslowie/{mp.id}</loc>
         <changefreq>weekly</changefreq>
     </url>"""
             urls.append(url)
@@ -86,3 +87,58 @@ def get_sitemap_mps():
         return Response(content=xml_content, media_type="application/xml")
     finally:
         session.close()
+
+@router.get("/sitemap-processes.xml", response_class=Response)
+def get_sitemap_processes():
+    """
+    Returns sitemap for Legislative Processes.
+    """
+    session = SessionLocal()
+    try:
+        processes = session.query(LegislativeProcess.id, LegislativeProcess.updated_at).all()
+        
+        urls = []
+        for p in processes:
+            lastmod = p.updated_at.strftime('%Y-%m-%d') if p.updated_at else ''
+            url = f"""
+    <url>
+        <loc>{DOMAIN}/procesy/{p.id}</loc>
+        {f'<lastmod>{lastmod}</lastmod>' if lastmod else ''}
+        <changefreq>daily</changefreq>
+    </url>"""
+            urls.append(url)
+            
+        xml_content = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    {''.join(urls)}
+</urlset>"""
+        return Response(content=xml_content, media_type="application/xml")
+    finally:
+        session.close()
+
+@router.get("/sitemap-static.xml", response_class=Response)
+def get_sitemap_static():
+    """
+    Returns sitemap for static pages.
+    """
+    static_pages = [
+        "/", "/poslowie", "/partie", "/glosowania", "/rankingi", 
+        "/majatek", "/wypowiedzi", "/interpelacje", "/projekty", 
+        "/kategorie", "/metodologia", "/kontakt", "/porownywarka", "/o-projekcie"
+    ]
+    
+    urls = []
+    for path in static_pages:
+        url = f"""
+    <url>
+        <loc>{DOMAIN}{path}</loc>
+        <changefreq>daily</changefreq>
+        <priority>{"0.8" if path == "/" else "0.7"}</priority>
+    </url>"""
+        urls.append(url)
+        
+    xml_content = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    {''.join(urls)}
+</urlset>"""
+    return Response(content=xml_content, media_type="application/xml")
