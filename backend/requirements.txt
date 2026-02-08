@@ -9,7 +9,7 @@ psycopg2-binary
 python-dotenv
 numpy
 sentence-transformers
-torch
+torch --index-url https://download.pytorch.org/whl/cpu
 pgvector
 apscheduler
 alembic
