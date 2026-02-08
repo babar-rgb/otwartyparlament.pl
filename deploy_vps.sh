@@ -8,6 +8,7 @@ echo "🛡️ [Stability Shield] Rozpoczynam procedurę bezpiecznego wdrożenia.
 
 # 1. Pre-flight Check
 echo "🔍 [Pre-flight] Sprawdzanie środowiska..."
+df -h
 if command -v docker-compose >/dev/null 2>&1; then
     DOCKER_COMPOSE="docker-compose"
 elif docker compose version >/dev/null 2>&1; then
