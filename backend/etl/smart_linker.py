@@ -141,11 +141,21 @@ class SmartLinker:
         return title.strip()
 
     def _update_vote(self, vote: Vote, bill_id: int):
-        """Updates the vote record in DB."""
+        """Updates the vote record in DB with Bill info."""
         vote.bill_id = bill_id
-        # We don't commit here, the caller (Orchestrator) should handle session management
-        # to ensure atomic updates if multiple things happen to the vote (like AI analysis)
-        logger.info(f"✅ Linked Vote {vote.id} to Bill {bill_id}")
+        
+        # Fetch Bill to get titles
+        # We use the session attached to the vote object
+        session = Session.object_session(vote)
+        if session:
+            bill = session.get(Bill, bill_id)
+            if bill:
+                # Prioritize Street Title (AI) > Official Title
+                vote.title_clean = bill.street_title if bill.street_title else bill.title
+                vote.topic = bill.topic
+                logger.info(f"✅ Linked Vote {vote.id} to Bill {bill_id} (Title: {vote.title_clean})")
+        else:
+             logger.warning(f"⚠️ Vote {vote.id} has no session, could not sync title.")
 
 # Singleton-like instance
 smart_linker = SmartLinker()
