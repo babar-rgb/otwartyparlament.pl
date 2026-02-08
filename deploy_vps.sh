@@ -62,7 +62,7 @@ fi
 
 # Orchestrator Health
 echo "🧠 Sprawdzanie Orchestrator..."
-OS_STATUS=$($DOCKER_COMPOSE exec -T orchestrator python3 backend/orchestrator.py --status | grep -c "HEALTHY" || echo 0)
+OS_STATUS=$($DOCKER_COMPOSE exec -T orchestrator python3 backend/orchestrator.py --status 2>/dev/null | grep "HEALTHY" | wc -l | tr -d '[:space:]')
 if [ "$OS_STATUS" -eq "1" ]; then
     echo "✅ Orchestrator: STABILNY (Heartbeat OK)"
 else

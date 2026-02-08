@@ -11,17 +11,26 @@ from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, select, update, func, cast, String
 
-# Import Models
-from backend.models import AnalysisRequest, Vote, Bill, Interpellation, SystemHealth, BillAnalysis, LegislativeStage
-from backend.core.db import get_db, SessionLocal
-
-# Import Services (Workers)
-from backend.services.gemini import gemini_service
-from backend.etl.smart_linker import smart_linker
-from backend.etl.incremental import IncrementalETL
-from backend.etl.pdf_extractor import PDFReplyExtractor
-from backend.etl.generate_embeddings import VectorSyncETL
-from backend.services.telegram import telegram_service
+# Robust Imports for different environments (Docker vs Local)
+try:
+    from backend.models import AnalysisRequest, Vote, Bill, Interpellation, SystemHealth, BillAnalysis, LegislativeStage
+    from backend.core.db import get_db, SessionLocal
+    from backend.services.gemini import gemini_service
+    from backend.etl.smart_linker import smart_linker
+    from backend.etl.incremental import IncrementalETL
+    from backend.etl.pdf_extractor import PDFReplyExtractor
+    from backend.etl.generate_embeddings import VectorSyncETL
+    from backend.services.telegram import telegram_service
+except ImportError:
+    # Fallback to direct imports if 'backend.' prefix fails
+    from models import AnalysisRequest, Vote, Bill, Interpellation, SystemHealth, BillAnalysis, LegislativeStage
+    from core.db import get_db, SessionLocal
+    from services.gemini import gemini_service
+    from etl.smart_linker import smart_linker
+    from etl.incremental import IncrementalETL
+    from etl.pdf_extractor import PDFReplyExtractor
+    from etl.generate_embeddings import VectorSyncETL
+    from services.telegram import telegram_service
 
 # Configure Logging
 logging.basicConfig(
