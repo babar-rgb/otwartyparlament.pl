@@ -1,17 +1,22 @@
-
+# Robust path handling for Docker/VPS
+import sys
+import os
 import logging
 import time
-import os
-import sys
 import traceback
 import uuid
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
 
+# Ensure project root is in sys.path
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
+
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, select, update, func, cast, String
 
-# Robust Imports for different environments (Docker vs Local)
+# Absolute imports based on BASE_DIR being in sys.path
 try:
     from backend.models import AnalysisRequest, Vote, Bill, Interpellation, SystemHealth, BillAnalysis, LegislativeStage
     from backend.core.db import get_db, SessionLocal
@@ -22,7 +27,7 @@ try:
     from backend.etl.generate_embeddings import VectorSyncETL
     from backend.services.telegram import telegram_service
 except ImportError:
-    # Fallback to direct imports if 'backend.' prefix fails
+    # Fallback for environments where 'backend' folder is the root
     from models import AnalysisRequest, Vote, Bill, Interpellation, SystemHealth, BillAnalysis, LegislativeStage
     from core.db import get_db, SessionLocal
     from services.gemini import gemini_service

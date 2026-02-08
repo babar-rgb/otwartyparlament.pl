@@ -25,8 +25,8 @@ const SittingSummaryCard: React.FC = () => {
             setSummary(null);
 
             try {
-                console.log("Fetching sitting summary from:", `${API_URL}/sittings/latest/summary?term=${term}`);
-                const response = await fetch(`${API_URL}/sittings/latest/summary?term=${term}`);
+                console.log("Fetching sitting summary from:", `${API_URL}/api/sittings/latest/summary?term=${term}`);
+                const response = await fetch(`${API_URL}/api/sittings/latest/summary?term=${term}`);
                 if (!response.ok) {
                     console.error("Fetch failed with status:", response.status);
                     return;

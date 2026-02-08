@@ -33,12 +33,12 @@ export default {
         },
         // 4. Functional / Voting Results
         vote: {
-          yes: '#166534',
-          yesBg: '#DCFCE7',
-          no: '#991B1B',
-          noBg: '#FEE2E2',
-          abstain: '#4B5563',
-          abstainBg: '#F3F4F6'
+          yes: '#15803d',
+          yesBg: '#f0fdf4',
+          no: '#b91c1c',
+          noBg: '#fef2f2',
+          abstain: '#374151',
+          abstainBg: '#f9fafb'
         }
       },
       fontFamily: {

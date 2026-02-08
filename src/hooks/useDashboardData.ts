@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchVotes, fetchVoteAnalysis, fetchVoteResults, fetchProcessesCount, fetchVoteResultsDetailed } from '../api';
+import { fetchVotes, fetchVoteAnalysis, fetchProcessesCount, fetchVoteResultsDetailed } from '../api';
 import { useTerm } from '../context/TermContext';
 
 export interface DashboardStats {
@@ -83,16 +83,7 @@ export function useDashboardData() {
                     date: topV.date,
                     summary: analysis?.summary || "Trwa analiza treści ustawy...",
                     ux_category: topV.topic || 'Ogólne',
-                    results: results.map((r: any) => ({
-                        ...r,
-                        mps: {
-                            id: r.mp_id,
-                            first_name: r.mp_first_name,
-                            last_name: r.mp_last_name,
-                            club: r.mp_club,
-                            photo_url: `/assets/mps/${r.mp_id}.jpg`
-                        }
-                    }))
+                    results: results
                 };
             }
 

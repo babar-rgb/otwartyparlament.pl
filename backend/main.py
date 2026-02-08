@@ -61,7 +61,7 @@ def check_ml_health():
         "lazy_loading": True
     }
 
-@app.get("/sittings/latest/summary")
+@app.get("/api/sittings/latest/summary")
 def get_latest_sitting_summary(term: int = 10):
     """Get the AI-generated summary for the latest sitting of a specific term."""
     from backend.core.db import db
@@ -81,7 +81,7 @@ def get_latest_sitting_summary(term: int = 10):
         
     return summary
 
-@app.get("/sittings/summaries")
+@app.get("/api/sittings/summaries")
 def get_all_sitting_summaries(term: int = 10):
     """Get all sitting summaries for a term."""
     from backend.core.db import db

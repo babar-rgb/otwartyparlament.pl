@@ -58,26 +58,23 @@ const BetaWelcomeModal = () => {
                                 </div>
 
                                 <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">
-                                    Cześć! 👋
+                                    Witaj w wersji Beta
                                 </h2>
-
                                 <div className="prose-sm text-slate-600 dark:text-slate-300 space-y-3 mb-8 leading-relaxed">
                                     <p>
-                                        Dzięki, że wchodzisz na moją stronę.
-                                        Projekt znajduje się obecnie w fazie <strong className="text-purple-600 dark:text-purple-400">Beta (Software v0.1)</strong> – to oznacza, że jest gotowy w około <strong>10%</strong>. Wiele funkcji jeszcze nie działa, a ja wciąż testuję nowe rozwiązania.
+                                        Projekt Otwarty Parlament znajduje się obecnie w fazie <strong className="text-purple-600 dark:text-purple-400">rozwoju (v0.1)</strong>. Oznacza to, że wiele funkcji jest wciąż optymalizowanych, a dane są sukcesywnie uzupełniane przez silnik AI.
                                     </p>
                                     <p>
-                                        <strong>Dlaczego to robię?</strong> W Polsce brakuje nowoczesnego, bezstronnego źródła informacji o polityce. Oficjalna strona Sejmu przypomina forum z 2005 roku. Buduję to narzędzie, aby to zmienić – dostarczając surową prawdę (<em>Code is Truth</em>) w formie przystępnej dla obywatela XXI wieku.
+                                        <strong>Nasza misja:</strong> Wierzymy, że w XXI wieku obywatele zasługują na nowoczesne, bezstronne i przejrzyste źródło informacji o procesie legislacyjnym. Naszym celem jest dostarczenie surowych danych i głębokich analiz (<em>Code is Truth</em>) w formie przystępnej dla każdego.
                                     </p>
                                     <p>
-                                        Mam do Ciebie prośbę: jeśli znajdziesz błąd lub masz pomysł, daj znać!
-                                        Twoja opinia jest dla mnie kluczowa.
+                                        Jeśli zauważysz błąd lub masz sugestię dotyczącą rozwoju platformy, Twoja opinia będzie dla nas niezwykle cenna.
                                     </p>
                                     <p className="text-sm font-semibold text-purple-600 dark:text-purple-400">
-                                        💡 PS. Serwis najlepiej wygląda na komputerze – tam znajdziesz pełne analizy i wykresy!
+                                        Serwis jest zoptymalizowany pod kątem przeglądarek desktopowych – tam znajdziesz pełny zakres analiz i interaktywnych wykresów.
                                     </p>
                                     <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                                        🛠️ PS2. Wiem, że strona może momentami zamulać – to wersja Beta na serwerze za 5 dolarów. Niedługo będę ulepszał całą architekturę!
+                                        Trwają prace nad skalowaniem infrastruktury i optymalizacją czasu odpowiedzi systemu.
                                     </p>
                                 </div>
 

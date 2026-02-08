@@ -76,7 +76,7 @@ export default function Navigation() {
                     Głosowania
                   </Link>
 
-                  <Link to="/dla-ciebie" className="px-2 xl:px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 text-xs xl:text-sm font-bold hover:bg-blue-100 transition-colors whitespace-nowrap">
+                  <Link to="/dla-ciebie" className="text-xs xl:text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200 whitespace-nowrap">
                     Dla Ciebie
                   </Link>
 
@@ -90,7 +90,7 @@ export default function Navigation() {
                     Projekty
                   </Link>
 
-                  <Link to="/o-projekcie" className="px-2 xl:px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-xs xl:text-sm font-bold hover:bg-red-100 transition-colors whitespace-nowrap">
+                  <Link to="/o-projekcie" className="text-xs xl:text-sm font-bold text-secondary hover:text-primary transition-colors hover:scale-105 transform duration-200 whitespace-nowrap">
                     O Projekcie
                   </Link>
                 </>
@@ -165,7 +165,6 @@ export default function Navigation() {
           <Link to="/dla-ciebie" className="flex flex-col items-center gap-1 text-xs font-medium text-secondary hover:text-primary p-2">
             <div className="relative">
               <Sparkles size={20} className="text-purple-400" />
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
             </div>
             <span>Dla Ciebie</span>
           </Link>
