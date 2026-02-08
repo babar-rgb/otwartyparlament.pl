@@ -24,16 +24,30 @@ class BillVoteLinker:
             # We can do this with a single SQL UPDATE query which is instant
             # UPDATE votes SET bill_id = bills.id FROM bills WHERE votes.print_number = bills.number
             
-            sql = """
+            # 1. Link new votes
+            sql_link = """
                 UPDATE votes 
-                SET bill_id = bills.id 
+                SET bill_id = bills.id,
+                    title_clean = bills.title,
+                    topic = bills.topic
                 FROM bills 
                 WHERE votes.print_number = bills.number 
                   AND votes.bill_id IS NULL 
-                  AND votes.print_number IS NOT NULL
+                  AND votes.print_number IS NOT NULL;
             """
             
-            result = session.execute(text(sql))
+            # 2. Update titles for already linked votes (retroactive fix)
+            sql_fix = """
+                UPDATE votes
+                SET title_clean = bills.title,
+                    topic = bills.topic
+                FROM bills
+                WHERE votes.bill_id = bills.id
+                  AND (votes.title_clean IS NULL OR votes.title_clean LIKE 'Pkt %' OR votes.title_clean LIKE 'Sprawozdanie Komisji%');
+            """
+            
+            session.execute(text(sql_link))
+            session.execute(text(sql_fix))
             session.commit()
             
             if result.rowcount > 0:
