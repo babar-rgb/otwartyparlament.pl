@@ -10,23 +10,37 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-otwarty_parlament}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
       - "5432:5432"
 
   backend:
     build: ./backend
     restart: always
+    entrypoint: [ "/app/backend/docker-entrypoint.sh" ]
+    command: [ "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000" ]
     environment:
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER:-kajtek}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: ${POSTGRES_DB:-otwarty_parlament}
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    volumes:
+      - ./backend/backups:/app/backend/backups
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   frontend:
     build:
@@ -37,7 +51,31 @@ services:
     expose:
       - "80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+
+  orchestrator:
+    build: ./backend
+    restart: always
+    entrypoint: [ "/app/backend/docker-entrypoint.sh" ]
+    command: [ "--interval", "600" ]
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-kajtek}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-otwarty_parlament}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    healthcheck:
+      test: [ "CMD", "python3", "backend/orchestrator.py", "--status" ]
+      interval: 10m
+      timeout: 10s
+      retries: 3
+    depends_on:
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
 
 volumes:
   postgres_data:

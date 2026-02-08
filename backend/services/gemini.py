@@ -123,6 +123,53 @@ class GeminiService:
     def analyze_vote_expert(self, title: str, description: str, bill_text: Optional[str] = None) -> Dict[str, Any]:
         return self.analyze_expert(title, description, bill_text, doc_type="vote")
 
+    def _is_valuable_vote(self, title: str) -> bool:
+        """
+        Filters out procedural/technical votes to save costs.
+        """
+        technical_keywords = [
+            "przerwy w obradach",
+            "odroczenia obrad",
+            "uzupełnienia porządku",
+            "przyjęcie porządku",
+            "wniosek formalny",
+            "zamknięcie posiedzenia",
+            "wybór sekretarzy",
+            "zmiana w składzie komisji",
+            "ślubowanie poselskie"
+        ]
+        title_lower = title.lower()
+        if any(k in title_lower for k in technical_keywords):
+            logger.info(f"🚫 Vote '{title}' skipped (Technical/Procedural).")
+            return False
+        return True
+
+    def _smart_chunk_text(self, text: str, max_chars: int = 50000) -> str:
+        """
+        Intelligently truncates text, prioritizing:
+        1. Title/Header (First 2000 chars)
+        2. Justification (Uzasadnienie) - if found
+        3. OSR (Ocena Skutków Regulacji)
+        4. Actual Articles
+        """
+        if not text: return ""
+        if len(text) < max_chars: return text
+        
+        # Priority 1: Head
+        head = text[:2000]
+        
+        # Priority 2: Justification
+        justification = ""
+        if "uzasadnienie" in text.lower():
+            start = text.lower().find("uzasadnienie")
+            justification = text[start:start+15000] # Take 15k chars of justification
+            
+        # Priority 3: Middle/End
+        remaining_budget = max_chars - len(head) - len(justification)
+        body = text[2000:2000+remaining_budget]
+        
+        return f"{head}\n\n[...]\n\n{justification}\n\n[...]\n\n{body}"
+
     def _assess_complexity(self, title: str, description: str, bill_text: Optional[str]) -> str:
         """
         Heuristic to decide complexity.
@@ -189,7 +236,10 @@ class GeminiService:
                 "Emeryt": "Wpływ szczegółowy.",
                 "Student": "Wpływ szczegółowy.",
                 "Rodzic": "Wpływ szczegółowy."
-            }}}}
+            }}}},
+            "meta_description": "Opis SEO (max 160 znaków) dla Google.",
+            "keywords": ["słowo kluczowe 1", "słowo kluczowe 2"],
+            "tags": ["Tag 1", "Tag 2", "Tag 3"]
         }}}}
         """
 

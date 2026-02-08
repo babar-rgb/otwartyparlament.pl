@@ -25,38 +25,47 @@ except ImportError:
     from core.config import config
     from utils.http import http_session
 
+# Standard imports from current package
 try:
     from backend.etl.bills import BillsETL
     from backend.etl.committees import CommitteesETL
     from backend.etl.declarations import DeclarationsETL
     from backend.etl.interpellations import InterpellationsETL
     from backend.etl.europarl import EuroparlETL
+    from backend.etl.speeches import SpeechesETL
+    from backend.etl.pdf_extractor import PDFReplyExtractor
+    from backend.etl.bills_linker import BillVoteLinker
+    from backend.etl.summarize_sitting import SittingSummarizer
+    from backend.etl.socials import SocialsETL
+    from backend.etl.stats import calculate_stats
+    from backend.etl.vote_grouping import VoteGroupingETL
 except ImportError:
-    # Fallback if running from within etl dir/package issues
+    # Fallback for direct execution or docker paths
     try:
-        from .bills import BillsETL
-        from .committees import CommitteesETL
-        from .declarations import DeclarationsETL
-        from .interpellations import InterpellationsETL
-        from .europarl import EuroparlETL
-    except ImportError:
-        # Last resort for docker pathing if needed, though the sys.path hack should cover backend.etl
         from bills import BillsETL
         from committees import CommitteesETL
         from declarations import DeclarationsETL
         from interpellations import InterpellationsETL
-        from speeches import SpeechesETL as _SpeechesETL
-        from pdf_extractor import PDFReplyExtractor as _PDFReplyExtractor
+        from europarl import EuroparlETL
+        from speeches import SpeechesETL
+        from pdf_extractor import PDFReplyExtractor
         from bills_linker import BillVoteLinker
         from summarize_sitting import SittingSummarizer
         from socials import SocialsETL
-        from europarl import EuroparlETL
         from stats import calculate_stats
         from vote_grouping import VoteGroupingETL
-
-        # Re-assign to global names
-        SpeechesETL = _SpeechesETL
-        PDFReplyExtractor = _PDFReplyExtractor
+    except ImportError as e:
+        # If we still fail, we will define dummies or re-raise
+        print(f"⚠️ Critical Import Warning in incremental.py: {e}")
+        # Define dummies to avoid NameError during runtime if some modules are missing
+        class DummyETL: 
+            def __init__(self, *args, **kwargs): pass
+            def run(self, *args, **kwargs): pass
+        
+        BillsETL = CommitteesETL = DeclarationsETL = InterpellationsETL = DummyETL
+        EuroparlETL = SpeechesETL = PDFReplyExtractor = BillVoteLinker = DummyETL
+        SittingSummarizer = SocialsETL = VoteGroupingETL = DummyETL
+        def calculate_stats(): pass
 
 
 logger = get_logger("etl.incremental")

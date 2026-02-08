@@ -91,4 +91,36 @@ class Database:
             cur.execute(query, params)
             return cur.fetchone()
 
-db = Database()
+
+# SQLAlchemy Setup (Added for Automatyzacja 2.0)
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+
+# Create SQLAlchemy engine
+# Note: Re-using the same connection string logic
+sqlalchemy_database_url = config.get_db_uri().replace("postgresql://", "postgresql+psycopg2://")
+engine = create_engine(
+    sqlalchemy_database_url, 
+    pool_pre_ping=True,
+    pool_size=20,
+    max_overflow=0
+)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Base = declarative_base() # Removed to avoid conflict with backend.core.orm_db
+
+def get_db():
+    """Dependency for obtaining a DB session."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+# Global DB Instance
+# In testing, we don't want this to connect immediately.
+import os
+if os.getenv("TESTING") != "true":
+    db = Database()
+else:
+    db = None

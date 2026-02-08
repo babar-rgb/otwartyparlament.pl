@@ -13,10 +13,12 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the entire project code into 'backend' folder
-# This matches the local structure where 'backend' is the package
 COPY . /app/backend
+WORKDIR /app/backend
+RUN chmod +x docker-entrypoint.sh
+WORKDIR /app
 
-# Set PYTHONPATH to /app so 'import backend.main' works
+# Set PYTHONPATH to /app
 ENV PYTHONPATH=/app
 
 # Expose port

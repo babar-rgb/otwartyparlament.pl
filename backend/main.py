@@ -40,10 +40,17 @@ app.include_router(semantic_search.router, prefix="/api", tags=["Semantic Search
 app.include_router(recommendations.router, prefix="/api", tags=["Personalization"])
 app.include_router(general.router, prefix="/api", tags=["General"])
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to Sejm API"}
-
+@app.get("/health")
+def health_check():
+    from backend.core import orm_db as database
+    from sqlalchemy import text
+    try:
+        # Check DB connectivity
+        with database.engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return {"status": "ok", "database": "connected"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}, 503
 
 @app.get("/health/ml")
 def check_ml_health():
