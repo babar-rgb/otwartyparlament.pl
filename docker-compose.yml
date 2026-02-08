@@ -96,7 +96,7 @@ services:
       - parlament_net
 
   traefik:
-    image: traefik:v3.3
+    image: traefik:v3
     restart: always
     environment:
       DOCKER_API_VERSION: "1.44"
