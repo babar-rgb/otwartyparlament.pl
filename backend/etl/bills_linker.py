@@ -24,11 +24,11 @@ class BillVoteLinker:
             # We can do this with a single SQL UPDATE query which is instant
             # UPDATE votes SET bill_id = bills.id FROM bills WHERE votes.print_number = bills.number
             
-            # 1. Link new votes
+            # 1. Link new votes and prefer AI street_title
             sql_link = """
                 UPDATE votes 
                 SET bill_id = bills.id,
-                    title_clean = bills.title,
+                    title_clean = COALESCE(bills.street_title, bills.title),
                     topic = bills.topic
                 FROM bills 
                 WHERE votes.print_number = bills.number 
@@ -36,14 +36,20 @@ class BillVoteLinker:
                   AND votes.print_number IS NOT NULL;
             """
             
-            # 2. Update titles for already linked votes (retroactive fix)
+            # 2. Update titles for already linked votes (retroactive fix + upgrade to street_title)
+            # This will also upgrade existing votes if a new street_title appears for the bill
             sql_fix = """
                 UPDATE votes
-                SET title_clean = bills.title,
+                SET title_clean = COALESCE(bills.street_title, bills.title),
                     topic = bills.topic
                 FROM bills
                 WHERE votes.bill_id = bills.id
-                  AND (votes.title_clean IS NULL OR votes.title_clean LIKE 'Pkt %' OR votes.title_clean LIKE 'Sprawozdanie Komisji%');
+                  AND (
+                      votes.title_clean IS NULL 
+                      OR votes.title_clean LIKE 'Pkt %' 
+                      OR votes.title_clean LIKE 'Sprawozdanie Komisji%'
+                      OR (bills.street_title IS NOT NULL AND votes.title_clean = bills.title) -- Upgrade from official to street
+                  );
             """
             
             session.execute(text(sql_link))
