@@ -246,11 +246,17 @@ def search_all(
             if expanded_terms:
                 search_terms.extend(expanded_terms)
             
-            # Prepare patterns for ILIKE ANY(...)
-            # Limit to top 5 terms to prevent DOS
+            # Prepare patterns for Hybrid Search
             unique_terms = list(set([q] + [t for t in search_terms if t and len(t) > 2]))[:5]
-            keywords_patterns = [f"%{t}%" for t in unique_terms]
-            
+            # Use regex for word boundaries to avoid false positives (e.g. "rata" -> "Ratajski")
+            regex_patterns = []
+            for t in unique_terms:
+                if len(t) <= 4:
+                    regex_patterns.append(rf'\m{t}') # Match at least start of word
+                else:
+                    regex_patterns.append(t)
+            regex_combined = '|'.join(regex_patterns)
+
             # 3. Hybrid Search in Votes
             if should_search_type('vote'):
                 processed_types.add('vote')
@@ -263,12 +269,12 @@ def search_all(
                         term,
                         kind,
                         CASE 
-                            WHEN title_clean ILIKE ANY(:patterns) THEN 1.0 
+                            WHEN title_clean ~* :regex THEN 1.0 
                             WHEN vector_embedding IS NULL THEN 0.0
                             ELSE 1 - (vector_embedding <=> CAST(:embedding AS vector)) 
                         END as similarity
                     FROM votes
-                    WHERE (vector_embedding IS NOT NULL OR title_clean ILIKE ANY(:patterns))
+                    WHERE (vector_embedding IS NOT NULL OR title_clean ~* :regex)
                     AND (:term IS NULL OR term = :term)
                     ORDER BY similarity DESC
                     LIMIT 20
@@ -276,7 +282,7 @@ def search_all(
                 
                 votes = db.execute(vote_sql, {
                     "embedding": embedding_str, 
-                    "patterns": keywords_patterns,
+                    "regex": regex_combined,
                     "term": int(period) if period else None
                 }).fetchall()
                 
@@ -307,19 +313,19 @@ def search_all(
                         date,
                         type,
                         CASE 
-                            WHEN title ILIKE ANY(:patterns) THEN 1.0 
+                            WHEN title ~* :regex THEN 1.0 
                             WHEN vector_embedding IS NULL THEN 0.0
                             ELSE 1 - (vector_embedding <=> CAST(:embedding AS vector)) 
                         END as similarity
                     FROM bills
-                    WHERE (vector_embedding IS NOT NULL OR title ILIKE ANY(:patterns))
+                    WHERE (vector_embedding IS NOT NULL OR title ~* :regex)
                     ORDER BY similarity DESC
                     LIMIT 20
                 """)
                 
                 bills = db.execute(bill_sql, {
                     "embedding": embedding_str, 
-                    "patterns": keywords_patterns
+                    "regex": regex_combined
                 }).fetchall()
                 
                 for b in bills:
@@ -350,19 +356,19 @@ def search_all(
                         title,
                         sent_date,
                         CASE 
-                            WHEN title ILIKE ANY(:patterns) THEN 1.0 
+                            WHEN title ~* :regex THEN 1.0 
                             WHEN vector_embedding IS NULL THEN 0.0
                             ELSE 1 - (vector_embedding <=> CAST(:embedding AS vector)) 
                         END as similarity
                     FROM interpellations
-                    WHERE (vector_embedding IS NOT NULL OR title ILIKE ANY(:patterns))
+                    WHERE (vector_embedding IS NOT NULL OR title ~* :regex)
                     ORDER BY similarity DESC
                     LIMIT 15
                 """)
                 
                 interps = db.execute(interp_sql, {
                     "embedding": embedding_str, 
-                    "patterns": keywords_patterns
+                    "regex": regex_combined
                 }).fetchall()
                 
                 for i in interps:

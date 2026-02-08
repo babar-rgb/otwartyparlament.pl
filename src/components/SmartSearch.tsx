@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Sparkles, ChevronRight, TrendingUp, X, Lightbulb } from 'lucide-react';
+import { Search, ChevronRight, TrendingUp, X, Lightbulb } from 'lucide-react';
 import Fuse from 'fuse.js';
 import { expandSearchQuery, getCategorySuggestions, CONTEXT_MAP, getAllSearchTerms } from '../utils/searchContext';
 
@@ -122,11 +122,11 @@ export default function SmartSearch({
                         <Search size={32} />
                     </div>
                     <h2 className="text-3xl md:text-4xl font-black text-neutral-900 dark:text-white mb-4">
-                        Inteligentna Wyszukiwarka
+                        Wyszukiwarka
                     </h2>
                     <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-xl mx-auto">
                         Wpisz hasło <span className="font-bold text-amber-600">"drożyzna"</span>, a znajdziemy ustawy o inflacji.{' '}
-                        <span className="text-neutral-500">Rozumiemy kontekst, nie tylko słowa.</span>
+                        <span className="text-neutral-500">Szukamy kontekstowo, nie tylko po słowach.</span>
                     </p>
                 </div>
             )}
@@ -171,16 +171,12 @@ export default function SmartSearch({
                     <button
                         onClick={() => handleSearch()}
                         className={`
-              flex items-center gap-2
-              ${isSmall ? 'px-4 py-2 text-sm' : 'px-6 py-3'}
-              bg-gradient-to-r from-amber-500 to-orange-600 
-              hover:from-amber-600 hover:to-orange-700
-              text-white font-bold rounded-xl
-              transition-all duration-200 hover:shadow-lg
+              p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors
+              text-neutral-400 hover:text-amber-500
             `}
+                        title="Szukaj"
                     >
-                        <Sparkles size={isSmall ? 16 : 18} />
-                        <span className={isSmall ? 'hidden sm:inline' : ''}>Szukaj</span>
+                        <Search size={22} />
                     </button>
                 </div>
 

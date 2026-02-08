@@ -55,6 +55,7 @@ type FetchVotesOptions = {
   hide_procedural?: boolean;
   grouped?: boolean;
   category?: string;
+  topic?: string;
 };
 
 export const fetchVotes = async (options: FetchVotesOptions = {}): Promise<{ items: any[]; total: number }> => {
@@ -78,6 +79,7 @@ export const fetchVotes = async (options: FetchVotesOptions = {}): Promise<{ ite
   if (options.hide_procedural !== undefined) params.append('hide_procedural', options.hide_procedural.toString());
   if (options.grouped !== undefined) params.append('grouped', options.grouped.toString());
   if (options.category) params.append('category', options.category);
+  if (options.topic) params.append('topic', options.topic);
 
   const response = await fetch(`${API_URL}/api/votes?${params.toString()}`);
   if (!response.ok) {
@@ -88,6 +90,14 @@ export const fetchVotes = async (options: FetchVotesOptions = {}): Promise<{ ite
     items: data.items.map(mapBackendVote),
     total: data.total
   };
+};
+
+export const fetchTopics = async (term: number = 10): Promise<{ topic: string, count: number }[]> => {
+  const response = await fetch(`${API_URL}/api/votes/topics?term=${term}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch topics');
+  }
+  return response.json();
 };
 
 export const fetchVote = async (id: string): Promise<Vote> => {

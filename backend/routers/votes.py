@@ -51,6 +51,37 @@ def get_vote_timeline(
         for r in rows
     ]
 
+@router.get("/topics")
+def get_vote_topics(
+    term: Optional[int] = None,
+    db: Session = Depends(database.get_db)
+):
+    from sqlalchemy import func, desc
+    
+    query = db.query(
+        models.Vote.topic, 
+        func.count(models.Vote.id).label('count')
+    )
+    
+    if term:
+        query = query.filter(models.Vote.term == term)
+        
+    # Filter out null topics
+    query = query.filter(models.Vote.topic != None)
+    
+    # Filter out messy topics (merged strings)
+    query = query.filter(~models.Vote.topic.contains(','))
+    
+    # Filter out duplicates/noise
+    query = query.filter(models.Vote.topic.notin_(['Społeczne', 'Polityka Społeczna', 'Polityka społeczna']))
+
+    rows = query.group_by(models.Vote.topic).order_by(desc('count')).all()
+    
+    return [
+        {"topic": r.topic, "count": r.count}
+        for r in rows
+    ]
+
 @router.get("")
 def read_votes(
     skip: int = 0, 
@@ -69,6 +100,7 @@ def read_votes(
     q: Optional[str] = None,
     vector_str: Optional[str] = Query(None, alias="vector"), # Expect comma-separated floats
     category: Optional[str] = None, # LAWS, RESOLUTIONS, PERSONAL, PROCEDURAL
+    topic: Optional[str] = None,    # Specific topic from AI categorization
     hide_procedural: bool = False,
     grouped: bool = False,
     db: Session = Depends(database.get_db)
@@ -82,123 +114,98 @@ def read_votes(
         subqueryload(models.Vote.children)
     )
 
-    # 1. Client-Side Semantic Search (Edge AI)
-    # If frontend sends a vector, we use it directly. Zero Server CPU.
+    # 1. Semantic Search (Hybrid Base)
+    vector = None
     if vector_str:
         try:
             # Parse comma-separated string to floats
             vector = [float(x) for x in vector_str.split(',')]
-            if len(vector) == 384: # Validate dimension
-                query = query.order_by(models.Vote.vector_embedding.cosine_distance(vector))
+            if len(vector) != 768: # Correct dimension for gemini-embedding-001
+                vector = None
         except ValueError:
             pass # Invalid vector format, ignore
 
-    # 2. FTS & Synonym Logic (Fallback / Warm-up)
-    # Used when model is not yet loaded on client or for strict keyword matches
-    if q and not vector_str:
-    # Synonyms Dictionary (Unified - Level 5 "Evergreen")
+    # 2. Hybrid Search & SQL Pattern Prep
+    # We always use keyword patterns if q is provided, for "Keyword Boost"
+    keywords_patterns = []
+    if q:
+        # Synonyms Dictionary (Unified - Level 5 "Evergreen")
         POLITICAL_SYNONYMS = {
-            # Economic / Everyday (Kasa & Rachunki)
             'drożyzna': ['inflacja', 'ceny', 'vat', 'koszyk', 'akcyza', 'tarcza'],
             'podatki': ['danin', 'pit', 'cit', 'akcyza', 'kwota wolna', 'ryczałt'],
-            'małpki': ['wychowaniu w trzeźwości', 'napojów alkoholowych', 'opakowaniach', 'alkohol'],
-            'piec': ['czyste powietrze', 'termomoderniz', 'źródła ciepła', 'węgiel', 'palenisk'],
             'praca': ['zatrudnienie', 'bezrobocie', 'płaca', 'minimalna', 'umowa', 'kodeks pracy', 'zus', 'zasiłek'],
-            'zakaz gotówki': ['limit płatności', 'obrót bezgotówkowy', 'pieniądz cyfrowy', 'prawo przedsiębiorców'],
-            'babciowe': ['aktywny rodzic', 'świadczenie rodzicielskie', 'aktywni w pracy', 'opiece nad dzieckiem'],
-            'wakacje od zus': ['zwolnienie z opłacania', 'składek na ubezpieczenia', 'ubezpieczeń społecznych'],
-            'bon energetyczny': ['dodatek osłonowy', 'ceny energii', 'rekompensata', 'taryfy', 'mrożenie cen'],
-            'ceny paliw': ['opłata paliwowa', 'opłata emisyjna', 'benzyna', 'orlen', 'akcyza'],
-            'test przedsiębiorcy': ['działalność gospodarcza', 'uszczelnienie', 'podatki', 'b2b', 'samozatrudnienie'],
-            'lex uber': ['transport drogowy', 'przewóz osób', 'pośrednictwo', 'licencja', 'taksówki', 'aplikację'],
-
-            # Social / Election Promises / Health
-            'kwota wolna': ['podatku dochodowym', 'pit', 'zwiększenie kwoty', 'podatek'],
+            'kredyt': ['hipoteka', 'bank', 'rata', 'oprocentowanie', 'frankowicz', 'pożyczka', 'nbp', 'mieszkani'],
             'kredyt 0': ['pierwsze mieszkanie', 'mieszkanie na start', 'wspieraniu budownictwa', 'bezpieczny kredyt', 'dopłaty'],
-            'dobrowolny zus': ['wakacje składkowe', 'system ubezpieczeń', 'zus', 'przedsiębiorc'],
-            'renta wdowia': ['emeryturach i rentach', 'fundusz ubezpieczeń', 'wdowi', 'obywatelski projekt'],
-            '800 plus': ['wychowywaniu dzieci', 'świadczenie wychowawcze', 'rodzina 800'],
-            'porodówki': ['restrukturyzacja szpitali', 'sieć szpitali', 'oddziały położnicze', 'mapa potrzeb', 'likwidacja'],
-            'składka zdrowotna': ['świadczenia opieki', 'finansowanie', 'ryczałt', 'liniowy', 'nfz'],
-            'druga waloryzacja': ['emeryturach i rentach', 'fus', 'inflacja', 'waloryzacja', 'wypłata'],
-
-            # Worldview / Bioethical / Lifestyle
-            'aborcja': ['ciąż', 'płód', 'życie poczęte', 'terminacja', 'przerywanie'],
+            'małpki': ['wychowaniu w trzeźwości', 'napojów alkoholowych', 'opakowaniach', 'alkohol'],
+            'aborcja': ['ciąż', 'płód', 'terminacja', 'przerywanie'],
             'in vitro': ['leczenie niepłodności', 'zapłodnienie', 'procedury medycznej'],
-            'tabletka dzień po': ['antykoncepcja', 'awaryjna', 'pigułka', 'prawo farmaceutyczne', 'recept', 'octan uliprystalu'],
-            'fundusz kościelny': ['wyznaniowe', 'związki wyznaniowe', 'finansowanie kościoła'],
-            'związki partnerskie': ['równość', 'osoby najbliższej', 'wspólne pożycie', 'małżeństw', 'tęczow'],
-            'rejestr ciąż': ['system informacji medycznej', 'zdarzenia medyczne', 'minister zdrowia'],
-            'robaki': ['nowa żywność', 'novel food', 'białko owadzie', 'mąka ze świerszczy'],
-            'indoktrynacja': ['historia i teraźniejszość', 'czarnek', 'podstawa programowa', 'kurator oświaty'],
-            'alkohol na stacjach': ['wychowanie w trzeźwości', 'godziny sprzedaży', 'sprzedaż nocna', 'stacja benzynowa'],
-            'zakaz telefonów': ['prawo oświatowe', 'higiena cyfrowa', 'rzecznik praw dziecka', 'statut szkoły'],
-            'prace domowe': ['ocenianie', 'klasyfikowanie', 'promowanie', 'zadawanie prac', 'brak zadań'],
-
-            # Housing / Ecology / City
-            'pustostan': ['nieruchomości', 'czynności cywilnoprawnych', 'lokal niezamieszkany', 'flipperzy', 'pcc'],
-            'willa plus': ['dotacj', 'organizacjom', 'edukacyjn', 'inwestycje', 'czarnek'],
-            'lex deweloper': ['ułatwieniach', 'inwestycji mieszkaniowych', 'planowania przestrzennego'],
-            'patodeweloperka': ['warunki techniczne', 'prawo budowlane', 'nasłonecznienie', 'metraż', 'balkony'],
-            'eksmisja': ['ochrona praw lokatorów', 'lokal socjalny', 'okres ochronny', 'na bruk'],
-            'kaucja': ['gospodarka opakowaniami', 'system kaucyjny', 'recyklerzy', 'odpady', 'butelkomaty', 'zwrot butelek'],
-            'deszczówka': ['prawo wodne', 'retencja', 'zabetonowane', 'podatek od deszczu'],
-            'betonoza': ['powierzchnia biologicznie czynna', 'zagospodarowanie przestrzenne', 'tereny zielone', 'wycinka drzew'],
-
-            # Afery / Media Slang / Justice
-            'lex tvn': ['radiofoni', 'telewizji', 'krajowa rada', 'krrit', 'kapitał'],
-            'piątka dla zwierząt': ['ochronie zwierząt', 'futerkow', 'ubój rytualny'],
             'weto': ['prezydent', 'odrzucenie', 'ponowne rozpatrzenie'],
-            'koryto': ['wynagrodz', 'uposażeń', 'spółk', 'rad nadzorczych'],
-            'afera wizowa': ['wizy', 'konsularne', 'pośrednictwo wizowe', 'komisja śledcza', 'badania legalności'],
-            'wybory kopertowe': ['korespondencyjne', 'szczególnych zasadach', 'poczta polska'],
-            'pegasus': ['kontrola operacyjna', 'inwigilacja', 'szpiegowskie', 'służb'],
-            'wycinka puszczy': ['lasy państwowe', 'gospodarka leśna', 'plan urządzenia lasu', 'puszcza białowieska'],
-            'neosędziowie': ['krajowa rada sądownictwa', 'powołania sędziowskie', 'status sędziego', 'krs', 'uchwała'],
-            'sądy': ['wymiar sprawiedliwości', 'krs', 'sędzi', 'wyrok', 'trybunał'],
-
-            # Security / Investments / Cars
-            'zbrojenia': ['obrona', 'wojsko', 'armia', 'modernizacja', 'szpej'],
-            'mur': ['bariera', 'zapora', 'ochrona granicy', 'drogowa', 'przymusowej', 'straż graniczna'],
-            'zboże': ['ukrai', 'import', 'rolne', 'ekoport', 'embargo', 'produktów rolnych'],
-            'imigranci': ['cudzoziem', 'granic', 'uchodź', 'zapora'],
-            'cpk': ['centralny port komunikacyjny', 'baranów', 'lotnisko', 'pełnomocnik rządu'],
-            'elektrownia atomowa': ['jądrowa', 'choczewo', 'kopalino', 'energetyka jądrowa'],
-            'auta': ['konfiskat', 'kodeks karny', 'pojazd', 'nietrzeźw', 'pijanym', 'elektromobilność', 'strefa czystego transportu'],
-            'konfiskata aut': ['przepadek pojazdu', 'kodeks karny', 'prowadzenie w stanie nietrzeźwości'],
-            'zakaz diesla': ['elektromobilność', 'strefa czystego transportu', 'normy emisji', 'euro', 'sct'],
-            'mandaty': ['prawo o ruchu drogowym', 'wysokość grzywien', 'taryfikator', 'prędkość'],
-            'wezwania do wojska': ['kwalifikacja wojskowa', 'ćwiczenia rezerwy', 'obrona ojczyzny', 'wcr', 'pobór'],
-            'schrony': ['ochrona ludności', 'obrona cywilna', 'budowle ochronne', 'syreny'],
-            'dyrektywa inwigilacyjna': ['chat control', 'prywatność', 'komunikacja elektroniczna', 'szyfrowanie', 'inwigilacja'],
-            'podatek od smartfona': ['opłata reprograficzna', 'prawo autorskie', 'rekompensata', 'artystów'],
-            
-            # People / Specifics
-            'nawrocki': ['ipn', 'instytut pamięci'],
-            'pielęgniark': ['wynagrodz', 'lecznicz', 'medycz', 'system zdrowia'],
-            'nauczyciel': ['karta nauczyciela', 'oświat', 'szkoł', 'czarnek'],
-            'mentzen': ['podatki', 'pit', 'konfederacja', 'stereotyp'],
+            'ustawa łańcuchowa': ['ochrona zwierząt', 'na uwięzi', 'kojce', 'znęcanie się', 'dobrostan zwierząt', 'weto'],
         }
         
-        # Query Expansion
         search_terms = [q]
         q_lower = q.lower()
-        
         for key, values in POLITICAL_SYNONYMS.items():
             if key in q_lower:
                 search_terms.extend(values)
         
-        if len(search_terms) > 1:
-            expanded_query = " OR ".join([f'"{t}"' for t in search_terms]) 
-        else:
-            expanded_query = q
+        # Limit terms to top 5 and prepare for ILIKE ANY
+        # Use word boundaries if possible or just ensure no partial matches for short words
+        unique_terms = list(set([q] + [t for t in search_terms if t and len(t) > 2]))[:5]
+        
+        # Precise matching: "rata" -> " rata " or "rata," or at end of sentence
+        # Case insensitive regex or word boundary markers if DB supports it.
+        # For now, we'll use a safer ILIKE pattern for longer words and exact for short ones
+        # or just rely on the fact that most Polish words have suffixes.
+        # "rata" is problematic because it's in "przetwarzania", "Ratajski" etc.
+        # Use PostgreSQL Regex ~* for word boundaries: '\m' (start) and '\M' (end)
+        patterns = []
+        for t in unique_terms:
+            if len(t) <= 4:
+                # Short words need word boundaries to avoid false positives (e.g. "rata")
+                patterns.append(rf'\m{t}') # Match at least start of word
+            else:
+                patterns.append(t)
+        
+        keywords_patterns = patterns
 
-        try:
-             # Fast PostgreSQL Full Text Search
-             query = query.filter(models.Vote.search_vector.match(expanded_query))
-        except:
-             # Fallback
-             query = query.filter(models.Vote.title_raw.ilike(f"%{q}%"))
+    if vector or keywords_patterns:
+        from sqlalchemy import text
+        # If we have vector OR keywords, we calculate similarity
+        # 1.0 boost for keyword match, else cosine similarity
+        embedding_str = str(vector) if vector else None
+        
+        # We use a subquery to calculate similarity and then filter/order in the main query
+        # But for FastAPI routing, we prefer to keep it in the main query builder if possible.
+        # Since read_votes uses a lot of dynamic filters, it's easier to use a CASE in the query
+        
+        from sqlalchemy import case, literal
+        if vector:
+            sim_expr = 1 - models.Vote.vector_embedding.cosine_distance(vector)
+        else:
+            sim_expr = literal(0.5) # Baseline for keyword-only search
+            
+        # Add similarity column
+        if keywords_patterns:
+            # PostgreSQL Regex matching: ~* is case-insensitive matches regex
+            # We check if any pattern matches
+            regex_pattern = '|'.join(keywords_patterns)
+            query = query.add_columns(
+                case(
+                    (models.Vote.title_clean.op('~*')(regex_pattern), literal(1.0)),
+                    else_=sim_expr
+                ).label('similarity')
+            )
+            query = query.filter(
+                (models.Vote.title_clean.op('~*')(regex_pattern)) | 
+                (models.Vote.vector_embedding != None if vector else False)
+            )
+            query = query.order_by(text("similarity DESC"))
+        elif vector:
+            query = query.add_columns(sim_expr.label('similarity'))
+            query = query.order_by(text("similarity DESC"))
+        # Legacy search block removed in favor of Hybrid Search above
+        pass
 
     # Grouping & Clarity Logic
     if hide_procedural and category != 'PROCEDURAL': # Allow procedural if explicitly requested
@@ -222,7 +229,10 @@ def read_votes(
         # Frontend might send 'Uchwalono', 'Odrzucono' etc.
         # DB stores exact strings. We use ilike for flexibility
         query = query.filter(models.Vote.verdict.ilike(f"%{verdict}%"))
-        
+
+    if topic:
+        query = query.filter(models.Vote.topic == topic)
+
     if category:
         from sqlalchemy import or_
         if category == 'LAWS':

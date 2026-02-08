@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Search, ArrowLeft, Layers, CheckCircle2, XCircle, MinusCircle, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Layers, CheckCircle2, XCircle, MinusCircle, HelpCircle } from 'lucide-react';
 
 import TermSwitcher from '../components/ui/TermSwitcher';
+import SmartSearch from '../components/SmartSearch';
 import { cleanSejmTitle } from '../utils/titleFormatter';
 import { useVotesList } from '../hooks/useVotesList';
 import SEO from '../components/SEO';
@@ -14,13 +15,9 @@ import { UpcomingSittings } from '../components/features/UpcomingSittings';
 import VoteGroupCard from '../components/VoteGroupCard';
 import VotingTimeline from '../components/VotingTimeline';
 import { getCategoryStyles } from '../utils/voteStyles';
+import { CategoryFilterGrid } from '../components/CategoryFilterGrid';
 
 const VotesList = () => {
-
-
-
-
-
     const [searchParams] = useSearchParams();
     const mpId = searchParams.get('mp_id');
     const rebellion = searchParams.get('rebellion') === 'true';
@@ -31,7 +28,6 @@ const VotesList = () => {
         loading,
         searchQuery,
         setSearchQuery,
-        isContextualSearch,
         term,
         setPage,
         hasMore,
@@ -47,6 +43,8 @@ const VotesList = () => {
         setGroupVotes,
         filterCategory,
         setFilterCategory,
+        filterTopic,
+        setFilterTopic,
         sitting,
         setSitting
     } = useVotesList(mpId, rebellion);
@@ -140,26 +138,25 @@ const VotesList = () => {
                             />
                         </div>
 
+                        {/* Category Filter Grid (Visual Topics) */}
+                        <div className="mb-8">
+                            <CategoryFilterGrid
+                                selectedTopic={filterTopic}
+                                onSelectTopic={setFilterTopic}
+                            />
+                        </div>
+
                         <div className="bg-surface rounded-[var(--radius-card-xl)] border border-border-base shadow-2xl backdrop-blur-md overflow-hidden flex flex-col">
 
                             {/* Top Row: Search + Main Toggles */}
                             <div className="flex flex-col md:flex-row items-center gap-4 p-4 border-b border-border-base/50 flex-1">
                                 <div className="relative flex-1 w-full">
-                                    <div className="relative flex items-center gap-3">
-                                        <Search className={`text-secondary transition-colors ${isContextualSearch ? 'text-blue-400' : ''}`} size={20} />
-                                        <input
-                                            type="text"
-                                            placeholder="Szukaj..."
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="w-full bg-transparent text-base font-bold text-primary placeholder:text-slate-400 focus:outline-none py-2"
-                                        />
-                                        {isContextualSearch && (
-                                            <div className="hidden md:flex items-center gap-2 px-2 py-1 bg-accent-blue/10 rounded-full border border-accent-blue/20 animate-fade-in">
-                                                <span className="text-[10px] font-bold text-accent-blue uppercase tracking-wider">AI</span>
-                                            </div>
-                                        )}
-                                    </div>
+                                    <SmartSearch
+                                        size="small"
+                                        showHero={false}
+                                        initialQuery={searchQuery}
+                                        onSearch={(q) => setSearchQuery(q)}
+                                    />
                                 </div>
 
                                 <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto no-scrollbar">

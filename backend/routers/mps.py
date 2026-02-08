@@ -18,7 +18,10 @@ def read_mps(
     if term is not None:
         query = query.filter(models.MP.term == term)
     if active is not None:
-        query = query.filter(models.MP.active == active)
+        if active:
+            query = query.filter((models.MP.active == True) | (models.MP.active == None))
+        else:
+            query = query.filter(models.MP.active == False)
     
     mps = query.order_by(models.MP.last_name.asc()).offset(skip).limit(limit).all()
     

@@ -120,6 +120,37 @@ services:
     networks:
       - parlament_net
 
+  # 6. Analytics (Umami)
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-kajtek}:${POSTGRES_PASSWORD:-password}@umami-db:5432/umami
+      DATABASE_TYPE: postgresql
+      APP_SECRET: ${UMAMI_SECRET:-parlament-secret-123}
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    networks:
+      - parlament_net
+
+  umami-db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-kajtek}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: umami
+    volumes:
+      - umami_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d umami" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - parlament_net
+
 networks:
   parlament_net:
 
@@ -127,3 +158,4 @@ networks:
 volumes:
   postgres_data:
   n8n_data:
+  umami_data:

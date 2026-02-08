@@ -39,6 +39,7 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
     const [showProcedural, setShowProcedural] = useState(false);
     const [groupVotes, setGroupVotes] = useState(true);
     const [filterCategory, setFilterCategory] = useState<'ALL' | 'LAWS' | 'RESOLUTIONS' | 'PERSONAL' | 'PROCEDURAL'>('ALL');
+    const [filterTopic, setFilterTopic] = useState<string | undefined>(undefined);
 
     // Debounce and Generate Embeddings
     useEffect(() => {
@@ -64,7 +65,7 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
         error
     } = useInfiniteQuery({
         // Include vector in queryKey so it refetches when vector changes
-        queryKey: ['votesList', term, mpId, rebellion, dateFrom, dateTo, verdict, sitting, showProcedural, groupVotes, filterCategory, searchQuery, vector], // Added vector and searchQuery
+        queryKey: ['votesList', term, mpId, rebellion, dateFrom, dateTo, verdict, sitting, showProcedural, groupVotes, filterCategory, filterTopic, searchQuery, vector], // Added vector and searchQuery
 
         queryFn: async ({ pageParam = 1 }) => {
             const skip = (pageParam - 1) * PAGE_SIZE;
@@ -82,7 +83,8 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
                 vector: vector, // Pass vector to API
                 hide_procedural: !showProcedural,
                 grouped: groupVotes,
-                category: filterCategory === 'ALL' ? undefined : filterCategory
+                category: filterCategory === 'ALL' ? undefined : filterCategory,
+                topic: filterTopic
             });
             return {
                 items: res.items,
@@ -136,6 +138,9 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
         groupVotes,
         setGroupVotes,
         filterCategory,
-        setFilterCategory
+        setFilterCategory,
+        filterTopic,
+        setFilterTopic,
+        isAiLoading
     };
 }

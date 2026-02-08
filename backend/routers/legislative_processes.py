@@ -11,12 +11,16 @@ router = APIRouter()
 def read_processes(
     skip: int = 0,
     limit: int = 20,
+    term: Optional[int] = Query(10), # Default to current term X
     status: Optional[str] = None, # 'IN_PROGRESS', 'COMPLETED'
     type: Optional[str] = None,
     db: Session = Depends(database.get_db)
 ):
     query = db.query(models.LegislativeProcess)
     
+    if term:
+        query = query.filter(models.LegislativeProcess.term == term)
+
     if status:
         query = query.filter(models.LegislativeProcess.status == status)
         
@@ -26,7 +30,8 @@ def read_processes(
         query = query.filter(models.Bill.type == type)
         
     # Default sort: Most recent start_date
-    query = query.filter(models.LegislativeProcess.base_number != None)
+    # Relax filter: Differentiate between processes that have prints and those that don't, 
+    # but don't hide everything just because base_number is missing if they have a title.
     query = query.order_by(desc(models.LegislativeProcess.start_date))
     
     total = query.count()
