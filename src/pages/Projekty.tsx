@@ -215,17 +215,19 @@ export default function Projekty() {
                                                     <div className="flex-1 w-full">
                                                         {/* Header Badges */}
                                                         <div className="flex flex-wrap items-center gap-3 mb-2">
-                                                            <object>
-                                                                <a
-                                                                    href={`https://www.sejm.gov.pl/Sejm${print.term || 10}.nsf/druk.xsp?nr=${print.number}`}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                    className="px-2.5 py-1 bg-white/5 text-secondary text-[10px] font-black uppercase tracking-widest rounded-lg border border-border-base/50 hover:bg-accent-blue/10 hover:text-accent-blue hover:border-accent-blue/30 transition-all z-20 relative"
-                                                                >
-                                                                    Druk {print.number}
-                                                                </a>
-                                                            </object>
+                                                            {print.number && (
+                                                                <object>
+                                                                    <a
+                                                                        href={`https://www.sejm.gov.pl/Sejm${print.term || 10}.nsf/druk.xsp?nr=${print.number}`}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        onClick={(e) => e.stopPropagation()}
+                                                                        className="px-2.5 py-1 bg-white/5 text-secondary text-[10px] font-black uppercase tracking-widest rounded-lg border border-border-base/50 hover:bg-accent-blue/10 hover:text-accent-blue hover:border-accent-blue/30 transition-all z-20 relative"
+                                                                    >
+                                                                        Druk {print.number}
+                                                                    </a>
+                                                                </object>
+                                                            )}
                                                             {/* Source Badge */}
                                                             <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border border-transparent ${styles.badge}`}>
                                                                 {resolvedType}

@@ -117,7 +117,9 @@ def search_all(
         'podatek od smartfona': ['opłata reprograficzna', 'prawo autorskie', 'rekompensata', 'artystów'],
         
         # People / Specifics
-        'nawrocki': ['ipn', 'instytut pamięci'],
+        'nawrocki': ['ipn', 'instytut pamięci', 'prezes', 'powołanie', 'karol nawrocki', 'uchwała w sprawie powołania', 'weto'],
+        'prezes ipn': ['nawrocki', 'karol', 'instytut pamięci narodowej'],
+        'ustawa łańcuchowa': ['ochrona zwierząt', 'na uwięzi', 'kojce', 'znęcanie się', 'dobrostan zwierząt', 'weto'],
         'pielęgniark': ['wynagrodz', 'lecznicz', 'medycz', 'system zdrowia'],
         'nauczyciel': ['karta nauczyciela', 'oświat', 'szkoł', 'czarnek'],
         'mentzen': ['podatki', 'pit', 'konfederacja', 'stereotyp'],
@@ -143,10 +145,35 @@ def search_all(
         except ValueError:
             pass
 
-    # --- SEMANTIC SEARCH ENHANCEMENT ---
+    # --- AI QUERY EXPANSION (The "Translator") ---
+    def expand_query_with_llm(user_query):
+        try:
+            model = genai.GenerativeModel('models/gemini-flash-latest')
+            prompt = f"""
+            Jesteś ekspertem polskiego parlamentaryzmu. 
+            Przetłumacz potoczne lub slangowe zapytanie użytkownika na oficjalne słowa kluczowe legislacji.
+            
+            Zapytanie: "{user_query}"
+            
+            Jeśli to potoczna nazwa afery lub ustawy (np. "Lex TVN", "Ustawa Łańcuchowa"), podaj oficjalne tematy.
+            Jeśli to nazwisko, podaj funkcje (np. "Prezes IPN").
+            
+            Wypisz TYLKO słowa kluczowe oddzielone przecinkami. Maksymalnie 5 silnych fraz.
+            Przykład: "Willa Plus" -> Dotacje edukacyjne, Czarnek, Inwestycje w oświacie
+            """
+            response = model.generate_content(prompt)
+            if response.text:
+                return [t.strip() for t in response.text.split(',') if t.strip()]
+            return []
+        except Exception as e:
+            print(f"AI Expansion failed: {e}")
+            return []
+
+    # --- UNIFIED HYBRID SEARCH (AI + KEYWORD BOOST) ---
     semantic_results = []
+    processed_types = set()
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-    
+
     if GEMINI_API_KEY:
         genai.configure(api_key=GEMINI_API_KEY)
         
@@ -154,115 +181,207 @@ def search_all(
             # 1. Check Query Cache
             cached = db.query(models.QueryEmbedding).filter(models.QueryEmbedding.query == q.lower()).first()
             
-            if cached and cached.embedding is not None:
-                query_embedding = list(cached.embedding) if hasattr(cached.embedding, 'tolist') else cached.embedding
-                # Lazy update search count
+            expanded_terms = []
+            
+            if cached:
+                # Use existing embedding
+                if cached.embedding is not None:
+                    query_embedding = list(cached.embedding) if hasattr(cached.embedding, 'tolist') else cached.embedding
+                
+                # Check for cached AI expansion
+                if cached.ai_expansion:
+                    expanded_terms = cached.ai_expansion
+                else:
+                    # Generate expansion if missing
+                    expanded_terms = expand_query_with_llm(q)
+                    cached.ai_expansion = expanded_terms
+                    db.commit()
+                
                 cached.search_count += 1
                 cached.last_searched_at = func.now()
                 db.commit()
             else:
-                # 2. Generate new embedding
-                result = genai.embed_content(
-                    model="models/text-embedding-004",
-                    content=q,
-                    task_type="retrieval_query"
-                )
+                # 2. Generate new embedding & expansion
+                # Use gemini-embedding-001 with explicit dimensionality as in ETL script
+                try:
+                    result = genai.embed_content(
+                        model="models/gemini-embedding-001",
+                        content=q,
+                        task_type="retrieval_query",
+                        output_dimensionality=768
+                    )
+                except TypeError:
+                    # Fallback if library version doesn't support arg for this model
+                    result = genai.embed_content(
+                        model="models/gemini-embedding-001",
+                        content=q,
+                        task_type="retrieval_query"
+                    )
+                    
                 query_embedding = result['embedding']
+                
+                # Generate expansion
+                expanded_terms = expand_query_with_llm(q)
                 
                 # Save to cache
                 new_cache = models.QueryEmbedding(
                     query=q.lower(),
                     embedding=query_embedding,
                     search_count=1,
-                    last_searched_at=func.now()
+                    last_searched_at=func.now(),
+                    ai_expansion=expanded_terms
                 )
                 db.add(new_cache)
                 db.commit()
 
-            # 3. Vector Search in Votes
+            # Ensure embedding is a list of native floats
+            if hasattr(query_embedding, 'tolist'):
+                query_embedding = query_embedding.tolist()
+            elif isinstance(query_embedding, list) and len(query_embedding) > 0 and hasattr(query_embedding[0], 'item'):
+                 query_embedding = [float(x) for x in query_embedding]
+
+            embedding_str = str(query_embedding)
+            
+            # --- MERGE AI TERMS INTO SEARCH ---
+            if expanded_terms:
+                search_terms.extend(expanded_terms)
+            
+            # Prepare patterns for ILIKE ANY(...)
+            # Limit to top 5 terms to prevent DOS
+            unique_terms = list(set([q] + [t for t in search_terms if t and len(t) > 2]))[:5]
+            keywords_patterns = [f"%{t}%" for t in unique_terms]
+            
+            # 3. Hybrid Search in Votes
             if should_search_type('vote'):
-                sem_votes = db.query(models.Vote, models.Vote.vector_embedding.cosine_distance(query_embedding).label('distance'))\
-                    .filter(models.Vote.vector_embedding.isnot(None))
-                if period:
-                    sem_votes = sem_votes.filter(models.Vote.term == int(period))
+                processed_types.add('vote')
+                vote_sql = text("""
+                    SELECT 
+                        id,
+                        title_clean,
+                        topic,
+                        date,
+                        term,
+                        kind,
+                        CASE 
+                            WHEN title_clean ILIKE ANY(:patterns) THEN 1.0 
+                            WHEN vector_embedding IS NULL THEN 0.0
+                            ELSE 1 - (vector_embedding <=> CAST(:embedding AS vector)) 
+                        END as similarity
+                    FROM votes
+                    WHERE (vector_embedding IS NOT NULL OR title_clean ILIKE ANY(:patterns))
+                    AND (:term IS NULL OR term = :term)
+                    ORDER BY similarity DESC
+                    LIMIT 20
+                """)
                 
-                # Fetch more and filter by threshold
-                # Threshold relaxed from 0.37 to 0.65 based on empirical testing (e.g. 'ciąża' <-> 'in vitro' is ~0.64 distance)
-                sem_votes_raw = sem_votes.order_by('distance').limit(50).all()
+                votes = db.execute(vote_sql, {
+                    "embedding": embedding_str, 
+                    "patterns": keywords_patterns,
+                    "term": int(period) if period else None
+                }).fetchall()
                 
-                for v, dist in sem_votes_raw:
-                    if dist > 0.65: continue # Relaxed cutoff
-                    
-                    # Convert distance to similarity (approximate)
-                    # Cosine distance is 1 - Cosine Similarity. So Sim = 1 - Dist.
-                    # Dist 0.65 => Sim 0.35
-                    relevance = 1.0 - dist
-                    
-                    semantic_results.append({
-                        "type": "vote",
-                        "id": str(v.id),
-                        "title": v.title_clean,
-                        "date": str(v.date),
-                        "term": v.term,
-                        "topic": v.topic,
-                        "ux_category": v.kind or "Głosowanie",
-                        "is_semantic": True,
-                        "relevance_score": relevance
-                    })
+                for v in votes:
+                    if v.similarity > 0.4: # Hybrid threshold
+                        semantic_results.append({
+                            "type": "vote",
+                            "id": str(v.id),
+                            "title": v.title_clean,
+                            "date": str(v.date),
+                            "term": v.term,
+                            "topic": v.topic,
+                            "ux_category": v.kind or "Głosowanie",
+                            "is_semantic": True,
+                            "relevance_score": float(v.similarity)
+                        })
 
-            # 4. Vector Search in Bills
+            # 4. Hybrid Search in Bills
             if should_search_type('process'):
-                sem_bills = db.query(models.Bill, models.Bill.vector_embedding.cosine_distance(query_embedding).label('distance'))\
-                    .filter(models.Bill.vector_embedding.isnot(None))
-                if period:
-                    p = int(period)
-                    if p == 10:
-                        sem_bills = sem_bills.filter(models.Bill.date >= '2023-11-13')
-                    elif p == 9:
-                        sem_bills = sem_bills.filter(models.Bill.date < '2023-11-13', models.Bill.date >= '2019-11-12')
+                processed_types.add('process')
+                bill_sql = text("""
+                    SELECT 
+                        id,
+                        process_id,
+                        number,
+                        title,
+                        topic,
+                        date,
+                        type,
+                        CASE 
+                            WHEN title ILIKE ANY(:patterns) THEN 1.0 
+                            WHEN vector_embedding IS NULL THEN 0.0
+                            ELSE 1 - (vector_embedding <=> CAST(:embedding AS vector)) 
+                        END as similarity
+                    FROM bills
+                    WHERE (vector_embedding IS NOT NULL OR title ILIKE ANY(:patterns))
+                    ORDER BY similarity DESC
+                    LIMIT 20
+                """)
                 
-                sem_bills_raw = sem_bills.order_by('distance').limit(30).all()
-                for b, dist in sem_bills_raw:
-                    if dist > 0.65: continue # Relaxed cutoff
-                    
-                    relevance = 1.0 - dist
-                    
-                    b_term = 10 if not b.date or str(b.date) >= '2023-11-13' else 9
-                    semantic_results.append({
-                        "type": "process",
-                        "id": b.process_id or str(b.id),
-                        "title": f"Druk nr {b.number}: {b.title}",
-                        "date": str(b.date),
-                        "term": b_term,
-                        "topic": b.topic,
-                        "ux_category": b.type or "Projekt",
-                        "is_semantic": True,
-                        "relevance_score": relevance
-                    })
+                bills = db.execute(bill_sql, {
+                    "embedding": embedding_str, 
+                    "patterns": keywords_patterns
+                }).fetchall()
+                
+                for b in bills:
+                    if b.similarity > 0.4:
+                        # Term logic
+                        b_term = 10 if not b.date or str(b.date) >= '2023-11-13' else 9
+                        if period and int(period) != b_term:
+                            continue
 
-            # 5. Vector Search in Interpellations
-            sem_inters = db.query(models.Interpellation, models.Interpellation.vector_embedding.cosine_distance(query_embedding).label('distance'))\
-                .filter(models.Interpellation.vector_embedding.isnot(None))
-            sem_inters_raw = sem_inters.order_by('distance').limit(20).all()
-            for i, dist in sem_inters_raw:
-                if dist > 0.65: continue # Relaxed cutoff
+                        semantic_results.append({
+                            "type": "process",
+                            "id": b.process_id or str(b.id),
+                            "title": f"Druk nr {b.number}: {b.title}",
+                            "date": str(b.date),
+                            "term": b_term,
+                            "topic": b.topic,
+                            "ux_category": b.type or "Projekt",
+                            "is_semantic": True,
+                            "relevance_score": float(b.similarity)
+                        })
+
+            # 5. Hybrid Search in Interpellations
+            if should_search_type('interpellation'):
+                processed_types.add('interpellation')
+                interp_sql = text("""
+                    SELECT 
+                        id,
+                        title,
+                        sent_date,
+                        CASE 
+                            WHEN title ILIKE ANY(:patterns) THEN 1.0 
+                            WHEN vector_embedding IS NULL THEN 0.0
+                            ELSE 1 - (vector_embedding <=> CAST(:embedding AS vector)) 
+                        END as similarity
+                    FROM interpellations
+                    WHERE (vector_embedding IS NOT NULL OR title ILIKE ANY(:patterns))
+                    ORDER BY similarity DESC
+                    LIMIT 15
+                """)
                 
-                relevance = 1.0 - dist
+                interps = db.execute(interp_sql, {
+                    "embedding": embedding_str, 
+                    "patterns": keywords_patterns
+                }).fetchall()
                 
-                semantic_results.append({
-                    "type": "interpellation",
-                    "id": str(i.id),
-                    "title": i.title,
-                    "date": str(i.sent_date),
-                    "topic": "Interpelacja",
-                    "ux_category": "Interpelacja",
-                    "is_semantic": True,
-                    "relevance_score": relevance
-                })
+                for i in interps:
+                    if i.similarity > 0.4:
+                        semantic_results.append({
+                            "type": "interpellation",
+                            "id": str(i.id),
+                            "title": i.title,
+                            "date": str(i.sent_date),
+                            "topic": "Interpelacja",
+                            "ux_category": "Interpelacja",
+                            "is_semantic": True,
+                            "relevance_score": float(i.similarity)
+                        })
+                        
         except Exception as e:
-            print(f"Semantic enhancement failed: {e}")
-
-    # --- TRADITIONAL KEYWORD SEARCH ---
+            print(f"Hybrid search failed: {e}")
+    
+    # --- TRADITIONAL FALLBACK SEARCH (Only if Hybrid didn't run for that type) ---
     results = []
     
     # 1. Search across MPs (Traditional)
@@ -300,8 +419,8 @@ def search_all(
                 "data": mp_dict
             })
 
-    # 2. Add traditional Vote results (FTS)
-    if should_search_type('vote'):
+    # 2. Add traditional Vote results (FTS) - Only if Hybrid didn't run
+    if should_search_type('vote') and 'vote' not in processed_types:
         vote_query = db.query(models.Vote)
         if period: vote_query = vote_query.filter(models.Vote.term == int(period))
         try:
@@ -318,8 +437,8 @@ def search_all(
                 "voting_number": vote.voting_number # Re-added original fields
             })
 
-    # 3. Traditional Bills
-    if should_search_type('process'):
+    # 3. Traditional Bills - Only if Hybrid didn't run
+    if should_search_type('process') and 'process' not in processed_types:
         bill_query = db.query(models.Bill)
         if period:
             p = int(period)
@@ -351,34 +470,8 @@ def search_all(
         all_candidates.append(r)
         
     for r in semantic_results:
-        # Boost if keyword exists in title
-        title_lower = r['title'].lower()
-        boost = 0
-        
-        # Check for direct keyword matches (better for Polish declension)
-        # Check for direct keyword matches with Naive Polish Stemming
-        for term in search_terms[:5]:
-            t_lower = term.lower()
-            t_len = len(t_lower)
-            
-            # 1. Exact match
-            if t_lower in title_lower:
-                boost = 0.5
-                break
-            
-            # 2. Naive Stemming (remove last char if > 3, last 2 if > 6)
-            # e.g. "ciąża" (5) -> "ciąż" matches "ciąż-y"
-            # "Nawrocki" (8) -> "Nawroc" (matches "Nawroc-kiego"?) No, "Nawrocki" -> "Nawrock" matches "Nawrock-iego"
-            
-            stem = None
-            if t_len > 3:
-                stem = t_lower[:-1] # Remove 1 char
-                
-            if stem and stem in title_lower:
-                boost = 0.5
-                break
-                
-        r['relevance_boost'] = r.get('relevance_score', 0.1) + boost
+        # Trust the hybrid score directly
+        r['relevance_boost'] = r.get('relevance_score', 0.5)
         all_candidates.append(r)
 
     # 2. Sort and deduplicate
@@ -412,21 +505,22 @@ def search_all(
                     "date": str(s.date), "content_preview": content_preview, "term": s.term, "mp_id": str(s.mp_id)
                 })
 
-    # 5. Traditional Interpellations
-    inter_query = db.query(models.Interpellation)
-    trad_inters = inter_query.filter(models.Interpellation.title.ilike(f"%{q}%")).limit(10).all()
-    for i in trad_inters:
-        unique_key = f"interpellation_{i.id}"
-        if unique_key not in seen_ids:
-            seen_ids.add(unique_key)
-            final_results.append({
-                "type": "interpellation",
-                "id": str(i.id),
-                "title": i.title,
-                "date": str(i.sent_date),
-                "topic": "Interpelacja",
-                "ux_category": "Interpelacja"
-            })
+    # 5. Traditional Interpellations - Only if Hybrid didn't run
+    if should_search_type('interpellation') and 'interpellation' not in processed_types:
+        inter_query = db.query(models.Interpellation)
+        trad_inters = inter_query.filter(models.Interpellation.title.ilike(f"%{q}%")).limit(10).all()
+        for i in trad_inters:
+            unique_key = f"interpellation_{i.id}"
+            if unique_key not in seen_ids:
+                seen_ids.add(unique_key)
+                final_results.append({
+                    "type": "interpellation",
+                    "id": str(i.id),
+                    "title": i.title,
+                    "date": str(i.sent_date),
+                    "topic": "Interpelacja",
+                    "ux_category": "Interpelacja"
+                })
 
     return final_results
 

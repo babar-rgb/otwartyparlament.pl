@@ -2,7 +2,8 @@
 Semantic Search API endpoints
 """
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
+from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel
 import google.generativeai as genai
@@ -38,7 +39,8 @@ class SemanticSearchResponse(BaseModel):
 async def semantic_search(
     q: str = Query(..., min_length=3, description="Search query"),
     limit: int = Query(50, ge=1, le=200),  # Increased from 20 to 50, max 200
-    types: Optional[str] = Query(None, description="Comma-separated types: vote,bill,interpellation")
+    types: Optional[str] = Query(None, description="Comma-separated types: vote,bill,interpellation"),
+    db: Session = Depends(get_db)
 ):
     """
     Semantic search across votes, bills, and interpellations
@@ -53,7 +55,7 @@ async def semantic_search(
             total=0
         )
     
-    db = next(get_db())
+    # db = next(get_db()) # Moved to Depends
     
     try:
         # Check cache first
@@ -78,7 +80,7 @@ async def semantic_search(
         else:
             # Generate new embedding (costs API call)
             result = genai.embed_content(
-                model="models/text-embedding-004",
+                model="models/gemini-embedding-001",
                 content=q,
                 task_type="retrieval_query"
             )
@@ -106,6 +108,7 @@ async def semantic_search(
             search_types = ['vote', 'bill', 'interpellation', 'speech']
         
         results = []
+        query_like = f"%{q}%"
         
         # Search votes - get more results per type
         if 'vote' in search_types:
@@ -114,12 +117,16 @@ async def semantic_search(
                     id,
                     title_clean as title,
                     description,
-                    1 - (vector_embedding <=> CAST(:embedding AS vector)) as similarity
+                    CASE 
+                        WHEN title_clean ILIKE :query_like THEN 1.0 
+                        WHEN vector_embedding IS NULL THEN 0.0
+                        ELSE 1 - (vector_embedding <=> CAST(:embedding AS vector)) 
+                    END as similarity
                 FROM votes
-                WHERE vector_embedding IS NOT NULL
-                ORDER BY vector_embedding <=> CAST(:embedding AS vector)
+                WHERE vector_embedding IS NOT NULL OR title_clean ILIKE :query_like
+                ORDER BY similarity DESC
                 LIMIT :limit
-            """), {"embedding": embedding_str, "limit": limit * 2}).fetchall()  # Get 2x limit
+            """), {"embedding": embedding_str, "limit": limit * 2, "query_like": query_like}).fetchall()  # Get 2x limit
             
             for vote in votes:
                 if vote[3] > 0.3:  # Only include if similarity > 30% (lowered from 50%)
@@ -139,12 +146,16 @@ async def semantic_search(
                     id,
                     title,
                     SUBSTRING(content, 1, 200) as description,
-                    1 - (vector_embedding <=> CAST(:embedding AS vector)) as similarity
+                    CASE 
+                        WHEN title ILIKE :query_like THEN 1.0 
+                        WHEN vector_embedding IS NULL THEN 0.0
+                        ELSE 1 - (vector_embedding <=> CAST(:embedding AS vector)) 
+                    END as similarity
                 FROM bills
-                WHERE vector_embedding IS NOT NULL
-                ORDER BY vector_embedding <=> CAST(:embedding AS vector)
+                WHERE vector_embedding IS NOT NULL OR title ILIKE :query_like
+                ORDER BY similarity DESC
                 LIMIT :limit
-            """), {"embedding": embedding_str, "limit": limit * 2}).fetchall()
+            """), {"embedding": embedding_str, "limit": limit * 2, "query_like": query_like}).fetchall()
             
             for bill in bills:
                 if bill[3] > 0.3:
@@ -164,12 +175,16 @@ async def semantic_search(
                     id,
                     title,
                     SUBSTRING(content, 1, 200) as description,
-                    1 - (vector_embedding <=> CAST(:embedding AS vector)) as similarity
+                    CASE 
+                        WHEN title ILIKE :query_like THEN 1.0 
+                        WHEN vector_embedding IS NULL THEN 0.0
+                        ELSE 1 - (vector_embedding <=> CAST(:embedding AS vector)) 
+                    END as similarity
                 FROM interpellations
-                WHERE vector_embedding IS NOT NULL
-                ORDER BY vector_embedding <=> CAST(:embedding AS vector)
+                WHERE vector_embedding IS NOT NULL OR title ILIKE :query_like
+                ORDER BY similarity DESC
                 LIMIT :limit
-            """), {"embedding": embedding_str, "limit": limit * 2}).fetchall()
+            """), {"embedding": embedding_str, "limit": limit * 2, "query_like": query_like}).fetchall()
             
             for interp in interps:
                 if interp[3] > 0.3:

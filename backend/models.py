@@ -352,6 +352,7 @@ class QueryEmbedding(Base):
     embedding = Column(Vector(768))
     search_count = Column(Integer, default=0)
     last_searched_at = Column(DateTime)
+    ai_expansion = Column(JSONB, nullable=True) # Cache for AI synonyms
     created_at = Column(DateTime, server_default=func.now())
 
 class SejmPrint(Base):

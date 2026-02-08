@@ -26,6 +26,7 @@ def read_processes(
         query = query.filter(models.Bill.type == type)
         
     # Default sort: Most recent start_date
+    query = query.filter(models.LegislativeProcess.base_number != None)
     query = query.order_by(desc(models.LegislativeProcess.start_date))
     
     total = query.count()
@@ -38,15 +39,21 @@ def read_processes(
         # For MVP, simple load is fine (limit 20).
         stages_count = len(p.stages) 
         last_stage = p.stages[-1] if p.stages else None
+        # Fetch associated Bill to get number and type
+        bill = db.query(models.Bill).filter(models.Bill.process_id == p.id).first()
         
         result.append({
             "id": p.id,
             "title": p.title,
             "status": p.status,
+            "number": bill.number if bill else p.base_number,
+            "type": bill.type if bill else "Inny",
+            "term": bill.term if bill else p.term,
             "start_date": p.start_date.isoformat() if p.start_date else None,
             "stage_count": stages_count,
             "last_update": (last_stage.date.isoformat() if last_stage.date else None) if last_stage else (p.start_date.isoformat() if p.start_date else None),
-            "last_stage_title": last_stage.title if last_stage else "Inicjacja"
+            "last_stage_title": last_stage.title if last_stage else "Inicjacja",
+            "ai_summary": bill.description if bill else p.description
         })
         
     return {"items": result, "total": total}
