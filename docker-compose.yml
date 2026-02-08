@@ -57,6 +57,7 @@ services:
       args:
         VITE_API_ANON_KEY: ${VITE_API_ANON_KEY}
         VITE_API_URL: https://api.otwartyparlament.pl
+        VITE_UMAMI_ID: ${VITE_UMAMI_ID}
     expose:
       - "80"
     labels:
