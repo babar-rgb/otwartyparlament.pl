@@ -52,14 +52,15 @@ class BillVoteLinker:
                   );
             """
             
-            session.execute(text(sql_link))
-            session.execute(text(sql_fix))
+            result_link = session.execute(text(sql_link))
+            result_fix = session.execute(text(sql_fix))
             session.commit()
             
-            if result.rowcount > 0:
-                logger.info(f"✅ Linked {result.rowcount} votes to bills instantly!")
+            total_linked = result_link.rowcount + result_fix.rowcount
+            if total_linked > 0:
+                logger.info(f"✅ Linked/Updated {total_linked} votes to bills instantly! (New: {result_link.rowcount}, Fixed: {result_fix.rowcount})")
             else:
-                logger.debug("No new links created.")
+                logger.debug("No new links or updates needed.")
             
         except Exception as e:
             logger.error(f"Error linking votes: {e}")
