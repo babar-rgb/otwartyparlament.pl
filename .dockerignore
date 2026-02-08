@@ -1,0 +1,21 @@
+# Backups (KRYTYCZNE - 11GB sql rozwala buildy)
+*.sql
+*.tar.gz
+backend/backups/
+
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+.env
+
+# Node / Frontend
+node_modules/
+dist/
+.DS_Store
