@@ -20,7 +20,15 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column('speeches', sa.Column('vector_embedding', Vector(768), nullable=True))
+    # Check if column already exists (Safety Shield for out-of-sync VPS databases)
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    columns = [c['name'] for c in inspector.get_columns('speeches')]
+    
+    if 'vector_embedding' not in columns:
+        op.add_column('speeches', sa.Column('vector_embedding', Vector(768), nullable=True))
+    else:
+        print("ℹ️ Column 'vector_embedding' already exists in 'speeches', skipping.")
 
 
 def downgrade() -> None:

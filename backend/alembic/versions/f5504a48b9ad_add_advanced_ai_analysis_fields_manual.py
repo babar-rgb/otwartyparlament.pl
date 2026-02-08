@@ -19,22 +19,35 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    
     # --- Votes Table ---
-    # Check what else is missing. Base on the crash, expert_summary is missing.
-    # We should add pros, cons, personas and expert_summary to votes.
-    op.add_column('votes', sa.Column('expert_summary', sa.Text(), nullable=True))
-    op.add_column('votes', sa.Column('pros', postgresql.JSONB(astext_type=sa.Text()), nullable=True))
-    op.add_column('votes', sa.Column('cons', postgresql.JSONB(astext_type=sa.Text()), nullable=True))
-    op.add_column('votes', sa.Column('personas', postgresql.JSONB(astext_type=sa.Text()), nullable=True))
+    columns_votes = [c['name'] for c in inspector.get_columns('votes')]
+    new_votes_cols = [
+        ('expert_summary', sa.Text()),
+        ('pros', postgresql.JSONB(astext_type=sa.Text())),
+        ('cons', postgresql.JSONB(astext_type=sa.Text())),
+        ('personas', postgresql.JSONB(astext_type=sa.Text()))
+    ]
+    for col_name, col_type in new_votes_cols:
+        if col_name not in columns_votes:
+            op.add_column('votes', sa.Column(col_name, col_type, nullable=True))
     
     # --- Interpellations Table ---
-    op.add_column('interpellations', sa.Column('expert_summary', sa.Text(), nullable=True))
-    op.add_column('interpellations', sa.Column('street_title', sa.String(), nullable=True))
-    op.add_column('interpellations', sa.Column('meta_description', sa.String(), nullable=True))
-    op.add_column('interpellations', sa.Column('seo_keywords', postgresql.JSONB(astext_type=sa.Text()), nullable=True))
-    op.add_column('interpellations', sa.Column('pros', postgresql.JSONB(astext_type=sa.Text()), nullable=True))
-    op.add_column('interpellations', sa.Column('cons', postgresql.JSONB(astext_type=sa.Text()), nullable=True))
-    op.add_column('interpellations', sa.Column('personas', postgresql.JSONB(astext_type=sa.Text()), nullable=True))
+    columns_interp = [c['name'] for c in inspector.get_columns('interpellations')]
+    new_interp_cols = [
+        ('expert_summary', sa.Text()),
+        ('street_title', sa.String()),
+        ('meta_description', sa.String()),
+        ('seo_keywords', postgresql.JSONB(astext_type=sa.Text())),
+        ('pros', postgresql.JSONB(astext_type=sa.Text())),
+        ('cons', postgresql.JSONB(astext_type=sa.Text())),
+        ('personas', postgresql.JSONB(astext_type=sa.Text()))
+    ]
+    for col_name, col_type in new_interp_cols:
+        if col_name not in columns_interp:
+            op.add_column('interpellations', sa.Column(col_name, col_type, nullable=True))
 
 
 def downgrade() -> None:
