@@ -305,15 +305,9 @@ class IncrementalETL:
             # Group Votes for new sittings (Vote Clarity)
             logger.info("Grouping votes for new sittings...")
             try:
-                VoteGroupingETL(term=self.term).process_sittings(new_sittings) # Wait, check method name
-                # Actually I defined group_votes_for_sitting. Let's iterate.
+                # Use correct method run(sitting=...)
                 grouping_etl = VoteGroupingETL(term=self.term)
                 for s in new_sittings:
-                    grouping_etl.group_votes_for_sitting(session, s) # session? no, internal db
-                    # My class handles DB.
-                    grouping_etl.group_votes_for_sitting(db.get_db(), s) # No, it uses SessionLocal internally
-                    # My class implementation: run(sitting=...)
-                    # So I should call grouping_etl.run(sitting=s)
                     grouping_etl.run(sitting=s)
             except Exception as e:
                 logger.error(f"Error grouping votes: {e}")

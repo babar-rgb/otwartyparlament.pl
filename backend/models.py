@@ -85,6 +85,8 @@ class Vote(Base):
     cons = Column(JSONB, nullable=True) # AI generated
     personas = Column(JSONB, nullable=True) # {Student: text, Emeryt: text}
     
+    link_sejm = Column(String, nullable=True) # Added for ETL
+
     created_at = Column(DateTime, server_default=func.now())
 
     results = relationship("VoteResult", back_populates="vote")
@@ -110,7 +112,7 @@ class Bill(Base):
     __tablename__ = "bills"
 
     id = Column(Integer, primary_key=True, index=True)
-    process_id = Column(String, index=True) # e.g. RPS-123
+    process_id = Column(String, unique=True, index=True) # e.g. RPS-123
     number = Column(String, index=True) # print number
     title = Column(Text)
     description = Column(Text, nullable=True)
