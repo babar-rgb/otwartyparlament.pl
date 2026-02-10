@@ -241,7 +241,7 @@ def upgrade() -> None:
         sa.Column('ai_summary', sa.Text(), nullable=True),
         sa.Column('expert_summary', sa.Text(), nullable=True),
         sa.Column('kind', sa.String(), nullable=True),
-        sa.Column('vector_embedding', pgvector.sqlalchemy.vector.Vector(dim=768), nullable=True),
+        sa.Column('vector_embedding', Vector(768), nullable=True),
         sa.Column('search_vector', postgresql.TSVECTOR(), nullable=True),
         sa.Column('print_number', sa.String(), nullable=True),
         sa.Column('bill_id', sa.Integer(), nullable=True),
