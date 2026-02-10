@@ -1,68 +1,46 @@
-# --- Node.js Standard ---
-node_modules/
-dist/
-dist-ssr/
-.env*
+# --- Environment & Secrets ---
+.env
+.env.*
 !.env.example
 *.local
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+.DS_Store
 
-# --- Python Standard ---
+# --- Node.js (Frontend) ---
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+.eslintcache
+
+# --- Python (Backend) ---
 __pycache__/
 *.py[cod]
 *$py.class
-venv/
 .venv/
+venv/
 .pytest_cache/
+.coverage
+htmlcov/
 
-# --- OS Standard ---
-.DS_Store
-Thumbs.db
-.idea/
-.vscode/
-
-# --- Databases (CRITICAL) ---
+# --- Databases & Data ---
+data/*.db
+data/*.sqlite
+data/*.sql
 *.db
-*.sqlite
-*.sqlite3
-parlament.db
-sejm.db
-backend/parlament.db
+!data/README.md
 
-# --- Logs and Data ---
+# --- Logs ---
 logs/
 *.log
-item_log.txt
-backups/
-archive/
-backend/data/
+nohup.out
 
-# --- Temporary Scripts & Tools ---
-debug_*.py
-check_*.py
-audit_*.py
-inspect_*.py
-fix_*.py
-test_*.py
-generate_*.py
-enrich_*.py
-recover_*.py
-migrate_*.py
-pregenerate_*.py
-*_script.py
-backend/etl/.etl_state.json
+# --- Backups ---
+backend/backups/*.sql
+backups/*.sql
+*.sql
 
-# --- Local Shell Scripts ---
-run_*.sh
-scripts/deploy_db.sh
-
-# --- Assets (Redundant Rules to Ensure Ignore) ---
-backend/etl/public/
-backend/etl/public
-etl/public/
-assets/declarations/
-wiedza/SPECYFIKACJA_AUTOMATYZACJI.txt
+# --- OS / IDE ---
+.idea/
+.vscode/
+*.swp
+*.swo

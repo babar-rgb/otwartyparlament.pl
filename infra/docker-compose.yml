@@ -1,0 +1,196 @@
+services:
+  db:
+    image: pgvector/pgvector:pg15
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-kajtek}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-otwarty_parlament}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    networks:
+      - parlament_net
+
+  backend:
+    build: ../backend
+    restart: always
+    entrypoint: [ "/app/backend/docker-entrypoint.sh" ]
+    command: [ "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000" ]
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-kajtek}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-otwarty_parlament}
+    volumes:
+      - ../backend/backups:/app/backend/backups
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    expose:
+      - "8000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`api.otwartyparlament.pl`) || (Host(`otwartyparlament.pl`) && (PathPrefix(`/api`) || PathPrefix(`/sitemap`)))"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=myresolver"
+      - "traefik.http.services.backend.loadbalancer.server.port=8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - parlament_net
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_ANON_KEY: ${VITE_API_ANON_KEY}
+        VITE_API_URL: https://api.otwartyparlament.pl
+        VITE_UMAMI_ID: ${VITE_UMAMI_ID}
+
+    expose:
+      - "80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`otwartyparlament.pl`) || Host(`www.otwartyparlament.pl`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - parlament_net
+
+  orchestrator:
+    build: ./backend
+    restart: always
+    entrypoint: [ "/app/backend/docker-entrypoint.sh" ]
+    command: [ "--interval", "600" ]
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-kajtek}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-otwarty_parlament}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    healthcheck:
+      test: [ "CMD", "python3", "backend/orchestrator.py", "--status" ]
+      interval: 10m
+      timeout: 10s
+      retries: 3
+    depends_on:
+      db:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    networks:
+      - parlament_net
+
+  traefik:
+    image: traefik:v3
+    restart: always
+    environment:
+      DOCKER_API_VERSION: "1.44"
+    command:
+      - "--api.insecure=false"
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=kajtek76@icloud.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`monitor.otwartyparlament.pl`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls.certresolver=myresolver"
+      - "traefik.http.routers.dashboard.middlewares=dashboard-auth"
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH}"
+    networks:
+      - parlament_net
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    restart: always
+    privileged: true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.n8n.rule=Host(`n8n.otwartyparlament.pl`)"
+      - "traefik.http.routers.n8n.entrypoints=websecure"
+      - "traefik.http.routers.n8n.tls.certresolver=myresolver"
+      - "traefik.http.services.n8n.loadbalancer.server.port=5678"
+    environment:
+      - N8N_HOST=n8n.otwartyparlament.pl
+      - WEBHOOK_URL=https://n8n.otwartyparlament.pl/
+      - GENERIC_TIMEZONE=Europe/Warsaw
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - parlament_net
+
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.umami.rule=Host(`umami.otwartyparlament.pl`)"
+      - "traefik.http.routers.umami.entrypoints=websecure"
+      - "traefik.http.routers.umami.tls.certresolver=myresolver"
+      - "traefik.http.services.umami.loadbalancer.server.port=3000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-kajtek}:${POSTGRES_PASSWORD:-password}@umami-db:5432/umami
+      DATABASE_TYPE: postgresql
+      APP_SECRET: ${UMAMI_SECRET:-parlament-secret-123}
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    networks:
+      - parlament_net
+
+  umami-db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-kajtek}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: umami
+    volumes:
+      - umami_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d umami" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - parlament_net
+
+networks:
+  parlament_net:
+
+
+volumes:
+  postgres_data:
+  n8n_data:
+  umami_data:

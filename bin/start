@@ -51,15 +51,15 @@ else
 fi
 
 # 3. Check Frontend Dependencies
-if [ ! -d "node_modules" ]; then
+if [ ! -d "frontend/node_modules" ]; then
   echo "⚠️  Brak folderu node_modules!"
   echo "📦 Instaluję zależności (to potrwa chwilę)..."
-  npm install
+  npm --prefix frontend install
 fi
 
 # 4. Start Frontend
 echo "💻 Startuję stronę (Vite)..."
-npm run dev &
+npm --prefix frontend run dev &
 FRONTEND_PID=$!
 
 # 5. Auto-open Browser

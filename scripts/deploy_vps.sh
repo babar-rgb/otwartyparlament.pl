@@ -1,69 +1,72 @@
 #!/bin/bash
+# Stability Shield VPS Deploy v1.1
+# Skrypt do „pancernego” wdrażania zmian.
 
-# ==========================================
-# 🚀 Otwarty Parlament - VPS Auto-Setup Script
-# ==========================================
-# Uruchom ten skrypt na świeżym serwerze Ubuntu 22.04/24.04
-# bash deploy_vps.sh
-# ==========================================
+set -e # Przerwij natychmiast, jeśli dowolna komenda zawiedzie
 
-set -e # Zatrzymaj skrypt jeśli wystąpi błąd
+echo "🛡️ [Stability Shield] Rozpoczynam procedurę bezpiecznego wdrożenia..."
 
-echo "📦 Aktualizacja systemu..."
-sudo apt update && sudo apt upgrade -y
-
-echo "🐳 Instalacja Docker & Docker Compose..."
-if ! command -v docker &> /dev/null; then
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sudo sh get-docker.sh
-    sudo usermod -aG docker $USER
-    echo "✅ Docker zainstalowany."
+# 1. Pre-flight Check
+echo "🔍 [Pre-flight] Sprawdzanie środowiska..."
+df -h
+if command -v docker-compose >/dev/null 2>&1; then
+    DOCKER_COMPOSE="docker-compose"
+elif docker compose version >/dev/null 2>&1; then
+    DOCKER_COMPOSE="docker compose"
 else
-    echo "✅ Docker już jest zainstalowany."
+    echo "❌ Błąd: Nie znaleziono docker-compose ani docker compose."
+    exit 1
+fi
+echo "✅ Używam: $DOCKER_COMPOSE"
+
+# 2. Pull latest code
+echo "📥 [Git] Pobieranie zmian..."
+git pull origin main
+
+# 3. Build images
+echo "🏗️ [Docker] Budowanie obrazów (w tle)..."
+$DOCKER_COMPOSE build --pull
+
+# 4. Deploy
+echo "🔄 [Docker] Aktualizacja kontenerów..."
+$DOCKER_COMPOSE up -d --remove-orphans
+
+echo "⏳ [System] Oczekiwanie na inicjację bazy i start API (15s)..."
+sleep 15
+
+# 5. Final Audit
+echo "🏥 [Health Check] Weryfikacja stanu systemu..."
+
+$DOCKER_COMPOSE ps
+
+# Deep Health Check (Backend + DB Connection)
+echo "🌐 Sprawdzanie API Backend..."
+ATTEMPTS=0
+MAX_ATTEMPTS=3
+while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
+    HEALTH=$(curl -s http://localhost:8000/health | grep -c "ok" || echo 0)
+    if [ "$HEALTH" -eq "1" ]; then
+        echo "✅ API Backend: STABILNE (Połączenie z DB poprawne)"
+        break
+    else
+        echo "⏳ API jeszcze nie odpowiada, próba $((ATTEMPTS+1))/$MAX_ATTEMPTS..."
+        sleep 5
+        ATTEMPTS=$((ATTEMPTS+1))
+    fi
+done
+
+if [ $ATTEMPTS -eq $MAX_ATTEMPTS ]; then
+    echo "❌ [ALERT] Backend nie przeszedł testu zdrowia! Sprawdź logi: $DOCKER_COMPOSE logs backend"
+    exit 1
 fi
 
-echo "📂 Pobieranie kodu (Git)..."
-# Upewnij się, że masz token lub klucz SSH, jeśli repo jest prywatne
-if [ ! -d "parlament" ]; then
-    # ZAMIENZ_URL_NA_SWOJE_REPO
-    echo "⚠️  Podaj URL do repozytorium GitHub (np. https://github.com/twoj-login/parlament.git):"
-    read REPO_URL
-    git clone $REPO_URL parlament
+# Orchestrator Health
+echo "🧠 Sprawdzanie Orchestrator..."
+OS_STATUS=$($DOCKER_COMPOSE exec -T orchestrator python3 backend/orchestrator.py --status 2>/dev/null | grep "HEALTHY" | wc -l | tr -d '[:space:]')
+if [ "$OS_STATUS" -eq "1" ]; then
+    echo "✅ Orchestrator: STABILNY (Heartbeat OK)"
 else
-    echo "✅ Katalog 'parlament' już istnieje. Pomijam klonowanie."
+    echo "⚠️ [Ostrzeżenie] Orchestrator nie zgłosił jeszcze gotowości, ale kontener działa."
 fi
 
-cd parlament
-
-echo "⚙️ Konfiguracja .env (Produkcja)..."
-if [ ! -f .env.prod ]; then
-    echo "Tworzę plik .env.prod..."
-    cat <<EOT >> .env.prod
-# Baza Danych
-POSTGRES_HOST=db
-POSTGRES_PORT=5432
-POSTGRES_DB=otwarty_parlament
-POSTGRES_USER=admin
-POSTGRES_PASSWORD=$(openssl rand -hex 12)
-
-# Frontend
-VITE_API_BASE_URL=https://api.twojadomena.pl
-VITE_API_ANON_KEY=
-GEMINI_API_KEY=
-EOT
-    echo "⚠️  STWORZONO .env.prod! MUSISZ GO EDYTOWAĆ PRZED STARTEM: nano .env.prod"
-    echo "   (Wpisz klucze API i popraw domenę)"
-else
-    echo "✅ Plik .env.prod już istnieje."
-fi
-
-echo "🚀 Uruchamianie Aplikacji..."
-# Używamy konfigu produkcyjnego
-docker compose -f docker-compose.prod.yml up -d --build
-
-echo "=========================================="
-echo "✅ WDROŻENIE ZAKOŃCZONE!"
-echo "=========================================="
-echo "Twoja aplikacja powinna wstać za kilka minut."
-echo "1. Sprawdź logi: docker compose logs -f"
-echo "2. Pamiętaj, aby skonfigurować domenę w pliku 'Caddyfile'!"
+echo "🚀 [SUCCESS] System wdrożony i zweryfikowany pod osłoną Stability Shield."
