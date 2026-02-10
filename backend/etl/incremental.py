@@ -206,12 +206,13 @@ def sync_new_mps(term: int):
                     education_history = json.dumps(mp.get('educations', []))
                     
                     link_sejm = f"https://www.sejm.gov.pl/Sejm10.nsf/posel.xsp?id={mp['id']}&term={term}"
+                    photo_url = f"https://api.sejm.gov.pl/sejm/term{term}/MP/{mp['id']}/photo"
 
                     sql = """
                         INSERT INTO mps (id, first_name, last_name, club, term, active, 
                                          birth_date, birth_location, profession, education_level, education_history,
-                                         created_at, link_sejm)
-                        VALUES (%s, %s, %s, %s, %s, true, %s, %s, %s, %s, %s, NOW(), %s)
+                                         created_at, link_sejm, photo_url)
+                        VALUES (%s, %s, %s, %s, %s, true, %s, %s, %s, %s, %s, NOW(), %s, %s)
                         ON CONFLICT (id) DO UPDATE SET
                             first_name = EXCLUDED.first_name,
                             last_name = EXCLUDED.last_name,
@@ -221,10 +222,11 @@ def sync_new_mps(term: int):
                             profession = EXCLUDED.profession,
                             education_level = EXCLUDED.education_level,
                             education_history = EXCLUDED.education_history,
-                            link_sejm = EXCLUDED.link_sejm;
+                            link_sejm = EXCLUDED.link_sejm,
+                            photo_url = EXCLUDED.photo_url;
                     """
                     cur.execute(sql, (mp['id'], first_name, last_name, club, term, 
-                                      birth_date, birth_location, profession, education_level, education_history, link_sejm))
+                                      birth_date, birth_location, profession, education_level, education_history, link_sejm, photo_url))
                     new_count += 1
             
             if new_count > 0:
