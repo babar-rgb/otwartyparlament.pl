@@ -17,10 +17,9 @@ from backend.core.orm_db import SessionLocal
 # Configure Gemini
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
-    print("❌ GEMINI_API_KEY not set")
-    sys.exit(1)
-
-genai.configure(api_key=GEMINI_API_KEY)
+    print("⚠️ GEMINI_API_KEY not set. Embeddings generation will be skipped.")
+else:
+    genai.configure(api_key=GEMINI_API_KEY)
 
 BATCH_SIZE = 100
 RATE_LIMIT_DELAY = 1.0
@@ -28,6 +27,9 @@ RATE_LIMIT_DELAY = 1.0
 
 def generate_embeddings_batch(texts: List[str]) -> List[List[float]]:
     """Generate embeddings for a batch of texts"""
+    if not GEMINI_API_KEY:
+        return []
+
     try:
         result = genai.embed_content(
             model="models/gemini-embedding-001",
