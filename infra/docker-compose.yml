@@ -73,7 +73,7 @@ services:
       - parlament_net
 
   orchestrator:
-    build: ./backend
+    build: ../backend
     restart: always
     entrypoint: [ "/app/backend/docker-entrypoint.sh" ]
     command: [ "--interval", "600" ]
