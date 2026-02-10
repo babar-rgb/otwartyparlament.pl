@@ -42,13 +42,13 @@ def upgrade() -> None:
     op.execute("DROP TABLE IF EXISTS topic_arguments CASCADE")
     op.execute("DROP INDEX IF EXISTS idx_bill_authors_mp_id")
     op.execute("DROP TABLE IF EXISTS bill_authors CASCADE")
-    op.drop_index(op.f('idx_club_memberships_club'), table_name='club_memberships')
-    op.drop_index(op.f('idx_club_memberships_club_term'), table_name='club_memberships', postgresql_where='(to_date IS NULL)')
-    op.drop_index(op.f('idx_club_memberships_current'), table_name='club_memberships', postgresql_where='(to_date IS NULL)')
-    op.drop_index(op.f('idx_club_memberships_dates'), table_name='club_memberships')
-    op.drop_index(op.f('idx_club_memberships_mp'), table_name='club_memberships')
-    op.drop_index(op.f('idx_club_memberships_unique_current'), table_name='club_memberships', postgresql_where='(to_date IS NULL)')
-    op.drop_table('club_memberships')
+    op.execute("DROP INDEX IF EXISTS idx_club_memberships_club")
+    op.execute("DROP INDEX IF EXISTS idx_club_memberships_club_term")
+    op.execute("DROP INDEX IF EXISTS idx_club_memberships_current")
+    op.execute("DROP INDEX IF EXISTS idx_club_memberships_dates")
+    op.execute("DROP INDEX IF EXISTS idx_club_memberships_mp")
+    op.execute("DROP INDEX IF EXISTS idx_club_memberships_unique_current")
+    op.execute("DROP TABLE IF EXISTS club_memberships CASCADE")
     op.alter_column('asset_declarations', 'id',
                existing_type=sa.BIGINT(),
                type_=sa.Integer(),
@@ -71,12 +71,12 @@ def upgrade() -> None:
                type_=sa.DateTime(),
                existing_nullable=True,
                existing_server_default=sa.text('now()'))
-    op.drop_constraint(op.f('asset_declarations_mp_id_pdf_url_key'), 'asset_declarations', type_='unique')
+    op.execute("ALTER TABLE asset_declarations DROP CONSTRAINT IF EXISTS asset_declarations_mp_id_pdf_url_key")
     op.create_index(op.f('ix_asset_declarations_id'), 'asset_declarations', ['id'], unique=False)
-    op.drop_constraint(op.f('bills_process_id_key'), 'bills', type_='unique')
-    op.drop_index(op.f('bills_vector_idx'), table_name='bills', postgresql_ops={'vector_embedding': 'vector_cosine_ops'}, postgresql_using='hnsw')
-    op.drop_index(op.f('idx_bills_number'), table_name='bills')
-    op.drop_index(op.f('idx_bills_type'), table_name='bills')
+    op.execute("ALTER TABLE bills DROP CONSTRAINT IF EXISTS bills_process_id_key")
+    op.execute("DROP INDEX IF EXISTS bills_vector_idx")
+    op.execute("DROP INDEX IF EXISTS idx_bills_number")
+    op.execute("DROP INDEX IF EXISTS idx_bills_type")
     op.create_index(op.f('ix_bills_id'), 'bills', ['id'], unique=False)
     op.create_index(op.f('ix_bills_number'), 'bills', ['number'], unique=False)
     op.create_index(op.f('ix_bills_process_id'), 'bills', ['process_id'], unique=True)
@@ -92,13 +92,13 @@ def upgrade() -> None:
     op.alter_column('categories', 'level',
                existing_type=sa.INTEGER(),
                nullable=True)
-    op.drop_constraint(op.f('categories_slug_key'), 'categories', type_='unique')
-    op.drop_index(op.f('idx_categories_level'), table_name='categories')
-    op.drop_index(op.f('idx_categories_parent'), table_name='categories')
-    op.drop_index(op.f('idx_categories_slug'), table_name='categories')
+    op.execute("ALTER TABLE categories DROP CONSTRAINT IF EXISTS categories_slug_key")
+    op.execute("DROP INDEX IF EXISTS idx_categories_level")
+    op.execute("DROP INDEX IF EXISTS idx_categories_parent")
+    op.execute("DROP INDEX IF EXISTS idx_categories_slug")
     op.create_index(op.f('ix_categories_id'), 'categories', ['id'], unique=False)
     op.create_index(op.f('ix_categories_slug'), 'categories', ['slug'], unique=True)
-    op.drop_constraint(op.f('categories_parent_id_fkey'), 'categories', type_='foreignkey')
+    op.execute("ALTER TABLE categories DROP CONSTRAINT IF EXISTS categories_parent_id_fkey")
     op.drop_column('categories', 'display_order')
     op.drop_column('categories', 'parent_id')
     op.drop_column('categories', 'weight')
@@ -112,9 +112,9 @@ def upgrade() -> None:
                existing_type=sa.TEXT(),
                type_=sa.String(),
                existing_nullable=True)
-    op.drop_constraint(op.f('committee_members_committee_code_mp_id_from_date_key'), 'committee_members', type_='unique')
-    op.drop_index(op.f('idx_committee_members_code'), table_name='committee_members')
-    op.drop_index(op.f('idx_committee_members_mp'), table_name='committee_members')
+    op.execute("ALTER TABLE committee_members DROP CONSTRAINT IF EXISTS committee_members_committee_code_mp_id_from_date_key")
+    op.execute("DROP INDEX IF EXISTS idx_committee_members_code")
+    op.execute("DROP INDEX IF EXISTS idx_committee_members_mp")
     op.create_index(op.f('ix_committee_members_id'), 'committee_members', ['id'], unique=False)
     op.create_foreign_key(None, 'committee_members', 'committees', ['committee_code'], ['code'])
     op.alter_column('committee_sittings', 'committee_code',
@@ -136,15 +136,15 @@ def upgrade() -> None:
                existing_type=sa.TEXT(),
                type_=sa.String(),
                existing_nullable=True)
-    op.drop_constraint(op.f('committee_sittings_committee_code_sitting_number_term_key'), 'committee_sittings', type_='unique')
-    op.drop_index(op.f('idx_committee_sittings_code'), table_name='committee_sittings')
-    op.drop_index(op.f('idx_committee_sittings_date'), table_name='committee_sittings')
-    op.drop_index(op.f('idx_committee_sittings_status'), table_name='committee_sittings')
+    op.execute("ALTER TABLE committee_sittings DROP CONSTRAINT IF EXISTS committee_sittings_committee_code_sitting_number_term_key")
+    op.execute("DROP INDEX IF EXISTS idx_committee_sittings_code")
+    op.execute("DROP INDEX IF EXISTS idx_committee_sittings_date")
+    op.execute("DROP INDEX IF EXISTS idx_committee_sittings_status")
     op.create_index(op.f('ix_committee_sittings_committee_code'), 'committee_sittings', ['committee_code'], unique=False)
     op.create_index(op.f('ix_committee_sittings_date'), 'committee_sittings', ['date'], unique=False)
     op.create_index(op.f('ix_committee_sittings_id'), 'committee_sittings', ['id'], unique=False)
     op.create_index(op.f('ix_committee_sittings_status'), 'committee_sittings', ['status'], unique=False)
-    op.drop_constraint(op.f('fk_committee_sittings_committee'), 'committee_sittings', type_='foreignkey')
+    op.execute("ALTER TABLE committee_sittings DROP CONSTRAINT IF EXISTS fk_committee_sittings_committee")
     op.create_foreign_key(None, 'committee_sittings', 'committees', ['committee_code'], ['code'])
     op.alter_column('committees', 'code',
                existing_type=sa.TEXT(),
@@ -166,7 +166,7 @@ def upgrade() -> None:
                existing_type=sa.TEXT(),
                type_=sa.String(),
                existing_nullable=True)
-    op.drop_constraint(op.f('committees_code_key'), 'committees', type_='unique')
+    op.execute("ALTER TABLE committees DROP CONSTRAINT IF EXISTS committees_code_key")
     op.drop_column('committees', 'id')
     op.alter_column('euro_meps', 'api_id',
                existing_type=sa.INTEGER(),
@@ -219,11 +219,11 @@ def upgrade() -> None:
                existing_type=sa.TEXT(),
                type_=sa.String(),
                nullable=True)
-    op.drop_index(op.f('idx_euro_vote_results_mep_id'), table_name='euro_vote_results')
-    op.drop_index(op.f('idx_euro_vote_results_vote_id'), table_name='euro_vote_results')
+    op.execute("DROP INDEX IF EXISTS idx_euro_vote_results_mep_id")
+    op.execute("DROP INDEX IF EXISTS idx_euro_vote_results_vote_id")
     op.create_index(op.f('ix_euro_vote_results_id'), 'euro_vote_results', ['id'], unique=False)
-    op.drop_constraint(op.f('euro_vote_results_vote_id_fkey'), 'euro_vote_results', type_='foreignkey')
-    op.drop_constraint(op.f('euro_vote_results_mep_id_fkey'), 'euro_vote_results', type_='foreignkey')
+    op.execute("ALTER TABLE euro_vote_results DROP CONSTRAINT IF EXISTS euro_vote_results_vote_id_fkey")
+    op.execute("ALTER TABLE euro_vote_results DROP CONSTRAINT IF EXISTS euro_vote_results_mep_id_fkey")
     op.create_foreign_key(None, 'euro_vote_results', 'euro_votes', ['vote_id'], ['id'])
     op.create_foreign_key(None, 'euro_vote_results', 'euro_meps', ['mep_id'], ['id'])
     op.drop_column('euro_vote_results', 'created_at')
@@ -247,15 +247,15 @@ def upgrade() -> None:
                existing_type=sa.TEXT(),
                type_=sa.String(),
                existing_nullable=True)
-    op.drop_index(op.f('euro_votes_vector_idx'), table_name='euro_votes', postgresql_ops={'vector_embedding': 'vector_cosine_ops'}, postgresql_using='hnsw')
-    op.drop_index(op.f('idx_euro_votes_date'), table_name='euro_votes')
-    op.drop_index(op.f('idx_euro_votes_importance'), table_name='euro_votes')
-    op.drop_index(op.f('idx_euro_votes_is_key'), table_name='euro_votes')
+    op.execute("DROP INDEX IF EXISTS euro_votes_vector_idx")
+    op.execute("DROP INDEX IF EXISTS idx_euro_votes_date")
+    op.execute("DROP INDEX IF EXISTS idx_euro_votes_importance")
+    op.execute("DROP INDEX IF EXISTS idx_euro_votes_is_key")
     op.create_index(op.f('ix_euro_votes_id'), 'euro_votes', ['id'], unique=False)
     op.drop_column('euro_votes', 'vector_embedding_old')
     op.drop_column('euro_votes', 'created_at')
-    op.drop_index(op.f('idx_interpellation_authors_mp_id'), table_name='interpellation_authors')
-    op.drop_index(op.f('idx_interpellations_mp'), table_name='interpellation_authors')
+    op.execute("DROP INDEX IF EXISTS idx_interpellation_authors_mp_id")
+    op.execute("DROP INDEX IF EXISTS idx_interpellations_mp")
     op.create_foreign_key(None, 'interpellation_authors', 'mps', ['mp_id'], ['id'])
     op.create_foreign_key(None, 'interpellation_authors', 'interpellations', ['interpellation_id'], ['id'])
     op.alter_column('interpellations', 'title',
@@ -266,8 +266,8 @@ def upgrade() -> None:
                existing_type=postgresql.TIMESTAMP(timezone=True),
                type_=sa.DateTime(),
                existing_nullable=True)
-    op.drop_index(op.f('idx_interpellations_content_gin'), table_name='interpellations', postgresql_using='gin')
-    op.drop_index(op.f('idx_interpellations_sent_date'), table_name='interpellations')
+    op.execute("DROP INDEX IF EXISTS idx_interpellations_content_gin")
+    op.execute("DROP INDEX IF EXISTS idx_interpellations_sent_date")
     op.create_index(op.f('ix_interpellations_id'), 'interpellations', ['id'], unique=False)
     op.drop_column('interpellations', 'term')
     op.drop_column('interpellations', 'link_sejm')
@@ -301,11 +301,11 @@ def upgrade() -> None:
                type_=sa.DateTime(),
                nullable=True,
                existing_server_default=sa.text("timezone('utc'::text, now())"))
-    op.drop_index(op.f('idx_mps_activity_score'), table_name='mps')
-    op.drop_index(op.f('idx_mps_api_id_term'), table_name='mps')
-    op.drop_index(op.f('idx_mps_slug'), table_name='mps')
-    op.drop_index(op.f('idx_mps_stats_attendance'), table_name='mps')
-    op.drop_index(op.f('idx_mps_stats_rebellion'), table_name='mps')
+    op.execute("DROP INDEX IF EXISTS idx_mps_activity_score")
+    op.execute("DROP INDEX IF EXISTS idx_mps_api_id_term")
+    op.execute("DROP INDEX IF EXISTS idx_mps_slug")
+    op.execute("DROP INDEX IF EXISTS idx_mps_stats_attendance")
+    op.execute("DROP INDEX IF EXISTS idx_mps_stats_rebellion")
     op.create_index(op.f('ix_mps_club'), 'mps', ['club'], unique=False)
     op.create_index(op.f('ix_mps_first_name'), 'mps', ['first_name'], unique=False)
     op.create_index(op.f('ix_mps_id'), 'mps', ['id'], unique=False)
@@ -348,10 +348,10 @@ def upgrade() -> None:
                type_=sa.DateTime(),
                existing_nullable=True,
                existing_server_default=sa.text('now()'))
-    op.drop_index(op.f('idx_speeches_date'), table_name='speeches')
-    op.drop_index(op.f('idx_speeches_mp_id_date'), table_name='speeches')
-    op.drop_index(op.f('speeches_content_tsv_idx'), table_name='speeches', postgresql_using='gin')
-    op.drop_constraint(op.f('speeches_unique_statement'), 'speeches', type_='unique')
+    op.execute("DROP INDEX IF EXISTS idx_speeches_date")
+    op.execute("DROP INDEX IF EXISTS idx_speeches_mp_id_date")
+    op.execute("DROP INDEX IF EXISTS speeches_content_tsv_idx")
+    op.execute("ALTER TABLE speeches DROP CONSTRAINT IF EXISTS speeches_unique_statement")
     op.create_index(op.f('ix_speeches_id'), 'speeches', ['id'], unique=False)
     op.drop_column('speeches', 'ai_analysis')
     op.drop_column('speeches', 'content_tsv')
@@ -360,7 +360,7 @@ def upgrade() -> None:
                type_=sa.DateTime(),
                existing_nullable=True,
                existing_server_default=sa.text('now()'))
-    op.drop_constraint(op.f('vote_analyses_vote_id_fkey'), 'vote_analyses', type_='foreignkey')
+    op.execute("ALTER TABLE vote_analyses DROP CONSTRAINT IF EXISTS vote_analyses_vote_id_fkey")
     op.create_foreign_key(None, 'vote_analyses', 'votes', ['vote_id'], ['id'])
     op.alter_column('vote_results', 'id',
                existing_type=sa.UUID(),
@@ -371,12 +371,12 @@ def upgrade() -> None:
                existing_type=sa.TEXT(),
                type_=sa.String(),
                nullable=True)
-    op.drop_index(op.f('idx_vote_results_mp_id'), table_name='vote_results')
-    op.drop_index(op.f('idx_vote_results_vote_id'), table_name='vote_results')
-    op.drop_constraint(op.f('vote_results_vote_mp_unique'), 'vote_results', type_='unique')
+    op.execute("DROP INDEX IF EXISTS idx_vote_results_mp_id")
+    op.execute("DROP INDEX IF EXISTS idx_vote_results_vote_id")
+    op.execute("ALTER TABLE vote_results DROP CONSTRAINT IF EXISTS vote_results_vote_mp_unique")
     op.create_index(op.f('ix_vote_results_id'), 'vote_results', ['id'], unique=False)
-    op.drop_constraint(op.f('fk_vote_results_mp'), 'vote_results', type_='foreignkey')
-    op.drop_constraint(op.f('fk_vote_results_vote'), 'vote_results', type_='foreignkey')
+    op.execute("ALTER TABLE vote_results DROP CONSTRAINT IF EXISTS fk_vote_results_mp")
+    op.execute("ALTER TABLE vote_results DROP CONSTRAINT IF EXISTS fk_vote_results_vote")
     op.create_foreign_key(None, 'vote_results', 'mps', ['mp_id'], ['id'])
     op.create_foreign_key(None, 'vote_results', 'votes', ['vote_id'], ['id'])
     op.drop_column('vote_results', 'created_at')
@@ -412,17 +412,17 @@ def upgrade() -> None:
                type_=sa.DateTime(),
                nullable=True,
                existing_server_default=sa.text("timezone('utc'::text, now())"))
-    op.drop_index(op.f('idx_votes_bill_id'), table_name='votes')
-    op.drop_index(op.f('idx_votes_category'), table_name='votes', postgresql_where='(category IS NOT NULL)')
-    op.drop_index(op.f('idx_votes_category_term'), table_name='votes', postgresql_where='(category IS NOT NULL)')
-    op.drop_index(op.f('idx_votes_date'), table_name='votes')
-    op.drop_index(op.f('idx_votes_importance'), table_name='votes')
-    op.drop_index(op.f('idx_votes_print_number'), table_name='votes')
-    op.drop_index(op.f('idx_votes_search_vector'), table_name='votes', postgresql_using='gin')
-    op.drop_index(op.f('idx_votes_term'), table_name='votes')
-    op.drop_index(op.f('idx_votes_title_clean'), table_name='votes')
-    op.drop_index(op.f('votes_term_sitting_voting_idx'), table_name='votes')
-    op.drop_index(op.f('votes_vector_idx'), table_name='votes', postgresql_ops={'vector_embedding': 'vector_cosine_ops'}, postgresql_using='hnsw')
+    op.execute("DROP INDEX IF EXISTS idx_votes_bill_id")
+    op.execute("DROP INDEX IF EXISTS idx_votes_category")
+    op.execute("DROP INDEX IF EXISTS idx_votes_category_term")
+    op.execute("DROP INDEX IF EXISTS idx_votes_date")
+    op.execute("DROP INDEX IF EXISTS idx_votes_importance")
+    op.execute("DROP INDEX IF EXISTS idx_votes_print_number")
+    op.execute("DROP INDEX IF EXISTS idx_votes_search_vector")
+    op.execute("DROP INDEX IF EXISTS idx_votes_term")
+    op.execute("DROP INDEX IF EXISTS idx_votes_title_clean")
+    op.execute("DROP INDEX IF EXISTS votes_term_sitting_voting_idx")
+    op.execute("DROP INDEX IF EXISTS votes_vector_idx")
     op.create_index(op.f('ix_votes_bill_id'), 'votes', ['bill_id'], unique=False)
     op.create_index(op.f('ix_votes_date'), 'votes', ['date'], unique=False)
     op.create_index(op.f('ix_votes_id'), 'votes', ['id'], unique=False)
