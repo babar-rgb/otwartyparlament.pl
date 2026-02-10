@@ -1,9 +1,9 @@
 # Frontend Dockerfile
 # Stage 1: Build
-FROM node:18-alpine as builder
+FROM node:20-alpine as builder
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install
 COPY . .
 # We need VITE_POSTGREST_URL and VITE_API_ANON_KEY at build time or runtime?
 # Vite inlines env vars starting with VITE_ at build time.
