@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 
 import json
 from sqlalchemy.orm import Session
@@ -50,7 +52,7 @@ def calculate_priorities():
     engine = create_engine(database_url)
     db = Session(engine)
     
-    print("Fetching MPs...")
+    logging.info("Fetching MPs...")
     mps = db.query(models.MP).filter(models.MP.term == 10, models.MP.active == True).all()
     
     for idx, mp in enumerate(mps):
@@ -95,11 +97,11 @@ def calculate_priorities():
             stat.stat_value = json.dumps(top_3)
         
         if idx % 50 == 0:
-            print(f"Processed {idx}/{len(mps)} MPs...")
+            logging.info(f"Processed {idx}/{len(mps)} MPs...")
             db.commit()
 
     db.commit()
-    print("Done!")
+    logging.info("Done!")
 
 if __name__ == "__main__":
     calculate_priorities()

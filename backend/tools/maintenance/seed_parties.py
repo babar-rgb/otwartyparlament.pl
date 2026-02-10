@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 import sys
 import os
 
@@ -30,9 +32,9 @@ def seed_parties():
                 ON CONFLICT (id) DO UPDATE 
                 SET name = EXCLUDED.name, color = EXCLUDED.color, logo_url = EXCLUDED.logo_url;
             """, (p_id, name, color, logo_url))
-            print(f"Seeded party: {p_id}")
+            logging.info(f"Seeded party: {p_id}")
     
-    print("Database seeding completed.")
+    logging.info("Database seeding completed.")
 
 if __name__ == "__main__":
     seed_parties()

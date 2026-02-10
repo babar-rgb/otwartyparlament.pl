@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 
 import os
 import sys
@@ -73,19 +75,19 @@ def generate_sitemap():
         pass
 
     # Write XML to STDOUT
-    print('<?xml version="1.0" encoding="UTF-8"?>')
-    print('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
+    logging.info('<?xml version="1.0" encoding="UTF-8"?>')
+    logging.info('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
     
     for url in urls:
-        print('  <url>')
-        print(f'    <loc>{url["loc"]}</loc>')
+        logging.info('  <url>')
+        logging.info(f'    <loc>{url["loc"]}</loc>')
         if url.get("lastmod"):
-            print(f'    <lastmod>{url["lastmod"]}</lastmod>')
-        print(f'    <changefreq>{url["changefreq"]}</changefreq>')
-        print(f'    <priority>{url["priority"]}</priority>')
-        print('  </url>')
+            logging.info(f'    <lastmod>{url["lastmod"]}</lastmod>')
+        logging.info(f'    <changefreq>{url["changefreq"]}</changefreq>')
+        logging.info(f'    <priority>{url["priority"]}</priority>')
+        logging.info('  </url>')
         
-    print('</urlset>')
+    logging.info('</urlset>')
 
 if __name__ == "__main__":
     generate_sitemap()

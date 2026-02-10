@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 import sys
 import os
 from sqlalchemy import text, func
@@ -11,12 +13,12 @@ def check_data_quality():
     try:
         total = db.query(Vote).count()
         if total == 0:
-            print("No votes in DB.")
+            logging.info("No votes in DB.")
             return
 
         with_print = db.query(Vote).filter(Vote.print_number != None).count()
-        print(f"Total Votes: {total}")
-        print(f"Votes with Print Number (DB column): {with_print} ({with_print/total*100:.1f}%)")
+        logging.info(f"Total Votes: {total}")
+        logging.info(f"Votes with Print Number (DB column): {with_print} ({with_print/total*100:.1f}%)")
         
         # Check extraction regex quality
         import re
@@ -26,7 +28,7 @@ def check_data_quality():
             if re.search(r'druki? n?r (\d+)', v.title_raw or "", re.IGNORECASE):
                 extracted_count += 1
         
-        print(f"Votes with extractable Print Number (Regex): {extracted_count} ({extracted_count/total*100:.1f}%)")
+        logging.info(f"Votes with extractable Print Number (Regex): {extracted_count} ({extracted_count/total*100:.1f}%)")
         
         # Check potential False Positives with current loose logic
         loose_groups = 0
@@ -35,7 +37,7 @@ def check_data_quality():
              if not re.search(r'druki? n?r (\d+)', v.title_raw or "", re.IGNORECASE):
                  loose_groups += 1
                  
-        print(f"Votes relying on LOOSE text matching (RISK): {loose_groups}")
+        logging.info(f"Votes relying on LOOSE text matching (RISK): {loose_groups}")
 
     finally:
         db.close()

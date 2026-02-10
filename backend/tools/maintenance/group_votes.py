@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 import sys
 import os
 import re
@@ -10,7 +12,7 @@ from backend.models import Vote
 from backend.services.gemini import gemini_service
 
 def group_votes_for_sitting(db, sitting_number):
-    print(f"\n--- Processing Sitting {sitting_number} ---")
+    logging.info(f"\n--- Processing Sitting {sitting_number} ---")
     
     # 1. Fetch votes in strict temporal order
     votes = db.query(Vote).filter(Vote.sitting == sitting_number).order_by(Vote.voting_number).all()
@@ -63,10 +65,10 @@ def group_votes_for_sitting(db, sitting_number):
         if len(t1) > 20 and len(t2) > 20: 
             # Optimization: Check for overlap of significant words?
             # Or just trust AI.
-            print(f"    🤖 AI Checking linkage: '{t1[:30]}...' vs '{t2[:30]}...'")
+            logging.info(f"    🤖 AI Checking linkage: '{t1[:30]}...' vs '{t2[:30]}...'")
             is_same = gemini_service.compare_titles(t1, t2)
             if is_same:
-                print(f"    ✅ AI FOUND LINK: {t1} <-> {t2}")
+                logging.info(f"    ✅ AI FOUND LINK: {t1} <-> {t2}")
                 return True
                 
         return False
@@ -151,10 +153,10 @@ def group_votes_for_sitting(db, sitting_number):
                 updates += 1
                 
         if len(group) > 3:
-            print(f"  [SAFE MODE] Grouped {len(group)} votes under MAIN: #{parent.voting_number} ({parent.title_clean[:60]}...)")
+            logging.info(f"  [SAFE MODE] Grouped {len(group)} votes under MAIN: #{parent.voting_number} ({parent.title_clean[:60]}...)")
 
     db.commit()
-    print(f"  Updates committed: {updates} (Clusters: {grouped_clusters_count})")
+    logging.info(f"  Updates committed: {updates} (Clusters: {grouped_clusters_count})")
 
 def main():
     db = SessionLocal()

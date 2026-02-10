@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 
 import os
 import sys
@@ -8,7 +10,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
 from backend.core.db import db
 
 def parse_and_import(file_path, term):
-    print(f"Reading from {file_path} for Term {term}...")
+    logging.info(f"Reading from {file_path} for Term {term}...")
     
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
@@ -31,7 +33,7 @@ def parse_and_import(file_path, term):
             if current_sitting is not None:
                 summary_md = section.strip()
                 
-                print(f"Importing Sitting {current_sitting} (Term {term})...")
+                logging.info(f"Importing Sitting {current_sitting} (Term {term})...")
                 
                 # Upsert
                 query = """
@@ -45,9 +47,9 @@ def parse_and_import(file_path, term):
                     db.execute(query, (term, current_sitting, summary_md))
                     count += 1
                 except Exception as e:
-                    print(f"Error importing sitting {current_sitting}: {e}")
+                    logging.info(f"Error importing sitting {current_sitting}: {e}")
 
-    print(f"Finished. Imported {count} summaries for Term {term}.")
+    logging.info(f"Finished. Imported {count} summaries for Term {term}.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Import sitting summaries.')

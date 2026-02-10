@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 
 import sys
 import os
@@ -127,7 +129,7 @@ def parse_data(raw):
 
 def update_mps():
     data = parse_data(RAW_DATA)
-    print(f"Parsed {len(data)} MPs to update.")
+    logging.info(f"Parsed {len(data)} MPs to update.")
     
     with db.get_cursor(commit=True) as cur:
         updated_count = 0
@@ -144,7 +146,7 @@ def update_mps():
             json_fragment = '{' + ', '.join(updates) + '}'
             
             # Special handling for names with typos if any, but first try direct match
-            # print(f"Updating {name} with {json_fragment}...")
+            # logging.info(f"Updating {name} with {json_fragment}...")
             
             cur.execute(
                 "UPDATE mps SET contact_info = contact_info || %s::jsonb WHERE name = %s",
@@ -152,7 +154,7 @@ def update_mps():
             )
             updated_count += 1
             
-        print(f"Updated {updated_count} MPs successfully.")
+        logging.info(f"Updated {updated_count} MPs successfully.")
 
 if __name__ == "__main__":
     update_mps()

@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 from sqlalchemy.orm import Session
 from backend.core.orm_db import SessionLocal
 from backend.models import MP, MPStat
@@ -45,7 +47,7 @@ ROLES = {
 def update_roles():
     db = SessionLocal()
     try:
-        print("Updating Government/Parliamentary Roles...")
+        logging.info("Updating Government/Parliamentary Roles...")
         
         for last_name, role in ROLES.items():
             # Find MP
@@ -59,11 +61,11 @@ def update_roles():
             elif last_name == "Bodnar":
                 # Adam Bodnar is Senator, not MP. Izabela Bodnar is MP. 
                 # Izabela is NOT the Minister. Skip Bodnar key to avoid confusion.
-                print("Skipping Bodnar (Adam is Senator/Minister, Izabela is MP/Not Minister)")
+                logging.info("Skipping Bodnar (Adam is Senator/Minister, Izabela is MP/Not Minister)")
                 mp = None
             elif last_name == "Pełczyńska-Nałęcz":
                 # Not an MP
-                print("Skipping Pełczyńska-Nałęcz (Not an MP)")
+                logging.info("Skipping Pełczyńska-Nałęcz (Not an MP)")
                 mp = None
             elif last_name == "Kołodziejczak":
                 mp = db.query(MP).filter(MP.last_name == last_name, MP.first_name == "Michał", MP.term == 10).first()
@@ -76,12 +78,12 @@ def update_roles():
             else:
                 mps = db.query(MP).filter(MP.last_name == last_name, MP.term == 10).all()
                 if len(mps) > 1:
-                    print(f"⚠️ Multiple MPs found for {last_name}: {[m.first_name for m in mps]}. Skipping.")
+                    logging.info(f"⚠️ Multiple MPs found for {last_name}: {[m.first_name for m in mps]}. Skipping.")
                     continue
                 mp = mps[0] if mps else None
             
             if mp:
-                print(f"✅ Assigning '{role}' to {mp.first_name} {mp.last_name}")
+                logging.info(f"✅ Assigning '{role}' to {mp.first_name} {mp.last_name}")
                 
                 # Check if stat exists
                 stat = db.query(MPStat).filter(MPStat.mp_id == mp.id, MPStat.stat_key == "function_gov").first()
@@ -91,10 +93,10 @@ def update_roles():
                 else:
                     stat.stat_value = role
             else:
-                print(f"❌ MP not found: {last_name}")
+                logging.info(f"❌ MP not found: {last_name}")
         
         db.commit()
-        print("Done.")
+        logging.info("Done.")
 
     finally:
         db.close()

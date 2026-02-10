@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 import sys
 import os
 import re
@@ -16,7 +18,7 @@ def auto_link_votes():
             Vote.bill_id == None,
             Vote.term == 10
         ).all()
-        print(f"Checking {len(unlinked_votes)} unlinked votes for Term 10...")
+        logging.info(f"Checking {len(unlinked_votes)} unlinked votes for Term 10...")
         
         linked_count = 0
         for vote in unlinked_votes:
@@ -37,13 +39,13 @@ def auto_link_votes():
                     session.add(vote)
                     linked_count += 1
                     if linked_count % 50 == 0:
-                        print(f"Linked {linked_count} votes...")
+                        logging.info(f"Linked {linked_count} votes...")
         
         session.commit()
-        print(f"Finished! Total votes linked: {linked_count}")
+        logging.info(f"Finished! Total votes linked: {linked_count}")
 
     except Exception as e:
-        print(f"Linking Error: {e}")
+        logging.info(f"Linking Error: {e}")
         session.rollback()
     finally:
         session.close()

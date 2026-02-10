@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 import sys
 import numpy as np
 from pathlib import Path
@@ -13,10 +15,10 @@ from backend.models import Vote, VoteResult, MP, MPRelation
 def calculate_alignment():
     db = SessionLocal()
     try:
-        print("Fetching data...")
+        logging.info("Fetching data...")
         # 1. Get current term (assuming max term is current)
         current_term = db.query(func.max(MP.term)).scalar() or 10
-        print(f"Analyzing Term: {current_term}")
+        logging.info(f"Analyzing Term: {current_term}")
 
         # 2. Get MPs
         mps = db.query(MP).filter(MP.term == current_term, MP.active == True).all()
@@ -25,7 +27,7 @@ def calculate_alignment():
         n_mps = len(mps)
         
         if n_mps < 2:
-            print("Not enough MPs to calculate alignment.")
+            logging.info("Not enough MPs to calculate alignment.")
             return
 
         # 3. Get Votes (only key votes or all votes? All votes for better data)
@@ -34,10 +36,10 @@ def calculate_alignment():
         vote_id_map = {vote.id: i for i, vote in enumerate(votes)}
         n_votes = len(votes)
         
-        print(f"MPs: {n_mps}, Votes: {n_votes}")
+        logging.info(f"MPs: {n_mps}, Votes: {n_votes}")
         
         if n_votes == 0:
-            print("No votes found.")
+            logging.info("No votes found.")
             return
 
         # 4. Build Matrix
@@ -48,7 +50,7 @@ def calculate_alignment():
         # Bulk fetch results is faster
         results = db.query(VoteResult).join(Vote).filter(Vote.term == current_term).all()
         
-        print(f"Processing {len(results)} vote results...")
+        logging.info(f"Processing {len(results)} vote results...")
         for res in results:
             if res.mp_id in mp_id_map and res.vote_id in vote_id_map:
                 row = mp_id_map[res.mp_id]
@@ -71,7 +73,7 @@ def calculate_alignment():
         # shape: (n_mps, n_mps)
         similarity_matrix = np.dot(normalized_matrix, normalized_matrix.T)
 
-        print("Calculated similarity matrix. Saving relations...")
+        logging.info("Calculated similarity matrix. Saving relations...")
         
         # 7. Extract Top 1 Twin (excluding self)
         # Clear old relations for this type?
@@ -123,10 +125,10 @@ def calculate_alignment():
             
         db.add_all(relations_to_add)
         db.commit()
-        print("Done.")
+        logging.info("Done.")
 
     except Exception as e:
-        print(f"Error: {e}")
+        logging.info(f"Error: {e}")
         db.rollback()
     finally:
         db.close()

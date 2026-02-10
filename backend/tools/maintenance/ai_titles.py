@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 import sys
 import os
 import re
@@ -25,7 +27,7 @@ def resolve_bill_content(session, vote, verbose=False):
     if vote.bill_id:
         bill = session.query(Bill).filter(Bill.id == vote.bill_id).first()
         if bill and verbose:
-            print(f"   [LINK] Found linked bill by ID: {bill.print_number}")
+            logging.info(f"   [LINK] Found linked bill by ID: {bill.print_number}")
 
     # 2. Extract from title if not found
     if not bill:
@@ -39,7 +41,7 @@ def resolve_bill_content(session, vote, verbose=False):
                 Bill.term == vote.term
             ).first()
             if bill and verbose:
-                 print(f"   [REGEX] Found bill by print number: {print_number}")
+                 logging.info(f"   [REGEX] Found bill by print number: {print_number}")
 
     if bill and bill.content:
         return bill.content
@@ -62,23 +64,23 @@ def process_titles(limit=10, force=False, verbose=False, dry_run=False):
         # Sort by date desc is better for relevance, but limit * 3 and then random sample allows to check different types
         
         if not votes:
-            print("No votes to process.")
+            logging.info("No votes to process.")
             return
 
-        print(f"Found {len(votes)} potential votes. Processing {limit}...")
+        logging.info(f"Found {len(votes)} potential votes. Processing {limit}...")
         
         processed_count = 0
         for vote in votes:
             if processed_count >= limit:
                 break
                 
-            print(f"\nProcessing Vote ID: {vote.id} | Date: {vote.date}")
-            print(f"Original Title: {vote.title}")
+            logging.info(f"\nProcessing Vote ID: {vote.id} | Date: {vote.date}")
+            logging.info(f"Original Title: {vote.title}")
             
             # Resolve Content
             bill_content = resolve_bill_content(session, vote, verbose)
             context_source = "BILL CONTENT" if bill_content and len(bill_content) > 500 else "DESCRIPTION/NONE"
-            print(f"Context Source: {context_source} (Len: {len(bill_content) if bill_content else 0})")
+            logging.info(f"Context Source: {context_source} (Len: {len(bill_content) if bill_content else 0})")
 
             if dry_run:
                 continue
@@ -90,7 +92,7 @@ def process_titles(limit=10, force=False, verbose=False, dry_run=False):
                 bill_content=bill_content or ""
             )
             
-            print(f"Generated Title: \033[92m{new_title}\033[0m")
+            logging.info(f"Generated Title: \033[92m{new_title}\033[0m")
             
             vote.title_clean = new_title
             session.add(vote)
@@ -100,10 +102,10 @@ def process_titles(limit=10, force=False, verbose=False, dry_run=False):
             time.sleep(1)
 
         session.commit()
-        print(f"\nSaved {processed_count} titles.")
+        logging.info(f"\nSaved {processed_count} titles.")
 
     except Exception as e:
-        print(f"Error: {e}")
+        logging.info(f"Error: {e}")
         session.rollback()
     finally:
         session.close()

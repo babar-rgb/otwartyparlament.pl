@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 import sys
 import json
 import re
@@ -14,12 +16,12 @@ from backend.models import MP, Interpellation, MPStat, InterpellationAuthor
 def calculate_badges():
     db = SessionLocal()
     try:
-        print("Fetching Data for Badges...")
+        logging.info("Fetching Data for Badges...")
         mps = db.query(MP).filter(MP.active == True).all()
         
         # Pre-fetch interpellations using the many-to-many link
         # Join InterpellationAuthor to get mp_id
-        print("Loading interpellations via authors...")
+        logging.info("Loading interpellations via authors...")
         results = db.query(Interpellation, InterpellationAuthor.mp_id)\
                     .join(InterpellationAuthor, Interpellation.id == InterpellationAuthor.interpellation_id)\
                     .all()
@@ -47,7 +49,7 @@ def calculate_badges():
         # Clear old badges
         db.query(MPStat).filter(MPStat.stat_key.like("badge_%")).delete()
         
-        print(f"Analyzing {len(mps)} MPs...")
+        logging.info(f"Analyzing {len(mps)} MPs...")
         
         for mp in mps:
             mp_interpellations = interpellation_map.get(mp.id, [])
@@ -137,13 +139,13 @@ def calculate_badges():
                  # Let's be gentle.
                  pass
 
-        print(f"Assigning {len(stats_to_add)} badges...")
+        logging.info(f"Assigning {len(stats_to_add)} badges...")
         db.add_all(stats_to_add)
         db.commit()
-        print("Done.")
+        logging.info("Done.")
 
     except Exception as e:
-        print(f"Error: {e}")
+        logging.info(f"Error: {e}")
         db.rollback()
     finally:
         db.close()

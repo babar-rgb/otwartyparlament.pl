@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 import sys
 import os
 
@@ -9,7 +11,7 @@ def audit_stats():
     # Szymon Hołownia usually has ID 133 (from URL in screenshot /poslowie/133)
     target_id = 133
     
-    print(f"Auditing stats for MP ID {target_id} (Hołownia)...")
+    logging.info(f"Auditing stats for MP ID {target_id} (Hołownia)...")
     
     with db.get_cursor() as cur:
         # 1. Check raw MP record
@@ -17,13 +19,13 @@ def audit_stats():
         mp = cur.fetchone()
         
         if not mp:
-            print("❌ MP not found!")
+            logging.info("❌ MP not found!")
             return
             
-        print("\n--- MP Record ---")
-        print(f"Name: {mp['first_name']} {mp['last_name']}")
-        print(f"Stats Rebellion (Column): {mp.get('stats_rebellion', 'MISSING')}")
-        print(f"Stats Attendance (Column): {mp.get('stats_attendance', 'MISSING')}")
+        logging.info("\n--- MP Record ---")
+        logging.info(f"Name: {mp['first_name']} {mp['last_name']}")
+        logging.info(f"Stats Rebellion (Column): {mp.get('stats_rebellion', 'MISSING')}")
+        logging.info(f"Stats Attendance (Column): {mp.get('stats_attendance', 'MISSING')}")
         
         # 2. Check Interpellations (via Link Table)
         try:
@@ -36,10 +38,10 @@ def audit_stats():
             """, (target_id,))
             interp_mp = cur.fetchone()['cnt']
             
-            print("\n--- Interpellations ---")
-            print(f"Found for Hołownia (via interpellation_authors): {interp_mp}")
+            logging.info("\n--- Interpellations ---")
+            logging.info(f"Found for Hołownia (via interpellation_authors): {interp_mp}")
         except Exception as e:
-            print(f"Error checking interpellations: {e}")
+            logging.info(f"Error checking interpellations: {e}")
 
 if __name__ == "__main__":
     audit_stats()

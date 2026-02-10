@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 
 import sys
 import os
@@ -15,21 +17,21 @@ def run_migration():
     # Ensuring 005 applied
     with open('backend/database/migrations/005_content_enrichment.sql', 'r') as f:
         sql = f.read()
-        print("Running migration 005_content_enrichment...")
+        logging.info("Running migration 005_content_enrichment...")
         try:
             with db.get_cursor(commit=True) as cur:
                 cur.execute(sql)
         except Exception as e:
-            print(f"Error in 005: {e}")
+            logging.info(f"Error in 005: {e}")
 
     # Running 006
     with open('backend/database/migrations/006_sitting_summaries.sql', 'r') as f:
         sql = f.read()
-        print("Running migration 006_sitting_summaries...")
+        logging.info("Running migration 006_sitting_summaries...")
         with db.get_cursor(commit=True) as cur:
             cur.execute(sql)
     
-    print("Migration completed successfully.")
+    logging.info("Migration completed successfully.")
 
 if __name__ == "__main__":
     run_migration()

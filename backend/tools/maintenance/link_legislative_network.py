@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 import sys
 import os
 import uuid
@@ -21,7 +23,7 @@ def link_network():
     session = SessionLocal()
     try:
         # 1. Group bills by (term, base_number)
-        print("Pre-fetching bills...")
+        logging.info("Pre-fetching bills...")
         all_bills = session.query(Bill).all()
         by_key = {} # Keyed by (term, base_number)
         for b in all_bills:
@@ -31,7 +33,7 @@ def link_network():
             if key not in by_key: by_key[key] = []
             by_key[key].append(b)
 
-        print(f"Found {len(by_key)} unique legislative processes (term + base).")
+        logging.info(f"Found {len(by_key)} unique legislative processes (term + base).")
 
         # 2. Pre-fetch existing processes by (term, base_number)
         existing_processes = {
@@ -74,7 +76,7 @@ def link_network():
                 )
                 session.add(process)
                 existing_processes[(term, base)] = process
-                print(f"[{count}/{len(by_key)}] Created process for {term}/{base}")
+                logging.info(f"[{count}/{len(by_key)}] Created process for {term}/{base}")
             else:
                 # Ensure titles are updated if they were generic
                 if "Proces legislacyjny" in process.title and parent_bill.title:
@@ -161,7 +163,7 @@ def link_network():
 
             # --- AI DESCRIPTION GENERATION ---
             if not process.description or len(process.description) < 10:
-                print(f"Generating AI description for Process {term}/{base}...")
+                logging.info(f"Generating AI description for Process {term}/{base}...")
                 try:
                     from backend.services.gemini import GeminiService
                     gemini = GeminiService()
@@ -185,20 +187,20 @@ def link_network():
                         response = model.generate_content(prompt)
                         if response and response.text:
                             process.description = response.text.strip()
-                            print(f"   [DESC] {process.description[:60]}...")
+                            logging.info(f"   [DESC] {process.description[:60]}...")
                 except Exception as ai_e:
-                    print(f"AI Description Error: {ai_e}")
+                    logging.info(f"AI Description Error: {ai_e}")
 
             if count % 20 == 0:
                 session.commit()
-                print(f"--- Committed {count} processes ---")
+                logging.info(f"--- Committed {count} processes ---")
                 time.sleep(1)
 
         session.commit()
-        print(f"Linking complete. Total processes: {count}")
+        logging.info(f"Linking complete. Total processes: {count}")
 
     except Exception as e:
-        print(f"Error linking network: {e}")
+        logging.info(f"Error linking network: {e}")
         session.rollback()
         import traceback
         traceback.print_exc()

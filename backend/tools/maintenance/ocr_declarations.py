@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 #!/usr/bin/env python3
 """
 OCR Asset Declarations with Gemini Vision
@@ -20,7 +22,7 @@ from backend.core import orm_db as database
 # Configure Gemini
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
-    print("❌ GEMINI_API_KEY not set")
+    logging.info("❌ GEMINI_API_KEY not set")
     sys.exit(1)
 
 genai.configure(api_key=GEMINI_API_KEY)
@@ -120,7 +122,7 @@ def parse_declaration_with_gemini(pdf_path: str) -> Optional[Dict]:
                 uploaded_file = genai.get_file(uploaded_file.name)
             
             if uploaded_file.state.name == "FAILED":
-                print(f"⚠️  File upload failed")
+                logging.info(f"⚠️  File upload failed")
                 return None
             
             # Generate content with PDF
@@ -147,14 +149,14 @@ def parse_declaration_with_gemini(pdf_path: str) -> Optional[Dict]:
             return data
             
         except json.JSONDecodeError as e:
-            print(f"⚠️  JSON parse error (attempt {attempt + 1}/{MAX_RETRIES}): {e}")
+            logging.info(f"⚠️  JSON parse error (attempt {attempt + 1}/{MAX_RETRIES}): {e}")
             if attempt == MAX_RETRIES - 1:
-                print(f"Response: {response.text[:500]}")
+                logging.info(f"Response: {response.text[:500]}")
                 return None
             time.sleep(2 ** attempt)
             
         except Exception as e:
-            print(f"⚠️  OCR error (attempt {attempt + 1}/{MAX_RETRIES}): {e}")
+            logging.info(f"⚠️  OCR error (attempt {attempt + 1}/{MAX_RETRIES}): {e}")
             if attempt == MAX_RETRIES - 1:
                 return None
             time.sleep(2 ** attempt)
@@ -183,12 +185,12 @@ def save_parsed_data(db, declaration_id: int, parsed_data: Dict):
         )
         conn.commit()
     except Exception as e:
-        print(f"⚠️  Error saving declaration {declaration_id}: {e}")
+        logging.info(f"⚠️  Error saving declaration {declaration_id}: {e}")
         conn.rollback()
 
 def main():
-    print("📄 Asset Declaration OCR with Gemini Vision")
-    print()
+    logging.info("📄 Asset Declaration OCR with Gemini Vision")
+    logging.info()
     
     db = database.get_db().__next__()
     
@@ -211,19 +213,19 @@ def main():
         })
     
     total = len(declarations)
-    print(f"📊 Found {total} declarations to parse")
+    logging.info(f"📊 Found {total} declarations to parse")
     
     if total == 0:
-        print("✅ All declarations already parsed!")
+        logging.info("✅ All declarations already parsed!")
         return
     
     # Estimate cost
-    print(f"\n💰 Estimated cost: ${total * 0.002:.2f} (Gemini Vision)")
-    print(f"⏱️  Estimated time: {total * RATE_LIMIT_DELAY / 60:.1f} minutes")
+    logging.info(f"\n💰 Estimated cost: ${total * 0.002:.2f} (Gemini Vision)")
+    logging.info(f"⏱️  Estimated time: {total * RATE_LIMIT_DELAY / 60:.1f} minutes")
     
     response = input("\nProceed? (y/n): ")
     if response.lower() != 'y':
-        print("Cancelled.")
+        logging.info("Cancelled.")
         return
     
     # Process declarations
@@ -234,7 +236,7 @@ def main():
         for decl in declarations:
             # Check if file exists
             if not os.path.exists(decl['file_path']):
-                print(f"\n⚠️  File not found: {decl['file_path']}")
+                logging.info(f"\n⚠️  File not found: {decl['file_path']}")
                 failed += 1
                 pbar.update(1)
                 continue
@@ -251,10 +253,10 @@ def main():
             pbar.update(1)
             time.sleep(RATE_LIMIT_DELAY)
     
-    print(f"\n✅ OCR complete!")
-    print(f"   Processed: {processed}")
-    print(f"   Failed: {failed}")
-    print(f"   Success rate: {processed/(processed+failed)*100:.1f}%")
+    logging.info(f"\n✅ OCR complete!")
+    logging.info(f"   Processed: {processed}")
+    logging.info(f"   Failed: {failed}")
+    logging.info(f"   Success rate: {processed/(processed+failed)*100:.1f}%")
 
 if __name__ == "__main__":
     main()

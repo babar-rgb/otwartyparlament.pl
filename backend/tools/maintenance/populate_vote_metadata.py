@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 import json
 from backend.core.db import db
 from backend.core.logger import get_logger

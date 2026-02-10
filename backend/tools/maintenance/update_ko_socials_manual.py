@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 
 import sys
 import os
@@ -253,7 +255,7 @@ def parse_data(raw):
 
 def update_mps():
     data = parse_data(RAW_DATA)
-    print(f"Parsed {len(data)} MPs.")
+    logging.info(f"Parsed {len(data)} MPs.")
     
     with db.get_cursor(commit=True) as cur:
         updated_count = 0
@@ -267,12 +269,12 @@ def update_mps():
                 updates.append(f'"twitter": "{mp["twitter"]}"')
                 
             if not updates:
-                print(f"Skipping {name} (no valid links)")
+                logging.info(f"Skipping {name} (no valid links)")
                 continue
                 
             json_fragment = '{' + ', '.join(updates) + '}'
             
-            print(f"Updating {name} with {json_fragment}...")
+            logging.info(f"Updating {name} with {json_fragment}...")
             
             # Update query using jsonb concatenation
             cur.execute(
@@ -281,7 +283,7 @@ def update_mps():
             )
             updated_count += 1
             
-        print(f"Updated {updated_count} MPs successfully.")
+        logging.info(f"Updated {updated_count} MPs successfully.")
 
 if __name__ == "__main__":
     update_mps()

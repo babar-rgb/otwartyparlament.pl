@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, func
@@ -17,19 +19,19 @@ def calculate_relations():
     engine = create_engine(database_url)
     db = Session(engine)
     
-    print("Fetching MPs...")
+    logging.info("Fetching MPs...")
     mps = db.query(models.MP).filter(models.MP.term == 10, models.MP.active == True).all()
-    print(f"Found {len(mps)} active MPs in term 10.")
+    logging.info(f"Found {len(mps)} active MPs in term 10.")
     
     # Pre-fetch all vote results for term 10
-    print("Fetching Vote Results (this might take a moment)...")
+    logging.info("Fetching Vote Results (this might take a moment)...")
     # Optimize: Only fetch (mp_id, vote_id, result) tuples
     results = db.query(models.VoteResult.mp_id, models.VoteResult.vote_id, models.VoteResult.result)\
         .join(models.Vote, models.VoteResult.vote_id == models.Vote.id)\
         .filter(models.Vote.term == 10)\
         .all()
         
-    print(f"Loaded {len(results)} vote results.")
+    logging.info(f"Loaded {len(results)} vote results.")
     
     # Organize into a dictionary: mp_id -> {vote_id: result}
     mp_votes = {}
@@ -38,7 +40,7 @@ def calculate_relations():
             mp_votes[r.mp_id] = {}
         mp_votes[r.mp_id][r.vote_id] = r.result
         
-    print("Calculating similarities...")
+    logging.info("Calculating similarities...")
     
     # Calculate relations
     # We want to find for each MP:
@@ -137,12 +139,12 @@ def calculate_relations():
             ))
             
         if idx % 10 == 0:
-            print(f"Processed {idx}/{total_mps} MPs...")
+            logging.info(f"Processed {idx}/{total_mps} MPs...")
             
-    print(f"Saving {len(relations_to_add)} relations to DB...")
+    logging.info(f"Saving {len(relations_to_add)} relations to DB...")
     db.bulk_save_objects(relations_to_add)
     db.commit()
-    print("Done!")
+    logging.info("Done!")
 
 if __name__ == "__main__":
     calculate_relations()

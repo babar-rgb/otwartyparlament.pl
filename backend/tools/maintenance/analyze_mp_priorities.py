@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 import sys
 import json
 from pathlib import Path
@@ -27,7 +29,7 @@ TOPICS = {
 def analyze_priorities():
     db = SessionLocal()
     try:
-        print("Analyzing MP Priorities...")
+        logging.info("Analyzing MP Priorities...")
         mps = db.query(MP).filter(MP.active == True).all()
         
         # Use join table
@@ -76,13 +78,13 @@ def analyze_priorities():
                     stat_value=json.dumps([{"topic": t, "count": c} for t, c in top_3])
                 ))
                 
-        print(f"Saving priorities for {len(stats_to_add)} MPs...")
+        logging.info(f"Saving priorities for {len(stats_to_add)} MPs...")
         db.add_all(stats_to_add)
         db.commit()
-        print("Done.")
+        logging.info("Done.")
 
     except Exception as e:
-        print(f"Error: {e}")
+        logging.info(f"Error: {e}")
         db.rollback()
     finally:
         db.close()

@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 import sys
 import os
 import json
@@ -16,39 +18,39 @@ except ImportError:
     from etl.analysis.generate_mp_bios import BiographyGenerator # This import might fail if circular or path oddity
 
 def verify():
-    print("🔍 Searching for Donald Tusk...")
+    logging.info("🔍 Searching for Donald Tusk...")
     with db.get_cursor(commit=True) as cur:
         cur.execute("SELECT * FROM mps WHERE first_name = 'Donald' AND last_name = 'Tusk' LIMIT 1")
         mp = cur.fetchone()
         
         if not mp:
-            print("⚠️ Donald Tusk not found. Fetching any MP...")
+            logging.info("⚠️ Donald Tusk not found. Fetching any MP...")
             cur.execute("SELECT * FROM mps LIMIT 1")
             mp = cur.fetchone()
             
         if not mp:
-            print("❌ No MPs found in database.")
+            logging.info("❌ No MPs found in database.")
             return
 
-        print(f"👤 Generating Bio for: {mp['first_name']} {mp['last_name']} (ID: {mp['id']})")
+        logging.info(f"👤 Generating Bio for: {mp['first_name']} {mp['last_name']} (ID: {mp['id']})")
         
         generator = BiographyGenerator(term=mp['term'])
         stats = generator.get_mp_stats(mp['id'])
-        print(f"📊 Stats context: {stats}")
+        logging.info(f"📊 Stats context: {stats}")
         
         bio = ollama_service.generate_mp_bio(mp, stats)
         
         if bio:
-            print("\n✅ Biography Generated Successfully:")
-            print("="*60)
-            print(bio)
-            print("="*60)
+            logging.info("\n✅ Biography Generated Successfully:")
+            logging.info("="*60)
+            logging.info(bio)
+            logging.info("="*60)
             
             # Save to DB to verify full loop
             cur.execute("UPDATE mps SET biography = %s WHERE id = %s", (bio, mp['id']))
-            print("💾 Saved to Database.")
+            logging.info("💾 Saved to Database.")
         else:
-            print("❌ Failed to generate biography.")
+            logging.info("❌ Failed to generate biography.")
 
 if __name__ == "__main__":
     verify()

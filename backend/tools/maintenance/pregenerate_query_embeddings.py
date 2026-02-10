@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 #!/usr/bin/env python3
 """
 ULTRA-FAST Mass pre-generate embeddings for 100,000 search queries
@@ -19,7 +21,7 @@ from backend.core.orm_db import SessionLocal
 # Configure Gemini
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
-    print("❌ GEMINI_API_KEY not set", flush=True)
+    logging.info("❌ GEMINI_API_KEY not set", flush=True)
     sys.exit(1)
 
 genai.configure(api_key=GEMINI_API_KEY)
@@ -71,7 +73,7 @@ def generate_queries_mega_batch(count: int) -> List[str]:
         response = model.generate_content(prompt)
         return [q.strip() for q in response.text.split('\n') if q.strip()]
     except Exception as e:
-        print(f"⚠️  Gen error: {e}", flush=True)
+        logging.info(f"⚠️  Gen error: {e}", flush=True)
         return []
 
 def embed_single_batch(queries_batch: List[str]):
@@ -84,28 +86,28 @@ def embed_single_batch(queries_batch: List[str]):
         )
         return list(zip(queries_batch, result['embedding']))
     except Exception as e:
-        print(f"⚠️  Embed error: {e}", flush=True)
+        logging.info(f"⚠️  Embed error: {e}", flush=True)
         return []
 
 def main():
     db = SessionLocal()
     
     current = db.execute(text("SELECT COUNT(*) FROM query_embeddings")).scalar()
-    print(f"🚀 Starting from {current:,} / {TARGET_TOTAL:,}", flush=True)
+    logging.info(f"🚀 Starting from {current:,} / {TARGET_TOTAL:,}", flush=True)
     
     start_time = time.time()
     total_new = 0
     
     while current + total_new < TARGET_TOTAL:
-        print(f"[{time.strftime('%H:%M:%S')}] Attempting to generate {GEN_BATCH_SIZE} queries...", flush=True)
+        logging.info(f"[{time.strftime('%H:%M:%S')}] Attempting to generate {GEN_BATCH_SIZE} queries...", flush=True)
         # 1. Generate queries in large chunks
         raw_queries = generate_queries_mega_batch(GEN_BATCH_SIZE)
         if not raw_queries:
-            print("💤 No queries returned, retrying in 2s...", flush=True)
+            logging.info("💤 No queries returned, retrying in 2s...", flush=True)
             time.sleep(2)
             continue
             
-        print(f"📡 Generated {len(raw_queries)} queries. Embedding in parallel...", end="", flush=True)
+        logging.info(f"📡 Generated {len(raw_queries)} queries. Embedding in parallel...", end="", flush=True)
         
         # 2. Split into embedding batches
         embed_batches = [raw_queries[i:i + EMBED_BATCH_SIZE] for i in range(0, len(raw_queries), EMBED_BATCH_SIZE)]
@@ -134,7 +136,7 @@ def main():
         total_new += saved
         elapsed = time.time() - start_time
         rate = total_new / (elapsed / 60) if elapsed > 0 else 0
-        print(f"✅ Saved {saved}. Total: {current + total_new:,}. Rate: {rate:.1f}/min", flush=True)
+        logging.info(f"✅ Saved {saved}. Total: {current + total_new:,}. Rate: {rate:.1f}/min", flush=True)
         
         # Periodic sync to DB to keep count accurate
         if total_new % 1000 == 0:
@@ -142,7 +144,7 @@ def main():
             db = SessionLocal()
 
     db.close()
-    print(f"🏁 DONE! Total saved: {total_new}", flush=True)
+    logging.info(f"🏁 DONE! Total saved: {total_new}", flush=True)
 
 if __name__ == "__main__":
     main()

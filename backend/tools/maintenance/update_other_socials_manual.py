@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 
 import sys
 import os
@@ -24,7 +26,7 @@ MPS_DATA = {
 }
 
 def update_mps():
-    print(f"Updating {len(MPS_DATA)} MPs...")
+    logging.info(f"Updating {len(MPS_DATA)} MPs...")
     
     with db.get_cursor(commit=True) as cur:
         updated_count = 0
@@ -40,7 +42,7 @@ def update_mps():
                 
             json_fragment = '{' + ', '.join(updates) + '}'
             
-            print(f"Updating {name} with {json_fragment}...")
+            logging.info(f"Updating {name} with {json_fragment}...")
             
             cur.execute(
                 "UPDATE mps SET contact_info = contact_info || %s::jsonb WHERE name = %s",
@@ -48,7 +50,7 @@ def update_mps():
             )
             updated_count += 1
             
-        print(f"Updated {updated_count} MPs successfully.")
+        logging.info(f"Updated {updated_count} MPs successfully.")
 
 if __name__ == "__main__":
     update_mps()

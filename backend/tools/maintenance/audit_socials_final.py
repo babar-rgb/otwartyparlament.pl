@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 
 import sys
 import os
@@ -8,7 +10,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
 from backend.core.db import db
 
 def audit_socials():
-    print("Running Final Social Media Audit...")
+    logging.info("Running Final Social Media Audit...")
     
     with db.get_cursor() as cur:
         # Get all active MPs in term 10
@@ -26,10 +28,10 @@ def audit_socials():
         
         clubs_stats = {}
         
-        print(f"Total Active MPs: {total_mps}")
-        print("-" * 60)
-        print(f"{'Name':<30} | {'Club':<15} | {'Missing'}")
-        print("-" * 60)
+        logging.info(f"Total Active MPs: {total_mps}")
+        logging.info("-" * 60)
+        logging.info(f"{'Name':<30} | {'Club':<15} | {'Missing'}")
+        logging.info("-" * 60)
         
         for mp in mps:
             name = mp['name']
@@ -60,21 +62,21 @@ def audit_socials():
                 missing_any += 1
                 if len(missing) == 2:
                     missing_both += 1
-                    print(f"{name:<30} | {club:<15} | Both missing")
+                    logging.info(f"{name:<30} | {club:<15} | Both missing")
                 # else:
-                #     print(f"{name:<30} | {club:<15} | Missing {missing[0]}")
+                #     logging.info(f"{name:<30} | {club:<15} | Missing {missing[0]}")
 
-        print("-" * 60)
-        print("CLUB STATISTICS")
-        print("-" * 60)
-        print(f"{'Club':<20} | {'Total':<6} | {'No FB':<6} | {'No TW':<6} | {'No Socials':<10}")
-        print("-" * 60)
+        logging.info("-" * 60)
+        logging.info("CLUB STATISTICS")
+        logging.info("-" * 60)
+        logging.info(f"{'Club':<20} | {'Total':<6} | {'No FB':<6} | {'No TW':<6} | {'No Socials':<10}")
+        logging.info("-" * 60)
         for club, stats in clubs_stats.items():
-            print(f"{club:<20} | {stats['total']:<6} | {stats['missing_fb']:<6} | {stats['missing_tw']:<6} | {stats['missing_both']:<10}")
+            logging.info(f"{club:<20} | {stats['total']:<6} | {stats['missing_fb']:<6} | {stats['missing_tw']:<6} | {stats['missing_both']:<10}")
             
-        print("-" * 60)
-        print(f"MPs with at least one missing: {missing_any}")
-        print(f"MPs with NO social media: {missing_both}")
+        logging.info("-" * 60)
+        logging.info(f"MPs with at least one missing: {missing_any}")
+        logging.info(f"MPs with NO social media: {missing_both}")
 
 if __name__ == "__main__":
     audit_socials()

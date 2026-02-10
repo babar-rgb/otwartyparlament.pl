@@ -1,3 +1,5 @@
+import logging
+logging.basicConfig(level=logging.INFO)
 import sys
 import os
 import requests
@@ -53,7 +55,7 @@ def clean_html(html_content):
 def backfill_replies():
     db = SessionLocal()
     try:
-        print("Fetching interpellations WITHOUT replies...")
+        logging.info("Fetching interpellations WITHOUT replies...")
         # Only get records that have replies in raw_data BUT no reply_content yet
         query = text("""
             SELECT id, raw_data, reply_content 
@@ -64,7 +66,7 @@ def backfill_replies():
         """)
         results = db.execute(query).fetchall()
         
-        print(f"Found {len(results)} interpellations needing replies. Processing...")
+        logging.info(f"Found {len(results)} interpellations needing replies. Processing...")
         
         count = 0
         updated = 0
@@ -112,7 +114,7 @@ def backfill_replies():
                                 new_reply_text += f"{header}\n\n{cleaned}\n\n"
                                 fetched_any = True
                     except Exception as e:
-                        print(f"Failed to fetch {body_url}: {e}")
+                        logging.info(f"Failed to fetch {body_url}: {e}")
                 
                 # Also keep attachment links if 'onlyAttachment' is true or just as backup
                 if reply.get('onlyAttachment') and 'attachments' in reply:
@@ -128,15 +130,15 @@ def backfill_replies():
                 
             count += 1
             if count % 10 == 0:
-                print(f"Processed {count}/{len(results)} | Updated: {updated}", end='\r')
+                logging.info(f"Processed {count}/{len(results)} | Updated: {updated}", end='\r')
                 db.commit()
                 # Removed delay for faster fetching
                     
         db.commit()
-        print(f"\nFinished! Processed {count}, Updated {updated} records.")
+        logging.info(f"\nFinished! Processed {count}, Updated {updated} records.")
         
     except Exception as e:
-        print(f"Error: {e}")
+        logging.info(f"Error: {e}")
         db.rollback()
     finally:
         db.close()
