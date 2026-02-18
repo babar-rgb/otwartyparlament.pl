@@ -39,6 +39,7 @@ try:
     from backend.etl.socials import SocialsETL
     from backend.etl.stats import calculate_stats
     from backend.etl.vote_grouping import VoteGroupingETL
+    from backend.etl.ai_enrichment import AIEnrichmentETL
 except ImportError:
     # Fallback for direct execution or docker paths
     try:
@@ -54,6 +55,7 @@ except ImportError:
         from socials import SocialsETL
         from stats import calculate_stats
         from vote_grouping import VoteGroupingETL
+        from ai_enrichment import AIEnrichmentETL
     except ImportError as e:
         # If we still fail, we will define dummies or re-raise
         print(f"⚠️ Critical Import Warning in incremental.py: {e}")
@@ -64,7 +66,7 @@ except ImportError:
         
         BillsETL = CommitteesETL = DeclarationsETL = InterpellationsETL = DummyETL
         EuroparlETL = SpeechesETL = PDFReplyExtractor = BillVoteLinker = DummyETL
-        SittingSummarizer = SocialsETL = VoteGroupingETL = DummyETL
+        SittingSummarizer = SocialsETL = VoteGroupingETL = AIEnrichmentETL = DummyETL
         def calculate_stats(): pass
 
 
@@ -343,6 +345,7 @@ class IncrementalETL:
             (BillVoteLinker, "Linking Votes"),
             (EuroparlETL, "Europarl Votes"),
             (SittingSummarizer, "AI Sitting Summaries"), # Requires GEMINI_API_KEY
+            (AIEnrichmentETL, "AI Vote Enrichment"),     # Real Gemini-powered analyses
             (SocialsETL, "MP Socials Discovery"),        # Requires GEMINI_API_KEY
             (VoteGroupingETL, "Vote Grouping (Clarity)"),
             # Run stats LAST to include all new data

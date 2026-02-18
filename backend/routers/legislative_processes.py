@@ -14,9 +14,13 @@ def read_processes(
     term: Optional[int] = Query(10), # Default to current term X
     status: Optional[str] = None, # 'IN_PROGRESS', 'COMPLETED'
     type: Optional[str] = None,
+    only_bills: bool = False,
     db: Session = Depends(database.get_db)
 ):
     query = db.query(models.LegislativeProcess)
+    
+    if only_bills:
+        query = query.filter(models.LegislativeProcess.base_number.isnot(None), models.LegislativeProcess.base_number != "")
     
     if term:
         from sqlalchemy import or_

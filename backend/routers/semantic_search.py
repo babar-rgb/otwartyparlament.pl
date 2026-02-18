@@ -118,12 +118,12 @@ async def semantic_search(
                     title_clean as title,
                     description,
                     CASE 
-                        WHEN title_clean ILIKE :query_like THEN 1.0 
+                        WHEN unaccent(title_clean) ILIKE unaccent(:query_like) THEN 1.0 
                         WHEN vector_embedding IS NULL THEN 0.0
                         ELSE 1 - (vector_embedding <=> CAST(:embedding AS vector)) 
                     END as similarity
                 FROM votes
-                WHERE vector_embedding IS NOT NULL OR title_clean ILIKE :query_like
+                WHERE vector_embedding IS NOT NULL OR unaccent(title_clean) ILIKE unaccent(:query_like)
                 ORDER BY similarity DESC
                 LIMIT :limit
             """), {"embedding": embedding_str, "limit": limit * 2, "query_like": query_like}).fetchall()  # Get 2x limit
@@ -147,12 +147,12 @@ async def semantic_search(
                     title,
                     SUBSTRING(content, 1, 200) as description,
                     CASE 
-                        WHEN title ILIKE :query_like THEN 1.0 
+                        WHEN unaccent(title) ILIKE unaccent(:query_like) THEN 1.0 
                         WHEN vector_embedding IS NULL THEN 0.0
                         ELSE 1 - (vector_embedding <=> CAST(:embedding AS vector)) 
                     END as similarity
                 FROM bills
-                WHERE vector_embedding IS NOT NULL OR title ILIKE :query_like
+                WHERE vector_embedding IS NOT NULL OR unaccent(title) ILIKE unaccent(:query_like)
                 ORDER BY similarity DESC
                 LIMIT :limit
             """), {"embedding": embedding_str, "limit": limit * 2, "query_like": query_like}).fetchall()
@@ -176,12 +176,12 @@ async def semantic_search(
                     title,
                     SUBSTRING(content, 1, 200) as description,
                     CASE 
-                        WHEN title ILIKE :query_like THEN 1.0 
+                        WHEN unaccent(title) ILIKE unaccent(:query_like) THEN 1.0 
                         WHEN vector_embedding IS NULL THEN 0.0
                         ELSE 1 - (vector_embedding <=> CAST(:embedding AS vector)) 
                     END as similarity
                 FROM interpellations
-                WHERE vector_embedding IS NOT NULL OR title ILIKE :query_like
+                WHERE vector_embedding IS NOT NULL OR unaccent(title) ILIKE unaccent(:query_like)
                 ORDER BY similarity DESC
                 LIMIT :limit
             """), {"embedding": embedding_str, "limit": limit * 2, "query_like": query_like}).fetchall()

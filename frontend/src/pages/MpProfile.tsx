@@ -48,10 +48,10 @@ const MpProfile = () => {
   const rebelVotes = mp.rebelVotes || 0;
 
   // Extract Badges
-  const badges = stats?.badges ? stats.badges : [];
+  const badges = (stats?.badges && Array.isArray(stats.badges)) ? stats.badges : [];
 
   // Extract Priorities
-  const topPriorities = stats?.top_priorities ? stats.top_priorities : [];
+  const topPriorities = (stats?.top_priorities && Array.isArray(stats.top_priorities)) ? stats.top_priorities : [];
 
   // Extract Twins
   const ideologicalTwin = relations?.find(r => r.relation_type === 'ideological_twin');

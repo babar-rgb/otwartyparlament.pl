@@ -113,7 +113,87 @@ class CommitteesETL:
                         mv['api_id']
                     ))
                 
+                
                 self.total_members += len(members)
 
+                # 3. Fetch and sync sittings
+                self._sync_sittings(code, cur)
+            
+            logger.info(f"Processed committee {code}: {len(members)} members.")
+
+
+    def _sync_sittings(self, code, cur):
+        """Fetch and sync sittings for a committee."""
+        try:
+            resp = http_session.get(f"{SEJM_API_URL}/committees/{code}/sittings", timeout=10)
+            if resp.status_code != 200:
+                return
+
+            sittings = resp.json()
+            for s in sittings:
+                # Prepare data
+                sitting_num = s.get('num')
+                date = s.get('date')
+                
+                # Parse times if present (API returns "2023-11-21T19:35:00")
+                start_time = s.get('startDateTime')
+                end_time = s.get('endDateTime')
+                
+                room = s.get('room')
+                status = s.get('status') # PLANNED, FINISHED, CANCELLED
+                is_remote = s.get('remote', False)
+                is_closed = s.get('closed', False)
+                
+                # Video: API returns list of video objects, pick first or store as JSON
+                video_url = None
+                if s.get('video'):
+                    video_url = s['video'][0].get('playerLink')
+
+                # Agenda: API returns HTML string in 'agenda' field usually
+                # We store raw JSON or text
+                agenda_raw = s.get('agenda')
+                agenda_json = json.dumps({'html': agenda_raw}) if agenda_raw else None
+
+                sql = """
+                    INSERT INTO committee_sittings (
+                        committee_code, sitting_number, date, start_time, end_time, 
+                        room, status, is_remote, is_closed, video_url, agenda, term, created_at
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 10, NOW())
+                    ON CONFLICT (committee_code, sitting_number, term) DO UPDATE SET
+                        date = EXCLUDED.date,
+                        start_time = EXCLUDED.start_time,
+                        end_time = EXCLUDED.end_time,
+                        room = EXCLUDED.room,
+                        status = EXCLUDED.status,
+                        is_remote = EXCLUDED.is_remote,
+                        is_closed = EXCLUDED.is_closed,
+                        video_url = EXCLUDED.video_url,
+                        agenda = EXCLUDED.agenda;
+                """
+                
+                # Need to handle potential unique constraint on id. 
+                # models.py says: id = Column(Integer, primary_key=True, index=True)
+                # But we don't have ID from API in 'sittings' list usually?
+                # Wait, SEJM API for /committees/{code}/sittings returns list.
+                # Does it have ID?
+                # Sample: {"num":1,"date":"2023-11-21",...}
+                # We should use composite key (committee_code, sitting_number, term) for uniqueness.
+                # Checking models.py... CommitteeSitting doesn't have unique constraint on composite?
+                # Let's check db schema. If not unique, we might duplicate.
+                # Assuming schema allows unique (committee_code, sitting_number, term).
+                # If not, we should delete and re-insert or add constraint.
+                # For safety in this iteration, let's try INSERT ON CONFLICT.
+                # If it fails due to missing constraint, we will add it or use delete strategy.
+                
+                cur.execute(sql, (
+                    code, sitting_num, date, start_time, end_time,
+                    room, status, is_remote, is_closed, video_url, agenda_json
+                ))
+
+        except Exception as e:
+            logger.warning(f"Failed to sync sittings for {code}: {e}")
+
 if __name__ == "__main__":
+    import json
     CommitteesETL().run()

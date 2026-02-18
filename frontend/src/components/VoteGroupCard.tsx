@@ -51,7 +51,7 @@ const VoteGroupCard = ({ vote }: VoteGroupCardProps) => {
                         {/* Title */}
                         <div className="flex items-start justify-between gap-4">
                             <h3 className="text-lg md:text-xl font-bold text-primary group-hover:text-accent-blue transition-colors leading-tight mb-2">
-                                {vote.title_clean || cleanSejmTitle(vote.title)}
+                                {vote.street_title || vote.title_clean || cleanSejmTitle(vote.title)}
                             </h3>
                             <button
                                 onClick={(e) => {

@@ -208,8 +208,19 @@ def read_votes(
         pass
 
     # Grouping & Clarity Logic
-    if hide_procedural and category != 'PROCEDURAL': # Allow procedural if explicitly requested
+    if hide_procedural and category != 'PROCEDURAL':
+        from sqlalchemy import or_, not_
         query = query.filter(models.Vote.is_procedural == False)
+        # Also exclude obvious technical noise that might not be flagged yet
+        procedural_keywords = [
+            '%posiedzenie Sejmu%', '%przerw%', '%odroczen%', 
+            '%Głosowanie proceduralne%', '%wniosek o%', '%porządek dzienny%'
+        ]
+        for pattern in procedural_keywords:
+            query = query.filter(not_(models.Vote.title_raw.ilike(pattern)))
+        
+        # Also hide sitting headers specifically
+        query = query.filter(not_(models.Vote.street_title.ilike('%Nagłówek Posiedzenia%')))
     if grouped:
         query = query.filter(models.Vote.parent_vote_id == None)
 

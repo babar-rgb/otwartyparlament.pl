@@ -269,12 +269,12 @@ def search_all(
                         term,
                         kind,
                         CASE 
-                            WHEN title_clean ~* :regex THEN 1.0 
+                            WHEN unaccent(title_clean) ~* unaccent(:regex) THEN 1.0 
                             WHEN vector_embedding IS NULL THEN 0.0
                             ELSE 1 - (vector_embedding <=> CAST(:embedding AS vector)) 
                         END as similarity
                     FROM votes
-                    WHERE (vector_embedding IS NOT NULL OR title_clean ~* :regex)
+                    WHERE (vector_embedding IS NOT NULL OR unaccent(title_clean) ~* unaccent(:regex))
                     AND (:term IS NULL OR term = :term)
                     ORDER BY similarity DESC
                     LIMIT 20
@@ -313,12 +313,12 @@ def search_all(
                         date,
                         type,
                         CASE 
-                            WHEN title ~* :regex THEN 1.0 
+                            WHEN unaccent(title) ~* unaccent(:regex) THEN 1.0 
                             WHEN vector_embedding IS NULL THEN 0.0
                             ELSE 1 - (vector_embedding <=> CAST(:embedding AS vector)) 
                         END as similarity
                     FROM bills
-                    WHERE (vector_embedding IS NOT NULL OR title ~* :regex)
+                    WHERE (vector_embedding IS NOT NULL OR unaccent(title) ~* unaccent(:regex))
                     ORDER BY similarity DESC
                     LIMIT 20
                 """)
@@ -356,12 +356,12 @@ def search_all(
                         title,
                         sent_date,
                         CASE 
-                            WHEN title ~* :regex THEN 1.0 
+                            WHEN unaccent(title) ~* unaccent(:regex) THEN 1.0 
                             WHEN vector_embedding IS NULL THEN 0.0
                             ELSE 1 - (vector_embedding <=> CAST(:embedding AS vector)) 
                         END as similarity
                     FROM interpellations
-                    WHERE (vector_embedding IS NOT NULL OR title ~* :regex)
+                    WHERE (vector_embedding IS NOT NULL OR unaccent(title) ~* unaccent(:regex))
                     ORDER BY similarity DESC
                     LIMIT 15
                 """)
@@ -396,9 +396,12 @@ def search_all(
         full_name_normal = func.concat(models.MP.first_name, ' ', models.MP.last_name)
         full_name_reverse = func.concat(models.MP.last_name, ' ', models.MP.first_name)
         mp_query = db.query(models.MP)
+        q_unaccent = func.unaccent(q)
         mps_candidates = mp_query.filter(or_(
-            models.MP.first_name.ilike(f"%{q}%"), models.MP.last_name.ilike(f"%{q}%"),
-            full_name_normal.ilike(f"%{q}%"), full_name_reverse.ilike(f"%{q}%")
+            func.unaccent(models.MP.first_name).ilike(func.concat('%', q_unaccent, '%')),
+            func.unaccent(models.MP.last_name).ilike(func.concat('%', q_unaccent, '%')),
+            func.unaccent(full_name_normal).ilike(func.concat('%', q_unaccent, '%')),
+            func.unaccent(full_name_reverse).ilike(func.concat('%', q_unaccent, '%'))
         )).limit(5).all() # Reduced limit to 5 as per snippet
         
         # Deduplicate by name (taking the most recent term) - Re-added original deduplication logic
@@ -433,7 +436,8 @@ def search_all(
             # Use websearch_to_tsquery for "OR" support
             trad_votes = vote_query.filter(models.Vote.search_vector.op('@@')(func.websearch_to_tsquery('simple', q_expanded))).limit(10).all()
         except:
-            trad_votes = vote_query.filter(models.Vote.title_raw.ilike(f"%{q}%")).limit(10).all()
+            q_unaccent = func.unaccent(q)
+            trad_votes = vote_query.filter(func.unaccent(models.Vote.title_raw).ilike(func.concat('%', q_unaccent, '%'))).limit(10).all()
             
         for vote in trad_votes:
             results.append({
@@ -454,8 +458,9 @@ def search_all(
                 bill_query = bill_query.filter(models.Bill.date < '2023-11-13', models.Bill.date >= '2019-11-12')
         
         # NO, I will use OR ILIKE chain for synonyms.
+        q_unaccent = func.unaccent(q)
         conditions = [
-            models.Bill.title.ilike(f"%{t}%") for t in search_terms[:5] # Limit terms to avoid huge query
+            func.unaccent(models.Bill.title).ilike(func.concat('%', func.unaccent(t), '%')) for t in search_terms[:5] # Limit terms to avoid huge query
         ]
         trad_bills = bill_query.filter(or_(*conditions)).limit(10).all() # Reduced limit to 10 as per snippet
         
@@ -497,7 +502,7 @@ def search_all(
             speech_query = speech_query.filter(models.Speech.term == int(period))
             
         speeches = speech_query.filter(
-            models.Speech.content.ilike(f"%{q}%")
+            func.unaccent(models.Speech.content).ilike(func.concat('%', func.unaccent(q), '%'))
         ).limit(5).all()
         
         for s in speeches:
@@ -514,7 +519,8 @@ def search_all(
     # 5. Traditional Interpellations - Only if Hybrid didn't run
     if should_search_type('interpellation') and 'interpellation' not in processed_types:
         inter_query = db.query(models.Interpellation)
-        trad_inters = inter_query.filter(models.Interpellation.title.ilike(f"%{q}%")).limit(10).all()
+        q_unaccent = func.unaccent(q)
+        trad_inters = inter_query.filter(func.unaccent(models.Interpellation.title).ilike(func.concat('%', q_unaccent, '%'))).limit(10).all()
         for i in trad_inters:
             unique_key = f"interpellation_{i.id}"
             if unique_key not in seen_ids:

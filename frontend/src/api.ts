@@ -130,8 +130,10 @@ export const fetchVoteAnalysis = async (voteId: string): Promise<VoteAnalysis | 
     return {
       vote_id: data.vote_id,
       summary: data.summary,
+      summary_expert: data.summary_expert,
       pros: Array.isArray(data.pros) ? data.pros : [],
-      cons: Array.isArray(data.cons) ? data.cons : []
+      cons: Array.isArray(data.cons) ? data.cons : [],
+      procedural_context: data.procedural_context
     };
   } catch (e) {
     console.error("Error fetching analysis:", e);
@@ -165,12 +167,28 @@ export const fetchMPStats = async (mpId: string | number): Promise<Record<string
     const response = await fetch(`${API_URL}/api/mps/${mpId}/stats`);
     if (!response.ok) return {};
     const data = await response.json();
+
     // Parse JSON values if they are strings
     Object.keys(data).forEach(key => {
-      try {
-        data[key] = JSON.parse(data[key]);
-      } catch {
-        // Keep as string if not JSON
+      let value = data[key];
+      if (typeof value === 'string') {
+        try {
+          // Try standard JSON parse
+          data[key] = JSON.parse(value);
+        } catch (e) {
+          // If failed, try to fix Python-style string (['a', 'b'] -> ["a", "b"])
+          if (value.startsWith('[') && value.includes("'")) {
+            try {
+              const fixed = value.replace(/'/g, '"');
+              data[key] = JSON.parse(fixed);
+            } catch (e2) {
+              console.warn(`Failed to parse stat ${key}:`, value);
+              // Leave as string or set to null? 
+              // Better to leave as string so we can see it, but frontend might crash if it expects array
+              // Let's leave it, but MpProfile must handle it.
+            }
+          }
+        }
       }
     });
     return data;
@@ -360,13 +378,14 @@ export const fetchProcess = async (id: string) => {
   return await response.json();
 };
 
-export const fetchProcesses = async (options?: { skip?: number; limit?: number; term?: number; q?: string; type?: string }) => {
+export const fetchProcesses = async (options?: { skip?: number; limit?: number; term?: number; q?: string; type?: string; only_bills?: boolean }) => {
   const params = new URLSearchParams();
   if (options?.skip) params.append('skip', options.skip.toString());
   if (options?.limit) params.append('limit', options.limit.toString());
   if (options?.term) params.append('term', options.term.toString());
   if (options?.q) params.append('q', options.q);
   if (options?.type) params.append('type', options.type);
+  if (options?.only_bills) params.append('only_bills', 'true');
   const response = await fetch(`${API_URL}/api/legislative_processes?${params.toString()}`);
   if (!response.ok) throw new Error('Failed to fetch processes');
   return await response.json();

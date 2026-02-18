@@ -18,7 +18,8 @@ export function useSejmPrints() {
                 skip,
                 limit: ITEMS_PER_PAGE,
                 q: searchTerm,
-                type: filterSource || undefined
+                type: filterSource || undefined,
+                only_bills: true
             });
 
             const prints: SejmPrint[] = res.items.map((p: any) => ({

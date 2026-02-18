@@ -150,7 +150,7 @@ const VoteDetails: React.FC = () => {
 
                     {/* Main Title */}
                     <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-primary leading-snug mb-8 max-w-4xl tracking-tight">
-                        {cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
+                        {vote.street_title || cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
                     </h1>
 
                     {/* Smart Actions Grid */}
@@ -174,7 +174,7 @@ const VoteDetails: React.FC = () => {
                         {/* 2. Connections Card */}
                         <VoteConnections
                             voteId={vote.id}
-                            voteTitle={cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
+                            voteTitle={vote.street_title || cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
                             variant="card"
                         />
                     </div>
@@ -473,7 +473,7 @@ const VoteDetails: React.FC = () => {
                 aria-hidden="true"
             >
                 <SocialShareCard
-                    title={cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
+                    title={vote.street_title || cleanSejmTitle(vote.title_clean || vote.title_raw || '')}
                     verdict={vote.verdict as 'PRZYJĘTO' | 'ODRZUCONO'}
                     date={formatPolishDate(vote.date)}
                     stats={{

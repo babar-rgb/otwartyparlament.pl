@@ -9,7 +9,7 @@ from datetime import datetime
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
 
 from backend.core.db import db
-from backend.services.ollama import ollama_service
+from backend.services.gemini import gemini_service
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class SittingSummarizer:
     def __init__(self):
         self.db = db
-        self.ollama = ollama_service
+        self.gemini = gemini_service
 
     def get_sitting_votes(self, term, sitting):
         """Fetch important votes for a sitting."""
@@ -82,8 +82,8 @@ class SittingSummarizer:
         GENERUJ PONIŻEJ:
         """
 
-        summary = self.ollama.generate(prompt)
-        return summary
+        summary_data = self.gemini.generate_summary(context_str, title=f"Posiedzenie {sitting}")
+        return summary_data.get('expert')
 
     def save_summary(self, term, sitting, summary):
         """Save the generated summary to the database."""

@@ -29,6 +29,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-kajtek}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: ${POSTGRES_DB:-otwarty_parlament}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
     volumes:
       - ../backend/backups:/app/backend/backups
     healthcheck:

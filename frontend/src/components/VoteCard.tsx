@@ -90,7 +90,7 @@ export default function VoteCard({ vote }: VoteCardProps) {
           <div className="flex-1">
             <div className="flex items-start justify-between gap-2">
               <h3 className="font-semibold text-slate-900 dark:text-slate-100 line-clamp-2 text-sm">
-                {vote.title}
+                {vote.street_title || vote.title}
               </h3>
               <span className={`px-2 py-1 rounded text-xs font-medium flex-shrink-0 ${resultColor}`}>
                 {vote.result || 'Nierozstrzygnięte'}

@@ -60,12 +60,12 @@ class GeminiService:
             instruction_part = (
                 f"Oryginalny tytuł biurokratyczny: '{original_title}'\n\n"
                 "Instrukcja:\n"
-                "1. Napisz KRÓTKI tytuł (maksymalnie 10 słów).\n"
-                "2. BEZWZGLĘDNIE POMIŃ numery punktów (np. 'Pkt. 21', 'Punkt 5') oraz techniczne nagłówki (np. 'Sprawozdanie Komisji', 'Piersze czytanie').\n"
-                "3. Pomiń słowa 'głosowanie nad...', 'ustawa o zmianie ustawy...', 'rządowy projekt...'.\n"
-                "4. Napisz SEDNO zmiany. Co to zmienia w życiu ludzi? Np. 'Podwyżka 800+', 'Wakacje kredytowe', 'Nowe zasady wycinki drzew'.\n"
-                "5. Jeśli to techniczna/proceduralna zmiana, napisz to wprost, np. 'Zmiany w procedurze sądowej'.\n"
-                "6. NIE używaj cudzysłowów w wyniku.\n\n"
+                "1. Napisz BARDZO KRÓTKI tytuł (maksymalnie 8 słów).\n"
+                "2. BEZWZGLĘDNIE I KATEGORYCZNIE POMIŃ: numery punktów (np. 'Pkt. 21', 'Punkt 5'), numery druków (np. 'druk nr...'), techniczne nagłówki (np. 'Sprawozdanie Komisji', 'Piersze czytanie', 'Uchwała Senatu').\n"
+                "3. Pomiń słowa 'głosowanie nad...', 'ustawa o zmianie ustawy...', 'rządowy projekt...', 'o zmianie ustawy...'.\n"
+                "4. Napisz SEDNO zmiany. Co to zmienia w życiu ludzi? Używaj języka potocznego, ale godnego. Np. 'Podwyżka 800+', 'Wakacje kredytowe', 'Nowe zasady wycinki drzew', 'Kryptoaktywa: nowe regulacje'.\n"
+                "5. Jeśli to techniczna/proceduralna zmiana, napisz to wprost, np. 'Zmiany w procedurze sądowej', 'Nowy sędzia Trybunału Konstytucyjnego'.\n"
+                "6. NIE używaj cudzysłowów ani kropek na końcu.\n\n"
                 "Wynik (tylko tytuł):"
             )
 
@@ -194,64 +194,61 @@ class GeminiService:
         if doc_type == "interpellation": context_word = "interpelacji poselskiej"
         if doc_type == "process_context": context_word = "etapu legislacyjnego"
 
-        base_prompt = f"""
-        Jesteś bezstronnym analitykiem sejmowym OtwartyParlament.pl.
-        Twoim zadaniem jest dostarczenie surowej, obiektywnej analizy prawnej i ekonomicznej tego {{context_word}}.
+        base_prompt = """
+        Jesteś bezstronnym, ale dociekliwym analitykiem sejmowym OtwartyParlament.pl.
+        Twoim zadaniem jest dostarczenie fascynującej, opartej na faktach analizy tego {context_word}.
         
         WAŻNE: CAŁA ODPOWIEDŹ MUSI BYĆ W JĘZYKU POLSKIM (POLISH).
         
-        ZASADY:
-        1. Zachowaj absolutną neutralność polityczną.
-        2. STYL: Ekspercki, pogłębiony, "śledczy".
-        3. KLUCZOWE: Odwołuj się bezpośrednio do numerów druków i treści dokumentów.
-        4. Wykaż relację między dokumentem a stanem prawnym (co się zmienia?).
-        5. Cytuj konkretne kwoty i nazwy programów, jeśli występują w tekście.
+        ZASADY STYLU (KRYTYCZNE):
+        1. STYL "IMPACT-FIRST": Zacznij od razu od konkretu. Co to zmienia? Ile to kosztuje? Kto zyska, a kto straci?
+        2. ZERO BIUROKRACJI: Zakaz używania nudnych fraz typu "Głosowanie dotyczy...", "Projekt ma na celu...". Pisz jak dziennikarz analityczny.
+        3. STYL "ŚLEDCZY": Szukaj kruczków, konkretnych kwot, dat wejścia w życie i powiązań z innymi ustawami.
+        4. PROCEDURY: Jeśli dokument jest techniczny/proceduralny (np. odroczenie obrad), wyjaśnij to KRÓTKO I CIEKAWIE. 
+           ZAKAZ pisania "nie mam danych" – wyjaśnij CO TO ZA PROCEDURA i jakie ma znaczenie dla tempa prac.
         
         JAKOŚĆ I POKRYCIE:
-        - UNIKAJ POWTÓRZEŃ.
-        - UNIKAJ BANALNYCH WNIOSKÓW.
-        - ZALETY I WADY (BARDZO WAŻNE): 
-            * W "Zaletach" wymień KONKRETNE grupy/programy (np. "Wsparcie dla Szpitala w Bydgoszczy", "100 mln na Aktywnych Seniorów").
-            * W "Wadach" wymień KONKRETNE instytucje/ryzyka (np. "Cięcia w budżecie IPN", "Ryzyko inflacyjne").
-            * ZAKAZ używania ogólników.
+        - UNIKAJ POWTÓRZEŃ I BANALNYCH WNIOSKÓW.
+        - ZALETY I WADY: muszą być KONKRETNE (np. "Wsparcie dla 1200 szpitali", a nie "Poprawa ochrony zdrowia").
         
         DANE WEJŚCIOWE:
-        TYTUŁ: {{title}}
-        OPIS: {{description}}
-        TREŚĆ: {{bill_text}}
+        TYTUŁ: {title}
+        OPIS: {description}
+        TREŚĆ: {bill_text}
         
-        Zwróć JSON (Wartości w JSON muszą być po POLSKU):
-        {{{{
-            "summary_citizen": "Podsumowanie dla obywatela (MINIMUM 6-8 DŁUGICH, TREŚCIWYCH ZDAŃ). Opisz dokładnie mechanizm zmiany i jej wpływ na życie. Unikaj ogólników.",
-            "summary_expert": "Głęboka analiza ekspercka (MINIMUM 25-30 ROZBUDOWANYCH ZDAŃ). Styl analityczny, bogaty w terminologię prawniczą. STRUKTURA: 1. Geneza i kontekst prawny. 2. SZCZEGÓŁOWA LISTA ZMIAN (-). 3. ANALIZA BUDŻETOWA I GOSPODARCZA. 4. SKUTKI DŁUGOFALOWE. MUSI BYĆ BARDZO OBSZERNE.",
-            "street_title": "Krótki, chwytliwy tytuł (max 10 słów, bez numerów druków). Np. 'Wakacje Kredytowe 2024'.",
-            "category": "Jedna z: Gospodarka, Zdrowie, Obronność, Edukacja, Ustrój, Inne",
+        Zwróć JSON:
+        {
+            "summary_citizen": "Podsumowanie dla obywatela (5-7 zdań). ZALECENIA: Zacznij od 'Ta ustawa zmienia X...' lub 'Koszt tej zmiany to Y...'. Pisz jak do kogoś, kto ma tylko 30 sekund. ZERO wstępów o tym, że odbyło się głosowanie.",
+            "summary_expert": "Pogłębiona analiza 'Śledcza'. STRUKTURA: 1. Cel i ukryte intencje. 2. Wykaz kwot, terminów i twardych danych. 3. Potencjalne pułapki prawne. 4. Skutki dla stabilności państwa.",
+            "street_title": "Tytuł 'uliczny' (max 7 słów). Samo sedno, np. 'Wyższe kary za piractwo drogowe'.",
+            "category": "Gospodarka, Zdrowie, Obronność, Edukacja, Ustrój, Inne",
             "importance_score": 1-10,
-            "pros": ["Argument ZA 1 (konkretny)", "Argument ZA 2 (konkretny)"],
-            "cons": ["Argument PRZECIW 1 (konkretny)", "Argument PRZECIW 2 (konkretny)"],
-            "personas": {{{{
-                "Przedsiębiorca": "Wpływ szczegółowy.",
-                "Pracownik": "Wpływ szczegółowy.",
-                "Rolnik": "Wpływ szczegółowy.",
-                "Emeryt": "Wpływ szczegółowy.",
-                "Student": "Wpływ szczegółowy.",
-                "Rodzic": "Wpływ szczegółowy."
-            }}}},
-            "meta_description": "Opis SEO (max 160 znaków) dla Google.",
-            "keywords": ["słowo kluczowe 1", "słowo kluczowe 2"],
-            "tags": ["Tag 1", "Tag 2", "Tag 3"]
-        }}}}
+            "pros": ["Konkretna korzyść + dla kogo"],
+            "cons": ["Konkretne ryzyko lub koszt"],
+            "personas": {
+                "Przedsiębiorca": "Krótki, twardy wpływ.",
+                "Pracownik": "Krótki, twardy wpływ.",
+                "Rolnik": "Krótki, twardy wpływ.",
+                "Emeryt": "Krótki, twardy wpływ.",
+                "Student": "Krótki, twardy wpływ.",
+                "Rodzic": "Krótki, twardy wpływ."
+            },
+            "meta_description": "SEO (max 155 znaków).",
+            "keywords": ["tag1", "tag2"],
+            "tags": ["Tag1", "Tag2"],
+            "procedural_context": "Jeśli to głosowanie techniczne, wyjaśnij prostym językiem jego znaczenie (1-2 zdania). W przeciwnym razie zostaw puste."
+        }
         """
 
         if doc_type == "process_context":
-            base_prompt = f"""
+            base_prompt = """
             Jesteś ekspertem legislacyjnym Kancelarii Sejmu.
             Twoim zadaniem jest wyjaśnienie obecnego ETAPU PROCESU LEGISLACYJNEGO.
             
             KONTEKST (Oś Czasu):
-            {{bill_text}}
+            {bill_text}
 
-            OBECNY ETAP: {{title}} ({{description}})
+            OBECNY ETAP: {title} ({description})
 
             KLUCZOWE WYMOGI (TON: PROFESJONALNY, NEUTRALNY, PRAWNICZY):
             1. Wyjaśnij, co proceduralnie oznacza ten etap (np. "Jest to głosowanie nad uchwałą Senatu").
@@ -260,24 +257,27 @@ class GeminiService:
             4. ŻADNYCH OCEN i EMOCJI. ("Ważny moment", "Dramatyczne głosowanie" -> ZAKAZANE).
             
             Zwróć JSON:
-            {{{{
+            {
                 "procedural_context": "Zwięzłe wyjaśnienie proceduralne (max 3 zdania). Skup się na mechanice procesu.",
                 "legal_consequence": "Co się stanie po głosowaniu ZA, a co po PRZECIW."
-            }}}}
+            }
             """
-            return base_prompt.format(title=title, description=description, bill_text=bill_text)
          
-        
         if doc_type == "vote":
-            base_prompt += "\\nJEŚLI GŁOSOWANIE JEST TECHNICZNE (przerwa, odroczenie): Zwróć summary='Głosowanie techniczne.' i puste listy pros/cons."
+            base_prompt += "\nJEŚLI GŁOSOWANIE JEST TECHNICZNE (przerwa, odroczenie): Zwróć summary='Głosowanie techniczne.' i puste listy pros/cons."
             
-        if self._assess_complexity(title, description, bill_text) == "HIGH":
-             base_prompt += "\\nUWAGA: To jest kluczowy dokument. Dokładnie przeanalizuj wpływ finansowy."
+        if complexity == "HIGH":
+             base_prompt += "\nUWAGA: To jest kluczowy dokument. Dokładnie przeanalizuj wpływ finansowy."
         
         # Prepare content safely
-        bill_text_safe = bill_text[:100000] if bill_text else "BRAK - Analizuj tylko na podstawie tytułu i opisu."
+        bill_text_safe = str(bill_text or "")[:100000] if bill_text else "BRAK - Analizuj tylko na podstawie tytułu i opisu."
             
-        return base_prompt.format(context_word=context_word, title=title, description=description, bill_text=bill_text_safe)
+        final_prompt = base_prompt.replace("{context_word}", str(context_word))
+        final_prompt = final_prompt.replace("{title}", str(title))
+        final_prompt = final_prompt.replace("{description}", str(description or ""))
+        final_prompt = final_prompt.replace("{bill_text}", bill_text_safe)
+        
+        return final_prompt
 
     def generate_summary(self, bill_content: str, title: str = "") -> Dict[str, str]:
         """
