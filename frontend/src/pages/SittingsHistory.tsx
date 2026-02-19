@@ -11,6 +11,11 @@ interface SittingSummary {
     sitting_number: number;
     summary_md: string;
     updated_at: string;
+    top_votes?: {
+        id: number;
+        title: string;
+        verdict: string;
+    }[];
 }
 
 const SittingsHistory: React.FC = () => {
@@ -104,6 +109,44 @@ const SittingsHistory: React.FC = () => {
                                             {sitting.summary_md}
                                         </ReactMarkdown>
                                     </div>
+
+                                    {sitting.top_votes && sitting.top_votes.length > 0 && (
+                                        <div className="mt-8 pt-6 border-t border-border-base/50">
+                                            <h4 className="text-xs uppercase tracking-widest font-bold text-slate-500 mb-4 flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                                Kluczowe Głosowania
+                                            </h4>
+                                            <div className="grid gap-3">
+                                                {sitting.top_votes.map(vote => (
+                                                    <Link
+                                                        key={vote.id}
+                                                        to={`/glosowanie/${vote.id}`}
+                                                        className="flex items-center justify-between p-4 rounded-xl bg-page/50 hover:bg-page border border-border-base hover:border-amber-500/30 transition-all duration-300 group/vote relative overflow-hidden"
+                                                    >
+                                                        <div className="flex items-center gap-4 relative z-10">
+                                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${vote.verdict === 'Uchwalono' ? 'bg-green-500/10 text-green-600 dark:text-green-400' :
+                                                                vote.verdict === 'Odrzucono' ? 'bg-red-500/10 text-red-600 dark:text-red-400' :
+                                                                    'bg-slate-500/10 text-slate-600 dark:text-slate-400'
+                                                                }`}>
+                                                                {vote.verdict === 'Uchwalono' ? 'ZA' : vote.verdict === 'Odrzucono' ? 'PR' : '?'}
+                                                            </div>
+                                                            <span className="font-medium text-sm text-primary group-hover/vote:text-amber-600 dark:group-hover/vote:text-amber-500 transition-colors line-clamp-1">
+                                                                {vote.title}
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="text-xs font-bold text-secondary flex items-center gap-2 relative z-10 group-hover/vote:translate-x-1 transition-transform">
+                                                            Zobacz szczegóły
+                                                            <ArrowLeft className="rotate-180" size={12} />
+                                                        </div>
+
+                                                        {/* Hover Effect Background */}
+                                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-500/0 to-amber-500/5 translate-x-full group-hover/vote:translate-x-0 transition-transform duration-500" />
+                                                    </Link>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ))}

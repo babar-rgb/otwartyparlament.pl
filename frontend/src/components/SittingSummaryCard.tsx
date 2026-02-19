@@ -11,6 +11,11 @@ interface SittingSummary {
     sitting_number: number;
     summary_md: string;
     updated_at: string;
+    top_votes?: {
+        id: number;
+        title: string;
+        verdict: string;
+    }[];
 }
 
 const SittingSummaryCard: React.FC = () => {
@@ -111,6 +116,37 @@ const SittingSummaryCard: React.FC = () => {
                             </ReactMarkdown>
                         </div>
                     </div>
+
+                    {/* Key Votes Section */}
+                    {summary.top_votes && summary.top_votes.length > 0 && (
+                        <div className="mt-4 pt-4 border-t border-amber-900/5 dark:border-white/5 space-y-3">
+                            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                Kluczowe Głosowania
+                            </h4>
+                            <div className="space-y-2">
+                                {summary.top_votes.map(vote => (
+                                    <Link
+                                        key={vote.id}
+                                        to={`/glosowanie/${vote.id}`}
+                                        className="flex items-center justify-between p-2.5 rounded-xl bg-white/50 dark:bg-black/20 hover:bg-white dark:hover:bg-white/5 border border-amber-900/5 dark:border-white/5 transition-all group/vote"
+                                    >
+                                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate max-w-[180px] md:max-w-[220px]">
+                                            {vote.title}
+                                        </span>
+                                        <div className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg ${['Uchwalono', 'PRZYJĘTO'].includes(vote.verdict)
+                                                ? 'bg-emerald-500/10 text-emerald-600'
+                                                : ['Odrzucono', 'ODRZUCONO'].includes(vote.verdict)
+                                                    ? 'bg-rose-500/10 text-rose-600'
+                                                    : 'bg-amber-500/10 text-amber-600'
+                                            }`}>
+                                            {['Uchwalono', 'PRZYJĘTO'].includes(vote.verdict) ? 'ZA' : ['Odrzucono', 'ODRZUCONO'].includes(vote.verdict) ? 'PRZECIW' : '?'}
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="pt-4 mt-auto border-t border-amber-900/5 dark:border-white/5">
                         <Link to="/posiedzenia/historia" className="text-[10px] font-black uppercase tracking-widest flex items-center justify-between text-slate-900 dark:text-white hover:text-amber-600 dark:hover:text-amber-500 transition-colors group/btn">

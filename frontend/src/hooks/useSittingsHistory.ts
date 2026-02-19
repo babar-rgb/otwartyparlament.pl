@@ -5,7 +5,7 @@ export function useSittingsHistory(term: number) {
     return useQuery({
         queryKey: ['sittingsHistory', term],
         queryFn: async () => {
-            const response = await fetch(`${API_URL}/sittings/summaries?term=${term}`);
+            const response = await fetch(`${API_URL}/api/sittings/summaries?term=${term}`);
             if (!response.ok) throw new Error('Failed to fetch sittings history');
             return await response.json();
         },

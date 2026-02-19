@@ -80,7 +80,7 @@ def get_latest_sitting_summary(term: int = 10):
     
     # Get latest summary for the specific term
     query = """
-        SELECT term, sitting_number, summary_md, updated_at 
+        SELECT term, sitting_number, summary_md, updated_at, top_votes
         FROM sitting_summaries 
         WHERE term = %s
         ORDER BY sitting_number DESC 
@@ -99,7 +99,7 @@ def get_all_sitting_summaries(term: int = 10):
     from backend.core.db import db
     
     query = """
-        SELECT id, term, sitting_number, summary_md, updated_at 
+        SELECT id, term, sitting_number, summary_md, updated_at, top_votes 
         FROM sitting_summaries 
         WHERE term = %s
         ORDER BY sitting_number DESC
