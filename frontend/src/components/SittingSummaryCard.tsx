@@ -60,67 +60,63 @@ const SittingSummaryCard: React.FC = () => {
     if (!summary) return null;
 
     return (
-        <div className="mb-12 relative group">
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-purple-600/20 rounded-[2.5rem] blur-3xl opacity-30 group-hover:opacity-50 transition-opacity duration-700" />
+        <div className="relative group h-full">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-purple-600/10 rounded-[2.5rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-700" />
 
-            <div className="relative bg-[#FFFAF0] dark:bg-[#1a1625] rounded-[2.5rem] p-8 md:p-12 border border-amber-900/10 dark:border-purple-500/20 shadow-xl overflow-hidden">
+            <div className="relative h-full bg-[#FFFAF0] dark:bg-[#1a1625] rounded-[2.5rem] p-6 md:p-8 border border-amber-900/10 dark:border-purple-500/20 shadow-xl overflow-hidden flex flex-col">
                 {/* Decorative background elements */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+                <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl opacity-50" />
 
-                <div className="flex flex-col md:flex-row gap-8 md:gap-12 relative z-10">
-                    {/* Header Column */}
-                    <div className="md:w-1/3 space-y-6">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-900/5 dark:bg-amber-500/10 text-amber-900 dark:text-amber-500 rounded-full text-xs font-black uppercase tracking-widest border border-amber-900/10">
-                            <Sparkles size={14} className="animate-pulse" />
-                            <span>Podsumowanie Tygodnia</span>
+                <div className="flex flex-col gap-6 relative z-10 h-full">
+                    {/* Header Row */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-900/5 dark:bg-amber-500/10 text-amber-900 dark:text-amber-500 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-900/10">
+                                <Sparkles size={12} className="animate-pulse" />
+                                <span>Raport Tygodnia</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400">
+                                <Calendar size={12} />
+                                <span>Nr {summary.sitting_number}</span>
+                            </div>
                         </div>
 
                         <div>
-                            <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white leading-tight mb-2 tracking-tight">
+                            <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight mb-1 tracking-tight">
                                 Raport z Sejmu
                             </h2>
-                            <p className="text-amber-700 dark:text-amber-400 font-serif italic text-lg opacity-80">
+                            <p className="text-amber-700 dark:text-amber-400 font-serif italic text-sm opacity-80">
                                 Kluczowe decyzje i uchwały
                             </p>
                         </div>
-
-                        <div className="flex items-center gap-3 text-sm font-bold text-slate-500 dark:text-slate-400">
-                            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                <Calendar size={18} />
-                            </div>
-                            <div>
-                                <div className="uppercase tracking-wider text-[10px] opacity-60">Posiedzenie</div>
-                                <div>Nr {summary.sitting_number} (Kadencja {summary.term})</div>
-                            </div>
-                        </div>
-
-                        <div className="pt-4">
-                            <Link to="/posiedzenia/historia" className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-slate-900 dark:text-white hover:text-amber-600 dark:hover:text-amber-500 transition-colors group/btn">
-                                Zobacz pełną historię
-                                <ChevronRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
-                            </Link>
-                        </div>
                     </div>
 
-                    {/* Content Column */}
-                    <div className="md:w-2/3">
-                        <div className="prose prose-lg dark:prose-invert max-w-none prose-p:leading-relaxed prose-li:marker:text-amber-500">
+                    {/* Content Section - Compact */}
+                    <div className="flex-1 overflow-y-auto no-scrollbar pr-2">
+                        <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-li:marker:text-amber-500">
                             <ReactMarkdown
                                 components={{
-                                    ul: ({ node, ...props }) => <ul className="space-y-4 list-none pl-0 block" {...props} />,
+                                    ul: ({ node, ...props }) => <ul className="space-y-3 list-none pl-0 block" {...props} />,
                                     li: ({ node, ...props }) => (
-                                        <li className="relative pl-6 mb-4" {...props}>
-                                            <span className="absolute left-0 top-3 w-2 h-2 rounded-full bg-amber-500 mt-0.5" />
-                                            <span className="text-slate-700 dark:text-slate-300 block leading-relaxed">{props.children}</span>
+                                        <li className="relative pl-5 mb-3" {...props}>
+                                            <span className="absolute left-0 top-2.5 w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                            <span className="text-slate-700 dark:text-slate-300 block leading-relaxed text-sm">{props.children}</span>
                                         </li>
                                     ),
-                                    strong: ({ node, ...props }) => <strong className="font-black text-slate-900 dark:text-white block mb-1 text-lg tracking-tight" {...props} />,
-                                    p: ({ node, ...props }) => <span className="text-base text-slate-600 dark:text-slate-400 block" {...props} />
+                                    strong: ({ node, ...props }) => <strong className="font-black text-slate-900 dark:text-white block mb-0.5 text-base tracking-tight" {...props} />,
+                                    p: ({ node, ...props }) => <span className="text-sm text-slate-600 dark:text-slate-400 block" {...props} />
                                 }}
                             >
                                 {summary.summary_md}
                             </ReactMarkdown>
                         </div>
+                    </div>
+
+                    <div className="pt-4 mt-auto border-t border-amber-900/5 dark:border-white/5">
+                        <Link to="/posiedzenia/historia" className="text-[10px] font-black uppercase tracking-widest flex items-center justify-between text-slate-900 dark:text-white hover:text-amber-600 dark:hover:text-amber-500 transition-colors group/btn">
+                            <span>Zobacz pełną historię</span>
+                            <ChevronRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
+                        </Link>
                     </div>
                 </div>
             </div>

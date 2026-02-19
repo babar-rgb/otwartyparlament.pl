@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { FileText, Calendar, ChevronRight, ChevronLeft, ArrowRight, Network, Search, Filter } from 'lucide-react';
 import { useTerm } from '../context/TermContext';
@@ -48,20 +48,30 @@ export default function BillsList() {
 
     const { processes, totalCount, loading } = useBillsList(term, page, limit, query, typeParam);
 
+    const handleTypeSelect = (type: string) => {
+        const params: Record<string, string> = { q: query };
+        if (type) params.type = type;
+        setSearchParams(params, { preventScrollReset: true });
+        setPage(0);
+    };
+
+    const handlePrev = () => {
+        setPage(p => Math.max(0, p - 1));
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // or remove if we want pure preventScrollReset
+    };
+
+    const handleNext = () => {
+        setPage(p => p + 1);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // Note: handleSearch should also have preventScrollReset
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         const params: Record<string, string> = {};
         if (query.trim()) params.q = query;
         if (typeParam) params.type = typeParam;
-        setSearchParams(params);
-        setPage(0);
-    };
-
-    const handleTypeSelect = (type: string) => {
-        const params: Record<string, string> = {};
-        if (query.trim()) params.q = query;
-        if (type !== typeParam) params.type = type; // Toggle logic could be added here
-        setSearchParams(params);
+        setSearchParams(params, { preventScrollReset: true });
         setPage(0);
     };
 
@@ -125,10 +135,10 @@ export default function BillsList() {
                                         key={filter.value}
                                         onClick={() => handleTypeSelect(filter.value)}
                                         className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${typeParam === filter.value
-                                                ? 'bg-accent-blue text-white border-accent-blue'
-                                                : filter.value === '' && !typeParam
-                                                    ? 'bg-primary text-page border-primary'
-                                                    : 'bg-transparent text-secondary border-border-base hover:border-accent-blue hover:text-accent-blue'
+                                            ? 'bg-accent-blue text-white border-accent-blue'
+                                            : filter.value === '' && !typeParam
+                                                ? 'bg-gradient-to-r from-slate-600 to-slate-800 text-white border-transparent shadow-lg shadow-slate-900/20'
+                                                : 'bg-transparent text-secondary border-border-base hover:border-accent-blue hover:text-accent-blue'
                                             }`}
                                     >
                                         {filter.label}

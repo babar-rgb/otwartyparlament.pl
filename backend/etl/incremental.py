@@ -78,7 +78,12 @@ STATE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".etl_stat
 
 
 def load_state():
-    """Load last sync state from file."""
+    """
+    Load last sync state from JSON file.
+    
+    Returns:
+        dict: State dictionary containing 'last_sync' (map of term->sitting) and 'last_run' timestamp.
+    """
     if os.path.exists(STATE_FILE):
         with open(STATE_FILE, 'r') as f:
             return json.load(f)
@@ -93,7 +98,15 @@ def save_state(state):
 
 
 def get_latest_sitting_in_db(term: int) -> int:
-    """Get the latest sitting number we have in DB for a term."""
+    """
+    Get the latest sitting number stored in the local database for a given term.
+    
+    Args:
+        term (int): Sejm term number (e.g. 10).
+        
+    Returns:
+        int: The highest sitting number found, or 0 if no data exists.
+    """
     try:
         with db.get_cursor() as cur:
             cur.execute("SELECT MAX(sitting) FROM votes WHERE term = %s", (term,))
@@ -118,7 +131,20 @@ def get_all_sittings_from_api(term: int) -> list:
 
 
 def sync_sitting_votes(term: int, sitting_num: int) -> int:
-    """Sync votes for a specific sitting."""
+    """
+    Fetches and synchronizes all votes for a specific sitting from the Sejm API.
+    
+    1. Fetches votes metadata from /term{term}/votings/{sitting_num}.
+    2. Inserts basic vote data (title, date, verdict, counts) into 'votes' table.
+    3. Triggers 'ResultsETL' to fetch individual MP votes (who voted how).
+    
+    Args:
+        term (int): Sejm term number.
+        sitting_num (int): Sitting number.
+        
+    Returns:
+        int: Number of new/updated votes inserted.
+    """
     logger.info(f"Syncing sitting {sitting_num}...")
     
     try:
@@ -176,7 +202,15 @@ def sync_sitting_votes(term: int, sitting_num: int) -> int:
 
 
 def sync_new_mps(term: int):
-    """Sync any new MPs (quick check)."""
+    """
+    Checks for new MPs in the Sejm API and adds them to the database.
+    
+    Fetches the full list of MPs for the term and compares IDs with the local 'mps' table.
+    Updates biographical data (club, birth date, education) for new entries.
+    
+    Args:
+        term (int): Sejm term number.
+    """
     logger.info("Checking for new MPs...")
     
     try:
@@ -239,6 +273,14 @@ def sync_new_mps(term: int):
 
 
 class IncrementalETL:
+    """
+    Orchestrates the incremental synchronization process.
+    
+    Scope:
+    1. Checks for new sittings since last run.
+    2. Syncs Votes and MPs for new sittings.
+    3. Triggers secondary sub-ETLs (Bills, Interpellations, AI Enrichment).
+    """
     def __init__(self, term: int = 10):
         self.term = term
         self.term = term

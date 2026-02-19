@@ -1,13 +1,27 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Swords, TrendingDown, AlertTriangle, ScrollText, ArrowRight, Info, Activity, HandCoins, Mic } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Swords, AlertTriangle, ScrollText, ArrowRight, Info, Activity, HandCoins, Mic } from 'lucide-react';
 import Comparator from './Comparator';
 import { useRankings } from '../hooks/useRankings';
 import { RankingEntry } from '../types/domain';
 
 export default function Rankingi() {
-  const [activeTab, setActiveTab] = useState<'attendance_high' | 'attendance_low' | 'rebellion' | 'comparator' | 'legislation'>('attendance_high');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab') as any;
+
+  const [activeTab, setActiveTab] = useState<'attendance_high' | 'attendance_low' | 'rebellion' | 'comparator' | 'legislation'>(
+    ['attendance_high', 'attendance_low', 'rebellion', 'comparator', 'legislation'].includes(tabParam)
+      ? tabParam
+      : 'attendance_high'
+  );
+
   const { mps, legStats, loading } = useRankings();
+
+  // Sync state to URL
+  const handleTabChange = (newTab: typeof activeTab) => {
+    setActiveTab(newTab);
+    setSearchParams({ tab: newTab }, { preventScrollReset: true });
+  };
 
   if (loading) {
     return (
@@ -45,7 +59,6 @@ export default function Rankingi() {
 
   const tabs = [
     { id: 'attendance_high', label: 'Dyscyplina', icon: Activity },
-    { id: 'attendance_low', label: 'Absencja', icon: TrendingDown },
     { id: 'rebellion', label: 'Indywidualizm', icon: AlertTriangle },
     { id: 'legislation', label: 'Inicjatywy', icon: ScrollText },
     { id: 'comparator', label: 'Komparator', icon: Swords },
@@ -68,10 +81,10 @@ export default function Rankingi() {
         {/* Modern Header Section */}
         <div className="mb-16 relative">
           <h1 className="text-4xl md:text-7xl font-black tracking-tighter mb-6 flex flex-col md:flex-row md:items-baseline gap-4 text-primary">
-            Analityka <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-500 to-primary/40 italic font-serif">Parlamentarna</span>
+            Sejm w Liczbach
           </h1>
           <p className="text-secondary max-w-2xl text-lg font-medium leading-relaxed border-l-2 border-border-base pl-8">
-            Wielowymiarowy ranking aktywności. Przetwarzamy miliony rekordów głosowań, by dostarczyć obiektywny obraz pracy Sejmu X kadencji.
+            Wielowymiarowy ranking aktywności. Przetwarzam miliony rekordów głosowań, by dostarczyć obiektywny obraz pracy Sejmu X kadencji.
           </p>
         </div>
 
@@ -86,7 +99,7 @@ export default function Rankingi() {
                 <span className="w-8 h-[1px] bg-emerald-500/50"></span>
                 Jawność Finansowa
               </div>
-              <h3 className="text-3xl font-black mb-4 group-hover:text-emerald-600 transition-colors">Portfel Sejmu</h3>
+              <h3 className="text-3xl font-black mb-4 group-hover:text-emerald-600 transition-colors">Majątek Posłów</h3>
               <p className="text-secondary font-medium max-w-xs mb-8">Systemowa analiza oświadczeń majątkowych. Zobacz stan posiadania Twoich reprezentantów.</p>
               <ArrowRight className="text-secondary opacity-30 group-hover:text-emerald-500 group-hover:translate-x-4 transition-all duration-500" />
             </div>
@@ -101,7 +114,7 @@ export default function Rankingi() {
                 <span className="w-8 h-[1px] bg-accent-blue/50"></span>
                 Analiza Tematyczna
               </div>
-              <h3 className="text-3xl font-black mb-4 group-hover:text-accent-blue transition-colors">Analiza Retoryki</h3>
+              <h3 className="text-3xl font-black mb-4 group-hover:text-accent-blue transition-colors">Wypowiedzi</h3>
               <p className="text-secondary font-medium max-w-xs mb-8">Przeszukiwanie stenogramów wspomagane przez AI. Kto realnie dyskutuje, a kto ogranicza się do komunikatów?</p>
               <ArrowRight className="text-secondary opacity-30 group-hover:text-accent-blue group-hover:translate-x-4 transition-all duration-500" />
             </div>
@@ -115,7 +128,7 @@ export default function Rankingi() {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                onClick={() => handleTabChange(tab.id as typeof activeTab)}
                 className={`flex items-center gap-3 px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${activeTab === tab.id
                   ? 'bg-accent-blue text-white shadow-lg shadow-accent-blue/20'
                   : 'text-secondary hover:bg-accent-blue/5 hover:text-primary'
@@ -178,65 +191,85 @@ export default function Rankingi() {
               </div>
             ) : (
               /* Ranking List - Tactical Data Look */
-              <div className="space-y-1">
-                <div className="grid grid-cols-12 px-8 py-6 text-[10px] font-black uppercase tracking-[0.3em] text-secondary border-b border-border-base mb-4 opacity-50">
-                  <div className="col-span-1">RNK</div>
-                  <div className="col-span-7">Parlamentarzysta / Klub</div>
-                  <div className="col-span-4 text-right">Data Points</div>
-                </div>
-
-                <div className="space-y-3">
-                  {currentRanking.map((entry, idx) => {
-                    const maxVal = Math.max(...currentRanking.map((e) => e.value));
-                    const progress = (entry.value / (maxVal || 1)) * 100;
-                    return (
-                      <Link
-                        key={entry.id}
-                        to={`/poslowie/${entry.id}`}
-                        className="grid grid-cols-12 items-center px-8 py-6 bg-surface border border-border-base rounded-2xl hover:bg-accent-blue/5 hover:border-accent-blue/20 hover:shadow-xl transition-all group"
+              <div className="space-y-4">
+                {(activeTab === 'attendance_high' || activeTab === 'attendance_low') && (
+                  <div className="flex justify-center px-8 mb-10">
+                    <div className="bg-black/10 dark:bg-white/5 p-1.5 rounded-2xl flex gap-2 border border-border-base backdrop-blur-md">
+                      <button
+                        onClick={() => handleTabChange('attendance_high')}
+                        className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'attendance_high' ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-500/40 scale-105' : 'text-secondary hover:text-primary hover:bg-white/5'}`}
                       >
-                        <div className="col-span-1">
-                          <span className={`text-2xl font-black italic ${idx < 3 ? 'text-accent-blue' : 'text-secondary/20'}`}>
-                            {(idx + 1).toString().padStart(2, '0')}
-                          </span>
-                        </div>
+                        Najwyższa
+                      </button>
+                      <button
+                        onClick={() => handleTabChange('attendance_low')}
+                        className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'attendance_low' ? 'bg-rose-600 text-white shadow-xl shadow-rose-600/40 scale-105' : 'text-secondary hover:text-primary hover:bg-white/5'}`}
+                      >
+                        Najniższa
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <div className="space-y-1">
+                  <div className="grid grid-cols-12 px-8 py-6 text-[10px] font-black uppercase tracking-[0.3em] text-secondary border-b border-border-base mb-4 opacity-50">
+                    <div className="col-span-1"></div>
+                    <div className="col-span-7">Parlamentarzysta / Klub</div>
+                    <div className="col-span-4 text-right"></div>
+                  </div>
 
-                        <div className="col-span-7 flex items-center gap-6 min-w-0">
-                          <div className="relative shrink-0">
-                            <div className={`absolute -inset-1 rounded-full bg-accent-blue blur-md opacity-0 ${idx < 3 ? 'group-hover:opacity-30' : ''} transition-opacity`}></div>
-                            <img
-                              src={entry.photo_url || `https://ui-avatars.com/api/?name=${entry.last_name}&background=111126&color=666`}
-                              alt=""
-                              className="w-14 h-14 rounded-full object-cover border border-border-base relative z-10"
-                            />
-                          </div>
-                          <div className="truncate">
-                            <div className="text-xl font-black text-primary group-hover:text-accent-blue transition-colors flex items-center gap-4">
-                              <span className="truncate">{entry.first_name} {entry.last_name}</span>
-                              <span className={`px-3 py-1 text-[9px] font-black rounded-lg uppercase tracking-widest ${getPartyBadge(entry.club)}`}>
-                                {entry.club}
-                              </span>
-                            </div>
-                            <div className="text-[10px] text-secondary uppercase tracking-widest mt-1 font-bold">{entry.district}</div>
-                          </div>
-                        </div>
-
-                        <div className="col-span-4 flex flex-col items-end gap-2">
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-4xl font-mono font-black tabular-nums text-primary group-hover:scale-110 transition-transform origin-right">
-                              {entry.value}<span className="text-sm text-secondary">{entry.unit === '%' ? '%' : ''}</span>
+                  <div className="space-y-3">
+                    {currentRanking.map((entry, idx) => {
+                      const maxVal = Math.max(...currentRanking.map((e) => e.value));
+                      const progress = (entry.value / (maxVal || 1)) * 100;
+                      return (
+                        <Link
+                          key={entry.id}
+                          to={`/poslowie/${entry.id}`}
+                          className="grid grid-cols-12 items-center px-8 py-6 bg-surface border border-border-base rounded-2xl hover:bg-accent-blue/5 hover:border-accent-blue/20 hover:shadow-xl transition-all group"
+                        >
+                          <div className="col-span-1">
+                            <span className={`text-2xl font-black italic ${idx < 3 ? 'text-accent-blue' : 'text-secondary/20'}`}>
+                              {(idx + 1).toString().padStart(2, '0')}
                             </span>
                           </div>
-                          <div className="w-32 h-1 bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full transition-all duration-1000 ease-out ${activeTab === 'attendance_low' ? 'bg-rose-600' : 'bg-accent-blue'}`}
-                              style={{ width: `${progress}%` }}
-                            />
+
+                          <div className="col-span-7 flex items-center gap-6 min-w-0">
+                            <div className="relative shrink-0">
+                              <div className={`absolute -inset-1 rounded-full bg-accent-blue blur-md opacity-0 ${idx < 3 ? 'group-hover:opacity-30' : ''} transition-opacity`}></div>
+                              <img
+                                src={entry.photo_url || `https://ui-avatars.com/api/?name=${entry.last_name}&background=111126&color=666`}
+                                alt=""
+                                className="w-14 h-14 rounded-full object-cover border border-border-base relative z-10"
+                              />
+                            </div>
+                            <div className="truncate">
+                              <div className="text-xl font-black text-primary group-hover:text-accent-blue transition-colors flex items-center gap-4">
+                                <span className="truncate">{entry.first_name} {entry.last_name}</span>
+                                <span className={`px-3 py-1 text-[9px] font-black rounded-lg uppercase tracking-widest ${getPartyBadge(entry.club)}`}>
+                                  {entry.club}
+                                </span>
+                              </div>
+                              <div className="text-[10px] text-secondary uppercase tracking-widest mt-1 font-bold">{entry.district}</div>
+                            </div>
                           </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
+
+                          <div className="col-span-4 flex flex-col items-end gap-2">
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-4xl font-mono font-black tabular-nums text-primary group-hover:scale-110 transition-transform origin-right">
+                                {entry.value}<span className="text-sm text-secondary">{entry.unit === '%' ? '%' : ''}</span>
+                              </span>
+                            </div>
+                            <div className="w-32 h-1 bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full transition-all duration-1000 ease-out ${activeTab === 'attendance_low' ? 'bg-rose-600' : 'bg-accent-blue'}`}
+                                style={{ width: `${progress}%` }}
+                              />
+                            </div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}

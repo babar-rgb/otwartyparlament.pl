@@ -2,6 +2,18 @@ import logging
 import sys
 
 def get_logger(name: str):
+    """
+    Configure and return a standard logger with specific formatting.
+    
+    Ensures that logs are output to stdout with a consistent timestamp format.
+    Prevents duplicate handlers if called multiple times.
+    
+    Args:
+        name (str): The name of the logger (usually __name__).
+        
+    Returns:
+        logging.Logger: Configured logger instance.
+    """
     logger = logging.getLogger(name)
     if not logger.handlers:
         logger.setLevel(logging.INFO)

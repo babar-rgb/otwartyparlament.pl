@@ -42,6 +42,12 @@ app.include_router(general.router, prefix="/api", tags=["General"])
 
 @app.get("/health")
 def health_check():
+    """
+    Basic health check for the backend and database.
+    
+    Returns:
+        dict: {"status": "ok", "database": "connected"} or error details.
+    """
     from backend.core import orm_db as database
     from sqlalchemy import text
     try:
@@ -54,6 +60,12 @@ def health_check():
 
 @app.get("/health/ml")
 def check_ml_health():
+    """
+    Check the status of the Machine Learning service/embeddings.
+    
+    Returns:
+        dict: Status of the ML model loading.
+    """
     from backend.services.embedding import embedding_service
     return {
         "status": "up" if embedding_service.is_available else "down",

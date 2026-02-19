@@ -6,6 +6,7 @@ import MpCard from '../components/features/sejm/MpCard';
 import { Search, X } from 'lucide-react';
 import SEO from '../components/SEO';
 import { useMPs } from '../hooks/useMPs';
+import { getPartyStyle } from '../utils/theme';
 
 const MAJOR_CLUBS = ['KO', 'PiS', 'Polska2050', 'PSL-TD', 'Lewica', 'Konfederacja'];
 const MIN_PARTY_MAP: Record<string, string> = {
@@ -25,39 +26,33 @@ const PARTIES = [
   { id: 'INNE', name: 'INNE' },
 ];
 
-let lastScrollY = 0;
-
 export default function Poslowie() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { term } = useTerm();
   const { data: mps = [], isLoading: loading } = useMPs(term);
-  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
-  const [selectedParty, setSelectedParty] = useState<string>('');
 
-  // Handle scroll restoration
-  useEffect(() => {
-    if (mps.length > 0) {
-      const timeout = setTimeout(() => {
-        window.scrollTo(0, lastScrollY);
-      }, 100);
-      return () => clearTimeout(timeout);
-    }
-  }, [mps.length]);
+  const queryParam = searchParams.get('q') || '';
+  const partyParam = searchParams.get('party') || '';
 
-  // Save scroll position when leaving
-  useEffect(() => {
-    const handleScroll = () => {
-      lastScrollY = window.scrollY;
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
+  const [searchTerm, setSearchTerm] = useState(queryParam);
+  const [selectedParty, setSelectedParty] = useState<string>(partyParam);
+
+  // Sync state to URL and state
+  const updateFilters = (newQuery: string, newParty: string) => {
+    setSearchTerm(newQuery);
+    setSelectedParty(newParty);
+
+    const params: Record<string, string> = {};
+    if (newQuery.trim()) params.q = newQuery;
+    if (newParty) params.party = newParty;
+    setSearchParams(params, { preventScrollReset: true });
+  };
 
   useEffect(() => {
-    const query = searchParams.get('q');
-    if (query !== null) setSearchTerm(query);
+    const q = searchParams.get('q') || '';
+    const p = searchParams.get('party') || '';
+    setSearchTerm(q);
+    setSelectedParty(p);
   }, [searchParams]);
 
   const normalizePl = (str: string) => {
@@ -123,7 +118,7 @@ export default function Poslowie() {
               <div>
 
                 <h1 className="text-4xl md:text-6xl font-black text-primary mb-4 tracking-tighter">
-                  Nasi <span className="italic font-serif text-accent-blue/80">Reprezentanci</span>
+                  Posłowie
                 </h1>
                 <p className="text-secondary text-lg font-medium max-w-xl leading-relaxed">
                   Wykaz {mps.length} posłów sprawujących mandat w {term}. kadencji. Monitoruj ich aktywność i weryfikuj obietnice.
@@ -137,51 +132,49 @@ export default function Poslowie() {
         <div className="container mx-auto max-w-screen-2xl px-4 md:px-8 pt-12 space-y-16">
           {/* Filter & Search Section - Unified Style */}
           <div className="bg-surface p-6 rounded-[2rem] border border-border-base shadow-2xl backdrop-blur-xl">
-            <div className="flex flex-col gap-6">
-              <div className="flex flex-col md:flex-row gap-6">
-                <div className="relative flex-1">
-                  <div className="relative flex items-center gap-4">
-                    <Search className="text-secondary transition-colors" size={24} />
-                    <input
-                      type="text"
-                      placeholder="Szukaj posła (imię, nazwisko)..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full bg-transparent text-xl font-bold text-primary placeholder:text-slate-400 focus:outline-none"
-                    />
-                    {searchTerm && (
-                      <button onClick={() => setSearchTerm('')} className="p-2 text-secondary hover:text-primary transition-colors">
-                        <X size={20} />
-                      </button>
-                    )}
-                  </div>
+            <div className="relative group">
+              <div className="relative flex flex-col md:flex-row items-center gap-4">
+                <div className="relative flex-1 w-full flex items-center gap-4">
+                  <Search className="text-secondary transition-colors hidden md:block" size={24} />
+                  <input
+                    type="text"
+                    placeholder="Szukaj posła (imię, nazwisko)..."
+                    value={searchTerm}
+                    onChange={(e) => updateFilters(e.target.value, selectedParty)}
+                    className="w-full bg-transparent text-xl font-bold text-primary placeholder:text-slate-400 focus:outline-none py-2"
+                  />
+                  {searchTerm && (
+                    <button onClick={() => updateFilters('', selectedParty)} className="p-2 text-secondary hover:text-primary transition-colors">
+                      <X size={20} />
+                    </button>
+                  )}
                 </div>
-              </div>
 
-              {/* Party Filters */}
-              <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 border-t border-border-base/10 pt-6">
-                <button
-                  onClick={() => setSelectedParty('')}
-                  className={`px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-wider whitespace-nowrap transition-all border ${selectedParty === ''
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20'
-                    : 'bg-white/50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-white hover:text-primary transition-colors'
-                    }`}
-                >
-                  Wszyscy ({mps.length})
-                </button>
-
-                {PARTIES.map((party) => (
+                {/* Party Filters */}
+                <div className="flex w-full md:w-auto gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
                   <button
-                    key={party.id}
-                    onClick={() => setSelectedParty(party.id)}
-                    className={`px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-wider whitespace-nowrap transition-all border ${selectedParty === party.id
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20'
+                    onClick={() => updateFilters(searchTerm, '')}
+                    className={`px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-wider whitespace-nowrap transition-all border ${selectedParty === ''
+                      ? 'bg-gradient-to-r from-slate-600 to-slate-800 text-white border-transparent shadow-lg shadow-slate-900/20'
                       : 'bg-white/50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-white hover:text-primary transition-colors'
                       }`}
                   >
-                    {party.name}
+                    Wszyscy ({mps.length})
                   </button>
-                ))}
+
+                  {PARTIES.map((party) => (
+                    <button
+                      key={party.id}
+                      onClick={() => updateFilters(searchTerm, party.id)}
+                      className={`px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-wider whitespace-nowrap transition-all border ${selectedParty === party.id
+                        ? getPartyStyle(party.id)
+                        : 'bg-white/50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-white hover:text-primary transition-colors'
+                        }`}
+                    >
+                      {party.name}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

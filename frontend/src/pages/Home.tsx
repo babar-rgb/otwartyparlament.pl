@@ -146,7 +146,7 @@ export default function Home() {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setTermDropdownOpen(!termDropdownOpen)}
-                  className="flex items-center gap-2 px-4 py-2 bg-surface border border-border-base rounded-[var(--radius-badge)] hover:bg-hover transition-all shadow-sm"
+                  className="flex items-center gap-2 px-4 py-2 bg-surface border border-slate-200 dark:border-white/10 rounded-[var(--radius-badge)] hover:bg-hover transition-all shadow-sm"
                 >
                   <div className="w-2 h-2 bg-accent-blue rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
                   <span className="font-bold text-sm tracking-wide text-primary">{term} Kadencja</span>
@@ -159,7 +159,7 @@ export default function Home() {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute top-full right-0 mt-2 w-48 bg-surface border border-border-base rounded-[var(--radius-badge)] shadow-2xl overflow-hidden z-50 p-1"
+                      className="absolute top-full right-0 mt-2 w-48 bg-surface border border-slate-200 dark:border-white/10 rounded-[var(--radius-badge)] shadow-2xl overflow-hidden z-50 p-1"
                     >
                       {[10, 9].map((t) => (
                         <button
@@ -191,7 +191,7 @@ export default function Home() {
                 <input
                   type="text"
                   placeholder="Szukaj (Enter)..."
-                  className="bg-surface border border-border-base rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-accent-blue focus:ring-1 focus:ring-accent-blue transition-all w-64 text-primary placeholder:text-secondary opacity-80"
+                  className="bg-surface border border-slate-200 dark:border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-accent-blue focus:ring-1 focus:ring-accent-blue transition-all w-64 text-primary placeholder:text-secondary opacity-80"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       const target = e.target as HTMLInputElement;
@@ -208,8 +208,8 @@ export default function Home() {
             <TopVoteCard loading={loading} topVote={topVote} />
 
             {/* Session Date -> /glosowania */}
-            {loading ? <Skeleton className="bg-surface border border-border-base rounded-[2rem] h-full min-h-[160px]" /> : (
-              <Link to="/glosowania" className="bg-surface border border-border-base rounded-[2rem] p-8 flex items-center gap-5 hover:bg-black/5 dark:hover:bg-white/5 transition-all group shadow-sm">
+            {loading ? <Skeleton className="bg-surface border border-slate-200 dark:border-white/10 rounded-[2rem] h-full min-h-[160px]" /> : (
+              <Link to="/glosowania" className="bg-surface border border-slate-200 dark:border-white/10 rounded-[2rem] p-8 flex items-center gap-5 hover:bg-black/5 dark:hover:bg-white/5 transition-all group shadow-sm">
                 <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                   <Calendar className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                 </div>
@@ -221,8 +221,8 @@ export default function Home() {
             )}
 
             {/* Trending -> /kategorie */}
-            {loading ? <Skeleton className="bg-surface border border-border-base rounded-[2rem] h-full min-h-[160px]" /> : (
-              <Link to="/kategorie" className="bg-surface border border-border-base rounded-[2rem] p-8 flex items-center gap-5 hover:bg-black/5 dark:hover:bg-white/5 transition-all group shadow-sm">
+            {loading ? <Skeleton className="bg-surface border border-slate-200 dark:border-white/10 rounded-[2rem] h-full min-h-[160px]" /> : (
+              <Link to="/kategorie" className="bg-surface border border-slate-200 dark:border-white/10 rounded-[2rem] p-8 flex items-center gap-5 hover:bg-black/5 dark:hover:bg-white/5 transition-all group shadow-sm">
                 <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                   <TrendingUp className="w-6 h-6 text-amber-600 dark:text-amber-400" />
                 </div>
@@ -235,72 +235,77 @@ export default function Home() {
           </div>
 
 
-          {/* Weekly / Sitting Summary */}
-          <SittingSummaryCard />
+          {/* Main Grid: Summary + Hemicycle + Sidebar Stats */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch">
+            {/* Sejm Report (40%) */}
+            <div className="lg:col-span-2">
+              <SittingSummaryCard />
+            </div>
 
-          {/* Main Grid: Hemicycle + Activity + QuickStats */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-            {/* Left Large Card: Plenary Hall */}
-            {loading ? <Skeleton className="h-64 w-full" /> : (
-              <div className="lg:col-span-3 bg-surface border border-border-base rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden group shadow-sm">
-                {/* Background Blur decoration */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-accent-blue/10 dark:bg-accent-blue/20 blur-[100px] rounded-full pointer-events-none" />
+            {/* Plenary Hall (40%) */}
+            <div className="lg:col-span-2">
+              {loading ? (
+                <Skeleton className="h-full w-full rounded-[2.5rem] min-h-[400px]" />
+              ) : (
+                <div className="h-full bg-surface border border-slate-200 dark:border-white/10 rounded-[2.5rem] p-8 md:p-10 relative overflow-hidden group shadow-sm flex flex-col">
+                  {/* Background Blur decoration */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-accent-blue/10 dark:bg-accent-blue/20 blur-[100px] rounded-full pointer-events-none" />
 
-                <div className="flex items-center justify-between mb-12 relative z-10">
-                  <div>
-                    <h2 className="text-3xl font-black text-primary m-0">Sala Plenarna</h2>
-                    <p className="text-secondary dark:text-white/40 text-sm mt-1 uppercase tracking-widest font-bold">Rozkład głosów (Kadencja {term})</p>
+                  <div className="flex items-center justify-between mb-8 relative z-10">
+                    <div>
+                      <h2 className="text-2xl font-black text-primary m-0">Sala Plenarna</h2>
+                      <p className="text-secondary dark:text-white/40 text-[10px] mt-1 uppercase tracking-widest font-bold">Kadencja {term}</p>
+                    </div>
+                    <div className="flex bg-slate-200/50 dark:bg-white/5 p-1 rounded-xl border border-border-base relative scale-90 origin-right">
+                      <motion.div
+                        layoutId="viewModeBg"
+                        className="absolute inset-1 w-[calc(50%-4px)] bg-slate-700 dark:bg-slate-100 rounded-lg shadow-sm"
+                        initial={false}
+                        animate={{
+                          x: hemicycleMode === 'party' ? '0%' : '100%'
+                        }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
+                      <button
+                        onClick={() => setHemicycleMode('party')}
+                        className={`relative z-10 px-3 py-1.5 text-xs font-bold rounded-lg transition-colors w-20 ${hemicycleMode === 'party'
+                          ? 'text-white dark:text-black font-black'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                      >
+                        Partie
+                      </button>
+                      <button
+                        onClick={() => setHemicycleMode('vote')}
+                        className={`relative z-10 px-3 py-1.5 text-xs font-bold rounded-lg transition-colors w-20 ${hemicycleMode === 'vote'
+                          ? 'text-white dark:text-black font-black'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                      >
+                        Głosy
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex bg-surface p-1 rounded-xl border border-border-base relative">
-                    <motion.div
-                      layoutId="viewModeBg"
-                      className="absolute inset-1 w-[calc(50%-4px)] bg-black dark:bg-white rounded-lg"
-                      initial={false}
-                      animate={{
-                        x: hemicycleMode === 'party' ? '0%' : '100%'
-                      }}
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+
+                  <div className="relative flex-1 flex items-center justify-center min-h-[300px]">
+                    <SejmHemicycle
+                      mode={hemicycleMode}
+                      data={topVote?.results?.map((r: any) => ({
+                        id: r.mps?.id || r.mp_id,
+                        name: r.mps ? `${r.mps.first_name} ${r.mps.last_name}` : 'Nieznany',
+                        party: r.mps?.club || 'Niezrzeszony',
+                        photo_url: r.mps?.photo_url || '',
+                        vote: r.vote,
+                        seat_number: r.mps?.seat_number
+                      })) || []}
                     />
-                    <button
-                      onClick={() => setHemicycleMode('party')}
-                      className={`relative z-10 px-4 py-2 text-sm font-bold rounded-lg transition-colors w-24 ${hemicycleMode === 'party'
-                        ? 'text-white dark:text-black'
-                        : 'text-secondary hover:text-primary'
-                        }`}
-                    >
-                      Partie
-                    </button>
-                    <button
-                      onClick={() => setHemicycleMode('vote')}
-                      className={`relative z-10 px-4 py-2 text-sm font-bold rounded-lg transition-colors w-24 ${hemicycleMode === 'vote'
-                        ? 'text-white dark:text-black'
-                        : 'text-secondary hover:text-primary'
-                        }`}
-                    >
-                      Głosy
-                    </button>
                   </div>
                 </div>
+              )}
+            </div>
 
-                <div className="relative min-h-[400px] flex items-center justify-center">
-                  <SejmHemicycle
-                    mode={hemicycleMode}
-                    data={topVote?.results?.map((r: any) => ({
-                      id: r.mps?.id || r.mp_id,
-                      name: r.mps ? `${r.mps.first_name} ${r.mps.last_name}` : 'Nieznany',
-                      party: r.mps?.club || 'Niezrzeszony',
-                      photo_url: r.mps?.photo_url || '',
-                      vote: r.vote,
-                      seat_number: r.mps?.seat_number
-                    })) || []}
-                  />
-                </div>
-
-              </div>
-            )}
-
-            {/* Right Column: Topic of the Day Card & QuickStats */}
-            <div className="flex flex-col gap-6">
+            {/* Sidebar Stats (20%) */}
+            <div className="lg:col-span-1 flex flex-col gap-6">
               <ActivityCard loading={loading} />
               <QuickStats stats={stats} />
             </div>

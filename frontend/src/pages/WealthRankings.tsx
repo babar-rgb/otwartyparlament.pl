@@ -25,7 +25,7 @@ export default function WealthRankings() {
         fetch('/api/wealth-rankings')
             .then(res => res.json())
             .then(data => {
-                setRankings(data);
+                setRankings(Array.isArray(data) ? data : []);
                 setLoading(false);
             })
             .catch(err => {
@@ -83,8 +83,8 @@ export default function WealthRankings() {
                     <button
                         onClick={() => setSortBy('net_worth')}
                         className={`px-6 py-3 rounded-2xl text-sm font-black uppercase tracking-wider transition-all ${sortBy === 'net_worth'
-                                ? 'bg-emerald-500 text-white shadow-lg'
-                                : 'bg-surface border border-border-base text-secondary hover:bg-emerald-500/10'
+                            ? 'bg-emerald-500 text-white shadow-lg'
+                            : 'bg-surface border border-border-base text-secondary hover:bg-emerald-500/10'
                             }`}
                     >
                         <ArrowUpDown size={16} className="inline mr-2" />
@@ -93,8 +93,8 @@ export default function WealthRankings() {
                     <button
                         onClick={() => setSortBy('income')}
                         className={`px-6 py-3 rounded-2xl text-sm font-black uppercase tracking-wider transition-all ${sortBy === 'income'
-                                ? 'bg-emerald-500 text-white shadow-lg'
-                                : 'bg-surface border border-border-base text-secondary hover:bg-emerald-500/10'
+                            ? 'bg-emerald-500 text-white shadow-lg'
+                            : 'bg-surface border border-border-base text-secondary hover:bg-emerald-500/10'
                             }`}
                     >
                         <TrendingUp size={16} className="inline mr-2" />
@@ -103,8 +103,8 @@ export default function WealthRankings() {
                     <button
                         onClick={() => setSortBy('savings')}
                         className={`px-6 py-3 rounded-2xl text-sm font-black uppercase tracking-wider transition-all ${sortBy === 'savings'
-                                ? 'bg-emerald-500 text-white shadow-lg'
-                                : 'bg-surface border border-border-base text-secondary hover:bg-emerald-500/10'
+                            ? 'bg-emerald-500 text-white shadow-lg'
+                            : 'bg-surface border border-border-base text-secondary hover:bg-emerald-500/10'
                             }`}
                     >
                         <Coins size={16} className="inline mr-2" />

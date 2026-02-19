@@ -109,7 +109,7 @@ export default function Projekty() {
                 title="Projekty Ustaw - Baza Legislacyjna"
                 description="Pełna baza projektów ustaw procesowanych w Sejmie X kadencji. Śledź postępy prac legislacyjnych, od złożenia projektu po podpis Prezydenta."
             />
-            <div className="min-h-screen bg-page dashboard-mesh text-primary pt-32 pb-24 px-4 md:px-8 font-sans transition-all duration-500">
+            <div className="min-h-screen bg-page dashboard-mesh text-primary pb-24 font-sans transition-all duration-500">
                 <div className="animate-fade-in">
                     {/* Hero Section */}
                     <div className="pt-32 pb-16 px-4 md:px-8 relative overflow-hidden border-b border-border-base bg-page">
@@ -117,7 +117,7 @@ export default function Projekty() {
                             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
                                 <div className="flex-1">
                                     <h1 className="text-4xl md:text-6xl font-black text-primary mb-4 tracking-tighter">
-                                        Baza <span className="italic font-serif text-accent-blue/80">Legislacyjna</span>
+                                        Projekty
                                     </h1>
                                     <p className="text-secondary text-lg font-medium max-w-xl leading-relaxed">
                                         Przeglądaj <span className="text-primary font-black">{totalCount > 0 ? totalCount.toLocaleString() : '...'}</span> projektów ustaw i uchwał.
@@ -131,7 +131,7 @@ export default function Projekty() {
                         </div>
                     </div>
 
-                    <div className="max-w-7xl mx-auto px-4 md:px-8 mt-12">
+                    <div className="container mx-auto max-w-screen-2xl px-4 md:px-8 mt-12">
                         {/* Search Panel */}
                         <div className="bg-surface p-6 rounded-[var(--radius-card-xl)] border border-border-base mb-10 shadow-2xl backdrop-blur-md">
                             <div className="relative group">

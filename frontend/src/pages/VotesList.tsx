@@ -18,9 +18,11 @@ import { getCategoryStyles } from '../utils/voteStyles';
 import { CategoryFilterGrid } from '../components/CategoryFilterGrid';
 
 const VotesList = () => {
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const mpId = searchParams.get('mp_id');
     const rebellion = searchParams.get('rebellion') === 'true';
+    const categoryParam = searchParams.get('category') || 'ALL';
+    const sourceParam = searchParams.get('source') || 'ALL';
     const [mpName, setMpName] = useState<string | null>(null);
 
     const {
@@ -49,6 +51,33 @@ const VotesList = () => {
         setSitting
     } = useVotesList(mpId, rebellion);
 
+    // Initial sync from URL
+    useEffect(() => {
+        if (categoryParam !== 'ALL') setFilterCategory(categoryParam as any);
+    }, []);
+
+    const [filterSource, setFilterSource] = useState<'ALL' | 'LAST_SITTING'>(sourceParam as any);
+
+    // Helper to update search params
+    const updateSearchParams = (key: string, value: string) => {
+        const newParams = new URLSearchParams(searchParams);
+        if (value && value !== 'ALL') {
+            newParams.set(key, value);
+        } else {
+            newParams.delete(key);
+        }
+        setSearchParams(newParams, { preventScrollReset: true });
+    };
+
+    const handleSourceChange = (val: 'ALL' | 'LAST_SITTING') => {
+        setFilterSource(val);
+        updateSearchParams('source', val);
+    };
+
+    const handleCategoryChange = (val: string) => {
+        setFilterCategory(val as any);
+        updateSearchParams('category', val);
+    };
 
     useEffect(() => {
         if (mpId) {
@@ -57,8 +86,6 @@ const VotesList = () => {
             }).catch(console.error);
         }
     }, [mpId]);
-
-    const [filterSource, setFilterSource] = useState<'ALL' | 'LAST_SITTING'>('ALL');
 
     const displayVotes = filteredVotes.filter(vote => {
         // 1. Filter by Source (Sitting) - this is still client-side usually for "Last Sitting" tab
@@ -106,7 +133,7 @@ const VotesList = () => {
                                 {mpName ? (
                                     rebellion ? `Głosy Odrębne: ${mpName}` : `Głosowania: ${mpName}`
                                 ) : (
-                                    <>Archiwum <span className="italic font-serif text-accent-blue/80">Głosowań</span></>
+                                    <>Archiwum Głosowań</>
                                 )}
                             </h1>
                             <p className="text-secondary text-lg font-medium max-w-xl leading-relaxed">
@@ -170,9 +197,9 @@ const VotesList = () => {
                                         ].map((f) => (
                                             <button
                                                 key={f.value}
-                                                onClick={() => setFilterSource(f.value as any)}
+                                                onClick={() => handleSourceChange(f.value as any)}
                                                 className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all ${filterSource === f.value
-                                                    ? 'bg-blue-600 text-white shadow-sm'
+                                                    ? 'bg-gradient-to-r from-slate-600 to-slate-800 text-white shadow-sm'
                                                     : 'text-secondary hover:text-primary hover:bg-white/10'
                                                     }`}
                                             >
@@ -203,9 +230,9 @@ const VotesList = () => {
                                 {CATEGORY_FILTERS.map((f) => (
                                     <button
                                         key={f.value}
-                                        onClick={() => setFilterCategory(f.value as any)}
+                                        onClick={() => handleCategoryChange(f.value as any)}
                                         className={`px-3 py-1.5 rounded-lg font-bold text-[10px] uppercase tracking-wider whitespace-nowrap transition-all border ${filterCategory === f.value
-                                            ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                                            ? 'bg-gradient-to-r from-slate-600 to-slate-800 text-white border-transparent shadow-sm'
                                             : 'bg-transparent text-secondary border-transparent hover:bg-black/5 dark:hover:bg-white/5'
                                             }`}
                                     >
@@ -435,7 +462,11 @@ const VotesList = () => {
                         {hasMore && !loading && filteredVotes.length > 0 && (
                             <div className="mt-12 text-center">
                                 <button
-                                    onClick={() => setPage()}
+                                    onClick={() => {
+                                        setPage();
+                                        // Scroll is allowed on "Load more" usually, but if user wants consistency:
+                                        // but setPage here is a query refetch, which by default doesn't scroll reset if done via TanStack Query.
+                                    }}
                                     className="bg-surface hover:bg-black/5 dark:hover:bg-white/5 border border-border-base px-8 py-4 rounded-2xl font-bold text-primary transition-all hover:scale-105 active:scale-95 shadow-sm"
                                 >
                                     Wczytaj więcej głosowań

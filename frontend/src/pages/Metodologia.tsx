@@ -140,7 +140,7 @@ export default function Metodologia() {
                         Wersja Metodologii 1.1
                     </div>
                     <h1 className="text-5xl md:text-7xl font-black text-primary mb-8 tracking-tighter leading-tight">
-                        Jak <span className="italic font-serif text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-indigo-500">Działam.</span>
+                        Jak Działam.
                     </h1>
                     <p className="text-xl text-secondary max-w-3xl mx-auto leading-relaxed font-medium">
                         Otwarty Parlament to projekt oparty na faktach. Nie interpretuję polityki – pokazuję twarde dane. Poniżej wyjaśniam po ludzku, skąd je biorę i jak dbam o ich rzetelność.

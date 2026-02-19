@@ -10,7 +10,7 @@ from backend.core import orm_db as database
 
 router = APIRouter()
 
-@router.get("/api/wealth-rankings")
+@router.get("/wealth-rankings")
 def get_wealth_rankings(db: Session = Depends(database.get_db)):
     """
     Get wealth rankings from parsed asset declarations

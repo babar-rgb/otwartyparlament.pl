@@ -16,10 +16,10 @@ export default function CommitteeHero({ committeeCount }: CommitteeHeroProps) {
                     <div>
 
                         <h1 className="text-4xl md:text-6xl font-black text-primary mb-4 tracking-tighter">
-                            Komisje <span className="italic font-serif opacity-60">Sejmowe</span>
+                            Komisje Sejmowe
                         </h1>
                         <p className="text-secondary text-lg font-medium max-w-xl leading-relaxed">
-                            Przegląd prac {committeeCount} komisji sejmowych w {term}. kadencji. Monitoruj posiedzenia, składy i postępy legislacyjne.
+                            Wielowymiarowy przegląd prac {committeeCount} komisji sejmowych w {term}. kadencji. Monitoruj posiedzenia, składy i postępy legislacyjne.
                         </p>
                     </div>
                     <TermSwitcher />

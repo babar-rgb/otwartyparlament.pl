@@ -3,7 +3,7 @@ import SEO from '../components/SEO';
 
 export default function OProjekcie() {
   return (
-    <div className="min-h-screen bg-page pt-32 pb-16 px-4 md:px-8 transition-colors duration-300">
+    <div className="min-h-screen bg-page dashboard-mesh pt-32 pb-16 px-4 md:px-8 transition-colors duration-300">
       <SEO
         title="O Projekcie"
         description="Misją Otwartego Parlamentu jest zwiększenie przejrzystości procesu legislacyjnego poprzez analityczne podejście do danych publicznych."
@@ -16,53 +16,53 @@ export default function OProjekcie() {
             <Target size={14} />
             <span>Moja Misja</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-black text-primary mb-6 tracking-tight leading-tight">
+          <h1 className="text-4xl md:text-7xl font-black text-primary mb-6 tracking-tighter leading-none animate-fade-in-up">
             O projekcie <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-rose-500 underline decoration-red-500/20 underline-offset-8">Otwarty Parlament.</span>
+            Otwarty Parlament.
           </h1>
-          <p className="text-lg md:text-xl text-secondary max-w-2xl leading-relaxed">
+          <p className="text-lg md:text-xl text-secondary max-w-2xl leading-relaxed animate-fade-in-up delay-75">
             Ta strona powstała, żebyś nie musiał sam przebijać się przez tysiące dokumentów na oficjalnych stronach Sejmu. Zbieram je w jednym miejscu i pokazuję w czytelny sposób, bez politycznego komentarza.
           </p>
         </div>
 
         {/* Strategic Pillars */}
         <div className="grid md:grid-cols-2 gap-8 mb-24">
-          <div className="p-8 rounded-3xl bg-surface border border-border-base shadow-sm hover:shadow-md transition-all group">
-            <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center mb-6 text-accent-blue">
+          <div className="p-8 rounded-[2rem] bg-surface/80 border border-white/10 shadow-xl backdrop-blur-xl hover:shadow-2xl hover:shadow-accent-blue/5 hover:-translate-y-1 transition-all group">
+            <div className="w-12 h-12 bg-accent-blue/10 rounded-2xl flex items-center justify-center mb-6 text-accent-blue">
               <Zap size={24} />
             </div>
-            <h3 className="text-xl font-bold text-primary mb-3">Informacje dla każdego</h3>
-            <p className="text-secondary leading-relaxed text-sm">
+            <h3 className="text-xl font-black text-primary mb-3">Informacje dla każdego</h3>
+            <p className="text-secondary leading-relaxed text-sm font-medium">
               Sejmowe dokumenty bywają trudne. Ja je upraszczam – używam technologii, by każdy mógł szybko zrozumieć, o czym jest dany projekt ustawy, bez czytania setek stron prawniczego żargonu.
             </p>
           </div>
 
-          <div className="p-8 rounded-3xl bg-surface border border-border-base shadow-sm hover:shadow-md transition-all group">
-            <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center mb-6 text-emerald-600 dark:text-emerald-400">
+          <div className="p-8 rounded-[2rem] bg-surface/80 border border-white/10 shadow-xl backdrop-blur-xl hover:shadow-2xl hover:shadow-accent-blue/5 hover:-translate-y-1 transition-all group">
+            <div className="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-6 text-purple-600 dark:text-purple-400">
               <Lock size={24} />
             </div>
-            <h3 className="text-xl font-bold text-primary mb-3">Twoja prywatność</h3>
-            <p className="text-secondary leading-relaxed text-sm">
+            <h3 className="text-xl font-black text-primary mb-3">Twoja prywatność</h3>
+            <p className="text-secondary leading-relaxed text-sm font-medium">
               Wierzę, że sprawdzanie polityków nie powinno wiązać się ze śledzeniem Ciebie. Nie mam reklam ani skryptów, które zbierają Twoje dane. To, co tutaj robisz, zostaje u Ciebie.
             </p>
           </div>
 
-          <div className="p-8 rounded-3xl bg-surface border border-border-base shadow-sm hover:shadow-md transition-all group">
-            <div className="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center mb-6 text-purple-600 dark:text-purple-400">
+          <div className="p-8 rounded-[2rem] bg-surface/80 border border-white/10 shadow-xl backdrop-blur-xl hover:shadow-2xl hover:shadow-accent-blue/5 hover:-translate-y-1 transition-all group">
+            <div className="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center mb-6 text-indigo-600 dark:text-indigo-400">
               <Users size={24} />
             </div>
-            <h3 className="text-xl font-bold text-primary mb-3">Pełna niezależność</h3>
-            <p className="text-secondary leading-relaxed text-sm">
+            <h3 className="text-xl font-black text-primary mb-3">Pełna niezależność</h3>
+            <p className="text-secondary leading-relaxed text-sm font-medium">
               Jako niezależny twórca, nie słucham żadnej partii ani korporacji. Kod jest otwarty (open-source), więc każdy może sprawdzić, że moje algorytmy nie są stronnicze.
             </p>
           </div>
 
-          <div className="p-8 rounded-3xl bg-surface border border-border-base shadow-sm hover:shadow-md transition-all group">
-            <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center mb-6 text-amber-600 dark:text-amber-500">
+          <div className="p-8 rounded-[2rem] bg-surface/80 border border-white/10 shadow-xl backdrop-blur-xl hover:shadow-2xl hover:shadow-accent-blue/5 hover:-translate-y-1 transition-all group">
+            <div className="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center mb-6 text-blue-600 dark:text-blue-500">
               <FileText size={24} />
             </div>
-            <h3 className="text-xl font-bold text-primary mb-3">Dane z samego źródła</h3>
-            <p className="text-secondary leading-relaxed text-sm">
+            <h3 className="text-xl font-black text-primary mb-3">Dane z samego źródła</h3>
+            <p className="text-secondary leading-relaxed text-sm font-medium">
               Wszystkie liczby i statystyki pochodzą prosto z serwerów Sejmu RP. Dzięki temu nie ma tu pomyłek ani fałszywych informacji – pokazuję tylko to, co faktycznie się wydarzyło.
             </p>
           </div>

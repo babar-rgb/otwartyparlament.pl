@@ -10,6 +10,7 @@ export interface RankingMP {
     photo_url: string;
     stats_attendance: number;
     stats_rebellion: number;
+    active: boolean;
 }
 
 export interface LegStat {
@@ -36,7 +37,8 @@ export function useRankings() {
                 district: m.district,
                 photo_url: m.photo_url,
                 stats_attendance: m.attendanceRate || 0,
-                stats_rebellion: m.rebelVotes || 0
+                stats_rebellion: m.rebelVotes || 0,
+                active: m.active ?? true
             }));
 
             const processes = processesRes.items;

@@ -37,6 +37,14 @@ class GeminiService:
     def generate_simple_title(self, original_title: str, description: str = "", bill_content: str = "") -> str:
         """
         Generates a simplified, human-readable title for a vote using Gemini.
+        
+        Args:
+            original_title (str): The official, bureaucratic title from Sejm API.
+            description (str, optional): Additional description.
+            bill_content (str, optional): Full text of the bill (truncated automatically).
+            
+        Returns:
+            str: A short, punchy title (e.g. "Wakacje Kredytowe") or original if AI fails.
         """
         if not self.model:
             return original_title
@@ -84,8 +92,19 @@ class GeminiService:
 
     def analyze_expert(self, title: str, description: str, bill_text: Optional[str] = None, doc_type: str = "vote") -> Dict[str, Any]:
         """
-        Expert analysis for Votes, Bills, or Interpellations.
-        doc_type: 'vote', 'bill', 'interpellation'
+        Performs a deep expert analysis of a legislative document.
+        
+        Selects the appropriate model (Flash/Pro) based on complexity.
+        Generates a JSON report containing summaries, pros/cons, and impact analysis.
+        
+        Args:
+            title (str): Document title.
+            description (str): Document description.
+            bill_text (str, optional): Full text content.
+            doc_type (str): Type of document ('vote', 'bill', 'interpellation').
+            
+        Returns:
+            dict: Structured analysis (JSON) or None on failure.
         """
         complexity = self._assess_complexity(title, description, bill_text)
         
@@ -281,7 +300,14 @@ class GeminiService:
 
     def generate_summary(self, bill_content: str, title: str = "") -> Dict[str, str]:
         """
-        Generates dual-layer summary (Simple + Expert).
+        Generates a dual-layer summary (Simple + Expert) for a bill.
+        
+        Args:
+            bill_content (str): Text content of the bill.
+            title (str): Title of the bill.
+            
+        Returns:
+            dict: {"simple": "...", "expert": "..."}
         """
         if not self.model: return {"simple": "Brak.", "expert": "Brak."}
         try:
@@ -315,7 +341,13 @@ class GeminiService:
 
     def generate_pros_cons(self, bill_content: str) -> Dict[str, Any]:
         """
-        Expert Pros & Cons with 'Confidence Score' and 'Source Citation'.
+        Extracts key arguments For and Against from the bill text.
+        
+        Args:
+            bill_content (str): Text content.
+            
+        Returns:
+            dict: {"pros": [...], "cons": [...], "confidence_score": int}
         """
         if not self.model: return {"pros": [], "cons": []}
         try:
@@ -345,8 +377,16 @@ class GeminiService:
 
     def generate_seo_metadata(self, title: str, description: str, bill_content: str = "") -> Dict[str, Any]:
         """
-        Generates SEO metadata (Street Title, Meta Description, Keywords) for Programmatic SEO.
-        "Language of the Street" Prompt.
+        Generates SEO-friendly metadata for a page.
+        
+        Translates bureaucratic language into "Language of the Street" (search terms).
+        
+        Args:
+            title (str): Original title.
+            description (str): Original description.
+            
+        Returns:
+            dict: {"street_title": "...", "meta_description": "...", "keywords": [...]}
         """
         if not self.model: return {"street_title": title, "meta_description": "", "keywords": []}
         

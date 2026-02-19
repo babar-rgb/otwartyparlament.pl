@@ -50,8 +50,13 @@ export default function InterpellationsList() {
         const params: Record<string, string> = {};
         if (query.trim()) params.q = query;
         if (mpIdFilter) params.mp_id = mpIdFilter;
-        setSearchParams(params);
+        setSearchParams(params, { preventScrollReset: true });
         setPage(1);
+    };
+
+    const handlePageChange = (newPage: number) => {
+        setPage(newPage);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     useEffect(() => {
@@ -67,7 +72,7 @@ export default function InterpellationsList() {
             />
             <div className="animate-fade-in">
                 {/* Hero Section */}
-                <div className="pt-32 pb-16 px-4 md:px-8 relative overflow-hidden border-b border-border-base bg-page">
+                <div className="pt-32 pb-12 px-4 md:px-8 relative overflow-hidden border-b border-border-base bg-page">
                     <div className="max-w-7xl mx-auto relative z-10">
                         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
                             <div className="flex-1">
@@ -82,9 +87,9 @@ export default function InterpellationsList() {
                     </div>
                 </div>
 
-                <div className="max-w-7xl mx-auto px-4 md:px-8 mt-12">
+                <div className="max-w-7xl mx-auto px-4 md:px-8 -mt-8 relative z-20">
                     {/* Search Panel */}
-                    <div className="bg-surface p-6 rounded-[var(--radius-card-xl)] border border-border-base mb-10 shadow-2xl backdrop-blur-md">
+                    <div className="bg-surface p-6 rounded-[2rem] border border-border-base mb-10 shadow-2xl backdrop-blur-md">
                         <form onSubmit={handleSearch} className="relative group">
                             <div className="relative flex items-center gap-4">
                                 <Search className="text-secondary/30" size={24} />
@@ -189,8 +194,7 @@ export default function InterpellationsList() {
                             <div className="flex justify-center items-center gap-4 pt-8">
                                 <button
                                     onClick={() => {
-                                        setPage(p => Math.max(1, p - 1));
-                                        window.scrollTo({ top: 0, behavior: 'instant' });
+                                        handlePageChange(Math.max(1, page - 1));
                                     }}
                                     disabled={page === 1 || loading}
                                     className="px-6 py-3 rounded-xl bg-surface border border-border-base hover:bg-black/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-black text-xs uppercase tracking-widest"
@@ -202,8 +206,7 @@ export default function InterpellationsList() {
                                 </span>
                                 <button
                                     onClick={() => {
-                                        setPage(p => p + 1);
-                                        window.scrollTo({ top: 0, behavior: 'instant' });
+                                        handlePageChange(page + 1);
                                     }}
                                     disabled={loading || interpellations.length < ITEMS_PER_PAGE}
                                     className="px-6 py-3 rounded-xl bg-surface border border-border-base hover:bg-black/5 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-black text-xs uppercase tracking-widest"
