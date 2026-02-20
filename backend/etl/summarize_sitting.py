@@ -20,16 +20,18 @@ class SittingSummarizer:
         self.gemini = gemini_service
 
     def get_sitting_votes(self, term, sitting):
-        """Fetch important votes for a sitting."""
+        """Fetch important votes for a sitting, prioritizing high importance and bills."""
         query = """
             SELECT 
-                COALESCE(title_clean, title_raw) as title, 
-                topic_tag, 
-                description as ai_summary, 
+                id,
+                COALESCE(street_title, title_clean, title_raw) as title, 
+                topic as topic_tag, 
+                ai_summary, 
                 verdict,
-                CASE WHEN COALESCE(title_clean, title_raw) ILIKE '%%ustawa%%' THEN 2 ELSE 1 END as weight
+                importance as importance_score,
+                CASE WHEN COALESCE(title_clean, title_raw) ILIKE '%%ustawa%%' THEN 5 ELSE 0 END + COALESCE(importance, 0) as weight
             FROM votes 
-            WHERE term = %s AND sitting = %s
+            WHERE term = %s AND sitting = %s AND is_procedural = False
             ORDER BY weight DESC, created_at DESC
             LIMIT 20
         """
@@ -85,15 +87,20 @@ class SittingSummarizer:
         summary_data = self.gemini.generate_summary(context_str, title=f"Posiedzenie {sitting}")
         return summary_data.get('expert')
 
-    def save_summary(self, term, sitting, summary):
-        """Save the generated summary to the database."""
+    def save_summary(self, term, sitting, summary, top_votes=None):
+        """Save the generated summary and top votes to the database."""
+        import json
         query = """
-            INSERT INTO sitting_summaries (term, sitting_number, summary_md, updated_at)
-            VALUES (%s, %s, %s, NOW())
+            INSERT INTO sitting_summaries (term, sitting_number, summary_md, top_votes, updated_at)
+            VALUES (%s, %s, %s, %s, NOW())
             ON CONFLICT (term, sitting_number) 
-            DO UPDATE SET summary_md = EXCLUDED.summary_md, updated_at = NOW();
+            DO UPDATE SET 
+                summary_md = EXCLUDED.summary_md, 
+                top_votes = EXCLUDED.top_votes,
+                updated_at = NOW();
         """
-        self.db.execute(query, (term, sitting, summary))
+        top_votes_json = json.dumps(top_votes) if top_votes else None
+        self.db.execute(query, (term, sitting, summary, top_votes_json))
         logger.info(f"Saved summary for Term {term}, Sitting {sitting}")
 
 
@@ -113,7 +120,17 @@ class SittingSummarizer:
             logger.info(f"Generating summary for latest sitting: Term {term}, Sitting {sitting}")
             summary = self.generate_summary(term, sitting)
             if summary:
-                self.save_summary(term, sitting, summary)
+                # Store top 3 most important votes specifically
+                top_3 = []
+                for v in votes[:3]:
+                    top_3.append({
+                        "id": v['id'],
+                        "title": v['title'],
+                        "verdict": v['verdict'],
+                        "importance": v['importance_score']
+                    })
+                
+                self.save_summary(term, sitting, summary, top_votes=top_3)
                 print(f"Summary generated for Sitting {sitting}")
                 print(summary)
         else:

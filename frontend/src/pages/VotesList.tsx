@@ -276,9 +276,9 @@ const VotesList = () => {
                                             </select>
                                         </div>
 
-                                        <div className="flex flex-col gap-3 pt-2">
-                                            <label className="flex items-center gap-3 cursor-pointer group select-none" onClick={(e) => e.stopPropagation()}>
-                                                <div className={`w-9 h-5 rounded-full transition-colors duration-200 ease-in-out relative ${showProcedural ? 'bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.3)]' : 'bg-slate-200 dark:bg-slate-700'}`}>
+                                        <div className="flex flex-col md:flex-row gap-6 pt-2 md:col-span-2">
+                                            <label className="flex items-center gap-3 cursor-pointer group select-none" title="Pokaż wnioski formalne, odroczenia i inne techniczne głosowania">
+                                                <div className={`w-9 h-5 rounded-full transition-colors duration-200 ease-in-out relative ${showProcedural ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.3)]' : 'bg-slate-200 dark:bg-slate-700'}`}>
                                                     <input
                                                         type="checkbox"
                                                         checked={!!showProcedural}
@@ -287,7 +287,10 @@ const VotesList = () => {
                                                     />
                                                     <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 ease-in-out ${showProcedural ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
                                                 </div>
-                                                <span className="text-[10px] font-black text-secondary tracking-widest uppercase group-hover:text-primary transition-colors whitespace-nowrap">Proceduralne</span>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-black text-secondary tracking-widest uppercase group-hover:text-primary transition-colors whitespace-nowrap">Tryb Analityczny</span>
+                                                    <span className="text-[8px] font-bold text-secondary/50 uppercase tracking-tight">Pokaż wnioski formalne</span>
+                                                </div>
                                             </label>
 
                                             <label className="flex items-center gap-3 cursor-pointer group select-none">
@@ -300,7 +303,10 @@ const VotesList = () => {
                                                     />
                                                     <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 ease-in-out ${groupVotes ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
                                                 </div>
-                                                <span className="text-[10px] font-black text-secondary tracking-widest uppercase group-hover:text-primary transition-colors whitespace-nowrap">Grupuj ustawy</span>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-black text-secondary tracking-widest uppercase group-hover:text-primary transition-colors whitespace-nowrap">Grupuj ustawy</span>
+                                                    <span className="text-[8px] font-bold text-secondary/50 uppercase tracking-tight">Ukryj szum poprawek</span>
+                                                </div>
                                             </label>
                                         </div>
                                     </div>
@@ -339,8 +345,13 @@ const VotesList = () => {
                                             <Link
                                                 key={vote.id}
                                                 to={`/glosowania/${vote.term}/${vote.sitting}/${vote.voting_number}`}
-                                                className={`group bg-surface hover:bg-hover border transition-all shadow-sm hover:shadow-xl hover:shadow-accent-blue/5 p-6 rounded-[var(--radius-card-md)] ${styles.border} ${styles.bg}`}
+                                                className={`group bg-surface hover:bg-hover border transition-all shadow-sm hover:shadow-xl hover:shadow-accent-blue/5 p-6 rounded-[var(--radius-card-md)] ${styles.border} ${styles.bg} ${vote.is_procedural ? 'opacity-60 grayscale-[0.5]' : ''}`}
                                             >
+                                                {vote.is_procedural && (
+                                                    <div className="mb-4 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-[10px] font-black uppercase tracking-wider">
+                                                        Głosowanie Proceduralne
+                                                    </div>
+                                                )}
                                                 <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
                                                     {/* Light Circle Date Badge */}
                                                     <div className={`flex flex-col items-center justify-center w-16 h-16 rounded-full shrink-0 transition-all border relative overflow-hidden group-hover:scale-105 ${styles.border} ${styles.badge}`}>
@@ -480,7 +491,7 @@ const VotesList = () => {
                         <UpcomingSittings isOpen={isCalendarOpen} onToggle={() => setIsCalendarOpen(!isCalendarOpen)} />
                     </div>
                 </div>
-            </div>
+            </div >
         </div >
     );
 };

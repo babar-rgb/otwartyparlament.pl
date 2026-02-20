@@ -3,6 +3,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { fetchVotes as apiFetchVotes } from '../api';
 import { useTerm } from '../context/TermContext';
 import { browserAI } from '../services/BrowserAI';
+import { groupVotesGlobally, VoteItem as GroupedVoteItem } from '../utils/voteGrouping';
 
 export interface VoteItem {
     id: number;
@@ -82,7 +83,7 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
                 q: searchQuery || undefined,
                 vector: vector, // Pass vector to API
                 hide_procedural: !showProcedural,
-                grouped: groupVotes,
+                grouped: false, // We handle grouping on the frontend now for better control
                 category: filterCategory === 'ALL' ? undefined : filterCategory,
                 topic: filterTopic
             });
@@ -104,10 +105,22 @@ export function useVotesList(mpId?: string | null, rebellion?: boolean) {
 
     const { filteredVotes, isContextualSearch } = useMemo(() => {
         // Semantic Search is handled by Backend (pgvector)
-        // We just verify if we are in search mode for UI styling
         const isSearch = searchQuery.trim().length > 0;
-        return { filteredVotes: allVotes, isContextualSearch: isSearch };
-    }, [searchQuery, allVotes]);
+
+        // Apply our New Global Grouping Logic if enabled
+        let processedVotes = allVotes;
+
+        if (groupVotes && !isSearch) {
+            processedVotes = groupVotesGlobally(allVotes as any) as any;
+        }
+
+        // Apply procedural filter if needed (frontend backup)
+        if (!showProcedural && !isSearch) {
+            processedVotes = processedVotes.filter(v => !v.is_procedural);
+        }
+
+        return { filteredVotes: processedVotes, isContextualSearch: isSearch };
+    }, [searchQuery, allVotes, groupVotes, showProcedural]);
 
     if (error) {
         console.error('Error fetching votes list:', error);

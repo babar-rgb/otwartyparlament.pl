@@ -181,7 +181,8 @@ def sync_sitting_votes(term: int, sitting_num: int) -> int:
                         details_json = EXCLUDED.details_json,
                         link_sejm = EXCLUDED.link_sejm;
                 """
-                details = json.dumps({"yes": yes, "no": no, "abstain": abstain})
+                # Store full API details for better grouping/analysis
+                details = json.dumps(vote)
                 cur.execute(sql, (vote_id, sitting_num, vote_num, date, title, title, verdict, term, details, link_sejm))
                 inserted += 1
         

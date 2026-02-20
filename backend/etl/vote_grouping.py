@@ -92,6 +92,17 @@ class VoteGroupingETL:
         return match.group(1) if match else None
 
     def are_related(self, v1, v2):
+        # 0. Check for "Punkt" in details_json (Most reliable if available)
+        d1 = v1.details_json or {}
+        d2 = v2.details_json or {}
+        
+        # Sejm API often puts stuff like "1. Pierwsze czytanie..." in 'topic'
+        point1 = d1.get('topic', '').split('.')[0] if '.' in d1.get('topic', '') else None
+        point2 = d2.get('topic', '').split('.')[0] if '.' in d2.get('topic', '') else None
+        
+        if point1 and point2 and point1.isdigit() and point2.isdigit():
+            if point1 == point2: return True
+
         # Rule A: Same Print Number
         p1 = self.get_print_number(v1)
         p2 = self.get_print_number(v2)
@@ -102,6 +113,12 @@ class VoteGroupingETL:
         t1 = (v1.title_clean or v1.title_raw or "").strip().lower()
         t2 = (v2.title_clean or v2.title_raw or "").strip().lower()
         
+        # Rule C: Smart Topic Check from Sejm API
+        topic1 = d1.get('topic', '')
+        topic2 = d2.get('topic', '')
+        if topic1 and topic2 and topic1 == topic2:
+            return True
+
         limit = min(len(t1), len(t2))
         match_len = 0
         for i in range(limit):
@@ -114,10 +131,6 @@ class VoteGroupingETL:
             
         # Fallback: AI Semantic Check
         if len(t1) > 20 and len(t2) > 20:
-             # We assume gemini_service handles caching/rate limits
-             # But for incremental runs, we might want to be careful.
-             # Ideally we only call this if recently fetched.
-             # For now, we trust the service.
              try:
                 is_same = gemini_service.compare_titles(t1, t2)
                 if is_same:

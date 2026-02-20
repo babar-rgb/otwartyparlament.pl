@@ -135,10 +135,10 @@ const SittingSummaryCard: React.FC = () => {
                                             {vote.title}
                                         </span>
                                         <div className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg ${['Uchwalono', 'PRZYJĘTO'].includes(vote.verdict)
-                                                ? 'bg-emerald-500/10 text-emerald-600'
-                                                : ['Odrzucono', 'ODRZUCONO'].includes(vote.verdict)
-                                                    ? 'bg-rose-500/10 text-rose-600'
-                                                    : 'bg-amber-500/10 text-amber-600'
+                                            ? 'bg-emerald-500/10 text-emerald-600'
+                                            : ['Odrzucono', 'ODRZUCONO'].includes(vote.verdict)
+                                                ? 'bg-rose-500/10 text-rose-600'
+                                                : 'bg-amber-500/10 text-amber-600'
                                             }`}>
                                             {['Uchwalono', 'PRZYJĘTO'].includes(vote.verdict) ? 'ZA' : ['Odrzucono', 'ODRZUCONO'].includes(vote.verdict) ? 'PRZECIW' : '?'}
                                         </div>
