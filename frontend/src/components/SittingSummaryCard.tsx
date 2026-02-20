@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Calendar, Sparkles, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { useTerm } from '../context/TermContext';
 import { API_URL } from '../api';
@@ -20,6 +20,7 @@ interface SittingSummary {
 
 const SittingSummaryCard: React.FC = () => {
     const { term } = useTerm();
+    const navigate = useNavigate();
     const [summary, setSummary] = useState<SittingSummary | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -54,6 +55,10 @@ const SittingSummaryCard: React.FC = () => {
         fetchSummary();
     }, [term]);
 
+    const handleCardClick = () => {
+        navigate("/posiedzenia/historia");
+    };
+
 
     if (loading) return (
         <div className="mb-12 p-8 bg-surface border border-border-base rounded-[2.5rem] animate-pulse">
@@ -65,7 +70,10 @@ const SittingSummaryCard: React.FC = () => {
     if (!summary) return null;
 
     return (
-        <Link to="/posiedzenia/historia" className="relative group/card h-full block">
+        <div
+            onClick={handleCardClick}
+            className="relative group/card h-full block cursor-pointer transition-transform active:scale-[0.99]"
+        >
             <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-purple-600/10 rounded-[2.5rem] blur-2xl opacity-20 group-hover/card:opacity-40 transition-opacity duration-700" />
 
             <div className="relative h-full bg-[#FFFAF0] dark:bg-[#1a1625] rounded-[2.5rem] border border-amber-900/10 dark:border-purple-500/20 shadow-xl overflow-hidden flex flex-col group-hover/card:bg-amber-500/5 dark:group-hover/card:bg-purple-500/5 transition-colors">
@@ -126,26 +134,36 @@ const SittingSummaryCard: React.FC = () => {
                                 Kluczowe Głosowania
                             </h4>
                             <div className="space-y-2">
-                                {summary.top_votes.map(vote => (
-                                    <Link
-                                        key={vote.id}
-                                        to={`/glosowanie/${vote.id}`}
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="flex items-center justify-between p-2.5 rounded-xl bg-white/50 dark:bg-black/20 hover:bg-white dark:hover:bg-white/5 border border-amber-900/5 dark:border-white/5 transition-all group/vote"
-                                    >
-                                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate max-w-[180px] md:max-w-[220px]">
-                                            {cleanTitle(vote.title)}
-                                        </span>
-                                        <div className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg ${['Uchwalono', 'PRZYJĘTO'].includes(vote.verdict)
-                                            ? 'bg-emerald-500/10 text-emerald-600'
-                                            : ['Odrzucono', 'ODRZUCONO'].includes(vote.verdict)
-                                                ? 'bg-rose-500/10 text-rose-600'
-                                                : 'bg-amber-500/10 text-amber-600'
-                                            }`}>
-                                            {['Uchwalono', 'PRZYJĘTO'].includes(vote.verdict) ? 'ZA' : ['Odrzucono', 'ODRZUCONO'].includes(vote.verdict) ? 'PRZECIW' : '?'}
-                                        </div>
-                                    </Link>
-                                ))}
+                                {summary.top_votes.map(vote => {
+                                    const vLower = vote.verdict.toLowerCase();
+                                    const isAccepted = vLower.includes('uchwalon') || vLower.includes('przyjęt') || vLower.includes('za');
+                                    const isRejected = vLower.includes('odrzucon') || vLower.includes('przeciw');
+
+                                    return (
+                                        <Link
+                                            key={vote.id}
+                                            to={`/glosowanie/${vote.id}`}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="flex items-center justify-between p-3 rounded-xl bg-white/50 dark:bg-black/20 hover:bg-white dark:hover:bg-white/10 hover:shadow-md border border-amber-900/5 dark:border-white/5 transition-all group/vote"
+                                        >
+                                            <div className="flex items-center gap-3 overflow-hidden">
+                                                <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black ${isAccepted ? 'bg-emerald-500/10 text-emerald-600' :
+                                                    isRejected ? 'bg-rose-500/10 text-rose-600' :
+                                                        'bg-amber-500/10 text-amber-600'
+                                                    }`}>
+                                                    {isAccepted ? 'ZA' : isRejected ? 'PRZECIW' : '?'}
+                                                </div>
+                                                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate max-w-[180px] md:max-w-[300px]">
+                                                    {cleanTitle(vote.title)}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-1 text-[10px] font-black text-slate-400 opacity-0 group-hover/vote:opacity-100 transition-opacity">
+                                                <span>SZCZEGÓŁY</span>
+                                                <ChevronRight size={12} />
+                                            </div>
+                                        </Link>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
@@ -158,7 +176,7 @@ const SittingSummaryCard: React.FC = () => {
                     </div>
                 </div>
             </div>
-        </Link>
+        </div>
     );
 };
 
