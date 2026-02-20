@@ -86,14 +86,15 @@ const SittingSummaryCard: React.FC = () => {
                             </div>
                         </div>
 
-                        <div>
-                            <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight mb-1 tracking-tight">
+                        <Link to="/posiedzenia/historia" className="block group/title">
+                            <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight mb-1 tracking-tight group-hover/title:text-amber-600 dark:group-hover/title:text-amber-500 transition-colors">
                                 Raport z Sejmu
                             </h2>
-                            <p className="text-amber-700 dark:text-amber-400 font-serif italic text-sm opacity-80">
+                            <p className="text-amber-700 dark:text-amber-400 font-serif italic text-sm opacity-80 flex items-center gap-1">
                                 Kluczowe decyzje i uchwały
+                                <ChevronRight size={14} className="opacity-0 -translate-x-2 group-hover/title:opacity-100 group-hover/title:translate-x-0 transition-all" />
                             </p>
-                        </div>
+                        </Link>
                     </div>
 
                     {/* Content Section - Compact */}
