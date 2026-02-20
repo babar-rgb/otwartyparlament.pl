@@ -65,37 +65,37 @@ const SittingSummaryCard: React.FC = () => {
     if (!summary) return null;
 
     return (
-        <div className="relative group h-full">
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-purple-600/10 rounded-[2.5rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-700" />
+        <Link to="/posiedzenia/historia" className="relative group/card h-full block">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-purple-600/10 rounded-[2.5rem] blur-2xl opacity-20 group-hover/card:opacity-40 transition-opacity duration-700" />
 
-            <div className="relative h-full bg-[#FFFAF0] dark:bg-[#1a1625] rounded-[2.5rem] p-6 md:p-8 border border-amber-900/10 dark:border-purple-500/20 shadow-xl overflow-hidden flex flex-col">
+            <div className="relative h-full bg-[#FFFAF0] dark:bg-[#1a1625] rounded-[2.5rem] border border-amber-900/10 dark:border-purple-500/20 shadow-xl overflow-hidden flex flex-col group-hover/card:bg-amber-500/5 dark:group-hover/card:bg-purple-500/5 transition-colors">
                 {/* Decorative background elements */}
                 <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl opacity-50" />
 
-                <div className="flex flex-col gap-6 relative z-10 h-full">
+                <div className="p-6 md:p-8 flex flex-col gap-6 relative z-10 h-full">
                     {/* Header Row */}
-                    <Link to="/posiedzenia/historia" className="space-y-4 block group/header">
+                    <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-900/5 dark:bg-amber-500/10 text-amber-900 dark:text-amber-500 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-900/10 group-hover/header:border-amber-500/30 transition-colors">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-900/5 dark:bg-amber-500/10 text-amber-900 dark:text-amber-500 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-900/10 group-hover/card:border-amber-500/30 transition-colors">
                                 <Sparkles size={12} className="animate-pulse" />
                                 <span>Raport Tygodnia</span>
                             </div>
-                            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 group-hover/header:text-amber-500/50 transition-colors">
+                            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 group-hover/card:text-amber-500/50 transition-colors">
                                 <Calendar size={12} />
                                 <span>Nr {summary.sitting_number}</span>
                             </div>
                         </div>
 
                         <div className="block">
-                            <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight mb-1 tracking-tight group-hover/header:text-amber-600 dark:group-hover/header:text-amber-500 transition-colors">
+                            <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight mb-1 tracking-tight group-hover/card:text-amber-600 dark:group-hover/card:text-amber-500 transition-colors">
                                 Raport z Sejmu
                             </h2>
                             <p className="text-amber-700 dark:text-amber-400 font-serif italic text-sm opacity-80 flex items-center gap-1">
                                 Kluczowe decyzje i uchwały
-                                <ChevronRight size={14} className="opacity-0 -translate-x-2 group-hover/header:opacity-100 group-hover/header:translate-x-0 transition-all" />
+                                <ChevronRight size={14} className="opacity-0 -translate-x-2 group-hover/card:opacity-100 group-hover/card:translate-x-0 transition-all" />
                             </p>
                         </div>
-                    </Link>
+                    </div>
 
                     {/* Content Section - Compact */}
                     <div className="flex-1 overflow-y-auto no-scrollbar pr-2">
@@ -120,7 +120,7 @@ const SittingSummaryCard: React.FC = () => {
 
                     {/* Key Votes Section */}
                     {summary.top_votes && summary.top_votes.length > 0 && (
-                        <div className="mt-4 pt-4 border-t border-amber-900/5 dark:border-white/5 space-y-3">
+                        <div className="mt-0 pt-0 space-y-3">
                             <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                                 Kluczowe Głosowania
@@ -130,6 +130,7 @@ const SittingSummaryCard: React.FC = () => {
                                     <Link
                                         key={vote.id}
                                         to={`/glosowanie/${vote.id}`}
+                                        onClick={(e) => e.stopPropagation()}
                                         className="flex items-center justify-between p-2.5 rounded-xl bg-white/50 dark:bg-black/20 hover:bg-white dark:hover:bg-white/5 border border-amber-900/5 dark:border-white/5 transition-all group/vote"
                                     >
                                         <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate max-w-[180px] md:max-w-[220px]">
@@ -150,14 +151,14 @@ const SittingSummaryCard: React.FC = () => {
                     )}
 
                     <div className="pt-4 mt-auto border-t border-amber-900/5 dark:border-white/5">
-                        <Link to="/posiedzenia/historia" className="text-[10px] font-black uppercase tracking-widest flex items-center justify-between text-slate-900 dark:text-white hover:text-amber-600 dark:hover:text-amber-500 transition-colors group/btn">
+                        <div className="text-[10px] font-black uppercase tracking-widest flex items-center justify-between text-slate-900 dark:text-white group-hover/card:text-amber-600 dark:group-hover/card:text-amber-500 transition-colors">
                             <span>Zobacz pełną historię</span>
-                            <ChevronRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
-                        </Link>
+                            <ChevronRight size={14} className="group-hover/card:translate-x-1 transition-transform" />
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </Link>
     );
 };
 
