@@ -74,28 +74,28 @@ const SittingSummaryCard: React.FC = () => {
 
                 <div className="flex flex-col gap-6 relative z-10 h-full">
                     {/* Header Row */}
-                    <div className="space-y-4">
+                    <Link to="/posiedzenia/historia" className="space-y-4 block group/header">
                         <div className="flex items-center justify-between">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-900/5 dark:bg-amber-500/10 text-amber-900 dark:text-amber-500 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-900/10">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-900/5 dark:bg-amber-500/10 text-amber-900 dark:text-amber-500 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-900/10 group-hover/header:border-amber-500/30 transition-colors">
                                 <Sparkles size={12} className="animate-pulse" />
                                 <span>Raport Tygodnia</span>
                             </div>
-                            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400">
+                            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 group-hover/header:text-amber-500/50 transition-colors">
                                 <Calendar size={12} />
                                 <span>Nr {summary.sitting_number}</span>
                             </div>
                         </div>
 
-                        <Link to="/posiedzenia/historia" className="block group/title">
-                            <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight mb-1 tracking-tight group-hover/title:text-amber-600 dark:group-hover/title:text-amber-500 transition-colors">
+                        <div className="block">
+                            <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight mb-1 tracking-tight group-hover/header:text-amber-600 dark:group-hover/header:text-amber-500 transition-colors">
                                 Raport z Sejmu
                             </h2>
                             <p className="text-amber-700 dark:text-amber-400 font-serif italic text-sm opacity-80 flex items-center gap-1">
                                 Kluczowe decyzje i uchwały
-                                <ChevronRight size={14} className="opacity-0 -translate-x-2 group-hover/title:opacity-100 group-hover/title:translate-x-0 transition-all" />
+                                <ChevronRight size={14} className="opacity-0 -translate-x-2 group-hover/header:opacity-100 group-hover/header:translate-x-0 transition-all" />
                             </p>
-                        </Link>
-                    </div>
+                        </div>
+                    </Link>
 
                     {/* Content Section - Compact */}
                     <div className="flex-1 overflow-y-auto no-scrollbar pr-2">
