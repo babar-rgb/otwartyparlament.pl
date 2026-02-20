@@ -137,6 +137,16 @@ class GeminiService:
         except Exception as e:
             logger.error(f"Gemini API Error: {e}")
             return None
+    def generate_text(self, prompt: str, model_name: Optional[str] = None) -> str:
+        """Generic method to generate plain text from a custom prompt."""
+        if not self.model: return ""
+        try:
+            model = self._get_model(model_name or self.model_flash)
+            response = model.generate_content(prompt)
+            return response.text.strip() if response.text else ""
+        except Exception as e:
+            logger.error(f"Gemini Text Generation Error: {e}")
+            return ""
 
     # Alias for backward compatibility (temporarily)
     def analyze_vote_expert(self, title: str, description: str, bill_text: Optional[str] = None) -> Dict[str, Any]:
