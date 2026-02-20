@@ -51,37 +51,39 @@ class SittingSummarizer:
             logger.warning("    Please add GEMINI_API_KEY to .env to enable automatic sitting summaries.")
             return None
 
-        # Sort votes to prioritize distinct topics
-        # Simple heuristic: group by topic_tag or distinct titles
-        
-        # Construct Prompt
+        # Construct Prompt with pre-cleaned titles
+        import re
         context_str = ""
         for v in votes:
-            context_str += f"- Tytuł: {v['title']}\n  Temat: {v['topic_tag']}\n  Wynik: {v['verdict']}\n"
+            # Clean title from common prefixes like "13. ", "Druk nr..."
+            clean_title = re.sub(r'^\d+[\.\s]+', '', v['title']) # Remove leading numbers
+            clean_title = re.sub(r'\(druki? nr.*?\)', '', clean_title) # Remove (druki nr...)
+            clean_title = clean_title.strip()
+            
+            context_str += f"- Tytuł: {clean_title}\n  Temat: {v['topic_tag']}\n  Wynik: {v['verdict']}\n"
             if v['ai_summary']:
-                context_str += f"  Info: {v['ai_summary'][:200]}...\n"
+                context_str += f"  Info: {v['ai_summary'][:300]}\n"
             context_str += "\n"
 
         prompt = f"""
-        Jesteś ekspertem legislacyjnym i dziennikarzem politycznym. Twoim zadaniem jest stworzenie krótkiego, profesjonalnego podsumowania (4-5 punktów) najważniejszych decyzji podjętych przez Sejm na danym posiedzeniu.
+        Jesteś czołowym felietonistą politycznym i ekspertem ds. państwa. Twoim zadaniem jest stworzenie eleganckiego, "premium" podsumowania najważniejszych wydarzeń z najnowszego posiedzenia Sejmu.
         
-        Oto lista głosowań i ustaw z tego posiedzenia:
-        
+        DANE WEJŚCIOWE (Głosowania i Ustawy):
         {context_str}
         
-        INSTRUKCJE:
-        1. Wybierz 3-5 najważniejszych tematów (np. ustawa budżetowa, ważne zmiany w prawie karnym, głośne sprawy społeczne).
-        2. Sformatuj wynik jako listę punktowaną Markdown.
-        3. Styl ma być "premium", konkretny i informacyjny (patrz przykład).
-        4. Każdy punkt musi mieć pogrubiony nagłówek i krótki opis po myślniku.
-        5. NIE używaj wstępu ani zakończenia ("Oto podsumowanie..."). Tylko lista.
+        KRYTYCZNE INSTRUKCJE STYLISTYCZNE:
+        1. **ŻADNYCH NUMERÓW NA POCZĄTKU**: Nie zaczynaj punktów od "13 poselski...", "8 rządowy...". To brzmi biurokratycznie.
+        2. **JĘZYK KORZYŚCI I ZNACZENIA**: Pisz o tym, CO TA DECYZJA OZNACZA dla obywatela, a nie tylko jak się nazywa.
+        3. **FORMATOWANIE**: Każdy punkt: **POGRUBIONY TYTUŁ REDAKCYJNY** – krótki, esencjonalny opis (max 2-3 zdania).
+        4. **BEZ ŻARGONU**: Usuń wzmianki o "drukach nr 2189", "poprawkach nr 1" itp. To ma być tekst do czytania przy kawie.
+        5. **WYNIK**: Skup się na tym, czy ustawa przeszła dalej, czy została odrzucona.
         
-        PRZYKŁAD STYLU (TAK MA WYGLĄDAĆ WYNIK):
-        * **Ustawa budżetowa na 2026 rok** – Sejm ostatecznie przyjął budżet z wydatkami na poziomie 918,9 mld zł.
-        * **Status języka śląskiego** – Posłowie przegłosowali nadanie mowie śląskiej statusu języka regionalnego.
-        * **Prawo do azylu** – Sejm wyraził zgodę na przedłużenie czasowego zawieszenia prawa do azylu na granicy.
+        PRZYKŁAD IDEALNEGO STYLU:
+        * **Reforma finansowania samorządów** – Sejm zdecydował o nowym sposobie podziału podatków, co znacząco zasili budżety mniejszych gmin i miast.
+        * **Wzmocnienie statusu języków regionalnych** – Posłowie przegłosowali historyczne zmiany, które ułatwią naukę i pielęgnowanie śląskiej tożsamości.
+        * **Nowe zasady prawa do azylu** – W trosce o bezpieczeństwo granicy przyjęto czasowe przepisy pozwalające na zawieszenie procedur azylowych w sytuacjach kryzysowych.
         
-        GENERUJ PONIŻEJ:
+        WYNIK (Tylko 3-5 punktów w Markdown, bez Twoich komentarzy):
         """
 
         summary_data = self.gemini.generate_summary(context_str, title=f"Posiedzenie {sitting}")

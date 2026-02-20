@@ -132,7 +132,7 @@ const SittingSummaryCard: React.FC = () => {
                                         className="flex items-center justify-between p-2.5 rounded-xl bg-white/50 dark:bg-black/20 hover:bg-white dark:hover:bg-white/5 border border-amber-900/5 dark:border-white/5 transition-all group/vote"
                                     >
                                         <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate max-w-[180px] md:max-w-[220px]">
-                                            {vote.title}
+                                            {cleanTitle(vote.title)}
                                         </span>
                                         <div className={`text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg ${['Uchwalono', 'PRZYJĘTO'].includes(vote.verdict)
                                             ? 'bg-emerald-500/10 text-emerald-600'
@@ -158,6 +158,14 @@ const SittingSummaryCard: React.FC = () => {
             </div>
         </div>
     );
+};
+
+const cleanTitle = (title: string) => {
+    return title
+        .replace(/^\d+[\.\s]+/, '') // Remove leading numbers
+        .replace(/\(druki? nr.*?\)/gi, '') // Remove (druki nr...)
+        .replace(/ – .*$/, '') // Optional: remove very long suffixes after dash if needed
+        .trim();
 };
 
 export default SittingSummaryCard;
