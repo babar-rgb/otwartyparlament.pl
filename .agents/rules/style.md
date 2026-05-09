@@ -11,3 +11,4 @@ trigger: always_on
 5. INTEGRACJA API: Pamiętaj, że backend FastAPI oczekuje prefiksu `/api` w zapytaniach (np. /api/search, /api/wealth-rankings).
 6. FILTR SPOKOJU I WPŁYWU: Priorytetyzuj dane i funkcje, które bezpośrednio dotykają życia ludzi (pieniądze, bezpieczeństwo, zdrowie), ale podawaj je w sposób chłodny i analityczny.
 7. TRANSPLANT MODE: Pamiętaj, że migrujemy z Reacta na Vanilla JS – dbaj o to, by nowa logika nie "odrzuciła" istniejących stylów CSS.
+8. ZŁOTA ZASADA ARCHITEKTURY PODSTRON: Odtworzony w \`js/templates.js\` layout kart posłów (\`mpDetail\`) oraz głosowań (\`voteDetail\`), oparty na zaawansowanym ułożeniu grid/flex i brutalistycznej estetyce, jest NIETYKALNY. Nigdy nie usuwaj ani nie upraszczaj tego kodu pod pretekstem "czyszczenia" skryptów. Obok okrągłych zdjęć (.circular-image) ma zawsze znajdować się .mic-icon jako przypinka.
