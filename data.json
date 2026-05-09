@@ -1,0 +1,119 @@
+{
+    "articles": [
+        {
+            "id": "analiza-017",
+            "category": "BEZPIECZEŃSTWO, GRANICA",
+            "categoryIcon": "security",
+            "date": "26 lipca 2024",
+            "title": "Kto ma prawo pociągnąć za spust?",
+            "excerpt": "Sejm RP przyjął ustawę o wsparciu działań żołnierzy na granicy, wprowadzając tzw. kontratyp. Prześwietlamy, co to realnie oznacza dla odpowiedzialności karnej funkcjonariuszy.",
+            "image": "https://images.unsplash.com/photo-1555848962-6e79363ec58f?w=600&h=600&fit=crop",
+            "fullContent": "<p>Sejm RP przyjął ustawę o wsparciu działań żołnierzy na granicy...</p>",
+            "sources": [
+                {
+                    "title": "Druk Sejmowy nr 453",
+                    "url": "https://www.sejm.gov.pl/Sejm10.nsf/druk.xsp?nr=453",
+                    "type": "doc"
+                }
+            ]
+        }
+    ],
+    "votes": [
+        {
+            "id": "vote-42",
+            "date": "26.07.2024",
+            "title": "Wsparcie działań żołnierzy i funkcjonariuszy (Druk 453)",
+            "topic": "BEZPIECZEŃSTWO",
+            "verdict": "PRZYJĘTO",
+            "stats": {
+                "for": 401,
+                "against": 17,
+                "abstained": 0
+            },
+            "sourceUrl": "https://www.sejm.gov.pl/Sejm10.nsf/agent.xsp?symbol=glosowania&NrKadencji=10&NrPosiedzenia=15&NrGlosowania=42",
+            "clubBreakdown": [
+                {
+                    "club": "KO",
+                    "for": 155,
+                    "against": 0,
+                    "total": 155
+                },
+                {
+                    "club": "PiS",
+                    "for": 175,
+                    "against": 0,
+                    "total": 175
+                },
+                {
+                    "club": "Trzecia Droga",
+                    "for": 60,
+                    "against": 0,
+                    "total": 60
+                },
+                {
+                    "club": "Lewica",
+                    "for": 10,
+                    "against": 16,
+                    "total": 26
+                },
+                {
+                    "club": "Konfederacja",
+                    "for": 1,
+                    "against": 1,
+                    "total": 18
+                }
+            ],
+            "aiSummary": [
+                "Wprowadza kontratyp wyłączający karalność za użycie broni w określonych sytuacjach.",
+                "Zapewnia pomoc prawną dla żołnierzy objętych postępowaniem.",
+                "Zmienia zasady zatrzymywania żołnierzy przez Żandarmerię Wojskową."
+            ]
+        }
+    ],
+    "mps": [
+        {
+            "id": "mp-001",
+            "name": "Jan Ardanowski",
+            "club": "PiS",
+            "district": "Okręg nr 5 - Toruń",
+            "image": "https://www.sejm.gov.pl/Sejm10.nsf/photos/001.jpg",
+            "attendance": "98%",
+            "consistency": "94%",
+            "email": "jan.ardanowski@sejm.pl",
+            "votingHistory": [
+                {
+                    "title": "Wsparcie działań żołnierzy (Druk 453)",
+                    "choice": "ZA",
+                    "date": "26.07.2024"
+                },
+                {
+                    "title": "Depenalizacja aborcji (Druk 176)",
+                    "choice": "PRZECIW",
+                    "date": "12.07.2024"
+                }
+            ]
+        },
+        {
+            "id": "mp-002",
+            "name": "Maria Janyska",
+            "club": "KO",
+            "district": "Okręg nr 38 - Piła",
+            "image": "https://www.sejm.gov.pl/Sejm10.nsf/photos/140.jpg",
+            "attendance": "99%",
+            "consistency": "91%",
+            "email": "maria.janyska@sejm.pl",
+            "votingHistory": [
+                {
+                    "title": "Wsparcie działań żołnierzy (Druk 453)",
+                    "choice": "ZA",
+                    "date": "26.07.2024"
+                },
+                {
+                    "title": "Depenalizacja aborcji (Druk 176)",
+                    "choice": "ZA",
+                    "date": "12.07.2024"
+                }
+            ]
+        }
+    ]
+}

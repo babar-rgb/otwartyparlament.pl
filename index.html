@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>otwartyparlament.pl - A Truth Layer Over Democracy</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/views.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Mega Menu Overlay -->
+    <div id="megaMenu" class="menu-overlay">
+        <div class="menu-search-wrapper">
+            <div class="menu-search-container">
+                <input type="text" id="mainSearchInput" placeholder="GDZIE CHCESZ ZAJRZEĆ?" class="mega-search-input">
+            </div>
+        </div>
+
+        <div class="menu-container">
+            <!-- Lewa kolumna: Systemowa (NYT Style) -->
+            <div class="menu-column system-nav">
+                <ul>
+                    <li><a href="#" class="nav-main-link">O ZAŁOŻYCIELU</a></li>
+                    <li><a href="#" class="nav-main-link">A TRUTH LAYER OVER DEMOCRACY</a></li>
+                    <li class="nav-spacer"></li>
+                    <li><a href="#glosowania" class="nav-sub-link">GŁOSOWANIA</a></li>
+                    <li><a href="#ustawy" class="nav-sub-link">PROJEKTY USTAW</a></li>
+                    <li><a href="#poslowie" class="nav-sub-link">POSŁOWIE</a></li>
+                    <li><a href="#" class="nav-sub-link">KOMISJE</a></li>
+                    <li><a href="#" class="nav-sub-link">KONTAKT</a></li>
+                </ul>
+            </div>
+
+            <div class="menu-column">
+                <h3>FINANSE I PODATKI</h3>
+                <ul>
+                    <li><a href="#szukaj/podatki" class="menu-topic-link">Podatki i Akcyza</a></li>
+                    <li><a href="#szukaj/budżet" class="menu-topic-link">Budżet Państwa</a></li>
+                    <li><a href="#szukaj/ksef" class="menu-topic-link">KSeF i Cyfryzacja</a></li>
+                    <li><a href="#szukaj/ue" class="menu-topic-link">Fundusze UE</a></li>
+                    <li><a href="#szukaj/inflacja" class="menu-topic-link">NBP i Inflacja</a></li>
+                </ul>
+            </div>
+
+            <div class="menu-column">
+                <h3>BEZPIECZEŃSTWO</h3>
+                <ul>
+                    <li><a href="#szukaj/obrona" class="menu-topic-link">Obrona Narodowa</a></li>
+                    <li><a href="#szukaj/granica" class="menu-topic-link">Sytuacja na Granicy</a></li>
+                    <li><a href="#szukaj/służby" class="menu-topic-link">Służby Specjalne</a></li>
+                    <li><a href="#szukaj/nato" class="menu-topic-link">NATO i Relacje USA</a></li>
+                    <li><a href="#szukaj/obrona cywilna" class="menu-topic-link">Obrona Cywilna</a></li>
+                </ul>
+            </div>
+
+            <div class="menu-column">
+                <h3>SĄDOWNICTWO</h3>
+                <ul>
+                    <li><a href="#szukaj/trybuna%C5%82 konstytucyjny" class="menu-topic-link">Trybunał Konstytucyjny</a></li>
+                    <li><a href="#szukaj/KRS" class="menu-topic-link">Krajowa Rada Sądownictwa</a></li>
+                    <li><a href="#szukaj/reforma sądów" class="menu-topic-link">Reforma Sądów</a></li>
+                    <li><a href="#szukaj/prawa człowieka" class="menu-topic-link">Prawa Człowieka</a></li>
+                    <li><a href="#szukaj/prokuratura" class="menu-topic-link">Prokuratura</a></li>
+                </ul>
+            </div>
+
+            <div class="menu-column">
+                <h3>SPRAWY SPOŁECZNE</h3>
+                <ul>
+                    <li><a href="#szukaj/emerytury" class="menu-topic-link">System Emerytalny</a></li>
+                    <li><a href="#szukaj/zdrowie" class="menu-topic-link">Ochrona Zdrowia</a></li>
+                    <li><a href="#szukaj/edukacja" class="menu-topic-link">Edukacja i Nauka</a></li>
+                    <li><a href="#szukaj/rodzina" class="menu-topic-link">Polityka Rodzinna</a></li>
+                    <li><a href="#szukaj/praca" class="menu-topic-link">Rynek Pracy</a></li>
+                </ul>
+            </div>
+
+            <div class="menu-column">
+                <h3>EKOLOGIA I ENERGIA</h3>
+                <ul>
+                    <li><a href="#szukaj/transformacja energetyczna" class="menu-topic-link">Transformacja Energetyczna</a></li>
+                    <li><a href="#szukaj/energia jądrowa" class="menu-topic-link">Energia Jądrowa</a></li>
+                    <li><a href="#szukaj/lasy" class="menu-topic-link">Lasy i Ochrona Przyrody</a></li>
+                    <li><a href="#szukaj/odpady" class="menu-topic-link">Gospodarka Odpadami</a></li>
+                    <li><a href="#szukaj/woda" class="menu-topic-link">Zasoby Wodne</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Search Results View -->
+        <div id="searchResultsArea" class="menu-results-container"></div>
+    </div>
+
+
+    <div class="social-sidebar">
+        <div class="social-icon"><svg viewBox="0 0 24 24">
+                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+            </svg></div> <!-- FB -->
+        <div class="social-icon"><svg viewBox="0 0 24 24">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+            </svg></div> <!-- IG -->
+        <div class="social-icon"><svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 8v8M8 12h8"></path>
+            </svg></div> <!-- Spotify (placeholder) -->
+        <div class="social-icon"><svg viewBox="0 0 24 24">
+                <path
+                    d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2C5.12 19.5 12 19.5 12 19.5s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z">
+                </path>
+                <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>
+            </svg></div> <!-- YT -->
+        <div class="social-icon"><svg viewBox="0 0 24 24">
+                <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path>
+            </svg></div> <!-- TikTok -->
+        <div class="social-icon"><svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"></path>
+            </svg></div> <!-- Patronite -->
+    </div>
+
+    <header>
+        <div class="header-container">
+            <div class="header-left">
+                <div class="menu-btn" id="menuToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <div class="logo-container">
+                    <div class="logo-main">
+                        <svg class="logo-globe" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="12" cy="18" r="1.5" />
+                            <circle cx="7" cy="14" r="1.2" />
+                            <circle cx="12" cy="12" r="1.2" />
+                            <circle cx="17" cy="14" r="1.2" />
+                            <circle cx="4" cy="9" r="1" />
+                            <circle cx="9" cy="7" r="1" />
+                            <circle cx="15" cy="7" r="1" />
+                            <circle cx="20" cy="9" r="1" />
+                        </svg>
+                        <span class="logo-text">otwartyparlament.pl</span>
+                    </div>
+                    <div class="logo-tagline">Twarde dane. Zero opinii.</div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="search-bar" id="globalSearchTrigger">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    SZUKAJ
+                </div>
+                <div class="contact-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    NAPISZ DO MNIE
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-layout">
+        <div class="content-area">
+            <section class="hero-section">
+                <h1>Politycy liczą na to, że nie sprawdzisz.</h1>
+                <p>Obiektywna warstwa informacyjna nad polską demokracją. Analiza wydarzeń politycznych oparta wyłącznie
+                    na twardych danych.</p>
+            </section>
+
+            <div class="feed" id="mainFeed">
+                <!-- Dynamic content from data.json -->
+            </div>
+        </div>
+
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="#glosowania">GŁOSOWANIA</a></li>
+                    <li><a href="#ustawy">USTAWY</a></li>
+                    <li><a href="#poslowie">POSŁOWIE</a></li>
+                    <li><a href="#rankingi">RANKINGI</a></li>
+                    <li><a href="#szukaj">SZUKAJ</a></li>
+                </ul>
+                <div class="sidebar-divider"></div>
+                <ul>
+                    <li><a href="#finanse">FINANSE</a></li>
+                    <li><a href="#">BEZPIECZEŃSTWO</a></li>
+                    <li><a href="#">SĄDOWNICTWO</a></li>
+                    <li><a href="#">SPOŁECZEŃSTWO</a></li>
+                    <li><a href="#">EKOLOGIA</a></li>
+                </ul>
+                <div class="sidebar-select">
+                    <select>
+                        <option>WYBIERZ TEMAT</option>
+                    </select>
+                </div>
+            </nav>
+        </aside>
+    </main>
+
+    <script src="js/templates.js"></script>
+    <script src="main.js"></script>
+</body>
+
+</html>

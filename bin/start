@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Kolory dla lepszego UX
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}>>> Uruchamianie interfejsu otwartyparlament.pl (Truth Layer)...${NC}"
+
+# Pobieramy ścieżkę do katalogu głównego projektu
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$PROJECT_DIR"
+
+# Próbujemy uruchomić serwer na pierwszym wolnym porcie od 8000 w górę
+PORT=8000
+while lsof -Pi :$PORT -sTCP:LISTEN -t >/dev/null ; do
+    PORT=$((PORT+1))
+done
+
+echo -e "${GREEN}>>> Serwer startuje pod adresem: http://localhost:$PORT${NC}"
+echo -e "${BLUE}>>> Naciśnij Ctrl+C, aby zakończyć.${NC}"
+
+# Uruchamiamy serwer (Python 3 jest standardem na Macu)
+python3 -m http.server $PORT
