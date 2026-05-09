@@ -448,7 +448,7 @@ font-weight: 300;
     font-family: 'Outfit', sans-serif;
     font-weight: 300;
     padding: 10px 0;
-    margin-left: 450px;
+    margin-left: 320px;
     /* Definitive shift past the logo */
     outline: none;
     background: none;
@@ -490,10 +490,11 @@ font-weight: 300;
 
 /* Grid & Columns - Fixed Rhythm */
 .menu-container {
-    max-width: 100%;
-    margin: 0;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 0 40px;
     display: grid;
-    grid-template-columns: 450px repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: 320px repeat(auto-fill, minmax(200px, 1fr));
     align-items: stretch;
 }
 
@@ -506,6 +507,7 @@ font-weight: 300;
 .menu-column.system-nav {
     background: #fcfcfc;
     border-left: none;
+    padding-left: 0;
 }
 
 .menu-column h3 {

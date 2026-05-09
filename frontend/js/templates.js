@@ -86,7 +86,6 @@ const templates = {
     home: () => `
         <section class="hero-section">
             <h1>Politycy liczą na to, że nie sprawdzisz.</h1>
-            <p>Analiza wydarzeń politycznych oparta wyłącznie na twardych danych.</p>
         </section>
 
         <div class="feed">
