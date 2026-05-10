@@ -50,10 +50,13 @@ async function init() {
                 { name: 'PSL - TRZECIA DROGA', yes: 32, no: 0, abstain: 0 },
                 { name: 'LEWICA', yes: 26, no: 0, abstain: 0 },
                 { name: 'KONFEDERACJA', yes: 18, no: 0, abstain: 0 },
-                { name: 'KUKIZ\'15', yes: 4, no: 0, abstain: 0 }
+                { name: 'KUKIZ\'15', yes: 4, no: 0, abstain: 0 },
+                { name: 'WOLNI REPUBLIKANIE', yes: 4, no: 0, abstain: 0 },
+                { name: 'KOŁO POSŁÓW RAZEM', yes: 5, no: 0, abstain: 0 },
+                { name: 'NIEZRZESZENI', yes: 1, no: 0, abstain: 0 }
             ]
         },
-        {
+        { 
             id: 'border-law',
             category: 'BEZPIECZEŃSTWO',
             image: 'https://images.unsplash.com/photo-1555848960-8c3ed4cf32a0?q=80&w=500&auto=format&fit=crop',
@@ -64,13 +67,32 @@ async function init() {
             votes_no: 189,
             verdict: 'PRZYJĘTO',
             results_json: [
-                { name: 'KOALICJA OBYWATELSKA', yes: 157, no: 0, abstain: 0 },
-                { name: 'PRAWO I SPRAWIEDLIWOŚĆ', yes: 12, no: 168, abstain: 10 },
+                { 
+                    name: 'KOALICJA OBYWATELSKA', yes: 155, no: 1, abstain: 1,
+                    rebels: [
+                        { id: 'sterczewski', name: 'F. Sterczewski', vote: 'PRZECIW', photo: 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png' },
+                        { id: 'zielinska', name: 'U. Zielińska', vote: 'WSTRZYMAŁA SIĘ', photo: 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png' }
+                    ]
+                },
+                { 
+                    name: 'PRAWO I SPRAWIEDLIWOŚĆ', yes: 12, no: 168, abstain: 10,
+                    rebels: [
+                        { id: 'macierewicz', name: 'A. Macierewicz', vote: 'ZA', photo: 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png' }
+                    ]
+                },
                 { name: 'POLSKA 2050 - TRZECIA DROGA', yes: 33, no: 0, abstain: 0 },
                 { name: 'PSL - TRZECIA DROGA', yes: 32, no: 0, abstain: 0 },
-                { name: 'LEWICA', yes: 15, no: 11, abstain: 0 },
+                { 
+                    name: 'LEWICA', yes: 15, no: 11, abstain: 0,
+                    rebels: [
+                        { id: 'biejat', name: 'M. Biejat', vote: 'PRZECIW', photo: 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png' }
+                    ]
+                },
                 { name: 'KONFEDERACJA', yes: 0, no: 18, abstain: 0 },
-                { name: 'KUKIZ\'15', yes: 4, no: 0, abstain: 0 }
+                { name: 'KUKIZ\'15', yes: 4, no: 0, abstain: 0 },
+                { name: 'WOLNI REPUBLIKANIE', yes: 4, no: 0, abstain: 0 },
+                { name: 'KOŁO POSŁÓW RAZEM', yes: 0, no: 5, abstain: 0 },
+                { name: 'NIEZRZESZENI', yes: 1, no: 0, abstain: 0 }
             ]
         },
         {
@@ -89,7 +111,9 @@ async function init() {
                 { name: 'POLSKA 2050 - TRZECIA DROGA', yes: 33, no: 0, abstain: 0 },
                 { name: 'PSL - TRZECIA DROGA', yes: 32, no: 0, abstain: 0 },
                 { name: 'LEWICA', yes: 26, no: 0, abstain: 0 },
-                { name: 'KONFEDERACJA', yes: 5, no: 13, abstain: 0 }
+                { name: 'KONFEDERACJA', yes: 5, no: 13, abstain: 0 },
+                { name: 'KUKIZ\'15', yes: 4, no: 0, abstain: 0 },
+                { name: 'NIEZRZESZENI', yes: 1, no: 0, abstain: 0 }
             ]
         },
         {
@@ -106,8 +130,12 @@ async function init() {
                 { name: 'KOALICJA OBYWATELSKA', yes: 157, no: 0, abstain: 0 },
                 { name: 'PRAWO I SPRAWIEDLIWOŚĆ', yes: 0, no: 190, abstain: 0 },
                 { name: 'POLSKA 2050 - TRZECIA DROGA', yes: 33, no: 0, abstain: 0 },
+                { name: 'PSL - TRZECIA DROGA', yes: 32, no: 0, abstain: 0 },
                 { name: 'LEWICA', yes: 0, no: 26, abstain: 0 },
-                { name: 'KONFEDERACJA', yes: 0, no: 18, abstain: 0 }
+                { name: 'KONFEDERACJA', yes: 0, no: 18, abstain: 0 },
+                { name: 'KUKIZ\'15', yes: 0, no: 4, abstain: 0 },
+                { name: 'WOLNI REPUBLIKANIE', yes: 0, no: 4, abstain: 0 },
+                { name: 'NIEZRZESZENI', yes: 0, no: 1, abstain: 0 }
             ]
         }];
 

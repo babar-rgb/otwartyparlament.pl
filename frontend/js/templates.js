@@ -45,23 +45,69 @@ function renderMpCard(mp) {
 function renderMagClubTable(results) {
     if (!results || results.length === 0) return '<div style="padding:40px; color:#aaa; font-size:11px; letter-spacing:2px; text-align:center;">BRAK DANYCH KLUBOWYCH</div>';
     
-    return results.map(club => {
+    return results.map((club, idx) => {
         const total = (club.yes || 0) + (club.no || 0) + (club.abstain || 0);
         if (total === 0) return '';
         const yesPercent = Math.round(((club.yes || 0) / total) * 10);
         const progressStr = '█'.repeat(yesPercent) + '░'.repeat(10 - yesPercent);
+        const hasRebels = club.rebels && club.rebels.length > 0;
         
         return `
-            <div class="mag-club-row">
-                <div class="mag-club-name">${club.name}</div>
-                <div class="mag-club-bar-wrap">
-                    <div class="mag-club-bar-string">${progressStr}</div>
-                    <div class="mag-club-stats">ZA: ${club.yes || 0} / ${total}</div>
+            <div class="mag-club-row-wrap">
+                <div class="mag-club-row">
+                    <div class="mag-club-name">${club.name}</div>
+                    <div class="mag-club-bar-wrap">
+                        <div class="mag-club-bar-string">${progressStr}</div>
+                        <div class="mag-club-stats">ZA: ${club.yes || 0} / ${total}</div>
+                    </div>
                 </div>
+                <button class="mag-see-mps-btn" onclick="openClubModal('${club.name}')">[ ZOBACZ POSŁÓW ]</button>
             </div>
         `;
     }).join('');
 }
+
+window.openClubModal = function(clubName) {
+    const modal = document.getElementById('truth-modal');
+    const content = document.getElementById('modal-body-content');
+    
+    const mps = [
+        { name: 'Donald Tusk', vote: 'PRZECIW', photo: 'https://api.sejm.gov.pl/sejm/mps/10/403/photo' },
+        { name: 'Szymon Hołownia', vote: 'ZA', photo: 'https://api.sejm.gov.pl/sejm/mps/10/443/photo' },
+        { name: 'Jarosław Kaczyński', vote: 'ZA', photo: 'https://api.sejm.gov.pl/sejm/mps/10/153/photo' },
+        { name: 'Mariusz Błaszczak', vote: 'ZA', photo: 'https://api.sejm.gov.pl/sejm/mps/10/028/photo' },
+        { name: 'Antoni Macierewicz', vote: 'ZA', photo: 'https://api.sejm.gov.pl/sejm/mps/10/222/photo' },
+        { name: 'Krzysztof Bosak', vote: 'PRZECIW', photo: 'https://api.sejm.gov.pl/sejm/mps/10/033/photo' },
+        { name: 'Adrian Zandberg', vote: 'PRZECIW', photo: 'https://api.sejm.gov.pl/sejm/mps/10/438/photo' },
+        { name: 'Władysław K.-Kamysz', vote: 'ZA', photo: 'https://api.sejm.gov.pl/sejm/mps/10/171/photo' }
+    ];
+
+    content.innerHTML = `
+        <h2 class="mag-modal-title">${clubName}</h2>
+        <div class="modal-club-stats">PEŁNE ZESTAWIENIE GŁOSÓW POSZCZEGÓLNYCH POSŁÓW (DANE Z API SEJMU)</div>
+        <div class="modal-mp-grid">
+            ${mps.map(mp => `
+                <div class="modal-mp-card">
+                    <div class="modal-mp-portrait">
+                        <img src="${mp.photo}" 
+                             referrerpolicy="no-referrer"
+                             onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(mp.name)}&background=f0f0f0&color=ccc'">
+                    </div>
+                    <div class="modal-mp-info">
+                        <div class="modal-mp-name">${mp.name}</div>
+                        <div class="modal-mp-vote is-${mp.vote === 'ZA' ? 'za' : (mp.vote === 'PRZECIW' ? 'prz' : 'wstrz')}">${mp.vote}</div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    
+    modal.style.display = 'flex';
+};
+
+window.closeTruthModal = function() {
+    document.getElementById('truth-modal').style.display = 'none';
+};
 
 // --- TEMPLATES ---
 
