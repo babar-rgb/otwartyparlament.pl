@@ -161,130 +161,160 @@ body.menu-open .header-right {
     max-width: 600px;
 }
 
-/* DZ Card */
-.op-card {
+/* Truth Layer - Refined Brutal Card (Hybrid) */
+.op-card-refined {
     margin-bottom: 80px;
+    background: #fff;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.op-card-refined:hover {
+    transform: translate(-4px, -4px);
+    box-shadow: 12px 12px 0px #000;
 }
 
 .card-header {
     display: flex;
     justify-content: flex-start;
     align-items: stretch;
-    border-top: 1px solid var(--border-light);
+    border-top: 1px solid #eee;
 }
 
 .meta-box {
-    padding: 12px 18px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    color: #666;
-    border: 1px solid var(--border-light);
+    padding: 12px 20px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #888;
+    border: 1px solid #eee;
     border-top: none;
     margin-right: -1px;
     text-transform: uppercase;
+    background: #fff;
 }
 
-.card-arrow {
+.card-arrow-minimal {
     margin-left: auto;
-    width: 65px;
-    border: 1px solid var(--border-light);
+    width: 60px;
+    border: 1px solid #eee;
     border-top: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
 }
 
-.card-arrow svg {
-    width: 42px;
-    height: 42px;
-    stroke: #ccc;
-    /* Jasnoszara wg audytu */
-    stroke-width: 0.7px;
-    /* Cienka wg audytu */
-    fill: none;
+.card-arrow-minimal svg {
+    width: 24px;
+    height: 24px;
+    color: #ccc;
+    transition: color 0.2s;
 }
 
-.card-body {
+.op-card-refined:hover .card-arrow-minimal svg {
+    color: #000;
+}
+
+.card-body-refined {
     display: flex;
-    border: 1px solid var(--border-light);
+    border: 1px solid #eee;
     border-top: none;
-    padding: 50px 0;
+    padding: 60px;
     gap: 50px;
+    align-items: flex-start;
 }
 
-.card-image-container {
-    flex: 0 0 350px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.card-image-side {
+    flex: 0 0 180px;
 }
 
-.circular-image {
+.circular-image-small {
     position: relative;
-    width: 220px;
-    height: 220px;
+    width: 180px;
+    height: 180px;
 }
 
-.circular-image img {
+.circular-image-small img {
     width: 100%;
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
+    filter: grayscale(1);
     border: 1px solid #eee;
-    filter: grayscale(1) sepia(0.1) contrast(1.1);
 }
 
-.mic-icon {
+.mic-icon-small {
     position: absolute;
-    bottom: 10px;
+    bottom: 8px;
     left: -5px;
     background: #000;
-    width: 45px;
-    height: 45px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     border: 4px solid #fff;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
-.mic-icon svg {
-    width: 22px;
-    height: 22px;
+.mic-icon-small svg {
+    width: 18px;
+    height: 18px;
     fill: #fff;
 }
 
-.card-text {
+.card-text-side {
     flex: 1;
-    padding-right: 50px;
 }
 
-.card-date {
+.card-title-refined {
+    font-family: 'Playfair Display', serif;
+    font-size: 42px;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    color: #000;
+    letter-spacing: -1px;
+}
+
+.card-context-refined {
     font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-    margin-bottom: 12px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #444;
+}
+
+.card-footer-refined {
+    border: 1px solid #eee;
+    border-top: none;
+    padding: 25px 60px;
+    background: #fafafa;
+}
+
+.card-stats-minimal {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
     letter-spacing: 1px;
     color: #666;
 }
 
-.card-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 36px;
-    font-weight: 800;
-    margin-bottom: 25px;
-    line-height: 1.1;
-    letter-spacing: -0.5px;
+.card-stats-minimal {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 1px;
 }
 
-.card-excerpt {
-    font-size: 16px;
-    line-height: 1.7;
-    color: #444;
-    margin-bottom: 15px;
+.stat-tag {
+    margin-right: 20px;
+    color: #000;
+}
+
+.verdict-arrow {
+    color: #000;
+    text-transform: uppercase;
+    margin-left: 10px;
 }
 
 .read-more {

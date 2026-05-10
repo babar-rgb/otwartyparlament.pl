@@ -59,23 +59,37 @@ const templates = {
         </div>
     `,
     card: (a) => `
-        <article class="op-card" data-id="${a.id}">
-            <div class="card-header"><div class="meta-box">${a.category}</div></div>
-            <div class="card-body">
-                <div class="card-image-container">
-                    <div class="circular-image">
+        <article class="op-card-refined" data-id="${a.id}">
+            <div class="card-header">
+                <div class="meta-box">${a.category} · ${a.date}</div>
+                <div class="card-arrow-minimal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </div>
+            </div>
+            
+            <div class="card-body-refined">
+                <div class="card-image-side">
+                    <div class="circular-image-small">
                         <img src="${a.image}">
-                        <div class="mic-icon">
+                        <div class="mic-icon-small">
                             <svg viewBox="0 0 24 24">
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                             </svg>
                         </div>
                     </div>
                 </div>
-                <div class="card-text">
-                    <div class="card-date">${a.date}</div>
-                    <h2 class="card-title">${a.title}</h2>
-                    <p class="card-excerpt">${a.excerpt}</p>
+                
+                <div class="card-text-side">
+                    <h2 class="card-title-refined">${a.title}</h2>
+                    <p class="card-context-refined">${a.excerpt}</p>
+                </div>
+            </div>
+
+            <div class="card-footer-refined">
+                <div class="card-stats-minimal">
+                    <span class="stat-tag">[ZA: ${a.votes_yes || 0}]</span>
+                    <span class="stat-tag">[PRZECIW: ${a.votes_no || 0}]</span>
+                    <span class="verdict-arrow">→ ${a.verdict || 'PRZYJĘTO'}</span>
                 </div>
             </div>
         </article>

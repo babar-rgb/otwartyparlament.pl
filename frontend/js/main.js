@@ -39,7 +39,10 @@ async function init() {
             image: 'https://images.unsplash.com/photo-1555848962-6e79363ec58f?q=80&w=500&auto=format&fit=crop',
             date: 'MAJ 2026',
             title: 'Warstwa Prawdy: Informuj bez rujnowania dnia.',
-            excerpt: 'Demokracja to nie tylko emocje, to przede wszystkim dane. Naszym celem jest dostarczenie Ci surowych faktów w sposób spokojny i prestiżowy.'
+            excerpt: 'Demokracja to nie tylko emocje, to przede wszystkim dane. Naszym celem jest dostarczenie Ci surowych faktów w sposób spokojny i prestiżowy.',
+            votes_yes: 460,
+            votes_no: 0,
+            verdict: 'MISJA PRZYJĘTA'
         }];
 
         state.isLoaded = true;
