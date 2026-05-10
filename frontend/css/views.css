@@ -63,112 +63,229 @@
     color: #000;
 }
 
-/* --- Article Detail View (Poziom 2) --- */
-.article-view {
-    max-width: 1000px;
+/* --- Article Experimental Magazine Layout --- */
+.article-experimental {
+    max-width: 1100px;
     margin: 0 auto;
-    padding-bottom: 120px;
+    padding: 0 40px 150px 40px;
 }
 
-.article-header {
-    margin-top: 60px;
-    margin-bottom: 80px;
+.back-link-minimal {
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    color: #ccc;
+    cursor: pointer;
+    margin: 40px 0;
+    transition: color 0.3s;
 }
 
-.verdict-badge-refined {
-    display: inline-block;
+.back-link-minimal:hover { color: #000; }
+
+.article-mag-header {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 80px;
+    align-items: center;
+    margin-bottom: 100px;
+    text-align: left;
+}
+
+.mag-portrait-wrap {
+    width: 350px;
+    height: 350px;
+    border-radius: 50%;
+    position: relative;
+    border: 1px solid #000;
+    padding: 15px;
+}
+
+.mag-portrait-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    filter: grayscale(1) contrast(1.1);
+}
+
+.mag-mic-tag {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 70px;
+    height: 70px;
     background: #000;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: #fff;
-    padding: 8px 15px;
-    font-size: 10px;
-    font-weight: 900;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 30px;
+    border: 5px solid #fff;
 }
 
-.article-hero-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 64px;
-    font-weight: 900;
-    line-height: 1.1;
-    color: #000;
+.mag-mic-tag svg { width: 30px; height: 30px; fill: currentColor; }
+
+.mag-meta-top {
+    display: flex;
+    gap: 30px;
     margin-bottom: 25px;
-    letter-spacing: -2px;
 }
 
-.article-meta-line {
+.mag-date, .mag-read-time {
     font-size: 11px;
-    font-weight: 800;
-    color: #888;
+    font-weight: 900;
     letter-spacing: 2px;
-    text-transform: uppercase;
-    border-top: 1px solid #eee;
-    padding-top: 20px;
-    display: inline-block;
+    color: #999;
 }
 
-.section-label {
+.mag-hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 68px;
+    font-weight: 900;
+    line-height: 0.95;
+    margin-bottom: 30px;
+    letter-spacing: -3px;
+}
+
+.mag-author {
     font-size: 10px;
     font-weight: 900;
     letter-spacing: 3px;
     color: #000;
-    text-transform: uppercase;
     margin-bottom: 30px;
-    opacity: 0.5;
 }
 
-.article-brief-content {
-    font-family: 'Inter', sans-serif;
-    font-size: 20px;
+.mag-tags-row {
+    display: flex;
+    gap: 10px;
+}
+
+.mag-tag {
+    font-size: 9px;
+    font-weight: 900;
+    padding: 6px 15px;
+    background: #000;
+    color: #fff;
+    letter-spacing: 1px;
+}
+
+.mag-main-content {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 60px;
+    text-align: left;
+    margin-bottom: 100px;
+}
+
+.mag-side-label {
+    writing-mode: vertical-rl;
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 8px;
+    color: #ddd;
+    display: flex;
+    align-items: center;
+    border-right: 1px solid #eee;
+}
+
+.mag-brief-body {
+    font-size: 22px;
     line-height: 1.6;
-    color: #333;
+    color: #000;
     max-width: 800px;
 }
 
-.article-separator {
-    height: 1px;
-    background: #eee;
-    margin: 60px 0;
-}
-
-.impact-content {
-    background: #fafafa;
-    border-left: 5px solid #000;
-    padding: 40px;
-    font-size: 22px;
+.mag-dropcap {
+    float: left;
+    font-size: 110px;
+    line-height: 0.8;
+    padding-top: 10px;
+    padding-right: 20px;
     font-family: 'Playfair Display', serif;
-    font-style: italic;
+    font-weight: 900;
     color: #000;
-    line-height: 1.5;
 }
 
-.article-results-section {
-    margin-bottom: 60px;
+.mag-impact-container {
+    background: #000;
+    padding: 80px;
+    margin-bottom: 100px;
 }
 
-.sources-list {
-    list-style: none;
-    padding: 0;
+.mag-impact-box {
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 40px;
+    text-align: left;
 }
 
-.sources-list li {
-    margin-bottom: 12px;
+.mag-impact-label {
+    font-size: 10px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 4px;
+    margin-bottom: 30px;
+    opacity: 0.6;
 }
 
-.sources-list a {
+.mag-impact-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    line-height: 1.3;
+    color: #fff;
+    font-weight: 400;
+}
+
+.mag-results-header {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    margin-bottom: 50px;
+}
+
+.mag-res-label {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    white-space: nowrap;
+}
+
+.mag-res-line {
+    flex: 1;
+    height: 1px;
+    background: #000;
+}
+
+.mag-footer {
+    border-top: 5px solid #000;
+    padding-top: 40px;
+    text-align: left;
+}
+
+.mag-source-title {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    color: #999;
+    display: block;
+    margin-bottom: 20px;
+}
+
+.mag-source-links {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mag-source-links a {
+    font-size: 16px;
+    font-weight: 800;
     color: #000;
     text-decoration: none;
-    border-bottom: 1px solid #ccc;
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.2s;
+    transition: transform 0.2s;
 }
 
-.sources-list a:hover {
-    border-bottom-color: #000;
-    background: #fff9c4; /* Subtelne podświetlenie a la marker */
-}
+.mag-source-links a:hover { transform: translateX(10px); }
 
 .vote-analysis-calm {
     background: #f9f9f9;

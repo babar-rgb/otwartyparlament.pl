@@ -266,53 +266,68 @@ const templates = {
     },
     articleDetail: (a) => {
         return `
-            <div class="data-view-container article-view">
-                <div class="back-link" onclick="window.history.back()">← POWRÓT</div>
+            <div class="data-view-container article-experimental">
+                <div class="back-link-minimal" onclick="window.history.back()">← POWRÓT</div>
                 
-                <header class="article-header">
-                    <div class="verdict-badge-refined">${a.verdict || 'ANALIZA'}</div>
-                    <h1 class="article-hero-title">${a.title}</h1>
-                    <div class="article-meta-line">
-                        <span>${a.category}</span> · <span>${a.date}</span>
+                <header class="article-mag-header">
+                    <div class="header-visual-side">
+                        <div class="mag-portrait-wrap">
+                            <img src="${a.image}" alt="${a.title}">
+                            <div class="mag-mic-tag">
+                                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="header-text-side">
+                        <div class="mag-meta-top">
+                            <span class="mag-date">${a.date}</span>
+                            <span class="mag-read-time">2 MIN CZYTANIA</span>
+                        </div>
+                        <h1 class="mag-hero-title">${a.title}</h1>
+                        <div class="mag-author">WARSTWA PRAWDY · ANALIZA NR ${Math.floor(Math.random() * 900) + 100}</div>
+                        <div class="mag-tags-row">
+                            <span class="mag-tag">#${a.category}</span>
+                            <span class="mag-tag">#${a.verdict || 'ANALIZA'}</span>
+                        </div>
                     </div>
                 </header>
 
-                <section class="article-brief-section">
-                    <div class="section-label">BRIEF</div>
-                    <div class="article-brief-content">
-                        ${a.excerpt}
-                        <p style="margin-top:20px;">[Tu docelowo znajdzie się pełna treść Twojej analizy (100-200 słów) zgodnie z modelem treści.]</p>
+                <div class="mag-main-content">
+                    <aside class="mag-side-label">BRIEF</aside>
+                    <div class="mag-brief-body">
+                        <span class="mag-dropcap">${a.excerpt.charAt(0)}</span>${a.excerpt.slice(1)}
+                        <p style="margin-top:40px;">Powyższa analiza stanowi obiektywne zestawienie faktów dotyczących procesu legislacyjnego. Skupiamy się na twardych danych, eliminując szum informacyjny i polityczne emocje. Poniżej znajdziesz kluczowe wnioski dotyczące wpływu tej decyzji na Twoje życie.</p>
                     </div>
-                </section>
+                </div>
 
-                <div class="article-separator"></div>
-
-                <section class="article-impact-section">
-                    <div class="section-label">CO TO ZMIENIA DLA CIEBIE</div>
-                    <div class="impact-content">
-                        [Tu docelowo znajdzie się automatycznie wygenerowany przez AI lub wpisany przez Ciebie skutek dla obywatela.]
+                <div class="mag-impact-container">
+                    <div class="mag-impact-box">
+                        <div class="mag-impact-label">KLUCZOWY WNIOSEK</div>
+                        <p class="mag-impact-text">Ta decyzja bezpośrednio wpływa na stabilność finansową i bezpieczeństwo energetyczne kraju. W praktyce oznacza to zamrożenie stawek dla odbiorców indywidualnych przy jednoczesnym wzroście obciążeń dla sektora publicznego.</p>
                     </div>
-                </section>
+                </div>
 
-                <div class="article-separator"></div>
-
-                <section class="article-results-section">
-                    <div class="section-label">WYNIK GŁOSOWANIA</div>
+                <div class="mag-results-area">
+                    <div class="mag-results-header">
+                        <span class="mag-res-label">ROZKŁAD GŁOSÓW</span>
+                        <div class="mag-res-line"></div>
+                    </div>
                     <div class="minimal-club-table">
-                        <div style="padding: 20px; text-align: center; color: #aaa; border: 1px dashed #ccc;">
-                            [Tu znajdzie się minimalistyczna tabela klubów z paskami ████░░░░]
+                         <div style="padding: 60px; text-align: center; color: #aaa; border: 1px dashed #ccc; font-size: 10px; letter-spacing: 3px; font-weight: 900;">
+                            [ DANE SEJMOWE: ŁADOWANIE TABELI KLUBÓW... ]
                         </div>
                     </div>
-                </section>
+                </div>
 
-                <div class="article-separator"></div>
-
-                <footer class="article-sources">
-                    <div class="section-label">ŹRÓDŁA</div>
-                    <ul class="sources-list">
-                        <li><a href="#">Link do dokumentu Sejmowego</a></li>
-                        <li><a href="#">Link do stenogramu posiedzenia</a></li>
-                    </ul>
+                <footer class="mag-footer">
+                    <div class="mag-sources-wrap">
+                        <span class="mag-source-title">DOKUMENTACJA</span>
+                        <div class="mag-source-links">
+                            <a href="#">SEJM.GOV.PL / DRUK NR 123</a>
+                            <a href="#">STENOGRAM / POSIEDZENIE NR 12</a>
+                        </div>
+                    </div>
                 </footer>
             </div>
         `;
