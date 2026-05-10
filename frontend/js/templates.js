@@ -59,7 +59,7 @@ const templates = {
         </div>
     `,
     card: (a) => `
-        <article class="op-card-refined" data-id="${a.id}">
+        <article class="op-card-refined clickable-article" data-id="${a.id}">
             <div class="card-header">
                 <div class="meta-box">${a.category} · ${a.date}</div>
                 <div class="card-arrow-minimal">
@@ -261,6 +261,59 @@ const templates = {
                         <!-- Tu pojawią się wyniki wyszukiwania -->
                     </div>
                 </div>
+            </div>
+        `;
+    },
+    articleDetail: (a) => {
+        return `
+            <div class="data-view-container article-view">
+                <div class="back-link" onclick="window.history.back()">← POWRÓT</div>
+                
+                <header class="article-header">
+                    <div class="verdict-badge-refined">${a.verdict || 'ANALIZA'}</div>
+                    <h1 class="article-hero-title">${a.title}</h1>
+                    <div class="article-meta-line">
+                        <span>${a.category}</span> · <span>${a.date}</span>
+                    </div>
+                </header>
+
+                <section class="article-brief-section">
+                    <div class="section-label">BRIEF</div>
+                    <div class="article-brief-content">
+                        ${a.excerpt}
+                        <p style="margin-top:20px;">[Tu docelowo znajdzie się pełna treść Twojej analizy (100-200 słów) zgodnie z modelem treści.]</p>
+                    </div>
+                </section>
+
+                <div class="article-separator"></div>
+
+                <section class="article-impact-section">
+                    <div class="section-label">CO TO ZMIENIA DLA CIEBIE</div>
+                    <div class="impact-content">
+                        [Tu docelowo znajdzie się automatycznie wygenerowany przez AI lub wpisany przez Ciebie skutek dla obywatela.]
+                    </div>
+                </section>
+
+                <div class="article-separator"></div>
+
+                <section class="article-results-section">
+                    <div class="section-label">WYNIK GŁOSOWANIA</div>
+                    <div class="minimal-club-table">
+                        <div style="padding: 20px; text-align: center; color: #aaa; border: 1px dashed #ccc;">
+                            [Tu znajdzie się minimalistyczna tabela klubów z paskami ████░░░░]
+                        </div>
+                    </div>
+                </section>
+
+                <div class="article-separator"></div>
+
+                <footer class="article-sources">
+                    <div class="section-label">ŹRÓDŁA</div>
+                    <ul class="sources-list">
+                        <li><a href="#">Link do dokumentu Sejmowego</a></li>
+                        <li><a href="#">Link do stenogramu posiedzenia</a></li>
+                    </ul>
+                </footer>
             </div>
         `;
     },

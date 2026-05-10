@@ -171,7 +171,7 @@ body.menu-open .header-right {
 
 .op-card-refined:hover {
     transform: translate(-4px, -4px);
-    box-shadow: 12px 12px 0px #000;
+    box-shadow: 12px 12px 0px #ccc;
 }
 
 .card-header {

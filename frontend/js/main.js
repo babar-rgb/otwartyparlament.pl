@@ -43,6 +43,39 @@ async function init() {
             votes_yes: 460,
             votes_no: 0,
             verdict: 'MISJA PRZYJĘTA'
+        },
+        {
+            id: 'border-law',
+            category: 'BEZPIECZEŃSTWO',
+            image: 'https://images.unsplash.com/photo-1555848960-8c3ed4cf32a0?q=80&w=500&auto=format&fit=crop',
+            date: '10 MAJA 2026',
+            title: 'Kto ma prawo pociągnąć za spust?',
+            excerpt: 'Sejm przyjął ustawę o wsparciu działań żołnierzy na granicy. Nowe przepisy zmieniają zasady użycia broni w sytuacjach zagrożenia życia, co budzi skrajne emocje wśród prawników i obrońców praw człowieka.',
+            votes_yes: 231,
+            votes_no: 189,
+            verdict: 'PRZYJĘTO'
+        },
+        {
+            id: 'energy-prices',
+            category: 'FINANSE',
+            image: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?q=80&w=500&auto=format&fit=crop',
+            date: '08 MAJA 2026',
+            title: 'Ile kosztuje Twoja kawa?',
+            excerpt: 'Posłowie zdecydowali o przedłużeniu zamrożenia cen energii dla gospodarstw domowych do końca roku. To decyzja, która bezpośrednio dotknie portfela każdego obywatela, stabilizując koszty utrzymania w dobie inflacji.',
+            votes_yes: 412,
+            votes_no: 15,
+            verdict: 'PRZYJĘTO'
+        },
+        {
+            id: 'justice-reform',
+            category: 'SĄDOWNICTWO',
+            image: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?q=80&w=500&auto=format&fit=crop',
+            date: '05 MAJA 2026',
+            title: 'Czy sędzia jest sędzią?',
+            excerpt: 'Projekt ustawy o statusie neosędziów został odrzucony w pierwszym czytaniu. Spór o praworządność wkracza w fazę impasu, pozostawiając tysiące wyroków w stanie niepewności prawnej.',
+            votes_yes: 190,
+            votes_no: 245,
+            verdict: 'ODRZUCONO'
         }];
 
         state.isLoaded = true;
@@ -82,6 +115,15 @@ function handleRoute() {
                 mainContent.innerHTML = `<p>Nie udało się załadować danych głosowania.</p>`;
             });
     }
+    else if (hash.startsWith('#artykul/')) {
+        const id = hash.split('/')[1];
+        const article = state.data.articles.find(a => a.id === id);
+        if (article) {
+            mainContent.innerHTML = templates.articleDetail(article);
+        } else {
+            mainContent.innerHTML = `<p style="padding:40px; text-align:center; color:#aaa;">Nie znaleziono artykułu.</p>`;
+        }
+    }
     else if (hash === '#ustawy') mainContent.innerHTML = templates.processes();
     else if (hash.startsWith('#poslowie')) {
         const parts = hash.split('/');
@@ -112,6 +154,9 @@ function setupEventListeners() {
     window.addEventListener('hashchange', handleRoute);
 
     document.addEventListener('click', (e) => {
+        const articleItem = e.target.closest('.clickable-article');
+        if (articleItem) window.location.hash = `#artykul/${articleItem.dataset.id}`;
+
         const clubItem = e.target.closest('.club-item');
         if (clubItem) window.location.hash = `#poslowie/${encodeURIComponent(clubItem.dataset.club)}`;
 
