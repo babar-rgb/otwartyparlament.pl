@@ -183,8 +183,8 @@ const templates = {
     voteDetail: (v) => {
         const stats = v.results || { yes: 0, no: 0, abstain: 0 };
         return `
-            <div class="data-view-container" style="padding-top: 100px;">
-                <div class="back-link" style="margin-bottom: 40px; font-size: 9px; font-weight: 800; letter-spacing: 2px; color: #888; cursor: pointer; text-transform: uppercase;" onclick="window.history.back()">← POWRÓT DO LISTY GŁOSOWAŃ</div>
+            <div class="data-view-container">
+                <div class="back-link" style="margin-bottom: 20px; font-size: 9px; font-weight: 800; letter-spacing: 2px; color: #888; cursor: pointer; text-transform: uppercase;" onclick="window.history.back()">← POWRÓT DO LISTY GŁOSOWAŃ</div>
                 
                 <div class="vote-header-wrap" style="margin-bottom: 80px;">
                     <div class="verdict-badge-big" style="display: inline-block; background: #000; color: #fff; padding: 12px 25px; font-size: 12px; font-weight: 900; letter-spacing: 3px; margin-bottom: 40px; text-transform: uppercase;">${v.verdict || 'PRZYJĘTO'}</div>
@@ -239,6 +239,33 @@ const templates = {
                             `;
                         }).join('')}
                     </div>
+                </div>
+
+                <div class="mp-search-on-vote" style="margin-top: 100px; border-top: 2px solid #000; padding-top: 60px;">
+                    <h2 style="font-size: 11px; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 30px;">SPRAWDŹ GŁOS KONKRETNEGO POSŁA</h2>
+                    <input type="text" id="mpVoteSearchInput" class="minimal-search-input" placeholder="WPISZ NAZWISKO POSŁA..." style="width: 100%; border: none; border-bottom: 1px solid #eee; padding: 20px 0; font-family: 'Playfair Display', serif; font-size: 24px; outline: none;">
+                    
+                    <div id="mpVoteSearchResults" style="margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                        <!-- Tu pojawią się wyniki wyszukiwania -->
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+    renderMpVoteResult: (m) => {
+        const choice_map = { "YES": "ZA", "NO": "PRZECIW", "ABSTAIN": "WSTRZYMAŁ SIĘ", "ABSENT": "NIEOBECNY" };
+        const choice_pl = choice_map[m.choice] || m.choice;
+        return `
+            <div class="mp-result-card" style="display: flex; gap: 20px; align-items: center; padding: 20px; background: #fafafa; border: 1px solid #eee;">
+                <div style="width: 60px; height: 60px; border-radius: 50%; overflow: hidden; background: #eee;">
+                    <img src="${m.photo}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://www.sejm.gov.pl/Sejm10.nsf/photos/000.jpg'">
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-size: 9px; font-weight: 800; color: #888; text-transform: uppercase;">${m.club}</div>
+                    <div style="font-size: 16px; font-weight: 900;">${m.name}</div>
+                </div>
+                <div style="padding: 10px 20px; border: 2px solid #000; font-size: 11px; font-weight: 900; ${choice_pl === 'ZA' ? 'background: #000; color: #fff;' : 'background: #fff; color: #000;'}">
+                    ${choice_pl}
                 </div>
             </div>
         `;

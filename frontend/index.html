@@ -13,6 +13,28 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap"
         rel="stylesheet">
+    <style>
+        .sidebar-section-title {
+            font-family: 'Playfair Display', serif !important;
+            font-size: 18px !important;
+            font-weight: 900 !important;
+            color: #000 !important;
+            margin: 60px 0 25px 0 !important;
+            padding-top: 15px !important;
+            text-align: right !important;
+            display: block !important;
+            position: relative !important;
+        }
+        .sidebar-section-title::before {
+            content: "" !important;
+            position: absolute !important;
+            top: 0 !important;
+            right: 0 !important;
+            width: 50% !important;
+            height: 1px !important;
+            background: #000 !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -190,35 +212,17 @@
                     <li><a href="#ustawy">USTAWY</a></li>
                     <li><a href="#poslowie">POSŁOWIE</a></li>
                     <li><a href="#rankingi">RANKINGI</a></li>
-                    <li><a href="#legislacja">PREZYDENT VS RZĄD</a></li>
                 </ul>
                 <div class="sidebar-divider"></div>
+                <h3 class="sidebar-section-title">GRUPY</h3>
                 <ul>
+                    <li><a href="#legislacja">PREZYDENT VS RZĄD</a></li>
                     <li><a href="#szukaj/podatki">FINANSE</a></li>
                     <li><a href="#szukaj/obrona">BEZPIECZEŃSTWO</a></li>
                     <li><a href="#szukaj/sąd">SĄDOWNICTWO</a></li>
                     <li><a href="#szukaj/zdrowie">SPOŁECZEŃSTWO</a></li>
                     <li><a href="#szukaj/energia">EKOLOGIA</a></li>
                 </ul>
-                <div class="sidebar-select">
-                    <select id="topicSelect" onchange="if(this.value) window.location.hash=this.value; this.value='';">
-                        <option value="">WYBIERZ TEMAT</option>
-                        <option value="#szukaj/podatki">Podatki i Akcyza</option>
-                        <option value="#szukaj/bud%C5%BCet">Budżet Państwa</option>
-                        <option value="#szukaj/inflacja">NBP i Inflacja</option>
-                        <option value="#szukaj/obrona">Obrona Narodowa</option>
-                        <option value="#szukaj/granica">Sytuacja na Granicy</option>
-                        <option value="#szukaj/nato">NATO i Relacje USA</option>
-                        <option value="#szukaj/trybuna%C5%82">Trybunał Konstytucyjny</option>
-                        <option value="#szukaj/KRS">Krajowa Rada Sądownictwa</option>
-                        <option value="#szukaj/prokuratura">Prokuratura</option>
-                        <option value="#szukaj/emerytury">System Emerytalny</option>
-                        <option value="#szukaj/zdrowie">Ochrona Zdrowia</option>
-                        <option value="#szukaj/edukacja">Edukacja i Nauka</option>
-                        <option value="#szukaj/energia">Transformacja Energetyczna</option>
-                        <option value="#szukaj/klimat">Klimat i Środowisko</option>
-                    </select>
-                </div>
             </nav>
         </aside>
     </main>

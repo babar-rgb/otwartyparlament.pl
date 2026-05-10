@@ -1,9 +1,9 @@
 /* --- Data Views (Votes & MPs) --- */
 
 .data-view-container {
-    max-width: 900px;
+    width: 100%;
     margin: 0;
-    padding: 60px 0;
+    padding: 0;
 }
 
 .view-header {

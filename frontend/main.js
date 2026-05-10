@@ -69,6 +69,7 @@ function handleRoute() {
         fetch(`${API_BASE_URL}/votes/${id}`)
             .then(r => r.json())
             .then(fullVote => {
+                state.currentVoteVotes = fullVote.individualVotes; // Przechowujemy głosy dla wyszukiwarki
                 mainContent.innerHTML = templates.voteDetail(fullVote);
             })
             .catch(err => {
@@ -133,6 +134,23 @@ function setupEventListeners() {
         if (e.target.id === 'localMpSearch') {
             state.filters.mpSearch = e.target.value;
             document.querySelector('.content-area').innerHTML = templates.mps();
+        }
+
+        if (e.target.id === 'mpVoteSearchInput') {
+            const query = e.target.value.toLowerCase().trim();
+            const resultsContainer = document.getElementById('mpVoteSearchResults');
+            if (!resultsContainer) return;
+
+            if (query.length < 2) {
+                resultsContainer.innerHTML = '';
+                return;
+            }
+
+            const filtered = (state.currentVoteVotes || []).filter(m => 
+                m.name.toLowerCase().includes(query) || (m.club || '').toLowerCase().includes(query)
+            ).slice(0, 4); // Pokazujemy max 4 wyniki, żeby nie psuć layoutu
+
+            resultsContainer.innerHTML = filtered.map(m => templates.renderMpVoteResult(m)).join('');
         }
     });
 }

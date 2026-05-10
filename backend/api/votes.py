@@ -28,8 +28,8 @@ def read_vote(vote_id: int, db: Session = Depends(get_db)):
     if not vote:
         raise HTTPException(status_code=404, detail="Vote not found")
     
-    # WYGRZEBYWANIE ROZKŁADU WG KLUBÓW
-    # Poprawka: szukamy YES/NO/ABSTAIN bo tak zapisuje SejmSyncService
+    # 1. ROZKŁAD WG KLUBÓW
+    # Paski klubowe (to już działa, ale utrwalamy)
     club_results = db.query(
         MP.club,
         func.count(MPVote.id).filter(MPVote.choice == "YES").label("yes"),
@@ -49,11 +49,27 @@ def read_vote(vote_id: int, db: Session = Depends(get_db)):
             "total": row.yes + row.no + row.abstain
         })
 
+    # 2. LISTA GŁOSÓW INDYWIDUALNYCH (Naprawiona rura)
+    # Wybieramy konkretne pola, żeby nie słać całych obiektów
+    all_votes = db.query(MP.name, MP.photo_url, MP.club, MPVote.choice).\
+        join(MPVote, MP.id == MPVote.mp_id).\
+        filter(MPVote.vote_id == vote_id).all()
+    
+    individual_votes = []
+    for name, photo, club, choice in all_votes:
+        individual_votes.append({
+            "name": name,
+            "photo": photo,
+            "club": club or "NIEZRZESZENI",
+            "choice": choice
+        })
+
     return {
         "id": vote.id,
         "date": vote.date.isoformat(),
         "title": vote.title,
         "verdict": vote.verdict,
         "results": vote.results_json,
-        "breakdown": sorted(breakdown, key=lambda x: x['total'], reverse=True)
+        "breakdown": sorted(breakdown, key=lambda x: x['total'], reverse=True),
+        "individualVotes": individual_votes 
     }

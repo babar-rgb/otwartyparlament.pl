@@ -134,10 +134,8 @@ body.menu-open .header-right {
     grid-template-columns: 1fr 280px;
     max-width: 1300px;
     margin: 0 auto;
-    padding: 60px 40px;
-    /* Nieco mniejszy padding top dla dynamiki */
+    padding: 10px 40px;
     gap: 120px;
-    /* Większy odstęp dla oddechu NYT */
 }
 
 /* Hero Section - Audited Weights */
@@ -323,6 +321,19 @@ body.menu-open .header-right {
 
 .sidebar-nav a:hover {
     opacity: 0.5;
+}
+
+.sidebar-section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 14px;
+    font-weight: 900;
+    color: #000;
+    margin: 60px 0 25px 0;
+    padding-top: 15px;
+    border-top: 1px solid #000;
+    text-align: right;
+    letter-spacing: 0;
+    /* Przy szeryfach lepiej nie rozstrzelać liter za mocno */
 }
 
 
@@ -811,4 +822,3 @@ body.is-article-view .sidebar-right {
         height: 200px;
     }
 }
-
