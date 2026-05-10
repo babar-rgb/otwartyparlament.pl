@@ -285,7 +285,48 @@
     transition: transform 0.2s;
 }
 
-.mag-source-links a:hover { transform: translateX(10px); }
+/* --- Mag Club Table (Brutalist Progress) --- */
+.mag-club-table-container {
+    padding: 20px 0;
+}
+
+.mag-club-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.mag-club-name {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #000;
+}
+
+.mag-club-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.mag-club-bar-string {
+    font-family: monospace;
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: #000;
+}
+
+.mag-club-stats {
+    font-size: 10px;
+    font-weight: 800;
+    color: #bbb;
+    letter-spacing: 1px;
+    min-width: 80px;
+    text-align: right;
+}
 
 .vote-analysis-calm {
     background: #f9f9f9;

@@ -42,7 +42,16 @@ async function init() {
             excerpt: 'Demokracja to nie tylko emocje, to przede wszystkim dane. Naszym celem jest dostarczenie Ci surowych faktów w sposób spokojny i prestiżowy.',
             votes_yes: 460,
             votes_no: 0,
-            verdict: 'MISJA PRZYJĘTA'
+            verdict: 'MISJA PRZYJĘTA',
+            results_json: [
+                { name: 'PRAWO I SPRAWIEDLIWOŚĆ', yes: 190, no: 0, abstain: 0 },
+                { name: 'KOALICJA OBYWATELSKA', yes: 157, no: 0, abstain: 0 },
+                { name: 'POLSKA 2050 - TRZECIA DROGA', yes: 33, no: 0, abstain: 0 },
+                { name: 'PSL - TRZECIA DROGA', yes: 32, no: 0, abstain: 0 },
+                { name: 'LEWICA', yes: 26, no: 0, abstain: 0 },
+                { name: 'KONFEDERACJA', yes: 18, no: 0, abstain: 0 },
+                { name: 'KUKIZ\'15', yes: 4, no: 0, abstain: 0 }
+            ]
         },
         {
             id: 'border-law',
@@ -53,7 +62,16 @@ async function init() {
             excerpt: 'Sejm przyjął ustawę o wsparciu działań żołnierzy na granicy. Nowe przepisy zmieniają zasady użycia broni w sytuacjach zagrożenia życia, co budzi skrajne emocje wśród prawników i obrońców praw człowieka.',
             votes_yes: 231,
             votes_no: 189,
-            verdict: 'PRZYJĘTO'
+            verdict: 'PRZYJĘTO',
+            results_json: [
+                { name: 'KOALICJA OBYWATELSKA', yes: 157, no: 0, abstain: 0 },
+                { name: 'PRAWO I SPRAWIEDLIWOŚĆ', yes: 12, no: 168, abstain: 10 },
+                { name: 'POLSKA 2050 - TRZECIA DROGA', yes: 33, no: 0, abstain: 0 },
+                { name: 'PSL - TRZECIA DROGA', yes: 32, no: 0, abstain: 0 },
+                { name: 'LEWICA', yes: 15, no: 11, abstain: 0 },
+                { name: 'KONFEDERACJA', yes: 0, no: 18, abstain: 0 },
+                { name: 'KUKIZ\'15', yes: 4, no: 0, abstain: 0 }
+            ]
         },
         {
             id: 'energy-prices',
@@ -64,7 +82,15 @@ async function init() {
             excerpt: 'Posłowie zdecydowali o przedłużeniu zamrożenia cen energii dla gospodarstw domowych do końca roku. To decyzja, która bezpośrednio dotknie portfela każdego obywatela, stabilizując koszty utrzymania w dobie inflacji.',
             votes_yes: 412,
             votes_no: 15,
-            verdict: 'PRZYJĘTO'
+            verdict: 'PRZYJĘTO',
+            results_json: [
+                { name: 'PRAWO I SPRAWIEDLIWOŚĆ', yes: 170, no: 0, abstain: 20 },
+                { name: 'KOALICJA OBYWATELSKA', yes: 157, no: 0, abstain: 0 },
+                { name: 'POLSKA 2050 - TRZECIA DROGA', yes: 33, no: 0, abstain: 0 },
+                { name: 'PSL - TRZECIA DROGA', yes: 32, no: 0, abstain: 0 },
+                { name: 'LEWICA', yes: 26, no: 0, abstain: 0 },
+                { name: 'KONFEDERACJA', yes: 5, no: 13, abstain: 0 }
+            ]
         },
         {
             id: 'justice-reform',
@@ -75,7 +101,14 @@ async function init() {
             excerpt: 'Projekt ustawy o statusie neosędziów został odrzucony w pierwszym czytaniu. Spór o praworządność wkracza w fazę impasu, pozostawiając tysiące wyroków w stanie niepewności prawnej.',
             votes_yes: 190,
             votes_no: 245,
-            verdict: 'ODRZUCONO'
+            verdict: 'ODRZUCONO',
+            results_json: [
+                { name: 'KOALICJA OBYWATELSKA', yes: 157, no: 0, abstain: 0 },
+                { name: 'PRAWO I SPRAWIEDLIWOŚĆ', yes: 0, no: 190, abstain: 0 },
+                { name: 'POLSKA 2050 - TRZECIA DROGA', yes: 33, no: 0, abstain: 0 },
+                { name: 'LEWICA', yes: 0, no: 26, abstain: 0 },
+                { name: 'KONFEDERACJA', yes: 0, no: 18, abstain: 0 }
+            ]
         }];
 
         state.isLoaded = true;

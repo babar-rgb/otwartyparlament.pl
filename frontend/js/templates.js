@@ -42,6 +42,27 @@ function renderMpCard(mp) {
     `;
 }
 
+function renderMagClubTable(results) {
+    if (!results || results.length === 0) return '<div style="padding:40px; color:#aaa; font-size:11px; letter-spacing:2px; text-align:center;">BRAK DANYCH KLUBOWYCH</div>';
+    
+    return results.map(club => {
+        const total = (club.yes || 0) + (club.no || 0) + (club.abstain || 0);
+        if (total === 0) return '';
+        const yesPercent = Math.round(((club.yes || 0) / total) * 10);
+        const progressStr = '█'.repeat(yesPercent) + '░'.repeat(10 - yesPercent);
+        
+        return `
+            <div class="mag-club-row">
+                <div class="mag-club-name">${club.name}</div>
+                <div class="mag-club-bar-wrap">
+                    <div class="mag-club-bar-string">${progressStr}</div>
+                    <div class="mag-club-stats">ZA: ${club.yes || 0} / ${total}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
 // --- TEMPLATES ---
 
 const templates = {
@@ -308,17 +329,15 @@ const templates = {
                     </div>
                 </div>
 
-                <div class="mag-results-area">
-                    <div class="mag-results-header">
-                        <span class="mag-res-label">ROZKŁAD GŁOSÓW</span>
-                        <div class="mag-res-line"></div>
-                    </div>
-                    <div class="minimal-club-table">
-                         <div style="padding: 60px; text-align: center; color: #aaa; border: 1px dashed #ccc; font-size: 10px; letter-spacing: 3px; font-weight: 900;">
-                            [ DANE SEJMOWE: ŁADOWANIE TABELI KLUBÓW... ]
+                    <div class="mag-results-area">
+                        <div class="mag-results-header">
+                            <span class="mag-res-label">ROZKŁAD GŁOSÓW W KLUBACH</span>
+                            <div class="mag-res-line"></div>
+                        </div>
+                        <div class="mag-club-table-container">
+                             ${renderMagClubTable(a.results_json)}
                         </div>
                     </div>
-                </div>
 
                 <footer class="mag-footer">
                     <div class="mag-sources-wrap">
