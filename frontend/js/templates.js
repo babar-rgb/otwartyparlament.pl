@@ -19,8 +19,8 @@ function renderLedgerItem(v) {
                 <div class="ledger-topic">${v.topic || 'SEJM'}</div>
                 <h3 class="ledger-title">${v.title}</h3>
                 <div class="vote-bar-container-minimal">
-                    <div class="vote-bar-segment is-for" style="width: ${(yes/460)*100}%"></div>
-                    <div class="vote-bar-segment is-against" style="width: ${(no/460)*100}%"></div>
+                    <div class="vote-bar-segment is-for" style="width: ${(yes / 460) * 100}%"></div>
+                    <div class="vote-bar-segment is-against" style="width: ${(no / 460) * 100}%"></div>
                 </div>
                 <div class="ledger-footer">
                     <span class="verdict-badge ${v.verdict === 'PRZYJĘTO' ? 'is-success' : 'is-error'}">${v.verdict || '---'}</span>
@@ -81,10 +81,7 @@ const templates = {
         </article>
     `,
     votes: () => {
-        const query = (state.filters.voteSearch || '').toLowerCase().trim();
-        const filtered = query
-            ? state.data.votes.filter(v => v.title.toLowerCase().includes(query))
-            : state.data.votes;
+        const filtered = window.TruthSearch.searchInList(state.data.votes, state.filters.voteSearch, ['title', 'topic']);
 
         return `
             <div class="data-view-container">
@@ -102,7 +99,7 @@ const templates = {
     mps: () => {
         const query = state.filters.mpSearch.toLowerCase();
         const mps = state.data.mps;
-        
+
         if (!state.filters.selectedClub) {
             const clubs = [...new Set(mps.map(m => m.club))].filter(Boolean).sort();
             return `
@@ -112,7 +109,7 @@ const templates = {
                         <input type="text" id="localMpSearch" class="minimal-search-input" placeholder="SZUKAJ POSŁA LUB KLUBU..." value="${state.filters.mpSearch}">
                     </div>
                     <div class="clubs-list">
-                        ${clubs.filter(c => c.toLowerCase().includes(query)).map(c => `
+                        ${window.TruthSearch.searchInList(clubs, state.filters.mpSearch).map(c => `
                             <div class="club-item" data-club="${c}">
                                 <span class="club-name">${c}</span>
                                 <span class="club-arrow">→</span>
@@ -122,8 +119,9 @@ const templates = {
                 </div>
             `;
         }
-        
-        const filtered = mps.filter(m => m.club === state.filters.selectedClub && (m.name || '').toLowerCase().includes(query));
+
+        const clubMps = mps.filter(m => m.club === state.filters.selectedClub);
+        const filtered = window.TruthSearch.searchInList(clubMps, state.filters.mpSearch, ['name']);
         return `
             <div class="data-view-container">
                 <div class="back-link" id="backToClubs">← POWRÓT</div>
@@ -193,7 +191,7 @@ const templates = {
                     <div class="vote-meta-line" style="display: flex; gap: 40px; border-top: 1px solid #eee; padding-top: 30px; font-size: 10px; font-weight: 800; color: #aaa; letter-spacing: 1px; text-transform: uppercase;">
                         <div>DATA: <span style="color: #000;">${formatDatePolish(v.date)}</span></div>
                         <div>NUMER: <span style="color: #000;">${v.id}</span></div>
-                        <div>POSIEDZENIE: <span style="color: #000;">${Math.floor(v.id/1000)}</span></div>
+                        <div>POSIEDZENIE: <span style="color: #000;">${Math.floor(v.id / 1000)}</span></div>
                     </div>
                 </div>
 
@@ -216,9 +214,9 @@ const templates = {
                     <h2 style="font-size: 12px; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 50px;">ROZKŁAD GŁOSÓW WG KLUBÓW</h2>
                     <div class="clubs-grid" style="display: grid; grid-template-columns: 1fr 1fr; column-gap: 100px; row-gap: 60px;">
                         ${(v.breakdown || []).map(c => {
-                            const total = c.yes + c.no + c.abstain;
-                            const hasVotes = total > 0;
-                            return `
+            const total = c.yes + c.no + c.abstain;
+            const hasVotes = total > 0;
+            return `
                                 <div class="club-stat-box">
                                     <div class="club-row-meta" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px;">
                                         <span style="font-size: 20px; font-weight: 900; letter-spacing: 0px;">${c.club}</span>
@@ -230,14 +228,14 @@ const templates = {
                                     </div>
                                     <div class="club-bar-wrap" style="height: 8px; background: #f5f5f5; position: relative; overflow: hidden; border-radius: 2px;">
                                         ${hasVotes ? `
-                                            <div style="position: absolute; left: 0; top: 0; height: 100%; background: #2e7d32; width: ${(c.yes/total)*100}%"></div>
-                                            <div style="position: absolute; left: ${(c.yes/total)*100}%; top: 0; height: 100%; background: #c62828; width: ${(c.no/total)*100}%"></div>
-                                            <div style="position: absolute; left: ${((c.yes+c.no)/total)*100}%; top: 0; height: 100%; background: #999; width: ${(c.abstain/total)*100}%"></div>
+                                            <div style="position: absolute; left: 0; top: 0; height: 100%; background: #2e7d32; width: ${(c.yes / total) * 100}%"></div>
+                                            <div style="position: absolute; left: ${(c.yes / total) * 100}%; top: 0; height: 100%; background: #c62828; width: ${(c.no / total) * 100}%"></div>
+                                            <div style="position: absolute; left: ${((c.yes + c.no) / total) * 100}%; top: 0; height: 100%; background: #999; width: ${(c.abstain / total) * 100}%"></div>
                                         ` : ''}
                                     </div>
                                 </div>
                             `;
-                        }).join('')}
+        }).join('')}
                     </div>
                 </div>
 
@@ -256,7 +254,7 @@ const templates = {
         const choice_map = { "YES": "ZA", "NO": "PRZECIW", "ABSTAIN": "WSTRZYMAŁ SIĘ", "ABSENT": "NIEOBECNY" };
         const choice_pl = choice_map[m.choice] || m.choice;
         return `
-            <div class="mp-result-card" style="display: flex; gap: 20px; align-items: center; padding: 20px; background: #fafafa; border: 1px solid #eee;">
+            <div class="mp-result-card clickable-mp" data-id="${m.id}" style="display: flex; gap: 20px; align-items: center; padding: 20px; background: #fafafa; border: 1px solid #eee; cursor: pointer;">
                 <div style="width: 60px; height: 60px; border-radius: 50%; overflow: hidden; background: #eee;">
                     <img src="${m.photo}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://www.sejm.gov.pl/Sejm10.nsf/photos/000.jpg'">
                 </div>

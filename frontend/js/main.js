@@ -126,26 +126,29 @@ function setupEventListeners() {
     });
 
     document.addEventListener('input', (e) => {
+        // 1. Wyszukiwarka posłów na liście ogólnej
         if (e.target.id === 'localMpSearch') {
             state.filters.mpSearch = e.target.value;
+            // Korzystamy z centralnego silnika do filtrowania lokalnego
+            const allMps = window.state?.data?.mps || [];
+            state.filteredMps = window.TruthSearch.searchInList(allMps, e.target.value, ['name', 'club']);
             document.querySelector('.content-area').innerHTML = templates.mps();
         }
 
-        if (e.target.id === 'mpVoteSearchInput') {
-            const query = e.target.value.toLowerCase().trim();
-            const resultsContainer = document.getElementById('mpVoteSearchResults');
-            if (!resultsContainer) return;
-
-            if (query.length < 2) {
-                resultsContainer.innerHTML = '';
-                return;
+        // 2. Wyszukiwarka konkretnego posła w widoku głosowania
+        if (e.target.id === 'mpVoteSearchInput' || e.target.id === 'voteSearchInput') {
+            const query = e.target.value;
+            
+            if (e.target.id === 'voteSearchInput') {
+                state.filters.voteSearch = query;
+                document.querySelector('.content-area').innerHTML = templates.votes();
+            } else {
+                // Wyszukiwanie wewnątrz konkretnego głosowania
+                const resultsContainer = document.getElementById('mpVoteSearchResults');
+                if (!resultsContainer) return;
+                const results = window.TruthSearch.searchInList(state.currentVoteVotes || [], query, ['name', 'club']).slice(0, 4);
+                resultsContainer.innerHTML = results.map(m => templates.renderMpVoteResult(m)).join('');
             }
-
-            const filtered = (state.currentVoteVotes || []).filter(m =>
-                m.name.toLowerCase().includes(query) || (m.club || '').toLowerCase().includes(query)
-            ).slice(0, 4); // Pokazujemy max 4 wyniki, żeby nie psuć layoutu
-
-            resultsContainer.innerHTML = filtered.map(m => templates.renderMpVoteResult(m)).join('');
         }
     });
 }

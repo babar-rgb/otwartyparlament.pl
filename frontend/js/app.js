@@ -3,23 +3,13 @@ document.addEventListener('alpine:init', () => {
         menuOpen: false,
         searchQuery: '',
         
-        // Dynamiczne filtrowanie posłów
-        get filteredMps() {
-            if (this.searchQuery.length < 2) return [];
-            const mps = window.state?.data?.mps || [];
-            return mps.filter(m => 
-                m.name.toLowerCase().includes(this.searchQuery.toLowerCase())
-            ).slice(0, 4);
+        // Korzystamy z nowego silnika TruthSearch
+        get results() {
+            return window.TruthSearch ? window.TruthSearch.query(this.searchQuery) : { mps: [], votes: [] };
         },
 
-        // Dynamiczne filtrowanie głosowań
-        get filteredVotes() {
-            if (this.searchQuery.length < 2) return [];
-            const votes = window.state?.data?.votes || [];
-            return votes.filter(v => 
-                v.title.toLowerCase().includes(this.searchQuery.toLowerCase())
-            ).slice(0, 4);
-        },
+        get filteredMps() { return this.results.mps; },
+        get filteredVotes() { return this.results.votes; },
 
         // Metody pomocnicze
         toggleMenu() {
