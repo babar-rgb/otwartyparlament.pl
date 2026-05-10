@@ -1,10 +1,11 @@
 const API_BASE_URL = 'http://localhost:8002/api';
 
-const state = {
+window.state = {
     data: { articles: [], mps: [], votes: [], processes: [], wealth: [], trending: [] },
     isLoaded: false,
     filters: { mpSearch: '', voteSearch: '', selectedClub: null }
 };
+const state = window.state; // Dla zachowania kompatybilności z resztą main.js
 
 // --- CORE LOGIC ---
 
@@ -30,7 +31,7 @@ async function init() {
 
         state.data.mps = mps;
         state.data.votes = votes;
-        
+
         // Dodajemy jeden artykuł o misji (ten, który miał zostać)
         state.data.articles = [{
             id: 'manifesto',
@@ -56,16 +57,17 @@ function handleRoute() {
     const mainContent = document.querySelector('.content-area');
     if (!mainContent) return;
 
-    // Reset UI przy każdej zmianie trasy
-    const megaMenu = document.getElementById('megaMenu');
-    if (megaMenu) megaMenu.classList.remove('open');
-    document.body.classList.remove('menu-open');
+    // Reset UI przy każdej zmianie trasy - delegowane do Alpine
+    if (window.Alpine) {
+        const data = Alpine.closestRoot(document.body)?._x_dataStack[0];
+        if (data) data.closeMenu();
+    }
 
     if (hash === '#glosowania') mainContent.innerHTML = templates.votes();
     else if (hash.startsWith('#glosowanie/')) {
         const id = hash.split('/')[1];
         mainContent.innerHTML = `<p style="padding:40px; text-align:center; color:#aaa;">Ładowanie szczegółów głosowania...</p>`;
-        
+
         fetch(`${API_BASE_URL}/votes/${id}`)
             .then(r => r.json())
             .then(fullVote => {
@@ -86,7 +88,7 @@ function handleRoute() {
     else if (hash.startsWith('#posel/')) {
         const id = hash.split('/')[1];
         mainContent.innerHTML = `<p style="padding:40px; text-align:center; color:#aaa;">Ładowanie profilu...</p>`;
-        
+
         // Pobieramy PEŁNE dane posła (z historią głosowań) bezpośrednio z API
         fetch(`${API_BASE_URL}/mps/${id}`)
             .then(r => r.json())
@@ -107,13 +109,6 @@ function setupEventListeners() {
     window.addEventListener('hashchange', handleRoute);
 
     document.addEventListener('click', (e) => {
-        const menuBtn = e.target.closest('#menuToggle');
-        if (menuBtn) {
-            menuBtn.classList.toggle('active');
-            document.getElementById('megaMenu').classList.toggle('open');
-            document.body.classList.toggle('menu-open');
-        }
-
         const clubItem = e.target.closest('.club-item');
         if (clubItem) window.location.hash = `#poslowie/${encodeURIComponent(clubItem.dataset.club)}`;
 
@@ -146,7 +141,7 @@ function setupEventListeners() {
                 return;
             }
 
-            const filtered = (state.currentVoteVotes || []).filter(m => 
+            const filtered = (state.currentVoteVotes || []).filter(m =>
                 m.name.toLowerCase().includes(query) || (m.club || '').toLowerCase().includes(query)
             ).slice(0, 4); // Pokazujemy max 4 wyniki, żeby nie psuć layoutu
 
