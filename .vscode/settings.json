@@ -3,6 +3,9 @@
         "**/__pycache__": true,
         "**/.DS_Store": true,
         "**/*.pyc": true,
-        ".agents": true
+        ".agents": true,
+        ".venv": true,
+        ".vscode": true,
+        ".git": true
     }
 }

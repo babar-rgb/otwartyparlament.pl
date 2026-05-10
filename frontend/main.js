@@ -3,7 +3,7 @@ const API_BASE_URL = 'http://localhost:8002/api';
 const state = {
     data: { articles: [], mps: [], votes: [], processes: [], wealth: [], trending: [] },
     isLoaded: false,
-    filters: { mpSearch: '', voteSearch: '', selectedClub: null }
+    filters: { mpSearch: '', voteSearch: '', selectedClub: null, votesLimit: 15 }
 };
 
 // --- CORE LOGIC ---
@@ -20,7 +20,7 @@ async function init() {
 
         const [mps, votes, procs, trending] = await Promise.all([
             fetchWithTimeout(`${API_BASE_URL}/mps?active=true&light=True`),
-            fetchWithTimeout(`${API_BASE_URL}/votes?limit=50`),
+            fetchWithTimeout(`${API_BASE_URL}/votes?limit=200&hide_procedural=true&sort_by=importance`),
             fetchWithTimeout(`${API_BASE_URL}/legislative_processes?limit=50`),
             fetchWithTimeout(`${API_BASE_URL}/trending`)
         ]);
@@ -71,6 +71,11 @@ function handleRoute() {
         }
     }
     else if (hash === '#ustawy') mainContent.innerHTML = templates.processes();
+    else if (hash === '#rankingi') mainContent.innerHTML = templates.rankings();
+    else if (hash.startsWith('#szukaj/')) {
+        const query = hash.replace('#szukaj/', '');
+        mainContent.innerHTML = templates.search(query);
+    }
     else if (hash.startsWith('#poslowie')) {
         const parts = hash.split('/');
         state.filters.selectedClub = parts[1] ? decodeURIComponent(parts[1]) : null;
@@ -131,6 +136,20 @@ function setupEventListeners() {
         if (e.target.id === 'localMpSearch') {
             state.filters.mpSearch = e.target.value;
             document.querySelector('.content-area').innerHTML = templates.mps();
+        }
+        if (e.target.id === 'voteSearchInput') {
+            state.filters.voteSearch = e.target.value;
+            state.filters.votesLimit = 15;
+            document.querySelector('.content-area').innerHTML = templates.votes();
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        const showMore = e.target.closest('#showMoreVotes');
+        if (showMore) {
+            state.filters.votesLimit = parseInt(showMore.dataset.limit, 10);
+            document.querySelector('.content-area').innerHTML = templates.votes();
+            return;
         }
     });
 }

@@ -190,19 +190,33 @@
                     <li><a href="#ustawy">USTAWY</a></li>
                     <li><a href="#poslowie">POSŁOWIE</a></li>
                     <li><a href="#rankingi">RANKINGI</a></li>
-                    <li><a href="#szukaj">SZUKAJ</a></li>
+                    <li><a href="#legislacja">PREZYDENT VS RZĄD</a></li>
                 </ul>
                 <div class="sidebar-divider"></div>
                 <ul>
-                    <li><a href="#finanse">FINANSE</a></li>
-                    <li><a href="#">BEZPIECZEŃSTWO</a></li>
-                    <li><a href="#">SĄDOWNICTWO</a></li>
-                    <li><a href="#">SPOŁECZEŃSTWO</a></li>
-                    <li><a href="#">EKOLOGIA</a></li>
+                    <li><a href="#szukaj/podatki">FINANSE</a></li>
+                    <li><a href="#szukaj/obrona">BEZPIECZEŃSTWO</a></li>
+                    <li><a href="#szukaj/sąd">SĄDOWNICTWO</a></li>
+                    <li><a href="#szukaj/zdrowie">SPOŁECZEŃSTWO</a></li>
+                    <li><a href="#szukaj/energia">EKOLOGIA</a></li>
                 </ul>
                 <div class="sidebar-select">
-                    <select>
-                        <option>WYBIERZ TEMAT</option>
+                    <select id="topicSelect" onchange="if(this.value) window.location.hash=this.value; this.value='';">
+                        <option value="">WYBIERZ TEMAT</option>
+                        <option value="#szukaj/podatki">Podatki i Akcyza</option>
+                        <option value="#szukaj/bud%C5%BCet">Budżet Państwa</option>
+                        <option value="#szukaj/inflacja">NBP i Inflacja</option>
+                        <option value="#szukaj/obrona">Obrona Narodowa</option>
+                        <option value="#szukaj/granica">Sytuacja na Granicy</option>
+                        <option value="#szukaj/nato">NATO i Relacje USA</option>
+                        <option value="#szukaj/trybuna%C5%82">Trybunał Konstytucyjny</option>
+                        <option value="#szukaj/KRS">Krajowa Rada Sądownictwa</option>
+                        <option value="#szukaj/prokuratura">Prokuratura</option>
+                        <option value="#szukaj/emerytury">System Emerytalny</option>
+                        <option value="#szukaj/zdrowie">Ochrona Zdrowia</option>
+                        <option value="#szukaj/edukacja">Edukacja i Nauka</option>
+                        <option value="#szukaj/energia">Transformacja Energetyczna</option>
+                        <option value="#szukaj/klimat">Klimat i Środowisko</option>
                     </select>
                 </div>
             </nav>

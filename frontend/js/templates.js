@@ -114,12 +114,65 @@ const templates = {
             </div>
         </article>
     `,
-    votes: () => `
-        <div class="data-view-container">
-            <h1 class="view-title">Księga Głosowań</h1>
-            <div class="votes-ledger">${state.data.votes.map(v => renderLedgerItem(v)).join('')}</div>
-        </div>
-    `,
+    votes: () => {
+        const SKIP_KEYWORDS = [
+            'kworum', 'porządek obrad', 'składach osobowych', 'skład osobowy',
+            'wnioski formalne', 'wniosek formalny', 'odroczenie obrad',
+            'głosowanie imienne', 'zamknięcie posiedzenia', 'przerwa w obradach'
+        ];
+
+        const isSubstantive = (v) => {
+            const title = (v.title_clean || v.title || '').toLowerCase();
+            const topic = (v.topic || '').toLowerCase();
+            if (topic === 'formalne' || topic === 'proceduralne') return false;
+            return !SKIP_KEYWORDS.some(kw => title.includes(kw));
+        };
+
+        const query = (state.filters.voteSearch || '').toLowerCase().trim();
+        const limit = state.filters.votesLimit || 15;
+
+        const substantive = state.data.votes.filter(isSubstantive);
+        const filtered = query
+            ? substantive.filter(v => (v.title_clean || v.title || '').toLowerCase().includes(query))
+            : substantive;
+
+        const visible = filtered.slice(0, limit);
+        const remaining = filtered.length - visible.length;
+
+        return `
+            <div class="data-view-container">
+                <h1 class="view-title">Głosowania</h1>
+                <div style="font-size:9px;font-weight:800;letter-spacing:2px;color:#aaa;text-transform:uppercase;border-bottom:1px solid #eee;padding-bottom:15px;margin-bottom:30px;">
+                    WYŚWIETLONO: ${visible.length} Z ${filtered.length} GŁOSOWAŃ MERYTORYCZNYCH
+                </div>
+
+                <div class="inline-search-wrap" style="margin-bottom:40px;">
+                    <input type="text" id="voteSearchInput" class="minimal-search-input"
+                        placeholder="SZUKAJ W GŁOSOWANIACH..."
+                        value="${state.filters.voteSearch || ''}">
+                </div>
+
+                <div class="votes-ledger">
+                    ${visible.map(v => renderLedgerItem(v)).join('')}
+                    ${visible.length === 0 ? `
+                    <div style="padding:60px 0;text-align:center;color:#ccc;">
+                        <div style="font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;">BRAK WYNIKÓW</div>
+                        <div style="font-family:'Playfair Display',serif;font-size:18px;margin-top:10px;color:#aaa;">Spróbuj innej frazy.</div>
+                    </div>` : ''}
+                </div>
+
+                ${remaining > 0 ? `
+                <div style="text-align:center;padding:50px 0;border-top:1px solid #eee;margin-top:20px;">
+                    <button id="showMoreVotes" data-limit="${limit + 15}"
+                        style="font-size:9px;font-weight:900;letter-spacing:3px;text-transform:uppercase;border:1.5px solid #000;background:#fff;padding:16px 40px;cursor:pointer;transition:all 0.2s;"
+                        onmouseover="this.style.background='#000';this.style.color='#fff';"
+                        onmouseout="this.style.background='#fff';this.style.color='#000';">
+                        POKAŻ WIĘCEJ — JESZCZE ${remaining}
+                    </button>
+                </div>` : ''}
+            </div>
+        `;
+    },
     mps: () => {
         const query = state.filters.mpSearch.toLowerCase();
         const mps = state.data.mps;
@@ -179,10 +232,8 @@ const templates = {
             <div class="data-view-container">
                 <div style="display: flex; align-items: center; gap: 30px; margin-bottom: 30px; justify-content: flex-start;">
                     <div class="back-link" style="margin-bottom: 0; font-size: 9px; font-weight: 800; letter-spacing: 2px; color: #888; cursor: pointer; text-transform: uppercase;" onclick="window.history.back()">← POWRÓT DO LISTY GŁOSOWAŃ</div>
-                    
-                    <div class="vote-verdict-large ${v.verdict === 'PRZYJĘTO' ? 'is-success' : 'is-error'}" style="margin-bottom: 0; padding: 10px 30px; font-size: 12px;">
-                        ${v.verdict || 'PRZYJĘTO'}
-                    </div>
+                    <div class="vote-verdict-large ${v.verdict === 'PRZYJĘTO' ? 'is-success' : 'is-error'}" style="margin-bottom: 0; padding: 10px 30px; font-size: 12px;">${v.verdict || 'PRZYJĘTO'}</div>
+                    ${v.vote_type ? `<div style="font-size:9px;font-weight:800;letter-spacing:2px;color:#bbb;text-transform:uppercase;border:1px solid #eee;padding:8px 16px;">${v.vote_type}</div>` : ''}
                 </div>
                 
                 <h1 class="vote-main-title">${v.title_clean || v.title || 'Szczegóły Głosowania'}</h1>
@@ -190,7 +241,8 @@ const templates = {
                 <div class="vote-meta-grid">
                     <div class="v-meta"><span>DATA:</span> ${v.date}</div>
                     <div class="v-meta"><span>NUMER:</span> ${v.voteNumber || '---'}</div>
-                    <div class="v-meta"><span>POSIEDZENIE:</span> ${v.sitting || '56'}</div>
+                    <div class="v-meta"><span>POSIEDZENIE:</span> ${v.sitting || '---'}</div>
+                    ${v.topic ? `<div class="v-meta"><span>TEMAT:</span> ${v.topic}</div>` : ''}
                 </div>
 
                 <div class="vote-grand-total" style="margin-top: 50px; margin-bottom: 60px;">
@@ -210,26 +262,184 @@ const templates = {
                     </div>
                 </div>
 
+                ${(v.impact || v.co_to_zmienia) ? `
+                <div style="background:#fafafa;border-left:3px solid #000;padding:30px;margin-bottom:60px;">
+                    <div style="font-size:9px;font-weight:900;letter-spacing:3px;text-transform:uppercase;margin-bottom:15px;color:#888;">CO TO ZMIENIA DLA CIEBIE</div>
+                    <p style="font-family:'Playfair Display',serif;font-size:18px;line-height:1.6;color:#000;margin:0;">${v.impact || v.co_to_zmienia}</p>
+                </div>` : ''}
+
                 <div class="vote-clubs-breakdown">
-                    <div class="section-title-brutal" style="margin-bottom: 30px;">ROZKŁAD GŁOSÓW WG KLUBÓW</div>
-                    <div class="club-stats-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px 50px;">
-                        ${(v.clubBreakdown || v.club_breakdown || []).map(c => renderClubStat(c)).join('')}
+                    <div class="section-title-brutal" style="margin-bottom:30px;">ROZKŁAD GŁOSÓW WG KLUBÓW</div>
+                    <div style="display:flex;flex-direction:column;">
+                        ${(v.clubBreakdown || v.club_breakdown || []).map(c => {
+                            const cFor = c.for || 0;
+                            const cAgainst = c.against || 0;
+                            const cAbstain = c.abstained || c.abstain || 0;
+                            const cTotal = cFor + cAgainst + cAbstain || 1;
+                            return `
+                            <div style="display:grid;grid-template-columns:90px 1fr 200px;align-items:center;gap:20px;padding:18px 0;border-bottom:1px solid #f0f0f0;">
+                                <div style="font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:1px;">${c.club}</div>
+                                <div style="height:4px;background:#f0f0f0;display:flex;">
+                                    <div style="width:${(cFor/cTotal)*100}%;background:#1a1a1a;"></div>
+                                    <div style="width:${(cAgainst/cTotal)*100}%;background:#c0c0c0;"></div>
+                                    <div style="width:${(cAbstain/cTotal)*100}%;background:#e8e8e8;"></div>
+                                </div>
+                                <div style="font-size:9px;font-weight:800;letter-spacing:1px;color:#666;text-align:right;">
+                                    <span style="color:#1a1a1a;">ZA ${cFor}</span>
+                                    <span style="color:#ccc;margin:0 4px;">·</span>
+                                    <span>PRZ ${cAgainst}</span>
+                                    <span style="color:#ccc;margin:0 4px;">·</span>
+                                    <span style="color:#ccc;">WST ${cAbstain}</span>
+                                </div>
+                            </div>`;
+                        }).join('')}
                     </div>
                 </div>
-                
+
+                ${((v.rebels || v.rebel_votes) && (v.rebels || v.rebel_votes).length > 0) ? `
+                <div style="margin-top:60px;margin-bottom:60px;">
+                    <div class="section-title-brutal" style="margin-bottom:5px;">POSŁOWIE GŁOSUJĄCY INACZEJ NIŻ KLUB</div>
+                    <div style="font-size:9px;color:#bbb;font-weight:700;letter-spacing:1px;margin-bottom:30px;text-transform:uppercase;">Odchylenia od linii klubowej</div>
+                    <div style="display:flex;flex-direction:column;">
+                        ${(v.rebels || v.rebel_votes).map(r => `
+                        <div style="display:grid;grid-template-columns:1fr 100px 80px;align-items:center;gap:20px;padding:14px 0;border-bottom:1px solid #f5f5f5;">
+                            <div>
+                                <span style="font-size:11px;font-weight:700;">${r.name || r.mp_name}</span>
+                                <span style="font-size:9px;color:#bbb;margin-left:10px;font-weight:700;letter-spacing:1px;">${r.club}</span>
+                            </div>
+                            <div style="font-size:9px;font-weight:800;letter-spacing:1px;color:#bbb;text-align:center;">KLUB: ${r.club_vote}</div>
+                            <div style="font-size:9px;font-weight:900;letter-spacing:1px;text-align:center;padding:6px;border:1.5px solid #000;${r.vote === 'ZA' ? 'background:#000;color:#fff;' : 'background:#fff;color:#000;'}">${r.vote}</div>
+                        </div>`).join('')}
+                    </div>
+                </div>` : ''}
+
                 ${(v.aiSummary && v.aiSummary.length > 0) ? `
                 <div class="vote-analysis-calm">
                     <h3>ANALIZA AI (FILTR SPOKOJU)</h3>
                     <div class="ai-summary-text">
-                        <ul style="list-style: none; padding: 0;">
-                            ${v.aiSummary.map(s => `<li style="margin-bottom: 10px; position: relative; padding-left: 20px;"><span style="position: absolute; left: 0; color: #ccc;">—</span>${s}</li>`).join('')}
+                        <ul style="list-style:none;padding:0;">
+                            ${v.aiSummary.map(s => `<li style="margin-bottom:10px;position:relative;padding-left:20px;"><span style="position:absolute;left:0;color:#ccc;">—</span>${s}</li>`).join('')}
                         </ul>
                     </div>
-                </div>
-                ` : ''}
+                </div>` : ''}
+
+                ${(v.source_url || (v.sources && v.sources.length > 0)) ? `
+                <div style="margin-top:60px;padding-top:40px;border-top:1px solid #eee;">
+                    <div style="font-size:9px;font-weight:900;letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;color:#888;">ŹRÓDŁA</div>
+                    <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;">
+                        ${(v.sources || [{ label: 'Dokument Sejmowy', url: v.source_url }]).map(s => {
+                            const url = typeof s === 'string' ? s : s.url;
+                            const label = typeof s === 'string' ? url : (s.label || s.title || url);
+                            return `<li><a href="${url}" target="_blank" rel="noopener" style="font-size:10px;font-weight:700;color:#000;text-decoration:none;letter-spacing:0.5px;">↗ ${label}</a></li>`;
+                        }).join('')}
+                    </ul>
+                </div>` : ''}
+
             </div>
         `;
     },
+    search: (query) => {
+        const q = (query || '').toLowerCase().trim();
+
+        const matchVotes = state.data.votes.filter(v =>
+            (v.title_clean || v.title || '').toLowerCase().includes(q) ||
+            (v.topic || '').toLowerCase().includes(q)
+        );
+
+        const matchProcesses = state.data.processes.filter(p =>
+            (p.title || '').toLowerCase().includes(q) ||
+            (p.type || '').toLowerCase().includes(q)
+        );
+
+        const matchMps = state.data.mps.filter(m =>
+            (m.name || '').toLowerCase().includes(q) ||
+            (m.club || '').toLowerCase().includes(q)
+        );
+
+        const totalCount = matchVotes.length + matchProcesses.length + matchMps.length;
+
+        return `
+            <div class="data-view-container">
+                <div class="search-meta" style="font-size:9px;font-weight:800;letter-spacing:2px;color:#aaa;text-transform:uppercase;margin-bottom:10px;">SZUKASZ:</div>
+                <h1 class="view-title" style="margin-bottom:40px;">${decodeURIComponent(query || '')}</h1>
+                <div class="search-summary" style="font-size:9px;font-weight:800;letter-spacing:2px;color:#aaa;text-transform:uppercase;border-bottom:1px solid #eee;padding-bottom:15px;margin-bottom:40px;">
+                    ZNALEZIONO: ${totalCount} WYNIKÓW — ${matchVotes.length} GŁOSOWAŃ · ${matchProcesses.length} PROJEKTÓW · ${matchMps.length} POSŁÓW
+                </div>
+
+                ${matchVotes.length > 0 ? `
+                <div class="search-section" style="margin-bottom:60px;">
+                    <div class="section-title-brutal" style="font-size:11px;font-weight:900;letter-spacing:3px;text-transform:uppercase;border-bottom:2px solid #000;padding-bottom:15px;margin-bottom:30px;">GŁOSOWANIA</div>
+                    <div class="votes-ledger">${matchVotes.slice(0, 10).map(v => renderLedgerItem(v)).join('')}</div>
+                </div>` : ''}
+
+                ${matchProcesses.length > 0 ? `
+                <div class="search-section" style="margin-bottom:60px;">
+                    <div class="section-title-brutal" style="font-size:11px;font-weight:900;letter-spacing:3px;text-transform:uppercase;border-bottom:2px solid #000;padding-bottom:15px;margin-bottom:30px;">PROJEKTY USTAW</div>
+                    <div class="votes-ledger">
+                        ${matchProcesses.slice(0, 10).map(p => `
+                            <div class="ledger-item">
+                                <div class="ledger-date">DRUK NR ${p.number || '---'}</div>
+                                <div class="ledger-content">
+                                    <div class="ledger-topic">${p.type || '---'}</div>
+                                    <h3 class="ledger-title">${p.title}</h3>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>` : ''}
+
+                ${matchMps.length > 0 ? `
+                <div class="search-section" style="margin-bottom:60px;">
+                    <div class="section-title-brutal" style="font-size:11px;font-weight:900;letter-spacing:3px;text-transform:uppercase;border-bottom:2px solid #000;padding-bottom:15px;margin-bottom:30px;">POSŁOWIE</div>
+                    <div class="mps-grid">${matchMps.slice(0, 12).map(m => renderMpCard(m)).join('')}</div>
+                </div>` : ''}
+
+                ${totalCount === 0 ? `
+                <div style="padding:80px 0;text-align:center;color:#ccc;">
+                    <div style="font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;">BRAK WYNIKÓW</div>
+                    <div style="font-family:'Playfair Display',serif;font-size:22px;margin-top:15px;color:#aaa;">Spróbuj innej frazy.</div>
+                </div>` : ''}
+            </div>
+        `;
+    },
+
+    rankings: () => {
+        const wealth = state.data.wealth || [];
+
+        return `
+            <div class="data-view-container">
+                <h1 class="view-title">Rankingi Majątkowe</h1>
+                <div class="search-summary" style="font-size:9px;font-weight:800;letter-spacing:2px;color:#aaa;text-transform:uppercase;border-bottom:1px solid #eee;padding-bottom:15px;margin-bottom:40px;">
+                    DANE NA PODSTAWIE OŚWIADCZEŃ MAJĄTKOWYCH ZŁOŻONYCH DO KANCELARII SEJMU
+                </div>
+
+                ${wealth.length === 0 ? `
+                <div class="votes-ledger">
+                    <div style="padding:80px 0;text-align:center;color:#ccc;">
+                        <div style="font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;">ŁADOWANIE DANYCH...</div>
+                        <div style="font-family:'Playfair Display',serif;font-size:18px;margin-top:15px;color:#aaa;">Oświadczenia majątkowe są pobierane z bazy Sejmu.</div>
+                    </div>
+                </div>` : `
+                <div class="votes-ledger">
+                    ${wealth.map((w, i) => `
+                        <div class="ledger-item">
+                            <div class="ledger-date" style="font-size:28px;font-weight:900;color:#eee;font-family:'Playfair Display',serif;">${String(i + 1).padStart(2, '0')}</div>
+                            <div class="ledger-content">
+                                <div class="ledger-topic">${w.club || '---'}</div>
+                                <h3 class="ledger-title">${w.name || w.mp_name || '---'}</h3>
+                                <div class="ledger-footer">
+                                    <span style="font-size:11px;font-weight:800;letter-spacing:1px;">
+                                        ${w.total_assets ? Number(w.total_assets).toLocaleString('pl-PL') + ' PLN' : 'brak danych'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>`}
+            </div>
+        `;
+    },
+
     mpDetail: (mp) => {
         const name = mp.name || `${mp.first_name || ''} ${mp.last_name || ''}`.trim();
         const fallbackImg = "https://www.sejm.gov.pl/Sejm10.nsf/photos/000.jpg";
