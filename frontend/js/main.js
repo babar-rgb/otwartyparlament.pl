@@ -56,7 +56,7 @@ async function init() {
                 { name: 'NIEZRZESZENI', yes: 1, no: 0, abstain: 0 }
             ]
         },
-        { 
+        {
             id: 'border-law',
             category: 'BEZPIECZEŃSTWO',
             image: 'https://images.unsplash.com/photo-1555848960-8c3ed4cf32a0?q=80&w=500&auto=format&fit=crop',
@@ -67,14 +67,14 @@ async function init() {
             votes_no: 189,
             verdict: 'PRZYJĘTO',
             results_json: [
-                { 
+                {
                     name: 'KOALICJA OBYWATELSKA', yes: 155, no: 1, abstain: 1,
                     rebels: [
                         { id: 'sterczewski', name: 'F. Sterczewski', vote: 'PRZECIW', photo: 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png' },
                         { id: 'zielinska', name: 'U. Zielińska', vote: 'WSTRZYMAŁA SIĘ', photo: 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png' }
                     ]
                 },
-                { 
+                {
                     name: 'PRAWO I SPRAWIEDLIWOŚĆ', yes: 12, no: 168, abstain: 10,
                     rebels: [
                         { id: 'macierewicz', name: 'A. Macierewicz', vote: 'ZA', photo: 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png' }
@@ -82,7 +82,7 @@ async function init() {
                 },
                 { name: 'POLSKA 2050 - TRZECIA DROGA', yes: 33, no: 0, abstain: 0 },
                 { name: 'PSL - TRZECIA DROGA', yes: 32, no: 0, abstain: 0 },
-                { 
+                {
                     name: 'LEWICA', yes: 15, no: 11, abstain: 0,
                     rebels: [
                         { id: 'biejat', name: 'M. Biejat', vote: 'PRZECIW', photo: 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png' }
@@ -137,6 +137,18 @@ async function init() {
                 { name: 'WOLNI REPUBLIKANIE', yes: 0, no: 4, abstain: 0 },
                 { name: 'NIEZRZESZENI', yes: 0, no: 1, abstain: 0 }
             ]
+        },
+        {
+            id: 'edukacja-investigation',
+            category: 'EDUKACJA',
+            image: 'https://images.unsplash.com/photo-1503676260728-1c00da096a0b?q=80&w=500&auto=format&fit=crop',
+            date: '12 MAJA 2026',
+            title: 'Reforma Szkolnictwa: Modernizacja czy fasada?',
+            excerpt: 'Śledztwo w sprawie programu "Cyfrowa Szkoła 2026" oraz narastającego kryzysu kadrowego w polskich placówkach oświatowych.',
+            votes_yes: 231,
+            votes_no: 220,
+            verdict: 'W TOKU',
+            results_json: []
         }];
 
         state.isLoaded = true;
@@ -178,7 +190,7 @@ function handleRoute() {
     }
     else if (hash.startsWith('#artykul/')) {
         const id = hash.split('/')[1];
-        const article = state.data.articles.find(a => a.id === id);
+        const article = state.data.articles.find(a => a.id == id);
         if (article) {
             mainContent.innerHTML = templates.articleDetail(article);
         } else {
@@ -206,6 +218,13 @@ function handleRoute() {
                 mainContent.innerHTML = `<p>Nie udało się załadować danych posła.</p>`;
             });
     }
+    else if (hash === '#poza-kadrem') {
+        mainContent.innerHTML = templates.szerszyKadr();
+    }
+    else if (hash.startsWith('#poza-kadrem/')) {
+        const id = hash.split('/')[1];
+        mainContent.innerHTML = templates.investigationDetail(id);
+    }
     else mainContent.innerHTML = templates.home();
 
     window.scrollTo(0, 0);
@@ -230,8 +249,6 @@ function setupEventListeners() {
         const mpItem = e.target.closest('.clickable-mp');
         if (mpItem) window.location.hash = `#posel/${mpItem.dataset.id}`;
 
-        const logoItem = e.target.closest('.logo-main');
-        if (logoItem) window.location.hash = '';
     });
 
     document.addEventListener('input', (e) => {
@@ -247,7 +264,7 @@ function setupEventListeners() {
         // 2. Wyszukiwarka konkretnego posła w widoku głosowania
         if (e.target.id === 'mpVoteSearchInput' || e.target.id === 'voteSearchInput') {
             const query = e.target.value;
-            
+
             if (e.target.id === 'voteSearchInput') {
                 state.filters.voteSearch = query;
                 document.querySelector('.content-area').innerHTML = templates.votes();

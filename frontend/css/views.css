@@ -1907,3 +1907,431 @@
     background: #000;
     color: #fff;
 }
+
+/* --- POZA KADREM (INVESTIGATIVE MODE) --- */
+
+.poza-kadrem-stamp {
+    width: 100px;
+    height: 100px;
+    background: #000;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    border: 4px solid #000;
+    transition: all 0.3s;
+    flex-shrink: 0;
+    margin-top: 10px;
+}
+
+.poza-kadrem-stamp:hover {
+    background: #fff;
+    color: #000;
+}
+
+.poza-kadrem-stamp span {
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    line-height: 1.1;
+    text-transform: uppercase;
+}
+
+/* Animacje drogi procesu */
+.sk-step {
+    transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+    opacity: 0.8;
+}
+
+.sk-step:hover {
+    opacity: 1;
+    transform: translateY(-5px);
+}
+
+.sk-step:hover .sk-step-dot {
+    background: #ff0000 !important;
+    transform: scale(1.5);
+    box-shadow: 0 0 15px rgba(255,0,0,0.3);
+}
+
+.sk-process-line {
+    transition: height 2s ease-in-out;
+}
+
+/* Tryb Drugi Plan - Interakcja */
+.reveal-trigger {
+    position: relative;
+    overflow: hidden;
+    cursor: crosshair;
+}
+
+.reveal-trigger::after {
+    content: "DRUGI PLAN";
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: #000;
+    color: #fff;
+    padding: 5px 15px;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.reveal-trigger:hover::after {
+    opacity: 1;
+}
+
+.reveal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    mix-blend-mode: multiply;
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+
+.reveal-trigger:hover .reveal-overlay {
+    opacity: 0.1;
+}
+
+.investigation-entry {
+    transition: border-color 0.3s;
+    border-bottom: 1px solid transparent;
+}
+
+/* Dyskretne memento */
+.veritas-sidebar-memento {
+    position: fixed;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%) rotate(90deg);
+    transform-origin: right center;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    color: #000;
+    text-transform: uppercase;
+    pointer-events: none;
+    z-index: 10000;
+    white-space: nowrap;
+    opacity: 0.15;
+}
+
+.szerszy-kadr-banner {
+    background: #000;
+    color: #fff;
+    padding: 80px 40px;
+    margin: 40px 0;
+    border: 4px solid #000;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.szerszy-kadr-banner:hover {
+    transform: scale(0.99);
+}
+
+.szerszy-kadr-banner::before {
+    content: "INVESTIGATION";
+    position: absolute;
+    top: 20px;
+    right: -30px;
+    background: #ff0000;
+    color: #fff;
+    padding: 5px 40px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    transform: rotate(45deg);
+}
+
+.sk-label {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 5px;
+    color: #555;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.sk-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 72px;
+    font-weight: 900;
+    line-height: 0.9;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+}
+
+.sk-excerpt {
+    font-size: 18px;
+    max-width: 600px;
+    color: #888;
+    line-height: 1.4;
+}
+
+.sk-meta {
+    margin-top: 40px;
+    display: flex;
+    gap: 30px;
+    font-size: 10px;
+    font-weight: 800;
+    color: #444;
+    letter-spacing: 2px;
+}
+
+/* Widok Śledztwa */
+.investigation-container {
+    background: #fff;
+    color: #000;
+    min-height: 100vh;
+    padding: 100px 0;
+    font-family: 'Inter', sans-serif;
+}
+
+.sk-hero {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+    padding-bottom: 100px;
+    border-bottom: 1px solid #222;
+}
+
+.sk-process-map {
+    position: relative;
+    max-width: 1000px;
+    margin: 150px auto;
+    padding: 0 40px;
+}
+
+.sk-process-line {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, #ff0000, #333, #111);
+    transform: translateX(-50%);
+}
+
+.sk-step {
+    position: relative;
+    width: 42%;
+    margin-bottom: 120px;
+    z-index: 2;
+}
+
+.sk-step:nth-child(even) {
+    margin-left: 58%;
+    text-align: left;
+}
+
+.sk-step:nth-child(odd) {
+    text-align: right;
+}
+
+.sk-step-dot {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: #000;
+    border: 3px solid #ff0000;
+    border-radius: 50%;
+    top: 10px;
+}
+
+.sk-step:nth-child(even) .sk-step-dot { left: -16.5%; }
+.sk-step:nth-child(odd) .sk-step-dot { right: -16.5%; }
+
+.sk-step-label {
+    font-size: 10px;
+    font-weight: 900;
+    color: #ff0000;
+    letter-spacing: 3px;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+}
+
+.sk-step-h {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 20px;
+}
+
+.sk-step-p {
+    font-size: 15px;
+    color: #999;
+    line-height: 1.6;
+}
+
+.sk-step-source-btn {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 8px 15px;
+    background: #111;
+    border: 1px solid #333;
+    color: #666;
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.sk-step-source-btn:hover {
+    border-color: #ff0000;
+    color: #fff;
+}
+
+.sk-reveal-box {
+    background: #111;
+    padding: 60px;
+    margin: 100px 0;
+    border: 1px solid #222;
+    text-align: center;
+}
+
+.sk-reveal-title {
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 5px;
+    color: #555;
+    margin-bottom: 30px;
+}
+
+.sk-reveal-main {
+    font-family: 'Playfair Display', serif;
+    font-size: 48px;
+    font-weight: 900;
+    margin-bottom: 40px;
+}
+
+.sk-cta-btn {
+    background: #ff0000;
+    color: #fff;
+    border: none;
+    padding: 20px 40px;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+/* --- POZA KADREM: REFINED LAYOUT --- */
+
+.sk-process-map-mini {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    position: relative;
+    padding: 20px 0;
+}
+
+.sk-mini-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: #eee;
+    z-index: 1;
+}
+
+.sk-mini-step {
+    width: 30px;
+    height: 30px;
+    background: #fff;
+    border: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 900;
+    z-index: 2;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.sk-mini-step.active {
+    background: #000;
+    color: #fff;
+    border-color: #000;
+}
+
+.sk-mini-step.danger {
+    color: #ff0000;
+    border-color: #ff0000;
+}
+
+.sk-mini-step:hover {
+    transform: scale(1.2);
+    border-color: #000;
+}
+
+.cascading-toc {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.toc-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: transform 0.3s;
+}
+
+.toc-item span {
+    font-size: 10px;
+    font-weight: 900;
+    color: #ff0000;
+    width: 20px;
+}
+
+.toc-item a {
+    text-decoration: none;
+    color: #888;
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 700;
+    transition: color 0.3s;
+}
+
+.toc-item:hover {
+    transform: translateX(10px);
+}
+
+.toc-item:hover a {
+    color: #000;
+}
+
+.section-heading {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.article-p {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    line-height: 1.7;
+    color: #333;
+    margin-bottom: 30px;
+    max-width: 800px;
+}
