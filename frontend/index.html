@@ -7,7 +7,7 @@
     <title>otwartyparlament.pl - A Truth Layer Over Democracy</title>
     <link rel="stylesheet" href="css/base.css?v=2">
     <link rel="stylesheet" href="css/layout.css?v=2">
-    <link rel="stylesheet" href="css/views.css?v=2">
+    <link rel="stylesheet" href="css/views.css?v=3">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>">
     <link
@@ -44,22 +44,26 @@
             position: relative !important;
             z-index: 3001 !important;
         }
+
         .menu-overlay {
             z-index: 3000 !important;
         }
-        header {
+
+        .site-header {
             z-index: 3100 !important;
             pointer-events: none !important;
         }
-        .header-left, .header-right {
+
+        .header-left,
+        .header-right {
             pointer-events: auto !important;
         }
     </style>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="js/search.js"></script>
     <script src="js/app.js"></script>
-    <script src="js/templates.js"></script>
-    <script src="js/main.js"></script>
+    <script src="js/templates.js?v=3"></script>
+    <script src="js/main.js?v=2"></script>
 </head>
 
 <body x-data="truthLayer">
@@ -68,7 +72,8 @@
     <div id="megaMenu" class="menu-overlay" :class="{ 'open': menuOpen }">
         <div class="menu-search-wrapper">
             <div class="menu-search-container">
-                <input type="text" id="mainSearchInput" x-model="searchQuery" placeholder="GDZIE CHCESZ ZAJRZEĆ?" class="mega-search-input">
+                <input type="text" id="mainSearchInput" x-model="searchQuery" placeholder="GDZIE CHCESZ ZAJRZEĆ?"
+                    class="mega-search-input">
             </div>
         </div>
 
@@ -144,11 +149,9 @@
 
         <!-- Search Results View -->
         <!-- Search Results View (Powered by Alpine) -->
-        <div id="searchResultsArea" 
-             class="menu-results-container" 
-             :class="{ 'active': searchQuery.length >= 2 }"
-             x-show="searchQuery.length >= 2">
-            
+        <div id="searchResultsArea" class="menu-results-container" :class="{ 'active': searchQuery.length >= 2 }"
+            x-show="searchQuery.length >= 2">
+
             <template x-if="filteredMps.length > 0">
                 <div>
                     <h4 style="font-size:10px; letter-spacing:2px; margin-bottom:20px; color:#999;">POSŁOWIE</h4>
@@ -204,7 +207,7 @@
             </svg></div> <!-- Patronite -->
     </div>
 
-    <header>
+    <header class="site-header">
         <div class="header-container">
             <div class="header-left">
                 <div class="menu-btn" id="menuToggle" @click="toggleMenu" :class="{ 'active': menuOpen }">
@@ -213,7 +216,7 @@
                     <span></span>
                 </div>
                 <div class="logo-container">
-                    <div class="logo-main" @click="closeMenu">
+                    <div class="logo-main" onclick="location.hash='#home';">
                         <svg class="logo-globe" viewBox="0 0 24 24" fill="currentColor">
                             <circle cx="12" cy="18" r="1.5" />
                             <circle cx="7" cy="14" r="1.2" />
@@ -230,7 +233,7 @@
                 </div>
             </div>
             <div class="header-right">
-                <div class="search-bar" id="globalSearchTrigger">
+                <div class="search-bar" id="globalSearchTrigger" @click="toggleMenu(); $nextTick(() => document.getElementById('mainSearchInput').focus())">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
                         <circle cx="11" cy="11" r="8"></circle>
@@ -282,6 +285,13 @@
             </nav>
         </aside>
     </main>
+    <div class="veritas-sidebar-memento">NIE UFAJ — WERYFIKUJ</div>
+    <div id="truth-modal" class="mag-modal" style="display:none;">
+        <div class="mag-modal-overlay" onclick="closeTruthModal()"></div>
+        <div class="mag-modal-content"><button class="mag-modal-close" onclick="closeTruthModal()">[ ZAMKNIJ ]</button>
+            <div id="modal-body-content"></div>
+        </div>
+    </div>
 </body>
 
 </html>

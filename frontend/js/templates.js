@@ -42,16 +42,87 @@ function renderMpCard(mp) {
     `;
 }
 
+function renderMagClubTable(results) {
+    if (!results || results.length === 0) return '<div style="padding:40px; color:#aaa; font-size:11px; letter-spacing:2px; text-align:center;">BRAK DANYCH KLUBOWYCH</div>';
+
+    return results.map((club, idx) => {
+        const total = (club.yes || 0) + (club.no || 0) + (club.abstain || 0);
+        if (total === 0) return '';
+        const yesPercent = Math.round(((club.yes || 0) / total) * 10);
+        const progressStr = '█'.repeat(yesPercent) + '░'.repeat(10 - yesPercent);
+        const hasRebels = club.rebels && club.rebels.length > 0;
+
+        return `
+            <div class="mag-club-row-wrap">
+                <div class="mag-club-row">
+                    <div class="mag-club-name">${club.name}</div>
+                    <div class="mag-club-bar-wrap">
+                        <div class="mag-club-bar-string">${progressStr}</div>
+                        <div class="mag-club-stats">ZA: ${club.yes || 0} / ${total}</div>
+                    </div>
+                </div>
+                <button class="mag-see-mps-btn" onclick="openClubModal('${club.name}')">[ ZOBACZ POSŁÓW ]</button>
+            </div>
+        `;
+    }).join('');
+}
+
+window.openClubModal = function (clubName) {
+    const modal = document.getElementById('truth-modal');
+    const content = document.getElementById('modal-body-content');
+
+    const mps = [
+        { name: 'Donald Tusk', vote: 'PRZECIW', photo: 'https://api.sejm.gov.pl/sejm/mps/10/403/photo' },
+        { name: 'Szymon Hołownia', vote: 'ZA', photo: 'https://api.sejm.gov.pl/sejm/mps/10/443/photo' },
+        { name: 'Jarosław Kaczyński', vote: 'ZA', photo: 'https://api.sejm.gov.pl/sejm/mps/10/153/photo' },
+        { name: 'Mariusz Błaszczak', vote: 'ZA', photo: 'https://api.sejm.gov.pl/sejm/mps/10/028/photo' },
+        { name: 'Antoni Macierewicz', vote: 'ZA', photo: 'https://api.sejm.gov.pl/sejm/mps/10/222/photo' },
+        { name: 'Krzysztof Bosak', vote: 'PRZECIW', photo: 'https://api.sejm.gov.pl/sejm/mps/10/033/photo' },
+        { name: 'Adrian Zandberg', vote: 'PRZECIW', photo: 'https://api.sejm.gov.pl/sejm/mps/10/438/photo' },
+        { name: 'Władysław K.-Kamysz', vote: 'ZA', photo: 'https://api.sejm.gov.pl/sejm/mps/10/171/photo' }
+    ];
+
+    content.innerHTML = `
+        <h2 class="mag-modal-title">${clubName}</h2>
+        <div class="modal-club-stats">PEŁNE ZESTAWIENIE GŁOSÓW POSZCZEGÓLNYCH POSŁÓW (DANE Z API SEJMU)</div>
+        <div class="modal-mp-grid">
+            ${mps.map(mp => `
+                <div class="modal-mp-card">
+                    <div class="modal-mp-portrait">
+                        <img src="${mp.photo}" 
+                             referrerpolicy="no-referrer"
+                             onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(mp.name)}&background=f0f0f0&color=ccc'">
+                    </div>
+                    <div class="modal-mp-info">
+                        <div class="modal-mp-name">${mp.name}</div>
+                        <div class="modal-mp-vote is-${mp.vote === 'ZA' ? 'za' : (mp.vote === 'PRZECIW' ? 'prz' : 'wstrz')}">${mp.vote}</div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+};
+
+window.closeTruthModal = function () {
+    document.getElementById('truth-modal').style.display = 'none';
+};
+
 // --- TEMPLATES ---
 
 const templates = {
     home: () => `
-        <section class="hero-section">
-            <h1>Politycy liczą na to, że nie sprawdzisz.</h1>
+        <section class="hero-section" style="position: relative; margin-bottom: 80px;">
+            <h1 style="max-width: 850px; margin: 0;">Politycy liczą na to, że nie sprawdzisz.</h1>
+            <div class="poza-kadrem-stamp" onclick="location.hash='#poza-kadrem'" style="position: absolute; top: 0; right: 0;">
+                <span>POZA</span>
+                <span>KADREM</span>
+            </div>
         </section>
 
         <div class="feed">
-            ${state.data.articles.length > 0 ? state.data.articles.map(a => templates.card(a)).join('') : `
+            ${window.state.data.articles.length > 0 ? window.state.data.articles.map((a, i) => templates.card(a)).join('') : `
                 <div style="padding: 40px; text-align: center; font-family: 'Playfair Display', serif; font-size: 20px; color: #aaa;">
                     Brak aktualnych analiz. Czekamy na dane.
                 </div>
@@ -95,13 +166,13 @@ const templates = {
         </article>
     `,
     votes: () => {
-        const filtered = window.TruthSearch.searchInList(state.data.votes, state.filters.voteSearch, ['title', 'topic']);
+        const filtered = window.TruthSearch.searchInList(window.state.data.votes, window.state.filters.voteSearch, ['title', 'topic']);
 
         return `
             <div class="data-view-container">
                 <h1 class="view-title">Głosowania</h1>
                 <div class="inline-search-wrap">
-                    <input type="text" id="voteSearchInput" class="minimal-search-input" placeholder="SZUKAJ W GŁOSOWANIACH..." value="${state.filters.voteSearch || ''}">
+                    <input type="text" id="voteSearchInput" class="minimal-search-input" placeholder="SZUKAJ W GŁOSOWANIACH..." value="${window.state.filters.voteSearch || ''}">
                 </div>
                 <div class="votes-ledger">
                     ${filtered.map(v => renderLedgerItem(v)).join('')}
@@ -111,19 +182,19 @@ const templates = {
         `;
     },
     mps: () => {
-        const query = state.filters.mpSearch.toLowerCase();
-        const mps = state.data.mps;
+        const query = window.state.filters.mpSearch.toLowerCase();
+        const mps = window.state.data.mps;
 
-        if (!state.filters.selectedClub) {
+        if (!window.state.filters.selectedClub) {
             const clubs = [...new Set(mps.map(m => m.club))].filter(Boolean).sort();
             return `
                 <div class="data-view-container">
                     <h1 class="view-title">Rejestr Posłów</h1>
                     <div class="inline-search-wrap">
-                        <input type="text" id="localMpSearch" class="minimal-search-input" placeholder="SZUKAJ POSŁA LUB KLUBU..." value="${state.filters.mpSearch}">
+                        <input type="text" id="localMpSearch" class="minimal-search-input" placeholder="SZUKAJ POSŁA LUB KLUBU..." value="${window.state.filters.mpSearch}">
                     </div>
                     <div class="clubs-list">
-                        ${window.TruthSearch.searchInList(clubs, state.filters.mpSearch).map(c => `
+                        ${window.TruthSearch.searchInList(clubs, window.state.filters.mpSearch).map(c => `
                             <div class="club-item" data-club="${c}">
                                 <span class="club-name">${c}</span>
                                 <span class="club-arrow">→</span>
@@ -134,12 +205,12 @@ const templates = {
             `;
         }
 
-        const clubMps = mps.filter(m => m.club === state.filters.selectedClub);
-        const filtered = window.TruthSearch.searchInList(clubMps, state.filters.mpSearch, ['name']);
+        const clubMps = mps.filter(m => m.club === window.state.filters.selectedClub);
+        const filtered = window.TruthSearch.searchInList(clubMps, window.state.filters.mpSearch, ['name']);
         return `
             <div class="data-view-container">
                 <div class="back-link" id="backToClubs">← POWRÓT</div>
-                <h1 class="view-title">${state.filters.selectedClub}</h1>
+                <h1 class="view-title">${window.state.filters.selectedClub}</h1>
                 <div class="mps-grid">${filtered.map(m => renderMpCard(m)).join('')}</div>
             </div>
         `;
@@ -308,17 +379,15 @@ const templates = {
                     </div>
                 </div>
 
-                <div class="mag-results-area">
-                    <div class="mag-results-header">
-                        <span class="mag-res-label">ROZKŁAD GŁOSÓW</span>
-                        <div class="mag-res-line"></div>
-                    </div>
-                    <div class="minimal-club-table">
-                         <div style="padding: 60px; text-align: center; color: #aaa; border: 1px dashed #ccc; font-size: 10px; letter-spacing: 3px; font-weight: 900;">
-                            [ DANE SEJMOWE: ŁADOWANIE TABELI KLUBÓW... ]
+                    <div class="mag-results-area">
+                        <div class="mag-results-header">
+                            <span class="mag-res-label">ROZKŁAD GŁOSÓW W KLUBACH</span>
+                            <div class="mag-res-line"></div>
+                        </div>
+                        <div class="mag-club-table-container">
+                             ${renderMagClubTable(a.results_json)}
                         </div>
                     </div>
-                </div>
 
                 <footer class="mag-footer">
                     <div class="mag-sources-wrap">
@@ -349,5 +418,146 @@ const templates = {
                 </div>
             </div>
         `;
+    },
+
+    szerszyKadr: () => `
+        <div class="data-view-container">
+            <div class="back-link-minimal" onclick="location.hash='#home'">← POWRÓT</div>
+            <div style="margin: 80px 0; border-bottom: 2px solid #000; padding-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+                <h1 class="view-title" style="margin: 0;">POZA KADREM</h1>
+                <span style="font-size: 10px; font-weight: 800; letter-spacing: 2px; color: #888;">SERIA RAPORTÓW ANALITYCZNYCH</span>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 80px; margin-top: 60px;">
+                <div class="investigation-entry" onclick="location.hash='#poza-kadrem/kobalt'" style="cursor: pointer;">
+                    <div style="font-size: 10px; font-weight: 900; color: #ff0000; margin-bottom: 15px;">RAPORT 01 / 2026</div>
+                    <h2 style="font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 900; margin-bottom: 20px;">ANALIZA ŁAŃCUCHA DOSTAW KOBALTU</h2>
+                    <p style="font-size: 14px; color: #666; line-height: 1.6;">Dokumentacja dotycząca procesów wydobywczych w DR Konga oraz ich korelacji z unijnymi dyrektywami transportowymi.</p>
+                </div>
+                <div class="investigation-entry" onclick="location.hash='#poza-kadrem/edukacja'" style="cursor: pointer;">
+                    <div style="font-size: 10px; font-weight: 900; color: #ff0000; margin-bottom: 15px;">RAPORT 02 / 2026</div>
+                    <h2 style="font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 900; margin-bottom: 20px;">REFORMA SZKOLNICTWA: MODERNIZACJA CZY FASADA?</h2>
+                    <p style="font-size: 14px; color: #666; line-height: 1.6;">Analiza wpływu programu "Cyfrowa Szkoła 2026" na realną kondycję polskiej oświaty i braki kadrowe.</p>
+                </div>
+            </div>
+        </div>
+    `,
+
+    investigationDetail: (id) => {
+        const reports = {
+            'kobalt': {
+                title: 'ANALIZA ŁAŃCUCHA DOSTAW KOBALTU',
+                subtitle: 'POZA KADREM / RAPORT 01',
+                image: 'brain/0ad6d0e8-294a-4318-bca4-9f5af2ac0597/kobalt_mine_brutalism_1778603263113.png',
+                toc: [
+                    { id: 'sec-1', label: 'GENEZA I TRANSFORMACJA ENERGETYCZNA' },
+                    { id: 'sec-2', label: 'MECHANIZMY REGULACYJNE UE' },
+                    { id: 'sec-3', label: 'RZECZYWISTOŚĆ WYDOBYWCZA (DR KONGA)' },
+                    { id: 'sec-4', label: 'UZALEŻNIENIE GEOPOLITYCZNE I WNIOSKI' }
+                ],
+                sections: [
+                    { id: 'sec-1', title: '01 / GENEZA', text: 'Porozumienie Paryskie wyznaczyło kierunek. Dekarbonizacja transportu stała się priorytetem. Głównym narzędziem tej zmiany ogłoszono pojazd elektryczny (BEV).' },
+                    { id: 'sec-2', title: '02 / REGULACJA', text: 'Pakiet "Fit for 55" przyspieszył popyt. Dyrektywy unijne, choć rygorystyczne w kwestii emisji, pozostają elastyczne w obszarze łańcuchów dostaw.' },
+                    { id: 'sec-3', title: '03 / FAKTY', text: '70% kobaltu pochodzi z Konga. Analiza 1420 dokumentów wykazuje mieszanie surowca nieformalnego z legalnym urobkiem na etapie rafinacji.' },
+                    { id: 'sec-4', title: '04 / WNIOSKI', text: 'Uzależnienie od Rosji zamieniamy na uzależnienie od Chin. Ekologia stała się polem gry geopolitycznej.' }
+                ],
+                secondPlan: {
+                    label: 'DRUGI PLAN',
+                    text: 'Zestawienie oficjalnych kampanii UE promujących czysty transport z rzeczywistością kopalń rzemieślniczych.',
+                    image: 'brain/0ad6d0e8-294a-4318-bca4-9f5af2ac0597/kobalt_mine_brutalism_1778603263113.png'
+                }
+            },
+            'edukacja': {
+                title: 'REFORMA SZKOLNICTWA: MODERNIZACJA CZY FASADA?',
+                subtitle: 'POZA KADREM / RAPORT 02',
+                image: 'https://images.unsplash.com/photo-1503676260728-1c00da096a0b?q=80&w=1200&auto=format&fit=crop',
+                toc: [
+                    { id: 'sec-1', label: 'GENEZA: CYFROWA SZKOŁA 2026' },
+                    { id: 'sec-2', label: 'MECHANIZMY: ZMIANY PROGRAMOWE' },
+                    { id: 'sec-3', label: 'FAKTY: KRYZYS KADROWY I PSYCHOLOGICZNY' },
+                    { id: 'sec-4', label: 'WNIOSKI: KOSZT ZMIANY POKOLENIOWEJ' }
+                ],
+                sections: [
+                    { id: 'sec-1', title: '01 / GENEZA', text: 'Rządowy program "Cyfrowa Szkoła 2026" zakładał pełną digitalizację placówek. Tablety dla każdego ucznia i szybki internet miały być odpowiedzią na wyzwania przyszłości.' },
+                    { id: 'sec-2', title: '02 / REGULACJA', text: 'Nowelizacja ustawy o systemie oświaty wprowadziła drastyczne cięcia w podstawie programowej, argumentując to "odchudzeniem" bagażu wiedzy. Analiza wskazuje jednak na chaos w implementacji tych zmian.' },
+                    { id: 'sec-3', title: '03 / FAKTY', text: 'Dane z 16 kuratoriów: w Polsce brakuje obecnie 20 000 nauczycieli. Jednocześnie czas oczekiwania na wizytę u psychologa szkolnego wzrósł o 300% w ciągu dwóch lat.' },
+                    { id: 'sec-4', title: '04 / WNIOSKI', text: 'Inwestycje w sprzęt (hardware) dominują nad inwestycją w kapitał ludzki (software). Reforma stwarza iluzję nowoczesności, podczas gdy systemowa tkanka ulega degradacji.' }
+                ],
+                secondPlan: {
+                    label: 'DRUGI PLAN',
+                    text: 'Oficjalny przekaz o "najnowocześniejszej szkole w regionie" zderza się z faktem, że w wielu placówkach fizyki uczą emerytowani poloniści.',
+                    image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=500&auto=format&fit=crop'
+                }
+            }
+        };
+
+        const report = reports[id] || reports['kobalt'];
+
+        return `
+        <div class="data-view-container" style="max-width: 1400px; display: grid; grid-template-columns: 200px 1fr; gap: 80px; position: relative;">
+            <aside style="position: sticky; top: 120px; height: fit-content;">
+                <div class="back-link-minimal" onclick="location.hash='#poza-kadrem'" style="margin-bottom: 40px;">← POWRÓT</div>
+                <div class="sk-process-map-mini">
+                    <div class="sk-mini-line"></div>
+                    ${report.toc.map((step, idx) => `
+                        <div class="sk-mini-step ${idx === 0 ? 'active' : ''} ${idx === 2 ? 'danger' : ''}" 
+                             title="${step.label}"
+                             onclick="document.getElementById('${step.id}').scrollIntoView({behavior:'smooth'})">
+                            ${String(idx + 1).padStart(2, '0')}
+                        </div>`).join('')}
+                </div>
+            </aside>
+
+            <main>
+                <header style="margin-bottom: 80px;">
+                    <div style="font-size: 10px; font-weight: 900; color: #ff0000; letter-spacing: 2px; margin-bottom: 20px;">${report.subtitle}</div>
+                    <h1 style="font-family: 'Playfair Display', serif; font-size: 64px; font-weight: 900; line-height: 1.1; margin-bottom: 60px;">${report.title}</h1>
+                    
+                    <nav class="cascading-toc">
+                        ${report.toc.map((item, idx) => `
+                            <div class="toc-item" style="margin-left: ${idx * 40}px;">
+                                <span>${String(idx + 1).padStart(2, '0')}</span> 
+                                <a href="javascript:void(0)" onclick="document.getElementById('${item.id}').scrollIntoView({behavior:'smooth'})">${item.label}</a>
+                            </div>
+                        `).join('')}
+                    </nav>
+                </header>
+
+                <article class="investigation-body">
+                    ${report.sections.map((section, idx) => `
+                        <section id="${section.id}" style="margin-bottom: 100px;">
+                            <h2 class="section-heading">${section.title}</h2>
+                            <p class="article-p">${section.text}</p>
+                            ${idx === 0 ? `
+                                <div style="margin: 60px 0; border-left: 4px solid #ff0000; padding: 30px; background: #fafafa;">
+                                    <div style="font-size: 9px; font-weight: 900; letter-spacing: 2px; margin-bottom: 15px; color: #ff0000;">[ ${report.secondPlan.label} ]</div>
+                                    <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 40px; align-items: center;">
+                                        <p style="font-size: 13px; line-height: 1.6; font-style: italic; color: #555;">${report.secondPlan.text}</p>
+                                        <div class="reveal-trigger" style="border: 1px solid #000; height: 160px; background: url('${report.secondPlan.image}'); background-size: cover; filter: grayscale(1);">
+                                            <div class="reveal-overlay"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </section>
+                    `).join('')}
+                </article>
+
+                <footer style="margin: 80px 0; border-top: 1px solid #000; padding-top: 30px;">
+                    <div style="font-size: 10px; font-weight: 900; margin-bottom: 15px;">DOKUMENTACJA ŹRÓDŁOWA (PDF)</div>
+                    <button class="mag-see-mps-btn">POBIERZ ARCHIWUM</button>
+                </footer>
+            </main>
+        </div>
+        `;
+    }
+};
+<div style="margin-top: 60px; padding: 40px; background: #f9f9f9; border-left: 4px solid #000;">
+    <p style="font-size: 14px; line-height: 1.6; color: #555; margin: 0;">
+        <strong>Filtr Spokoju:</strong> Widok komisji pozwala śledzić prace nad ustawami zanim trafią one pod głosowanie plenarne. To tutaj odbywa się 90% merytorycznej pracy parlamentu.
+    </p>
+</div>
+            </div >
+    `;
     }
 };

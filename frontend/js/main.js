@@ -12,6 +12,11 @@ const state = window.state; // Dla zachowania kompatybilności z resztą main.js
 async function init() {
     console.log(">>> Truth Layer: Inicjalizacja profesjonalnego API...");
     try {
+        state.isLoaded = true;
+        setupEventListeners();
+        handleRoute();
+        console.log(">>> Truth Layer: Gotowy (natychmiast).");
+
         const fetchAPI = async (endpoint) => {
             try {
                 const response = await fetch(`${API_BASE_URL}/${endpoint}`);
@@ -42,7 +47,19 @@ async function init() {
             excerpt: 'Demokracja to nie tylko emocje, to przede wszystkim dane. Naszym celem jest dostarczenie Ci surowych faktów w sposób spokojny i prestiżowy.',
             votes_yes: 460,
             votes_no: 0,
-            verdict: 'MISJA PRZYJĘTA'
+            verdict: 'MISJA PRZYJĘTA',
+            results_json: [
+                { name: 'PRAWO I SPRAWIEDLIWOŚĆ', yes: 190, no: 0, abstain: 0 },
+                { name: 'KOALICJA OBYWATELSKA', yes: 157, no: 0, abstain: 0 },
+                { name: 'POLSKA 2050 - TRZECIA DROGA', yes: 33, no: 0, abstain: 0 },
+                { name: 'PSL - TRZECIA DROGA', yes: 32, no: 0, abstain: 0 },
+                { name: 'LEWICA', yes: 26, no: 0, abstain: 0 },
+                { name: 'KONFEDERACJA', yes: 18, no: 0, abstain: 0 },
+                { name: 'KUKIZ\'15', yes: 4, no: 0, abstain: 0 },
+                { name: 'WOLNI REPUBLIKANIE', yes: 4, no: 0, abstain: 0 },
+                { name: 'KOŁO POSŁÓW RAZEM', yes: 5, no: 0, abstain: 0 },
+                { name: 'NIEZRZESZENI', yes: 1, no: 0, abstain: 0 }
+            ]
         },
         {
             id: 'border-law',
@@ -53,7 +70,35 @@ async function init() {
             excerpt: 'Sejm przyjął ustawę o wsparciu działań żołnierzy na granicy. Nowe przepisy zmieniają zasady użycia broni w sytuacjach zagrożenia życia, co budzi skrajne emocje wśród prawników i obrońców praw człowieka.',
             votes_yes: 231,
             votes_no: 189,
-            verdict: 'PRZYJĘTO'
+            verdict: 'PRZYJĘTO',
+            results_json: [
+                {
+                    name: 'KOALICJA OBYWATELSKA', yes: 155, no: 1, abstain: 1,
+                    rebels: [
+                        { id: 'sterczewski', name: 'F. Sterczewski', vote: 'PRZECIW', photo: 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png' },
+                        { id: 'zielinska', name: 'U. Zielińska', vote: 'WSTRZYMAŁA SIĘ', photo: 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png' }
+                    ]
+                },
+                {
+                    name: 'PRAWO I SPRAWIEDLIWOŚĆ', yes: 12, no: 168, abstain: 10,
+                    rebels: [
+                        { id: 'macierewicz', name: 'A. Macierewicz', vote: 'ZA', photo: 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png' }
+                    ]
+                },
+                { name: 'POLSKA 2050 - TRZECIA DROGA', yes: 33, no: 0, abstain: 0 },
+                { name: 'PSL - TRZECIA DROGA', yes: 32, no: 0, abstain: 0 },
+                {
+                    name: 'LEWICA', yes: 15, no: 11, abstain: 0,
+                    rebels: [
+                        { id: 'biejat', name: 'M. Biejat', vote: 'PRZECIW', photo: 'https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_1280.png' }
+                    ]
+                },
+                { name: 'KONFEDERACJA', yes: 0, no: 18, abstain: 0 },
+                { name: 'KUKIZ\'15', yes: 4, no: 0, abstain: 0 },
+                { name: 'WOLNI REPUBLIKANIE', yes: 4, no: 0, abstain: 0 },
+                { name: 'KOŁO POSŁÓW RAZEM', yes: 0, no: 5, abstain: 0 },
+                { name: 'NIEZRZESZENI', yes: 1, no: 0, abstain: 0 }
+            ]
         },
         {
             id: 'energy-prices',
@@ -64,7 +109,17 @@ async function init() {
             excerpt: 'Posłowie zdecydowali o przedłużeniu zamrożenia cen energii dla gospodarstw domowych do końca roku. To decyzja, która bezpośrednio dotknie portfela każdego obywatela, stabilizując koszty utrzymania w dobie inflacji.',
             votes_yes: 412,
             votes_no: 15,
-            verdict: 'PRZYJĘTO'
+            verdict: 'PRZYJĘTO',
+            results_json: [
+                { name: 'PRAWO I SPRAWIEDLIWOŚĆ', yes: 170, no: 0, abstain: 20 },
+                { name: 'KOALICJA OBYWATELSKA', yes: 157, no: 0, abstain: 0 },
+                { name: 'POLSKA 2050 - TRZECIA DROGA', yes: 33, no: 0, abstain: 0 },
+                { name: 'PSL - TRZECIA DROGA', yes: 32, no: 0, abstain: 0 },
+                { name: 'LEWICA', yes: 26, no: 0, abstain: 0 },
+                { name: 'KONFEDERACJA', yes: 5, no: 13, abstain: 0 },
+                { name: 'KUKIZ\'15', yes: 4, no: 0, abstain: 0 },
+                { name: 'NIEZRZESZENI', yes: 1, no: 0, abstain: 0 }
+            ]
         },
         {
             id: 'justice-reform',
@@ -75,13 +130,34 @@ async function init() {
             excerpt: 'Projekt ustawy o statusie neosędziów został odrzucony w pierwszym czytaniu. Spór o praworządność wkracza w fazę impasu, pozostawiając tysiące wyroków w stanie niepewności prawnej.',
             votes_yes: 190,
             votes_no: 245,
-            verdict: 'ODRZUCONO'
+            verdict: 'ODRZUCONO',
+            results_json: [
+                { name: 'KOALICJA OBYWATELSKA', yes: 157, no: 0, abstain: 0 },
+                { name: 'PRAWO I SPRAWIEDLIWOŚĆ', yes: 0, no: 190, abstain: 0 },
+                { name: 'POLSKA 2050 - TRZECIA DROGA', yes: 33, no: 0, abstain: 0 },
+                { name: 'PSL - TRZECIA DROGA', yes: 32, no: 0, abstain: 0 },
+                { name: 'LEWICA', yes: 0, no: 26, abstain: 0 },
+                { name: 'KONFEDERACJA', yes: 0, no: 18, abstain: 0 },
+                { name: 'KUKIZ\'15', yes: 0, no: 4, abstain: 0 },
+                { name: 'WOLNI REPUBLIKANIE', yes: 0, no: 4, abstain: 0 },
+                { name: 'NIEZRZESZENI', yes: 0, no: 1, abstain: 0 }
+            ]
+        },
+        {
+            id: 'edukacja-investigation',
+            category: 'EDUKACJA',
+            image: 'https://images.unsplash.com/photo-1503676260728-1c00da096a0b?q=80&w=500&auto=format&fit=crop',
+            date: '12 MAJA 2026',
+            title: 'Reforma Szkolnictwa: Modernizacja czy fasada?',
+            excerpt: 'Śledztwo w sprawie programu "Cyfrowa Szkoła 2026" oraz narastającego kryzysu kadrowego w polskich placówkach oświatowych.',
+            votes_yes: 231,
+            votes_no: 220,
+            verdict: 'W TOKU',
+            results_json: []
         }];
 
-        state.isLoaded = true;
-        setupEventListeners();
-        handleRoute();
-        console.log(">>> Truth Layer: Gotowy.");
+        handleRoute(); // Odśwież po pobraniu danych z API
+        console.log(">>> Truth Layer: Dane z API załadowane.");
     } catch (err) {
         console.error(">>> Truth Layer: Krytyczny błąd inicjalizacji:", err);
     }
@@ -117,7 +193,7 @@ function handleRoute() {
     }
     else if (hash.startsWith('#artykul/')) {
         const id = hash.split('/')[1];
-        const article = state.data.articles.find(a => a.id === id);
+        const article = state.data.articles.find(a => a.id == id);
         if (article) {
             mainContent.innerHTML = templates.articleDetail(article);
         } else {
@@ -145,6 +221,25 @@ function handleRoute() {
                 mainContent.innerHTML = `<p>Nie udało się załadować danych posła.</p>`;
             });
     }
+    else if (hash === '#poza-kadrem') {
+        mainContent.innerHTML = templates.szerszyKadr();
+    }
+    else if (hash.startsWith('#poza-kadrem/')) {
+        const id = hash.split('/')[1];
+        mainContent.innerHTML = templates.investigationDetail(id);
+    }
+    else if (hash.startsWith('#szukaj/')) {
+        const query = decodeURIComponent(hash.split('/')[1]);
+        // Dla uproszczenia: szukaj po prostu otwiera menu z tą frazą
+        if (window.Alpine) {
+            const data = Alpine.closestRoot(document.body)?._x_dataStack[0];
+            if (data) {
+                data.searchQuery = query;
+                data.menuOpen = true;
+            }
+        }
+        mainContent.innerHTML = templates.home();
+    }
     else mainContent.innerHTML = templates.home();
 
     window.scrollTo(0, 0);
@@ -169,8 +264,6 @@ function setupEventListeners() {
         const mpItem = e.target.closest('.clickable-mp');
         if (mpItem) window.location.hash = `#posel/${mpItem.dataset.id}`;
 
-        const logoItem = e.target.closest('.logo-main');
-        if (logoItem) window.location.hash = '';
     });
 
     document.addEventListener('input', (e) => {
@@ -186,7 +279,7 @@ function setupEventListeners() {
         // 2. Wyszukiwarka konkretnego posła w widoku głosowania
         if (e.target.id === 'mpVoteSearchInput' || e.target.id === 'voteSearchInput') {
             const query = e.target.value;
-            
+
             if (e.target.id === 'voteSearchInput') {
                 state.filters.voteSearch = query;
                 document.querySelector('.content-area').innerHTML = templates.votes();
