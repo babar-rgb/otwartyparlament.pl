@@ -7,7 +7,7 @@
     <title>otwartyparlament.pl - A Truth Layer Over Democracy</title>
     <link rel="stylesheet" href="css/base.css?v=2">
     <link rel="stylesheet" href="css/layout.css?v=2">
-    <link rel="stylesheet" href="css/views.css?v=3">
+    <link rel="stylesheet" href="css/views.css?v=2">
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌍</text></svg>">
     <link
@@ -47,7 +47,7 @@
         .menu-overlay {
             z-index: 3000 !important;
         }
-        .site-header {
+        header {
             z-index: 3100 !important;
             pointer-events: none !important;
         }
@@ -58,8 +58,8 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="js/search.js"></script>
     <script src="js/app.js"></script>
-    <script src="js/templates.js?v=3"></script>
-    <script src="js/main.js?v=2"></script>
+    <script src="js/templates.js"></script>
+    <script src="js/main.js"></script>
 </head>
 
 <body x-data="truthLayer">
@@ -204,7 +204,7 @@
             </svg></div> <!-- Patronite -->
     </div>
 
-    <header class="site-header">
+    <header>
         <div class="header-container">
             <div class="header-left">
                 <div class="menu-btn" id="menuToggle" @click="toggleMenu" :class="{ 'active': menuOpen }">
@@ -213,7 +213,7 @@
                     <span></span>
                 </div>
                 <div class="logo-container">
-                    <div class="logo-main" onclick="location.hash='#home';">
+                    <div class="logo-main" @click="closeMenu">
                         <svg class="logo-globe" viewBox="0 0 24 24" fill="currentColor">
                             <circle cx="12" cy="18" r="1.5" />
                             <circle cx="7" cy="14" r="1.2" />
@@ -282,7 +282,6 @@
             </nav>
         </aside>
     </main>
-<div class="veritas-sidebar-memento">NIE UFAJ — WERYFIKUJ</div>
-<div id="truth-modal" class="mag-modal" style="display:none;"><div class="mag-modal-overlay" onclick="closeTruthModal()"></div><div class="mag-modal-content"><button class="mag-modal-close" onclick="closeTruthModal()">[ ZAMKNIJ ]</button><div id="modal-body-content"></div></div></div></body>
+</body>
 
 </html>
