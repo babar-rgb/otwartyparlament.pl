@@ -54,12 +54,27 @@
         .header-left, .header-right {
             pointer-events: auto !important;
         }
+        /* Stany ładowania i błędów — używane przez router.js */
+        .loading-msg, .error-msg {
+            padding: 40px;
+            text-align: center;
+            color: #aaa;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .error-msg { color: #c62828; }
     </style>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="js/search.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/router.js"></script>
     <script src="js/app.js"></script>
     <script src="js/templates.js?v=3"></script>
-    <script src="js/main.js?v=2"></script>
+    <script src="js/main.js?v=3"></script>
 </head>
 
 <body x-data="truthLayer">

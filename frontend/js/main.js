@@ -1,29 +1,19 @@
-const API_BASE_URL = 'http://localhost:8002/api';
+// main.js — Inicjalizacja i obsługa zdarzeń.
+// Konfiguracja API: config.js | Fetch: api.js | Routing: router.js
 
 window.state = {
     data: { articles: [], mps: [], votes: [], processes: [], wealth: [], trending: [] },
     isLoaded: false,
     filters: { mpSearch: '', voteSearch: '', selectedClub: null }
 };
-const state = window.state; // Dla zachowania kompatybilności z resztą main.js
+const state = window.state;
 
 // --- CORE LOGIC ---
 
 async function init() {
-    console.log(">>> Truth Layer: Inicjalizacja profesjonalnego API...");
+    console.log(">>> Truth Layer: Inicjalizacja...");
     try {
-        const fetchAPI = async (endpoint) => {
-            try {
-                const response = await fetch(`${API_BASE_URL}/${endpoint}`);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                return await response.json();
-            } catch (e) {
-                console.error(`Błąd API (${endpoint}):`, e);
-                return [];
-            }
-        };
-
-        // Pobieramy dane równolegle z nowych "szafeczek"
+        // fetchAPI pochodzi z api.js
         const [mps, votes] = await Promise.all([
             fetchAPI('mps'),
             fetchAPI('votes')
@@ -160,75 +150,7 @@ async function init() {
     }
 }
 
-function handleRoute() {
-    if (!state.isLoaded) return;
-    const hash = window.location.hash || '#home';
-    const mainContent = document.querySelector('.content-area');
-    if (!mainContent) return;
-
-    // Reset UI przy każdej zmianie trasy - delegowane do Alpine
-    if (window.Alpine) {
-        const data = Alpine.closestRoot(document.body)?._x_dataStack[0];
-        if (data) data.closeMenu();
-    }
-
-    if (hash === '#glosowania') mainContent.innerHTML = templates.votes();
-    else if (hash.startsWith('#glosowanie/')) {
-        const id = hash.split('/')[1];
-        mainContent.innerHTML = `<p style="padding:40px; text-align:center; color:#aaa;">Ładowanie szczegółów głosowania...</p>`;
-
-        fetch(`${API_BASE_URL}/votes/${id}`)
-            .then(r => r.json())
-            .then(fullVote => {
-                state.currentVoteVotes = fullVote.individualVotes; // Przechowujemy głosy dla wyszukiwarki
-                mainContent.innerHTML = templates.voteDetail(fullVote);
-            })
-            .catch(err => {
-                console.error("Błąd pobierania głosowania:", err);
-                mainContent.innerHTML = `<p>Nie udało się załadować danych głosowania.</p>`;
-            });
-    }
-    else if (hash.startsWith('#artykul/')) {
-        const id = hash.split('/')[1];
-        const article = state.data.articles.find(a => a.id == id);
-        if (article) {
-            mainContent.innerHTML = templates.articleDetail(article);
-        } else {
-            mainContent.innerHTML = `<p style="padding:40px; text-align:center; color:#aaa;">Nie znaleziono artykułu.</p>`;
-        }
-    }
-    else if (hash === '#ustawy') mainContent.innerHTML = templates.processes();
-    else if (hash.startsWith('#poslowie')) {
-        const parts = hash.split('/');
-        state.filters.selectedClub = parts[1] ? decodeURIComponent(parts[1]) : null;
-        mainContent.innerHTML = templates.mps();
-    }
-    else if (hash.startsWith('#posel/')) {
-        const id = hash.split('/')[1];
-        mainContent.innerHTML = `<p style="padding:40px; text-align:center; color:#aaa;">Ładowanie profilu...</p>`;
-
-        // Pobieramy PEŁNE dane posła (z historią głosowań) bezpośrednio z API
-        fetch(`${API_BASE_URL}/mps/${id}`)
-            .then(r => r.json())
-            .then(fullMp => {
-                mainContent.innerHTML = templates.mpDetail(fullMp);
-            })
-            .catch(err => {
-                console.error("Błąd pobierania posła:", err);
-                mainContent.innerHTML = `<p>Nie udało się załadować danych posła.</p>`;
-            });
-    }
-    else if (hash === '#poza-kadrem') {
-        mainContent.innerHTML = templates.szerszyKadr();
-    }
-    else if (hash.startsWith('#poza-kadrem/')) {
-        const id = hash.split('/')[1];
-        mainContent.innerHTML = templates.investigationDetail(id);
-    }
-    else mainContent.innerHTML = templates.home();
-
-    window.scrollTo(0, 0);
-}
+// handleRoute() przeniesiony do router.js
 
 function setupEventListeners() {
     window.addEventListener('hashchange', handleRoute);
