@@ -24,10 +24,17 @@ echo ""
 FRONTEND_PORT=8000
 BACKEND_PORT=8002
 
-# Sprawdź czy port frontendu jest wolny, jeśli nie — znajdź wolny
+# Frontend: znajdź wolny port
 while lsof -Pi :$FRONTEND_PORT -sTCP:LISTEN -t >/dev/null 2>&1; do
     FRONTEND_PORT=$((FRONTEND_PORT + 1))
 done
+
+# Backend: jeśli port zajęty — zabij stary proces
+if lsof -Pi :$BACKEND_PORT -sTCP:LISTEN -t >/dev/null 2>&1; then
+    echo -e "${YELLOW}>>> Port $BACKEND_PORT zajęty — zatrzymuję stary backend...${NC}"
+    lsof -ti :$BACKEND_PORT | xargs kill -9 2>/dev/null
+    sleep 1
+fi
 
 # --- Sprawdź czy .venv istnieje ---
 if [ ! -d ".venv" ]; then
@@ -48,7 +55,7 @@ trap cleanup SIGINT SIGTERM
 
 # --- Start backendu FastAPI ---
 echo -e "${YELLOW}>>> [1/2] Backend FastAPI...${NC}"
-.venv/bin/uvicorn backend.main:app \
+.venv/bin/python3 -m uvicorn backend.main:app \
     --host 0.0.0.0 \
     --port $BACKEND_PORT \
     --reload \
