@@ -2335,3 +2335,430 @@
     margin-bottom: 30px;
     max-width: 800px;
 }
+
+
+/* ============================================================
+   FAZA 4 — Klasy wyekstrahowane z views/*.js inline styles
+   ============================================================ */
+
+/* --- Nawigacja powrotna --- */
+.back-link {
+    margin-bottom: var(--space-xl);
+    font-size: var(--font-size-micro);
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+/* --- Nagłówek szczegółu głosowania --- */
+.vote-verdict-badge {
+    display: inline-block;
+    background: var(--text-primary);
+    color: var(--bg-color);
+    padding: 12px 25px;
+    font-size: var(--font-size-label);
+    font-weight: 900;
+    letter-spacing: 3px;
+    margin-bottom: var(--space-lg);
+    text-transform: uppercase;
+}
+
+.vote-hero-title {
+    font-family: var(--font-title);
+    font-size: var(--font-size-hero);
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: var(--space-lg);
+    max-width: 1000px;
+    color: var(--text-primary);
+}
+
+.vote-meta-line {
+    display: flex;
+    gap: var(--space-lg);
+    border-top: 1px solid var(--border-light);
+    padding-top: var(--space-md);
+    font-size: var(--font-size-tiny);
+    font-weight: 800;
+    color: var(--text-faint);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.vote-meta-line span { color: var(--text-primary); }
+
+/* --- Statystyki grand (ZA / PRZECIW / WST) --- */
+.vote-grand-stats {
+    display: flex;
+    gap: var(--space-3xl);
+    margin-bottom: var(--space-3xl);
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: var(--space-xl);
+}
+
+.g-stat strong {
+    font-size: 72px;
+    font-weight: 900;
+    display: block;
+    line-height: 1;
+}
+
+.g-stat span {
+    font-size: var(--font-size-tiny);
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+}
+
+/* --- Sekcja rozkładu głosów w klubach --- */
+.clubs-breakdown-title {
+    font-size: var(--font-size-label);
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--border-strong);
+    padding-bottom: var(--space-sm);
+    margin-bottom: 50px;
+}
+
+.clubs-breakdown-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: var(--space-3xl);
+    row-gap: var(--space-xl);
+}
+
+.club-stat-box-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 12px;
+}
+
+.club-stat-box-name {
+    font-size: 20px;
+    font-weight: 900;
+}
+
+.club-stat-box-numbers {
+    font-size: var(--font-size-tiny);
+    font-weight: 800;
+    color: var(--text-muted);
+}
+
+.club-bar {
+    height: 8px;
+    background: #f5f5f5;
+    position: relative;
+    overflow: hidden;
+    border-radius: 2px;
+}
+
+.club-bar-yes  { position: absolute; left: 0;   top: 0; height: 100%; background: var(--color-yes); }
+.club-bar-no   { position: absolute;             top: 0; height: 100%; background: var(--color-no); }
+.club-bar-abst { position: absolute;             top: 0; height: 100%; background: var(--color-abstain); }
+
+/* --- Wyszukiwarka posła w głosowaniu --- */
+.mp-vote-search-section {
+    margin-top: var(--space-3xl);
+    border-top: 2px solid var(--border-strong);
+    padding-top: var(--space-xl);
+}
+
+.mp-vote-search-title {
+    font-size: var(--font-size-meta);
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: var(--space-md);
+}
+
+.mp-vote-search-input {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid var(--border-light);
+    padding: var(--space-sm) 0;
+    font-family: var(--font-title);
+    font-size: 24px;
+    outline: none;
+}
+
+.mp-vote-results-grid {
+    margin-top: var(--space-lg);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-lg);
+}
+
+/* --- Profil posła --- */
+.mp-detail-header {
+    display: flex;
+    gap: var(--space-xl);
+    align-items: center;
+    margin-bottom: var(--space-xl);
+}
+
+.mp-hero-portrait {
+    width: 240px;
+    height: 240px;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.mp-hero-portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mp-detail-club {
+    margin-bottom: var(--space-xs);
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+}
+
+.mp-detail-name {
+    font-family: var(--font-title);
+    font-size: var(--font-size-title);
+    font-weight: 900;
+    margin-bottom: 10px;
+    line-height: 1;
+}
+
+.mp-detail-subtitle {
+    font-size: var(--font-size-micro);
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.mp-stats-hero {
+    display: flex;
+    justify-content: space-around;
+    border-top: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+    padding: var(--space-xl) 0;
+    margin-bottom: var(--space-2xl);
+    text-align: center;
+}
+
+.mp-big-stat strong {
+    font-size: 36px;
+    font-weight: 900;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.mp-big-stat span {
+    font-size: var(--font-size-micro);
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.mp-voting-history-title {
+    font-size: var(--font-size-meta);
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--border-strong);
+    padding-bottom: var(--space-xs);
+    margin-bottom: var(--space-md);
+}
+
+.mp-vote-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 100px;
+    gap: var(--space-lg);
+    align-items: center;
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--border-light);
+    cursor: pointer;
+}
+
+.mp-vote-row-date  { font-size: var(--font-size-meta); font-weight: 800; color: var(--text-faint); }
+.mp-vote-row-title { font-family: var(--font-title); font-size: 16px; font-weight: 700; }
+
+.mp-vote-row-choice {
+    font-size: var(--font-size-micro);
+    font-weight: 900;
+    letter-spacing: 2px;
+    padding: 8px 0;
+    text-align: center;
+    border: 2px solid var(--border-strong);
+}
+
+.mp-vote-row-choice.is-za    { background: var(--text-primary); color: var(--bg-color); }
+.mp-vote-row-choice.is-other { background: var(--bg-color);     color: var(--text-primary); }
+
+/* --- Poza Kadrem: lista raportów --- */
+.pk-header {
+    margin: var(--space-2xl) 0;
+    border-bottom: 2px solid var(--border-strong);
+    padding-bottom: var(--space-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.pk-series-label {
+    font-size: var(--font-size-tiny);
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+}
+
+.pk-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2xl);
+    margin-top: var(--space-xl);
+}
+
+.pk-report-number {
+    font-size: var(--font-size-tiny);
+    font-weight: 900;
+    color: var(--color-accent);
+    margin-bottom: var(--space-xs);
+}
+
+.pk-report-title {
+    font-family: var(--font-title);
+    font-size: var(--font-size-section);
+    font-weight: 900;
+    margin-bottom: var(--space-sm);
+}
+
+.pk-report-excerpt {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+/* --- Poza Kadrem: szczegół raportu --- */
+.pk-detail-layout {
+    max-width: 1400px;
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: var(--space-2xl);
+    position: relative;
+}
+
+.pk-aside {
+    position: sticky;
+    top: 120px;
+    height: fit-content;
+}
+
+.pk-report-subtitle {
+    font-size: var(--font-size-tiny);
+    font-weight: 900;
+    color: var(--color-accent);
+    letter-spacing: 2px;
+    margin-bottom: var(--space-sm);
+}
+
+.pk-report-hero-title {
+    font-family: var(--font-title);
+    font-size: var(--font-size-hero);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: var(--space-xl);
+}
+
+.pk-second-plan {
+    margin: var(--space-xl) 0;
+    border-left: 4px solid var(--color-accent);
+    padding: var(--space-md);
+    background: var(--accent-bg);
+}
+
+.pk-second-plan-label {
+    font-size: var(--font-size-micro);
+    font-weight: 900;
+    letter-spacing: 2px;
+    margin-bottom: var(--space-xs);
+    color: var(--color-accent);
+}
+
+.pk-second-plan-body {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: var(--space-lg);
+    align-items: center;
+}
+
+.pk-second-plan-text {
+    font-size: 13px;
+    line-height: 1.6;
+    font-style: italic;
+    color: #555;
+}
+
+.pk-second-plan-image {
+    border: 1px solid var(--border-strong);
+    height: 160px;
+    background-size: cover;
+    filter: grayscale(1);
+}
+
+.pk-footer {
+    margin: var(--space-2xl) 0;
+    border-top: 1px solid var(--border-strong);
+    padding-top: var(--space-md);
+}
+
+.pk-footer-label {
+    font-size: var(--font-size-tiny);
+    font-weight: 900;
+    margin-bottom: var(--space-xs);
+}
+
+/* --- Wynik posła w wyszukiwarce głosowania --- */
+.mp-result-card {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: center;
+    padding: var(--space-sm);
+    background: var(--accent-bg);
+    border: 1px solid var(--border-light);
+    cursor: pointer;
+}
+
+.mp-result-photo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #eee;
+}
+
+.mp-result-photo img { width: 100%; height: 100%; object-fit: cover; }
+
+.mp-result-info { flex: 1; }
+
+.mp-result-club {
+    font-size: var(--font-size-micro);
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.mp-result-name { font-size: 16px; font-weight: 900; }
+
+.mp-result-choice {
+    padding: 10px var(--space-sm);
+    border: 2px solid var(--border-strong);
+    font-size: var(--font-size-meta);
+    font-weight: 900;
+}
+
+.mp-result-choice.is-za    { background: var(--text-primary); color: var(--bg-color); }
+.mp-result-choice.is-other { background: var(--bg-color);     color: var(--text-primary); }
+

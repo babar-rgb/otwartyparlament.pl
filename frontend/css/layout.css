@@ -852,3 +852,59 @@ body.is-article-view .sidebar-right {
         height: 200px;
     }
 }
+
+/* ============================================================
+   FAZA 4 — Style przeniesione z index.html <style> block
+   ============================================================ */
+
+.sidebar-section-title {
+    font-family: var(--font-title) !important;
+    font-size: 18px !important;
+    font-weight: 900 !important;
+    color: var(--text-primary) !important;
+    margin: var(--space-xl) 0 25px 0 !important;
+    padding-top: var(--space-xs) !important;
+    text-align: right !important;
+    display: block !important;
+    position: relative !important;
+}
+
+.sidebar-section-title::before {
+    content: "" !important;
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    width: 50% !important;
+    height: 1px !important;
+    background: var(--text-primary) !important;
+}
+
+.mega-search-input {
+    padding-left: 550px !important;
+    width: 100% !important;
+    flex: 1 !important;
+    margin-left: 0 !important;
+    position: relative !important;
+    z-index: 3001 !important;
+}
+
+.menu-overlay  { z-index: 3000 !important; }
+.site-header   { z-index: 3100 !important; pointer-events: none !important; }
+.header-left,
+.header-right  { pointer-events: auto !important; }
+
+/* Stany ładowania i błędów — używane przez router.js */
+.loading-msg,
+.error-msg {
+    padding: var(--space-lg);
+    text-align: center;
+    color: var(--text-faint);
+    font-family: var(--font-body);
+    font-size: var(--font-size-meta);
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.error-msg { color: var(--color-no); }
+

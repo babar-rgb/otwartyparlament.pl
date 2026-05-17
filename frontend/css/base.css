@@ -1,12 +1,42 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&family=Teko:wght@300;400;600;700&display=swap');
 
 :root {
+    /* Kolory */
     --bg-color: #ffffff;
     --text-primary: #000000;
     --text-secondary: #333333;
-    --border-light: #e0e0e0;
+    --text-muted: #888888;
+    --text-faint: #aaaaaa;
+    --border-light: #eeeeee;
+    --border-strong: #000000;
     --accent-gray: #f9f9f9;
+    --accent-bg: #fafafa;
+    --color-yes: #2e7d32;
+    --color-no: #c62828;
+    --color-abstain: #666666;
+    --color-accent: #ff0000;
+
+    /* Typografia */
+    --font-title: 'Playfair Display', serif;
+    --font-body: 'Inter', sans-serif;
+    --font-size-hero: 64px;
+    --font-size-title: 56px;
+    --font-size-section: 32px;
+    --font-size-label: 12px;
+    --font-size-meta: 11px;
+    --font-size-micro: 9px;
+    --font-size-tiny: 10px;
+
+    /* Odstępy */
+    --space-xs: 15px;
+    --space-sm: 20px;
+    --space-md: 30px;
+    --space-lg: 40px;
+    --space-xl: 60px;
+    --space-2xl: 80px;
+    --space-3xl: 100px;
 }
+
 
 .animate-fade-in {
     animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);

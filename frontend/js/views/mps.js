@@ -17,7 +17,6 @@ function renderMpCard(mp) {
 templates.mps = () => {
     const mps = window.state.data.mps;
 
-    // Widok listy klubów (bez wybranego klubu)
     if (!window.state.filters.selectedClub) {
         const clubs = [...new Set(mps.map(m => m.club))].filter(Boolean).sort();
         return `
@@ -40,7 +39,6 @@ templates.mps = () => {
         `;
     }
 
-    // Widok posłów konkretnego klubu
     const clubMps = mps.filter(m => m.club === window.state.filters.selectedClub);
     const filtered = window.TruthSearch.searchInList(clubMps, window.state.filters.mpSearch, ['name']);
     return `
@@ -54,11 +52,10 @@ templates.mps = () => {
 
 templates.mpDetail = (mp) => {
     const votingRows = (mp.votingHistory || []).map(v => `
-        <div class="mp-vote-item clickable-ledger" data-id="${v.id}"
-             style="display:grid;grid-template-columns:120px 1fr 100px;gap:40px;align-items:center;padding:20px 0;border-bottom:1px solid #eee;cursor:pointer;">
-            <div style="font-size:11px;font-weight:800;color:#aaa;">${formatDatePolish(v.date)}</div>
-            <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;">${v.title}</div>
-            <div style="font-size:9px;font-weight:900;letter-spacing:2px;padding:8px 0;text-align:center;border:2px solid #000;${v.choice === 'ZA' ? 'background:#000;color:#fff;' : 'background:#fff;color:#000;'}">${v.choice}</div>
+        <div class="mp-vote-row clickable-ledger" data-id="${v.id}">
+            <div class="mp-vote-row-date">${formatDatePolish(v.date)}</div>
+            <div class="mp-vote-row-title">${v.title}</div>
+            <div class="mp-vote-row-choice ${v.choice === 'ZA' ? 'is-za' : 'is-other'}">${v.choice}</div>
         </div>
     `).join('');
 
@@ -66,38 +63,37 @@ templates.mpDetail = (mp) => {
         <div class="data-view-container">
             <div class="back-link" onclick="window.history.back()">← POWRÓT</div>
 
-            <div style="display:flex;gap:60px;align-items:center;margin-bottom:60px;">
-                <div style="width:240px;height:240px;flex-shrink:0;">
+            <div class="mp-detail-header">
+                <div class="mp-hero-portrait">
                     <img src="${mp.photo_url || ''}" alt="${mp.name}"
-                         style="width:100%;height:100%;object-fit:cover;"
                          onerror="this.src='https://www.sejm.gov.pl/Sejm10.nsf/photos/000.jpg'">
                 </div>
                 <div>
-                    <div style="margin-bottom:15px;font-size:14px;font-weight:800;color:#888;letter-spacing:2px;">${mp.club || 'BRAK KLUBU'}</div>
-                    <h1 style="font-family:'Playfair Display',serif;font-size:56px;font-weight:900;margin-bottom:10px;line-height:1;">${mp.name}</h1>
-                    <div style="font-size:10px;font-weight:800;color:#999;letter-spacing:2px;text-transform:uppercase;">POSEŁ NA SEJM RP</div>
+                    <div class="mp-detail-club">${mp.club || 'BRAK KLUBU'}</div>
+                    <h1 class="mp-detail-name">${mp.name}</h1>
+                    <div class="mp-detail-subtitle">POSEŁ NA SEJM RP</div>
                 </div>
             </div>
 
-            <div style="display:flex;justify-content:space-around;border-top:1px solid #eee;border-bottom:1px solid #eee;padding:60px 0;margin-bottom:80px;text-align:center;">
-                <div>
-                    <strong style="font-size:36px;font-weight:900;display:block;margin-bottom:5px;">${mp.attendance || '---'}</strong>
-                    <span style="font-size:9px;font-weight:800;color:#999;letter-spacing:2px;text-transform:uppercase;">FREKWENCJA</span>
+            <div class="mp-stats-hero">
+                <div class="mp-big-stat">
+                    <strong>${mp.attendance || '---'}</strong>
+                    <span>FREKWENCJA</span>
                 </div>
-                <div>
-                    <strong style="font-size:36px;font-weight:900;display:block;margin-bottom:5px;">---</strong>
-                    <span style="font-size:9px;font-weight:800;color:#999;letter-spacing:2px;text-transform:uppercase;">GŁOSY ODMIENNE</span>
+                <div class="mp-big-stat">
+                    <strong>---</strong>
+                    <span>GŁOSY ODMIENNE</span>
                 </div>
-                <div>
-                    <strong style="font-size:36px;font-weight:900;display:block;margin-bottom:5px;">---</strong>
-                    <span style="font-size:9px;font-weight:800;color:#999;letter-spacing:2px;text-transform:uppercase;">RANKING MAJĄTKU</span>
+                <div class="mp-big-stat">
+                    <strong>---</strong>
+                    <span>RANKING MAJĄTKU</span>
                 </div>
             </div>
 
             <div>
-                <div style="font-size:11px;font-weight:900;letter-spacing:3px;text-transform:uppercase;border-bottom:2px solid #000;padding-bottom:15px;margin-bottom:30px;">OSTATNIE GŁOSOWANIA</div>
+                <div class="mp-voting-history-title">OSTATNIE GŁOSOWANIA</div>
                 <div class="voting-record-list">
-                    ${votingRows || `<p style="padding:40px;text-align:center;color:#aaa;">Brak danych o głosowaniach.</p>`}
+                    ${votingRows || `<p class="error-msg">Brak danych o głosowaniach.</p>`}
                 </div>
             </div>
         </div>

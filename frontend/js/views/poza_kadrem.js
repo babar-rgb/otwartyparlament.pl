@@ -51,20 +51,20 @@ const REPORTS = {
 templates.szerszyKadr = () => `
     <div class="data-view-container">
         <div class="back-link-minimal" onclick="location.hash='#home'">← POWRÓT</div>
-        <div style="margin:80px 0;border-bottom:2px solid #000;padding-bottom:20px;display:flex;justify-content:space-between;align-items:flex-end;">
+        <div class="pk-header">
             <h1 class="view-title" style="margin:0;">POZA KADREM</h1>
-            <span style="font-size:10px;font-weight:800;letter-spacing:2px;color:#888;">SERIA RAPORTÓW ANALITYCZNYCH</span>
+            <span class="pk-series-label">SERIA RAPORTÓW ANALITYCZNYCH</span>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:80px;margin-top:60px;">
+        <div class="pk-grid">
             <div class="investigation-entry" onclick="location.hash='#poza-kadrem/kobalt'" style="cursor:pointer;">
-                <div style="font-size:10px;font-weight:900;color:#ff0000;margin-bottom:15px;">RAPORT 01 / 2026</div>
-                <h2 style="font-family:'Playfair Display',serif;font-size:32px;font-weight:900;margin-bottom:20px;">ANALIZA ŁAŃCUCHA DOSTAW KOBALTU</h2>
-                <p style="font-size:14px;color:#666;line-height:1.6;">Dokumentacja dotycząca procesów wydobywczych w DR Konga oraz ich korelacji z unijnymi dyrektywami transportowymi.</p>
+                <div class="pk-report-number">RAPORT 01 / 2026</div>
+                <h2 class="pk-report-title">ANALIZA ŁAŃCUCHA DOSTAW KOBALTU</h2>
+                <p class="pk-report-excerpt">Dokumentacja dotycząca procesów wydobywczych w DR Konga oraz ich korelacji z unijnymi dyrektywami transportowymi.</p>
             </div>
             <div class="investigation-entry" onclick="location.hash='#poza-kadrem/edukacja'" style="cursor:pointer;">
-                <div style="font-size:10px;font-weight:900;color:#ff0000;margin-bottom:15px;">RAPORT 02 / 2026</div>
-                <h2 style="font-family:'Playfair Display',serif;font-size:32px;font-weight:900;margin-bottom:20px;">REFORMA SZKOLNICTWA: MODERNIZACJA CZY FASADA?</h2>
-                <p style="font-size:14px;color:#666;line-height:1.6;">Analiza wpływu programu "Cyfrowa Szkoła 2026" na realną kondycję polskiej oświaty i braki kadrowe.</p>
+                <div class="pk-report-number">RAPORT 02 / 2026</div>
+                <h2 class="pk-report-title">REFORMA SZKOLNICTWA: MODERNIZACJA CZY FASADA?</h2>
+                <p class="pk-report-excerpt">Analiza wpływu programu "Cyfrowa Szkoła 2026" na realną kondycję polskiej oświaty i braki kadrowe.</p>
             </div>
         </div>
     </div>
@@ -89,15 +89,16 @@ templates.investigationDetail = (id) => {
     `).join('');
 
     const sections = report.sections.map((section, idx) => `
-        <section id="${section.id}" style="margin-bottom:100px;">
+        <section id="${section.id}" style="margin-bottom:var(--space-3xl);">
             <h2 class="section-heading">${section.title}</h2>
             <p class="article-p">${section.text}</p>
             ${idx === 0 ? `
-                <div style="margin:60px 0;border-left:4px solid #ff0000;padding:30px;background:#fafafa;">
-                    <div style="font-size:9px;font-weight:900;letter-spacing:2px;margin-bottom:15px;color:#ff0000;">[ ${report.secondPlan.label} ]</div>
-                    <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:40px;align-items:center;">
-                        <p style="font-size:13px;line-height:1.6;font-style:italic;color:#555;">${report.secondPlan.text}</p>
-                        <div class="reveal-trigger" style="border:1px solid #000;height:160px;background:url('${report.secondPlan.image}');background-size:cover;filter:grayscale(1);">
+                <div class="pk-second-plan">
+                    <div class="pk-second-plan-label">[ ${report.secondPlan.label} ]</div>
+                    <div class="pk-second-plan-body">
+                        <p class="pk-second-plan-text">${report.secondPlan.text}</p>
+                        <div class="pk-second-plan-image reveal-trigger"
+                             style="background-image:url('${report.secondPlan.image}');">
                             <div class="reveal-overlay"></div>
                         </div>
                     </div>
@@ -107,23 +108,23 @@ templates.investigationDetail = (id) => {
     `).join('');
 
     return `
-        <div class="data-view-container" style="max-width:1400px;display:grid;grid-template-columns:200px 1fr;gap:80px;position:relative;">
-            <aside style="position:sticky;top:120px;height:fit-content;">
-                <div class="back-link-minimal" onclick="location.hash='#poza-kadrem'" style="margin-bottom:40px;">← POWRÓT</div>
+        <div class="data-view-container pk-detail-layout">
+            <aside class="pk-aside">
+                <div class="back-link-minimal" onclick="location.hash='#poza-kadrem'" style="margin-bottom:var(--space-lg);">← POWRÓT</div>
                 <div class="sk-process-map-mini">
                     <div class="sk-mini-line"></div>
                     ${tocItems}
                 </div>
             </aside>
             <main>
-                <header style="margin-bottom:80px;">
-                    <div style="font-size:10px;font-weight:900;color:#ff0000;letter-spacing:2px;margin-bottom:20px;">${report.subtitle}</div>
-                    <h1 style="font-family:'Playfair Display',serif;font-size:64px;font-weight:900;line-height:1.1;margin-bottom:60px;">${report.title}</h1>
+                <header style="margin-bottom:var(--space-2xl);">
+                    <div class="pk-report-subtitle">${report.subtitle}</div>
+                    <h1 class="pk-report-hero-title">${report.title}</h1>
                     <nav class="cascading-toc">${tocNav}</nav>
                 </header>
                 <article class="investigation-body">${sections}</article>
-                <footer style="margin:80px 0;border-top:1px solid #000;padding-top:30px;">
-                    <div style="font-size:10px;font-weight:900;margin-bottom:15px;">DOKUMENTACJA ŹRÓDŁOWA (PDF)</div>
+                <footer class="pk-footer">
+                    <div class="pk-footer-label">DOKUMENTACJA ŹRÓDŁOWA (PDF)</div>
                     <button class="mag-see-mps-btn">POBIERZ ARCHIWUM</button>
                 </footer>
             </main>

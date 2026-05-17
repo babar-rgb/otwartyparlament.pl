@@ -13,60 +13,8 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap"
         rel="stylesheet">
-    <style>
-        .sidebar-section-title {
-            font-family: 'Playfair Display', serif !important;
-            font-size: 18px !important;
-            font-weight: 900 !important;
-            color: #000 !important;
-            margin: 60px 0 25px 0 !important;
-            padding-top: 15px !important;
-            text-align: right !important;
-            display: block !important;
-            position: relative !important;
-        }
 
-        .sidebar-section-title::before {
-            content: "" !important;
-            position: absolute !important;
-            top: 0 !important;
-            right: 0 !important;
-            width: 50% !important;
-            height: 1px !important;
-            background: #000 !important;
-        }
 
-        .mega-search-input {
-            padding-left: 550px !important;
-            width: 100% !important;
-            flex: 1 !important;
-            margin-left: 0 !important;
-            position: relative !important;
-            z-index: 3001 !important;
-        }
-        .menu-overlay {
-            z-index: 3000 !important;
-        }
-        .site-header {
-            z-index: 3100 !important;
-            pointer-events: none !important;
-        }
-        .header-left, .header-right {
-            pointer-events: auto !important;
-        }
-        /* Stany ładowania i błędów — używane przez router.js */
-        .loading-msg, .error-msg {
-            padding: 40px;
-            text-align: center;
-            color: #aaa;
-            font-family: 'Inter', sans-serif;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-        .error-msg { color: #c62828; }
-    </style>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="js/search.js"></script>
     <script src="js/config.js"></script>
