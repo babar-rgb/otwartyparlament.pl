@@ -1,0 +1,361 @@
+{
+  "meta": {
+    "updated_at": "2026-05-15T12:32:45",
+    "total_government": 447,
+    "total_president": 59
+  },
+  "government": [
+    {
+      "id": "2581",
+      "title": "Rządowy projekt ustawy o zmianie ustawy o ubezpieczeniach upraw rolnych i zwierząt gospodarskich.",
+      "date": "2026-05-13",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2581"
+    },
+    {
+      "id": "2529",
+      "title": "Rządowy projekt ustawy o rynku kryptoaktywów.",
+      "date": "2026-05-08",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2529"
+    },
+    {
+      "id": "2533",
+      "title": "Rządowy projekt ustawy o udziale Rzeczypospolitej Polskiej w systemie Eurodac.",
+      "date": "2026-05-08",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2533"
+    },
+    {
+      "id": "2578",
+      "title": "Rządowy projekt ustawy o zmianie niektórych ustaw w celu dokonania deregulacji w zakresie energetyki.",
+      "date": "2026-05-08",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2578"
+    },
+    {
+      "id": "2579",
+      "title": "Rządowy projekt ustawy o koordynacji opieki długoterminowej i osobach starszych.",
+      "date": "2026-05-08",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2579"
+    },
+    {
+      "id": "2580",
+      "title": "Rządowy projekt ustawy o osobistych kontach inwestycyjnych.",
+      "date": "2026-05-08",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2580"
+    },
+    {
+      "id": "2550",
+      "title": "Rządowy projekt ustawy o zmianie ustawy o pomocy społecznej.",
+      "date": "2026-05-07",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2550"
+    },
+    {
+      "id": "2549",
+      "title": "Rządowy projekt ustawy o zmianie niektórych ustaw w celu wsparcia przedsiębiorstw żeglugowych oraz stworzenia warunków ich funkcjonowania pod polską banderą.",
+      "date": "2026-05-05",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2549"
+    },
+    {
+      "id": "2498",
+      "title": "Rządowy projekt ustawy o zmianie ustawy o zastawie rejestrowym i rejestrze zastawów oraz ustawy - Prawo o ruchu drogowym.",
+      "date": "2026-04-30",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2498"
+    },
+    {
+      "id": "2499",
+      "title": "Rządowy projekt ustawy o zmianie ustawy o przeciwdziałaniu narkomanii oraz niektórych innych ustaw.",
+      "date": "2026-04-30",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2499"
+    },
+    {
+      "id": "2488",
+      "title": "Rządowy projekt ustawy o szczególnych środkach ochrony osób uczestniczących w debacie publicznej.",
+      "date": "2026-04-29",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2488"
+    },
+    {
+      "id": "2489",
+      "title": "Rządowy projekt ustawy o zmianie ustawy o podatku od spadków i darowizn.",
+      "date": "2026-04-29",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2489"
+    },
+    {
+      "id": "2497",
+      "title": "Rządowy projekt ustawy o zmianie ustawy o pracowniczych planach kapitałowych oraz ustawy o szczególnych rozwiązaniach związanych z zapobieganiem, przeciwdziałaniem i zwalczaniem COVID-19, innych chorób zakaźnych oraz wywołanych nimi sytuacji kryzysowych.",
+      "date": "2026-04-29",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2497"
+    },
+    {
+      "id": "2500",
+      "title": "Rządowy projekt ustawy o szczególnych rozwiązaniach związanych z wynikami ewaluacji jakości działalności naukowej za lata 2022-2025.",
+      "date": "2026-04-29",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2500"
+    },
+    {
+      "id": "2456",
+      "title": "Rządowy projekt ustawy o zmianie ustawy o świadczeniach opieki zdrowotnej finansowanych ze środków publicznych oraz ustawy o zapobieganiu oraz zwalczaniu zakażeń i chorób zakaźnych u ludzi.",
+      "date": "2026-04-15",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2456"
+    },
+    {
+      "id": "2457",
+      "title": "Rządowy projekt ustawy o zmianie ustawy o podatku akcyzowym.",
+      "date": "2026-04-15",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2457"
+    },
+    {
+      "id": "2458",
+      "title": "Rządowy projekt ustawy o utworzeniu Wojskowej Akademii Medycznej.",
+      "date": "2026-04-15",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2458"
+    },
+    {
+      "id": "2459",
+      "title": "Rządowy projekt ustawy o zmianie ustawy o planowaniu i zagospodarowaniu przestrzennym oraz niektórych innych ustaw.",
+      "date": "2026-04-15",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2459"
+    },
+    {
+      "id": "2460",
+      "title": "Rządowy projekt ustawy o zmianie niektórych ustaw w związku z rozwojem usług e-zdrowia.",
+      "date": "2026-04-15",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2460"
+    },
+    {
+      "id": "2446",
+      "title": "Rządowy projekt ustawy o związku metropolitalnym w województwie pomorskim.",
+      "date": "2026-04-14",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2446"
+    },
+    {
+      "id": "2445",
+      "title": "Rządowy projekt ustawy o zmianie ustawy o podatku dochodowym od osób fizycznych, ustawy o podatku dochodowym od osób prawnych oraz ustawy o zryczałtowanym podatku dochodowym od niektórych przychodów osiąganych przez osoby fizyczne.",
+      "date": "2026-04-10",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2445"
+    },
+    {
+      "id": "2449",
+      "title": "Rządowy projekt ustawy o zmianie ustawy - Prawo oświatowe, ustawy o systemie oświaty oraz niektórych innych ustaw.",
+      "date": "2026-04-10",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2449"
+    },
+    {
+      "id": "2443",
+      "title": "Rządowy projekt ustawy o systemach sztucznej inteligencji.",
+      "date": "2026-04-09",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2443"
+    },
+    {
+      "id": "2404",
+      "title": "Rządowy projekt ustawy o zmianie ustawy o utworzeniu Uniwersytetu Medycznego w Łodzi.",
+      "date": "2026-04-07",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2404"
+    },
+    {
+      "id": "2398",
+      "title": "Rządowy projekt ustawy o zmianie ustawy - Kodeks karny.",
+      "date": "2026-04-01",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2398"
+    }
+  ],
+  "president": [
+    {
+      "id": "2548",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 17 kwietnia 2026 r. o koordynacji działań antykorupcyjnych oraz o likwidacji Centralnego Biura Antykorupcyjnego.",
+      "date": "2026-05-11",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2548"
+    },
+    {
+      "id": "2528",
+      "title": "Przedstawiony przez Prezydenta Rzeczypospolitej Polskiej projekt ustawy o rynku kryptoaktywów.",
+      "date": "2026-05-06",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2528"
+    },
+    {
+      "id": "2546",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 27 marca 2026 r. o zmianie ustawy - Kodeks wyborczy.",
+      "date": "2026-04-30",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2546"
+    },
+    {
+      "id": "2547",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 13 marca 2026 r. o zmianie ustawy - Kodeks rodzinny i opiekuńczy oraz niektórych innych ustaw.",
+      "date": "2026-04-30",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2547"
+    },
+    {
+      "id": "2378",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 27 lutego 2026 r. o zmianie ustawy - Kodeks postępowania karnego oraz niektórych innych ustaw.",
+      "date": "2026-03-13",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2378"
+    },
+    {
+      "id": "2377",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 27 lutego 2026 r. o Finansowym Instrumencie Zwiększenia Bezpieczeństwa SAFE.",
+      "date": "2026-03-12",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2377"
+    },
+    {
+      "id": "2268",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 23 stycznia 2026 r. o zmianie ustawy o Krajowej Radzie Sądownictwa oraz ustawy - Kodeks wyborczy.",
+      "date": "2026-02-19",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2268"
+    },
+    {
+      "id": "2269",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 23 stycznia 2026 r. o zmianie niektórych ustaw w celu wzmocnienia pozycji rolników aktywnych zawodowo.",
+      "date": "2026-02-19",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2269"
+    },
+    {
+      "id": "2266",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 9 stycznia 2026 r. o zmianie ustawy o mniejszościach narodowych i etnicznych oraz o języku regionalnym oraz niektórych innych ustaw.",
+      "date": "2026-02-12",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2266"
+    },
+    {
+      "id": "2267",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 18 grudnia 2025 r. o rynku kryptoaktywów.",
+      "date": "2026-02-12",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2267"
+    },
+    {
+      "id": "2169",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 4 grudnia 2025 r. o zmianie ustawy - Kodeks cywilny, ustawy o ubezpieczeniach obowiązkowych, Ubezpieczeniowym Funduszu Gwarancyjnym i Polskim Biurze Ubezpieczycieli Komunikacyjnych oraz ustawy o działalności ubezpieczeniowej i reasekuracyjnej.",
+      "date": "2026-01-09",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2169"
+    },
+    {
+      "id": "2170",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 18 grudnia 2025 r. o zmianie ustawy o Narodowym Centrum Badań i Rozwoju oraz niektórych innych ustaw.",
+      "date": "2026-01-09",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2170"
+    },
+    {
+      "id": "2171",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 18 grudnia 2025 r. o zmianie ustawy o świadczeniu usług drogą elektroniczną oraz niektórych innych ustaw.",
+      "date": "2026-01-09",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2171"
+    },
+    {
+      "id": "2123",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 7 listopada 2025 r. o zmianie ustawy o podatku akcyzowym.",
+      "date": "2025-12-18",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2123"
+    },
+    {
+      "id": "2124",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 7 listopada 2025 r. o zmianie ustawy o zdrowiu publicznym oraz ustawy o podatku dochodowym od osób fizycznych.",
+      "date": "2025-12-18",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2124"
+    },
+    {
+      "id": "2125",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 21 listopada 2025 r. o zmianie ustawy - Prawo oświatowe oraz niektórych innych ustaw.",
+      "date": "2025-12-18",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2125"
+    },
+    {
+      "id": "2049",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 7 listopada 2025 r. o zmianie ustawy o ochronie zwierząt.",
+      "date": "2025-12-02",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2049"
+    },
+    {
+      "id": "2270",
+      "title": "Przedstawiony przez Prezydenta Rzeczypospolitej Polskiej projekt ustawy o zmianie ustawy o ochronie zwierząt.",
+      "date": "2025-12-02",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2270"
+    },
+    {
+      "id": "2048",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 7 listopada 2025 r. o rynku kryptoaktywów.",
+      "date": "2025-12-01",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2048"
+    },
+    {
+      "id": "2039",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 17 października 2025 r. o zmianie ustawy - Kodeks wyborczy.",
+      "date": "2025-11-27",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2039"
+    },
+    {
+      "id": "2040",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 17 października 2025 r. o zmianie ustawy o podatku dochodowym od osób prawnych.",
+      "date": "2025-11-27",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2040"
+    },
+    {
+      "id": "2209",
+      "title": "Przedstawiony przez Prezydenta Rzeczypospolitej Polskiej projekt ustawy o zmianie ustawy o Funduszu Medycznym.",
+      "date": "2025-11-18",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=2209"
+    },
+    {
+      "id": "1957",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 17 października 2025 r. o utworzeniu Parku Narodowego Doliny Dolnej Odry.",
+      "date": "2025-11-07",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=1957"
+    },
+    {
+      "id": "1959",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 26 września 2025 r. o zmianie ustawy o Krajowym Rejestrze Karnym, ustawy - Kodeks spółek handlowych, ustawy o odpowiedzialności podmiotów zbiorowych za czyny zabronione pod groźbą kary oraz ustawy o przeciwdziałaniu praniu pieniędzy oraz finansowaniu terroryzmu.",
+      "date": "2025-11-07",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=1959"
+    },
+    {
+      "id": "1960",
+      "title": "Wniosek Prezydenta RP o ponowne rozpatrzenie ustawy z dnia 26 września 2025 r. o zmianie ustawy - Prawo o ruchu drogowym oraz niektórych innych ustaw.",
+      "date": "2025-11-07",
+      "type": "Projekt Ustawy",
+      "url": "https://www.sejm.gov.pl/sejm10.nsf/druk.xsp?nr=1960"
+    }
+  ]
+}

@@ -62,10 +62,29 @@ def seed_poza_kadrem(db: Session = Depends(get_db)):
                     {"id": "sec-4", "label": "WNIOSKI: KOSZT ZMIANY"}
                 ],
                 "sekcje": [
-                    {"id": "sec-1", "tytul": "01 / GENEZA", "tekst": "Rządowy program \"Cyfrowa Szkoła 2026\" zakładał pełną digitalizację."},
-                    {"id": "sec-2", "tytul": "02 / REGULACJA", "tekst": "Nowelizacja ustawy wprowadziła cięcia w podstawie programowej."},
-                    {"id": "sec-3", "tytul": "03 / FAKTY", "tekst": "W Polsce brakuje obecnie 20 000 nauczycieli."},
-                    {"id": "sec-4", "tytul": "04 / WNIOSKI", "tekst": "Inwestycje w sprzęt dominują nad inwestycją w ludzi."}
+                    {
+                        "id": "sec-1",
+                        "typ": "hero-number",
+                        "liczba": "120 MILIONÓW",
+                        "tekst": "Tyle złotych przeznaczono na tablety i laptopy dla szkół podstawowych. Urządzenia leżą w kartonach, bo szkoły nie mają budżetu na infrastrukturę sieciową."
+                    },
+                    {
+                        "id": "sec-2",
+                        "tytul": "02 / REGULACJA: Nowe podstawy programowe",
+                        "tekst": "<p>Wprowadzone w pośpiechu cięcia programowe miały odciążyć uczniów. W praktyce wywołały chaos informacyjny – nauczyciele dostali wytyczne zaledwie dwa tygodnie przed rozpoczęciem roku szkolnego. Podręczniki nie zostały zaktualizowane na czas.</p><p>Zamiast rzetelnej, zaplanowanej cyfryzacji powstała fasadowa zmiana: w programach brakuje kluczowych elementów logiki programowania na rzecz powierzchownej obsługi gotowych interfejsów.</p>"
+                    },
+                    {
+                        "id": "sec-3",
+                        "typ": "timeline-votes",
+                        "pytanie": "Ewakuacja kadry (2021-2026)",
+                        "tekst": "Odpływ nauczycieli przedmiotów ścisłych ze szkół publicznych przybrał postać lawinową. Wakat na stanowiskach fizyków i matematyków sięga obecnie 20 000 etatów. Brak stabilności zatrudnienia powoduje ucieczkę najlepszych nauczycieli do sektora prywatnego."
+                    },
+                    {
+                        "id": "sec-4",
+                        "typ": "flow-diagram",
+                        "pytanie": "Bilans i rzeczywiste koszty zmian",
+                        "tekst": "Inwestowanie wyłącznie w infrastrukturę sprzętową bez jednoczesnego dowartościowania ludzi tworzy pustą fasadę cyfrową: laptopy stają się zabawkami, podczas gdy brakuje podstawowej kadry do prowadzenia lekcji."
+                    }
                 ],
                 "drugi_plan": {
                     "tytul": "DRUGI PLAN",

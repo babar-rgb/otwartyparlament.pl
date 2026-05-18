@@ -16,7 +16,7 @@ templates.szerszyKadr = () => `
 `;
 
 // Wywołane po wyrenderowaniu szerszyKadr() — pobiera raporty z API
-window.loadPozaKadremList = async function() {
+window.loadPozaKadremList = async function () {
     const grid = document.getElementById('pk-reports-grid');
     if (!grid) return;
 
@@ -44,9 +44,9 @@ templates.investigationDetail = async (id) => {
         return `<div class="data-view-container"><p class="error-msg">Nie znaleziono raportu: ${id}</p></div>`;
     }
 
-    const toc   = r.struktura_json.spis_tresci || [];
+    const toc = r.struktura_json.spis_tresci || [];
     const sekcje = r.struktura_json.sekcje || [];
-    const dp    = r.struktura_json.drugi_plan || {};
+    const dp = r.struktura_json.drugi_plan || {};
 
     const tocItems = toc.map((step, idx) => `
         <div class="sk-mini-step ${idx === 0 ? 'active' : ''} ${idx === 2 ? 'danger' : ''}"
@@ -157,7 +157,7 @@ templates.investigationDetail = async (id) => {
     }).join('');
 
     return `
-        <div class="data-view-container pk-detail-layout">
+        <div class="data-view-container pk-detail-layout pk-detail-${r.id}">
             <aside class="pk-aside">
                 <div class="back-link-minimal" onclick="location.hash='#poza-kadrem'" style="margin-bottom:var(--space-lg);">← POWRÓT</div>
                 <div class="sk-process-map-mini">
