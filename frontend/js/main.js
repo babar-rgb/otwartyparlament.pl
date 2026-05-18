@@ -13,7 +13,13 @@ const state = window.state;
 async function init() {
     console.log(">>> Truth Layer: Inicjalizacja...");
     try {
-        // fetchAPI pochodzi z api.js
+        // Natychmiastowe ładowanie UI (zgodnie z origin/b&w)
+        state.isLoaded = true;
+        setupEventListeners();
+        handleRoute();
+        console.log(">>> Truth Layer: Gotowy (natychmiast).");
+
+        // Pobieramy dane w tle (fetchAPI pochodzi z api.js)
         const [mps, votes] = await Promise.all([
             fetchAPI('mps'),
             fetchAPI('votes')
@@ -22,14 +28,13 @@ async function init() {
         state.data.mps = mps;
         state.data.votes = votes;
 
-        // Artykuły pobierane z bazy (migracja: backend/services/articles_seed.py)
+        // Artykuły pobierane z bazy
         const [articles] = await Promise.all([fetchAPI('articles')]);
         state.data.articles = articles;
 
-        state.isLoaded = true;
-        setupEventListeners();
+        // Odśwież po pobraniu danych z API
         handleRoute();
-        console.log(">>> Truth Layer: Gotowy.");
+        console.log(">>> Truth Layer: Dane z API załadowane.");
     } catch (err) {
         console.error(">>> Truth Layer: Krytyczny błąd inicjalizacji:", err);
     }
@@ -55,7 +60,6 @@ function setupEventListeners() {
 
         const mpItem = e.target.closest('.clickable-mp');
         if (mpItem) window.location.hash = `#posel/${mpItem.dataset.id}`;
-
     });
 
     document.addEventListener('input', (e) => {

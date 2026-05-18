@@ -15,6 +15,30 @@
         rel="stylesheet">
 
 
+    <style>
+        .mega-search-input {
+            padding-left: 550px !important;
+            width: 100% !important;
+            flex: 1 !important;
+            margin-left: 0 !important;
+            position: relative !important;
+            z-index: 3001 !important;
+        }
+
+        .menu-overlay {
+            z-index: 3000 !important;
+        }
+
+        .site-header {
+            z-index: 3100 !important;
+            pointer-events: none !important;
+        }
+
+        .header-left,
+        .header-right {
+            pointer-events: auto !important;
+        }
+    </style>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="js/search.js?v=2"></script>
     <script src="js/config.js"></script>
@@ -38,7 +62,8 @@
     <div id="megaMenu" class="menu-overlay" :class="{ 'open': menuOpen }">
         <div class="menu-search-wrapper">
             <div class="menu-search-container">
-                <input type="text" id="mainSearchInput" x-model="searchQuery" placeholder="GDZIE CHCESZ ZAJRZEĆ?" class="mega-search-input">
+                <input type="text" id="mainSearchInput" x-model="searchQuery" placeholder="GDZIE CHCESZ ZAJRZEĆ?"
+                    class="mega-search-input">
             </div>
         </div>
 
@@ -114,33 +139,55 @@
 
         <!-- Search Results View -->
         <!-- Search Results View (Powered by Alpine) -->
-        <div id="searchResultsArea" 
-             class="menu-results-container" 
-             :class="{ 'active': searchQuery.length >= 2 }"
-             x-show="searchQuery.length >= 2">
-            
+        <div id="searchResultsArea" class="menu-results-container" :class="{ 'active': searchQuery.length >= 2 }"
+            x-show="searchQuery.length >= 2">
+
             <template x-if="filteredMps.length > 0">
-                <div>
-                    <h4 style="font-size:10px; letter-spacing:2px; margin-bottom:20px; color:#999;">POSŁOWIE</h4>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:40px;">
+                <div style="margin-bottom: 80px;">
+                    <div
+                        style="display: flex; align-items: center; gap: 20px; margin-bottom: 40px; border-bottom: 1px solid #000; padding-bottom: 15px;">
+                        <h4
+                            style="font-size:10px; font-weight: 900; letter-spacing:4px; margin: 0; color:#000; text-transform: uppercase;">
+                            POSŁOWIE</h4>
+                        <div style="flex: 1; height: 1px; background: #eee;"></div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px;">
                         <template x-for="mp in filteredMps" :key="mp.id">
-                            <div x-html="renderMpCard(mp)"></div>
+                            <div x-html="renderMpCard(mp)" class="search-result-item"></div>
                         </template>
                     </div>
                 </div>
             </template>
 
             <template x-if="filteredVotes.length > 0">
-                <div>
-                    <h4 style="font-size:10px; letter-spacing:2px; margin-bottom:20px; color:#999;">GŁOSOWANIA</h4>
-                    <template x-for="vote in filteredVotes" :key="vote.id">
-                        <div x-html="renderLedgerItem(vote)"></div>
-                    </template>
+                <div style="margin-bottom: 80px;">
+                    <div
+                        style="display: flex; align-items: center; gap: 20px; margin-bottom: 40px; border-bottom: 1px solid #000; padding-bottom: 15px;">
+                        <h4
+                            style="font-size:10px; font-weight: 900; letter-spacing:4px; margin: 0; color:#000; text-transform: uppercase;">
+                            GŁOSOWANIA</h4>
+                        <div style="flex: 1; height: 1px; background: #eee;"></div>
+                    </div>
+                    <div class="votes-ledger">
+                        <template x-for="vote in filteredVotes" :key="vote.id">
+                            <div x-html="renderLedgerItem(vote)" class="search-result-item"></div>
+                        </template>
+                    </div>
                 </div>
             </template>
 
             <template x-if="filteredMps.length === 0 && filteredVotes.length === 0">
-                <p style="color:#999;">BRAK WYNIKÓW DLA: <span x-text="searchQuery"></span></p>
+                <div style="padding: 100px 0; text-align: center;">
+                    <div
+                        style="font-family: 'Playfair Display', serif; font-size: 82px; font-weight: 900; color: #eee; margin-bottom: 20px; letter-spacing: -4px;">
+                        Zero.</div>
+                    <p
+                        style="font-size: 11px; font-weight: 800; color:#aaa; letter-spacing: 2px; text-transform: uppercase;">
+                        BRAK WYNIKÓW DLA: <span x-text="searchQuery" style="color: #000;"></span></p>
+                    <p style="max-width: 400px; margin: 40px auto 0; font-size: 14px; line-height: 1.6; color: #888;">
+                        W systemie nie ma wyniku pasującego do tej frazy. Spróbuj
+                        operować konkretnym nazwiskiem lub tematem legislacyjnym.</p>
+                </div>
             </template>
         </div>
     </div>
@@ -200,7 +247,8 @@
                 </div>
             </div>
             <div class="header-right">
-                <div class="search-bar" id="globalSearchTrigger">
+                <div class="search-bar" id="globalSearchTrigger"
+                    @click="toggleMenu(); $nextTick(() => document.getElementById('mainSearchInput').focus())">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                         stroke-linejoin="round">
                         <circle cx="11" cy="11" r="8"></circle>
@@ -252,7 +300,13 @@
             </nav>
         </aside>
     </main>
-<div class="veritas-sidebar-memento">NIE UFAJ — WERYFIKUJ</div>
-<div id="truth-modal" class="mag-modal" style="display:none;"><div class="mag-modal-overlay" onclick="closeTruthModal()"></div><div class="mag-modal-content"><button class="mag-modal-close" onclick="closeTruthModal()">[ ZAMKNIJ ]</button><div id="modal-body-content"></div></div></div></body>
+    <div class="veritas-sidebar-memento">NIE UFAJ — WERYFIKUJ</div>
+    <div id="truth-modal" class="mag-modal" style="display:none;">
+        <div class="mag-modal-overlay" onclick="closeTruthModal()"></div>
+        <div class="mag-modal-content"><button class="mag-modal-close" onclick="closeTruthModal()">[ ZAMKNIJ ]</button>
+            <div id="modal-body-content"></div>
+        </div>
+    </div>
+</body>
 
 </html>

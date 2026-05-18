@@ -68,6 +68,17 @@ function handleRoute() {
             mainContent.innerHTML = html;
         });
 
+    } else if (hash.startsWith('#szukaj/')) {
+        const query = decodeURIComponent(hash.split('/')[1]);
+        if (window.Alpine) {
+            const data = Alpine.closestRoot(document.body)?._x_dataStack[0];
+            if (data) {
+                data.searchQuery = query;
+                data.menuOpen = true;
+            }
+        }
+        mainContent.innerHTML = templates.home();
+
     } else {
         mainContent.innerHTML = templates.home();
     }
