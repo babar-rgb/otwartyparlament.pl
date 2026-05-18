@@ -2641,6 +2641,13 @@
     line-height: 1.6;
 }
 
+.article-html-content p {
+    font-size: 18px;
+    line-height: 1.8;
+    margin-bottom: 30px;
+    color: #222;
+}
+
 /* --- Poza Kadrem: szczegół raportu --- */
 .pk-detail-layout {
     max-width: 1400px;
@@ -2666,10 +2673,12 @@
 
 .pk-report-hero-title {
     font-family: var(--font-title);
-    font-size: var(--font-size-hero);
+    font-size: clamp(36px, 4.5vw, 56px);
     font-weight: 900;
     line-height: 1.1;
     margin-bottom: var(--space-xl);
+    hyphens: auto;
+    -webkit-hyphens: auto;
 }
 
 .pk-second-plan {
@@ -2846,3 +2855,236 @@
     text-transform: uppercase;
 }
 
+
+/* --- Vote Pros & Cons (Wady i Zalety) --- */
+.vote-pros-cons-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    margin-bottom: 80px;
+    margin-top: 60px;
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+}
+
+@media (max-width: 768px) {
+    .vote-pros-cons-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.pros-cons-box {
+    padding: 40px 40px 50px 40px;
+    background: transparent;
+}
+
+.pros-cons-box.is-pros {
+    border-right: 1px solid #eee;
+}
+
+@media (max-width: 768px) {
+    .pros-cons-box.is-pros {
+        border-right: none;
+        border-bottom: 1px solid #eee;
+    }
+}
+
+.pros-cons-title {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 30px;
+    color: #000;
+}
+
+.pros-cons-title span {
+    color: #999;
+}
+
+.pros-cons-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.pros-cons-list li {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    padding-left: 25px;
+    position: relative;
+    color: #000;
+}
+
+.pros-cons-list li::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    font-family: 'Inter', sans-serif;
+    font-weight: 900;
+    font-size: 14px;
+}
+
+.pros-cons-box.is-pros .pros-cons-list li::before {
+    color: #2d5a27;
+}
+
+.pros-cons-box.is-cons .pros-cons-list li::before {
+    color: #cc0000;
+}
+
+.mock-data-notice {
+    font-size: 9px;
+    color: #999;
+    font-style: italic;
+    display: block;
+    margin-top: 15px;
+}
+
+/* --- Sandbox Poza Kadrem --- */
+.sandbox-layer {
+    padding: 60px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.sandbox-layer.layer-hero-number {
+    background: #000;
+    color: #fff;
+    padding: 100px 40px;
+    text-align: center;
+}
+
+.hero-number-anim {
+    font-size: 120px;
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 30px;
+    opacity: 0;
+    transform: translateY(50px);
+    animation: riseUp 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.hero-text-anim {
+    font-size: 24px;
+    opacity: 0;
+    animation: fadeIn 1s ease 1s forwards;
+}
+
+@keyframes riseUp {
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+    to { opacity: 1; }
+}
+
+.sandbox-q {
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 40px;
+}
+
+.map-placeholder {
+    height: 300px;
+    background: #f5f5f5;
+    position: relative;
+    margin-bottom: 40px;
+    border: 1px solid #ddd;
+    overflow: hidden;
+}
+
+.map-point {
+    width: 20px;
+    height: 20px;
+    background: red;
+    border-radius: 50%;
+    position: absolute;
+    opacity: 0;
+    animation: pointPulse 2s infinite, fadeIn 0.5s forwards;
+}
+
+.map-point.point-1 { top: 40%; left: 30%; animation-delay: 0.5s; }
+.map-point.point-2 { top: 60%; left: 50%; animation-delay: 1.5s; }
+.map-point.point-3 { top: 30%; left: 70%; animation-delay: 2.5s; }
+
+@keyframes pointPulse {
+    0% { box-shadow: 0 0 0 0 rgba(255,0,0,0.4); }
+    70% { box-shadow: 0 0 0 20px rgba(255,0,0,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,0,0,0); }
+}
+
+.timeline-placeholder {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 40px;
+    background: #fafafa;
+    margin-bottom: 40px;
+    border: 1px solid #eee;
+}
+
+.timeline-node {
+    width: 40px;
+    height: 40px;
+    background: #000;
+    color: #fff;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+.timeline-line {
+    flex-grow: 1;
+    height: 2px;
+    background: #000;
+}
+.timeline-node:hover {
+    transform: scale(1.3);
+}
+
+.layer-flow-diagram {
+    background: #111;
+    color: #fff;
+    padding: 80px 40px;
+}
+.flow-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 40px;
+}
+.flow-element {
+    padding: 20px 40px;
+    border: 2px solid #333;
+    font-size: 14px;
+    letter-spacing: 2px;
+}
+.flow-plus { font-size: 24px; color: #666; }
+.flow-arrow { font-size: 40px; margin: 20px 0; }
+.flow-result {
+    font-family: 'Playfair Display', serif;
+    font-size: 64px;
+    font-weight: 900;
+}
+
+.layer-sources-list details {
+    cursor: pointer;
+    padding: 20px;
+    border: 1px solid #eee;
+}
+.layer-sources-list summary {
+    font-weight: bold;
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.sources-content {
+    margin-top: 20px;
+    font-size: 14px;
+    line-height: 1.6;
+}

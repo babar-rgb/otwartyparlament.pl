@@ -70,6 +70,8 @@ def read_vote(vote_id: int, db: Session = Depends(get_db)):
         "title": vote.title,
         "verdict": vote.verdict,
         "results": vote.results_json,
+        "pros": vote.pros,
+        "cons": vote.cons,
         "breakdown": sorted(breakdown, key=lambda x: x['total'], reverse=True),
         "individualVotes": individual_votes 
     }

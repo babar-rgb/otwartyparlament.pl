@@ -1,13 +1,14 @@
 // views/votes.js — Widoki głosowań: lista, szczegół, wynik posła.
 // Zależy od: helpers.js (formatDatePolish), window.TruthSearch, window.state.
 
-function renderLedgerItem(v) {
+function renderLedgerItem(v, isPinned = false) {
     const stats = v.results_json || { yes: 0, no: 0, abstain: 0 };
     const yes = stats.yes || 0;
     const no = stats.no || 0;
+    const pinnedBadge = isPinned ? `<span style="font-size:8px; font-weight:900; background:#000; color:#fff; padding:2px 5px; margin-left:10px; vertical-align:middle; letter-spacing:1px;">PRZYPIĘTE | OPRACOWANE</span>` : '';
     return `
         <div class="ledger-item clickable-ledger" data-id="${v.id}">
-            <div class="ledger-date">${formatDatePolish(v.date)}</div>
+            <div class="ledger-date">${formatDatePolish(v.date)}${pinnedBadge}</div>
             <div class="ledger-content">
                 <div class="ledger-topic">${v.topic || 'SEJM'}</div>
                 <h3 class="ledger-title">${v.title}</h3>
@@ -25,9 +26,18 @@ function renderLedgerItem(v) {
 }
 
 templates.votes = () => {
-    const filtered = window.TruthSearch.searchInList(
-        window.state.data.votes, window.state.filters.voteSearch, ['title', 'topic']
+    let filtered = window.TruthSearch.searchInList(
+        window.state.data.votes, window.state.filters.voteSearch, ['title', 'topic', 'id']
     );
+
+    // Przypinanie wybranego głosowania na szczyt listy (jeśli brak wyszukiwania)
+    if (!window.state.filters.voteSearch || window.state.filters.voteSearch.trim() === '') {
+        const pinnedIndex = filtered.findIndex(v => v.id === 56001);
+        if (pinnedIndex > -1) {
+            const pinnedVote = filtered.splice(pinnedIndex, 1)[0];
+            filtered.unshift(pinnedVote);
+        }
+    }
     return `
         <div class="data-view-container">
             <h1 class="view-title">Głosowania</h1>
@@ -37,7 +47,7 @@ templates.votes = () => {
                        value="${window.state.filters.voteSearch || ''}">
             </div>
             <div class="votes-ledger">
-                ${filtered.map(v => renderLedgerItem(v)).join('')}
+                ${filtered.map((v, i) => renderLedgerItem(v, !window.state.filters.voteSearch && i === 0 && v.id === 56001)).join('')}
                 ${filtered.length === 0 ? `<p style="text-align:center;padding:40px;color:#aaa;">Brak wyników.</p>` : ''}
             </div>
         </div>
@@ -97,6 +107,23 @@ templates.voteDetail = (v) => {
                     <span>WSTRZYMAŁO SIĘ</span>
                 </div>
             </div>
+
+            ${(v.pros && v.pros.length) || (v.cons && v.cons.length) ? `
+                <div class="vote-pros-cons-grid">
+                    <div class="pros-cons-box is-pros">
+                        <div class="pros-cons-title">DLACZEGO ZA? <span>(Zalety)</span></div>
+                        <ul class="pros-cons-list">
+                            ${(v.pros || []).map(p => `<li>${p}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="pros-cons-box is-cons">
+                        <div class="pros-cons-title">DLACZEGO PRZECIW? <span>(Wady)</span></div>
+                        <ul class="pros-cons-list">
+                            ${(v.cons || []).map(c => `<li>${c}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            ` : ''}
 
             <div>
                 <h2 class="clubs-breakdown-title">ROZKŁAD GŁOSÓW WG KLUBÓW</h2>

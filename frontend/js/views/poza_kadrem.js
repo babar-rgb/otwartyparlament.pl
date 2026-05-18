@@ -63,24 +63,98 @@ templates.investigationDetail = async (id) => {
         </div>
     `).join('');
 
-    const sections = sekcje.map((s, idx) => `
-        <section id="${s.id}" style="margin-bottom:var(--space-3xl);">
-            <h2 class="section-heading">${s.tytul}</h2>
-            <p class="article-p">${s.tekst}</p>
-            ${idx === 0 && dp.obrazek ? `
-                <div class="pk-second-plan">
-                    <div class="pk-second-plan-label">[ ${dp.tytul} ]</div>
-                    <div class="pk-second-plan-body">
-                        <p class="pk-second-plan-text">${dp.opis}</p>
-                        <div class="pk-second-plan-image reveal-trigger"
-                             style="background-image:url('${dp.obrazek}');">
-                            <div class="reveal-overlay"></div>
+    const sections = sekcje.map((s, idx) => {
+        let content = '';
+
+        if (s.typ === 'hero-number') {
+            content = `
+                <div class="sandbox-layer layer-hero-number">
+                    <div class="hero-number-anim">${s.liczba}</div>
+                    <p class="hero-text-anim">${s.tekst}</p>
+                </div>
+            `;
+        } else if (s.typ === 'map-points') {
+            content = `
+                <div class="sandbox-layer layer-map-points">
+                    <h3 class="sandbox-q">${s.pytanie}</h3>
+                    <div class="map-placeholder">
+                        <div class="map-point point-1"></div>
+                        <div class="map-point point-2"></div>
+                        <div class="map-point point-3"></div>
+                    </div>
+                    <p class="article-p">${s.tekst}</p>
+                </div>
+            `;
+        } else if (s.typ === 'timeline-votes') {
+            content = `
+                <div class="sandbox-layer layer-timeline-votes">
+                    <h3 class="sandbox-q">${s.pytanie}</h3>
+                    <div class="timeline-placeholder">
+                        <div class="timeline-node" title="Poseł 1 - Zobacz oświadczenie"></div>
+                        <div class="timeline-line"></div>
+                        <div class="timeline-node" title="Poseł 2 - Zobacz głosowania"></div>
+                        <div class="timeline-line"></div>
+                        <div class="timeline-node" title="Poseł 3"></div>
+                    </div>
+                    <p class="article-p">${s.tekst}</p>
+                </div>
+            `;
+        } else if (s.typ === 'flow-diagram') {
+            content = `
+                <div class="sandbox-layer layer-flow-diagram">
+                    <div class="flow-placeholder">
+                        <div class="flow-element">LUKA W PRZEPISACH</div>
+                        <div class="flow-plus">+</div>
+                        <div class="flow-element">BRAK REJESTRU</div>
+                        <div class="flow-plus">+</div>
+                        <div class="flow-element">WOLNE SĄDY</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-result">ZYSK</div>
+                    </div>
+                    <p class="article-p">${s.tekst}</p>
+                </div>
+            `;
+        } else if (s.typ === 'sources-list') {
+            content = `
+                <div class="sandbox-layer layer-sources-list">
+                    <details class="sources-details">
+                        <summary>[+] ${s.count} ŹRÓDEŁ. ROZWIŃ.</summary>
+                        <div class="sources-content">
+                            ${s.tekst}<br/><br/>
+                            <ul style="padding-left:20px;">
+                                <li>API Sejmu - Głosowanie nr 144</li>
+                                <li>Oświadczenia majątkowe członków komisji samorządu terytorialnego (2012-2016)</li>
+                                <li>Rejestr ksiąg wieczystych (dane zanonimizowane)</li>
+                            </ul>
+                        </div>
+                    </details>
+                </div>
+            `;
+        } else {
+            content = `
+                <h2 class="section-heading">${s.tytul || s.id}</h2>
+                <div class="article-html-content">${s.tekst}</div>
+                ${idx === 0 && dp.obrazek ? `
+                    <div class="pk-second-plan">
+                        <div class="pk-second-plan-label">[ ${dp.tytul} ]</div>
+                        <div class="pk-second-plan-body">
+                            <p class="pk-second-plan-text">${dp.opis}</p>
+                            <div class="pk-second-plan-image reveal-trigger"
+                                 style="background-image:url('${dp.obrazek}');">
+                                <div class="reveal-overlay"></div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            ` : ''}
-        </section>
-    `).join('');
+                ` : ''}
+            `;
+        }
+
+        return `
+            <section id="${s.id}" style="margin-bottom:var(--space-3xl);">
+                ${content}
+            </section>
+        `;
+    }).join('');
 
     return `
         <div class="data-view-container pk-detail-layout">

@@ -31,7 +31,7 @@ const TruthSearch = {
         const q = query.toLowerCase().trim();
         return list.filter(item => {
             return fields.some(field => 
-                (item[field] || '').toLowerCase().includes(q)
+                (item[field] ? item[field].toString() : '').toLowerCase().includes(q)
             );
         });
     },
