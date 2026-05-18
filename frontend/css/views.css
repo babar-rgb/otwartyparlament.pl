@@ -2762,3 +2762,87 @@
 .mp-result-choice.is-za    { background: var(--text-primary); color: var(--bg-color); }
 .mp-result-choice.is-other { background: var(--bg-color);     color: var(--text-primary); }
 
+
+
+/* ============================================================
+   WIDOK: Projekty Ustaw (processes.js)
+   ============================================================ */
+
+.processes-coming-soon {
+    border: 2px solid var(--border-strong);
+    padding: var(--space-xl);
+    margin-bottom: var(--space-2xl);
+}
+
+.processes-cs-tag {
+    font-size: var(--font-size-micro);
+    font-weight: 900;
+    letter-spacing: 3px;
+    color: var(--color-accent);
+    margin-bottom: var(--space-sm);
+}
+
+.processes-cs-text {
+    font-family: var(--font-title);
+    font-size: 20px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xl);
+    max-width: 700px;
+}
+
+.processes-cs-stats {
+    display: flex;
+    gap: var(--space-2xl);
+}
+
+.processes-cs-stat strong {
+    font-size: 48px;
+    font-weight: 900;
+    display: block;
+    line-height: 1;
+    margin-bottom: 5px;
+}
+
+.processes-cs-stat span {
+    font-size: var(--font-size-micro);
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+}
+
+.processes-roadmap { margin-top: var(--space-xl); }
+
+.processes-roadmap-title {
+    font-size: var(--font-size-tiny);
+    font-weight: 900;
+    letter-spacing: 3px;
+    border-bottom: 2px solid var(--border-strong);
+    padding-bottom: var(--space-xs);
+    margin-bottom: var(--space-md);
+    text-transform: uppercase;
+}
+
+.processes-roadmap-item {
+    display: flex;
+    gap: var(--space-md);
+    align-items: center;
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.roadmap-step {
+    font-size: 32px;
+    font-weight: 900;
+    color: var(--text-faint);
+    flex-shrink: 0;
+    width: 50px;
+}
+
+.roadmap-label {
+    font-size: var(--font-size-label);
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
