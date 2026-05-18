@@ -1,5 +1,5 @@
 #!/bin/bash
-# bin/start — Truth Layer: uruchamia frontend i backend równolegle.
+# bin/start — otwartyparlament.pl: uruchamia frontend i backend równolegle.
 # Użycie: ./bin/start
 # Zatrzymanie: Ctrl+C (zabija oba procesy)
 
@@ -16,7 +16,7 @@ cd "$PROJECT_DIR"
 
 echo ""
 echo -e "${BLUE}╔══════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║   otwartyparlament.pl — Truth Layer      ║${NC}"
+echo -e "${BLUE}║   otwartyparlament.pl — Twarde dane      ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════════╝${NC}"
 echo ""
 

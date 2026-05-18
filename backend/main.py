@@ -14,7 +14,7 @@ from backend.models.poza_kadrem import PozaKadrem  # Domknięcie długu: tabela 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Truth Layer API",
+    title="otwartyparlament.pl API",
     version="2.0.0",
     description="Profesjonalny backend dla projektu Dział Zagraniczny"
 )

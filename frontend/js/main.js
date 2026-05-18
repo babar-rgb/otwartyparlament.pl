@@ -11,13 +11,13 @@ const state = window.state;
 // --- CORE LOGIC ---
 
 async function init() {
-    console.log(">>> Truth Layer: Inicjalizacja...");
+    console.log(">>> otwartyparlament.pl: Inicjalizacja...");
     try {
         // Natychmiastowe ładowanie UI (zgodnie z origin/b&w)
         state.isLoaded = true;
         setupEventListeners();
         handleRoute();
-        console.log(">>> Truth Layer: Gotowy (natychmiast).");
+        console.log(">>> otwartyparlament.pl: Gotowy (natychmiast).");
 
         // Pobieramy dane w tle (fetchAPI pochodzi z api.js)
         const [mps, votes] = await Promise.all([
@@ -34,9 +34,9 @@ async function init() {
 
         // Odśwież po pobraniu danych z API
         handleRoute();
-        console.log(">>> Truth Layer: Dane z API załadowane.");
+        console.log(">>> otwartyparlament.pl: Dane z API załadowane.");
     } catch (err) {
-        console.error(">>> Truth Layer: Krytyczny błąd inicjalizacji:", err);
+        console.error(">>> otwartyparlament.pl: Krytyczny błąd inicjalizacji:", err);
     }
 }
 

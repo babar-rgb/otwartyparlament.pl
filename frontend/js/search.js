@@ -1,6 +1,6 @@
 /**
  * TruthSearch Engine
- * Moduł odpowiedzialny za globalne wyszukiwanie danych w projekcie Truth Layer.
+ * Moduł odpowiedzialny za globalne wyszukiwanie danych w projekcie otwartyparlament.pl.
  */
 const TruthSearch = {
     /**
