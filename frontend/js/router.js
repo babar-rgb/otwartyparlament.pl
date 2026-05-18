@@ -59,10 +59,14 @@ function handleRoute() {
 
     } else if (hash === '#poza-kadrem') {
         mainContent.innerHTML = templates.szerszyKadr();
+        window.loadPozaKadremList(); // pobiera raporty z API i wypełnia grid
 
     } else if (hash.startsWith('#poza-kadrem/')) {
         const id = hash.split('/')[1];
-        mainContent.innerHTML = templates.investigationDetail(id);
+        mainContent.innerHTML = `<p class="loading-msg">Ładowanie raportu...</p>`;
+        templates.investigationDetail(id).then(html => {
+            mainContent.innerHTML = html;
+        });
 
     } else {
         mainContent.innerHTML = templates.home();
